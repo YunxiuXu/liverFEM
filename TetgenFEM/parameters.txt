@@ -12,4 +12,6 @@ dampingConst=50.0
 Gravity=-10.0
 bindForce= -10000
 bindVelocity=-0.0
+stlFile=stls/cubeLong.stl
+tetgenArgs=pq2a0.005
 	

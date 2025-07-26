@@ -236,12 +236,12 @@ int main() {
 
 	tetgenio in, out;
 	in.firstnumber = 1;  // All indices start from 1
-	readSTL("stls/cubeLong.stl", in);
+	readSTL(stlFile.c_str(), in);
 	//readOBJ("./TetgenFEM/vbdbeam.obj", in);
 	// Configure TetGen behavior
 	tetgenbehavior behavior;
 	//char args[] = "pq1.414a0.1";
-	char args[] = "pq2a0.005";  // pq1.414a0.1 minratio 1/ mindihedral -q maxvolume -a switches='pq1.1/15a0.003' "pq1.1/15a0.0005 pq1.15a0.0001"
+	char* args = const_cast<char*>(tetgenArgs.c_str());  // pq1.414a0.1 minratio 1/ mindihedral -q maxvolume -a switches='pq1.1/15a0.003' "pq1.1/15a0.0005 pq1.15a0.0001"
 	behavior.parse_commandline(args);
 
 	//char argsNode[] = "./Beam.1";

@@ -9,6 +9,7 @@ extern float youngs, youngs1, youngs2, youngs3, poisson, density;
 extern int groupNum, groupNumX, groupNumY, groupNumZ;
 extern const float PI;
 extern float timeStep, dampingConst, Gravity, bindForce, bindVelocity;
+extern std::string stlFile, tetgenArgs;
 
 // Function to load parameters
 void loadParams(const std::string& filename);

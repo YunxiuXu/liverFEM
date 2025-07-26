@@ -9,6 +9,7 @@ float youngs, youngs1, youngs2, youngs3, poisson, density;
 int groupNum, groupNumX, groupNumY, groupNumZ;
 const float PI = 3.1415926535f; // This can be hardcoded as it won't change
 float timeStep, dampingConst, Gravity, bindForce, bindVelocity;
+std::string stlFile, tetgenArgs;
 
 void loadParams(const std::string& filename) {
     std::ifstream file(filename);
@@ -28,6 +29,10 @@ void loadParams(const std::string& filename) {
         {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ}
     };
 
+    std::unordered_map<std::string, std::string*> stringParams = {
+        {"stlFile", &stlFile}, {"tetgenArgs", &tetgenArgs}
+    };
+
     std::string line;
     while (std::getline(file, line)) {
         size_t pos = line.find('=');
@@ -41,6 +46,9 @@ void loadParams(const std::string& filename) {
         }
         else if (intParams.find(key) != intParams.end()) {
             *intParams[key] = std::stoi(value);
+        }
+        else if (stringParams.find(key) != stringParams.end()) {
+            *stringParams[key] = value;
         }
     }
 
