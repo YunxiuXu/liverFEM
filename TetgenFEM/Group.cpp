@@ -1136,7 +1136,7 @@ void Group::calBindFixed() {
 			Eigen::Vector3f diff = currentPos - initPos;
 
 			// Compute the constraint force for fixed vertices
-			Eigen::Vector3f constraintForce = -100000 * diff;
+			Eigen::Vector3f constraintForce = -10000 * diff;
 			Fbind.segment<3>(3 * vertex->localIndex) += constraintForce;
 		}
 	}

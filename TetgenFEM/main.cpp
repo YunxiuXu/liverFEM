@@ -236,8 +236,8 @@ int main() {
 
 	tetgenio in, out;
 	in.firstnumber = 1;  // All indices start from 1
-	//readSTL("stls/vbdbeam.stl", in);
-	readOBJ("C:/Users/76739/Desktop/tetfemcpp/TetgenFEM/vbdbeam.obj", in);
+	readSTL("stls/cubeLong.stl", in);
+	//readOBJ("./TetgenFEM/vbdbeam.obj", in);
 	// Configure TetGen behavior
 	tetgenbehavior behavior;
 	//char args[] = "pq1.414a0.1";
