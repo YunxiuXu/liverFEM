@@ -1,4 +1,5 @@
 ﻿#include "Group.h"
+#include "params.h"
 
 void Group::initialize() {
 	groupVelocity = Eigen::VectorXf::Zero(3 * verticesMap.size());
@@ -1054,77 +1055,64 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 	const std::vector<Vertex*>& commonVerticesGroup2,
 	const Eigen::VectorXf& currentPositionGroup1,
 	const Eigen::VectorXf& currentPositionGroup2, const Eigen::VectorXf& velGroup1, const Eigen::VectorXf& velGroup2, float k) {
-	// Initialize Fbind, with a length three times the number of vertices in the group
-	//Fbind = Eigen::VectorXf::Zero(verticesMap.size() * 3);
+	// XPBD Position Consistency Constraint Implementation
 	Eigen::Vector3f posThisGroup;
 	Eigen::Vector3f posOtherGroup;
-	Eigen::Vector3f avgPosition;
-	Eigen::Vector3f posDifference;
-	Eigen::Vector3f force;
-	Eigen::VectorXf distances = Eigen::VectorXf::Zero(commonVerticesGroup1.size() * 3);
-	posThisGroup = Eigen::Vector3f::Zero();
-	posOtherGroup = Eigen::Vector3f::Zero();
-	avgPosition = Eigen::Vector3f::Zero();
-	posDifference = Eigen::Vector3f::Zero();
-	Eigen::Vector3f velThisGroup;
-	Eigen::Vector3f velOtherGroup;
-	Eigen::Vector3f velDiff;
-	velThisGroup = Eigen::Vector3f::Zero();
-	velOtherGroup = Eigen::Vector3f::Zero();
-	velDiff = Eigen::Vector3f::Zero();
-	force = Eigen::Vector3f::Zero();
-
-	float totalMass = 0.0f;
-	size_t numVertices = commonVerticesGroup1.size();
-	for (size_t i = 0; i < numVertices; ++i) {
-		Vertex* vertexThisGroup = commonVerticesGroup1[i];
-		Vertex* vertexOtherGroup = commonVerticesGroup2[i];
-
-		// Add the mass of this shared vertex to the total mass
-		totalMass += vertexThisGroup->vertexMass;
-	}
-	float m_eff = totalMass / numVertices;
+	Eigen::Vector3f constraint_C;
+	Eigen::Vector3f deltaLambda;
+	Eigen::Vector3f deltaX_j, deltaX_k;
+	
+	// Compliance matrix α̃ = 1/E (inverse of Young's modulus)
+	// This is a block diagonal matrix, but for position consistency constraints
+	// we use the scalar compliance value for each direction
+	extern float youngs; // Access global Young's modulus from params
+	float alpha_tilde = 1.0f / youngs; // Compliance parameter (inverse stiffness)
+	
 	// Iterate through all common vertices
 	for (size_t i = 0; i < commonVerticesGroup1.size(); ++i) {
 		// Get the common vertex in this group and the other group
 		Vertex* vertexThisGroup = commonVerticesGroup1[i];
 		Vertex* vertexOtherGroup = commonVerticesGroup2[i];
 
-		// Directly use x, y, z from the Vertex objects for position
-		/*Eigen::Vector3f posThisGroup(vertexThisGroup->x, vertexThisGroup->y, vertexThisGroup->z);
-		Eigen::Vector3f posOtherGroup(vertexOtherGroup->x, vertexOtherGroup->y, vertexOtherGroup->z);*/
+		// Get current positions
 		posThisGroup = currentPositionGroup1.segment<3>(3 * vertexThisGroup->localIndex);
 		posOtherGroup = currentPositionGroup2.segment<3>(3 * vertexOtherGroup->localIndex);
-		velThisGroup = velGroup1.segment<3>(3 * vertexThisGroup->localIndex);
-		velOtherGroup = velGroup2.segment<3>(3 * vertexOtherGroup->localIndex);
-		avgPosition = (posThisGroup + posOtherGroup) / 2;
-		velDiff = velThisGroup - velOtherGroup;
-		// Compute the position difference between the current vertex and the other group's vertex
-		posDifference = posThisGroup - avgPosition;
-
-		// Compute the constraint force
-		//force = 0.01 * (2 * m_eff / (timeStep * timeStep)) * posDifference;
-		//force = k * posDifference + 1 * velDiff;
-		force = k * posDifference;
-		float maxForce = 100000;
-		if (abs(force.x()) > maxForce)
-		{
-			force.x() = force.x() / abs(force.x()) * maxForce;
-		}
-		if (abs(force.y()) > maxForce)
-		{
-			force.y() = force.y() / abs(force.y()) * maxForce;
-		}
-		if (abs(force.z()) > maxForce)
-		{
-			force.z() = force.z() / abs(force.z()) * maxForce;
-		}
-		// Place the constraint force in Fbind at the appropriate position using the local index
-		Fbind.segment<3>(3 * vertexThisGroup->localIndex) += force;
-		//Fbind.segment<3>(3 * vertexThisGroup->localIndex) = force;
-		distances.segment<3>(3 * i) = (posThisGroup - posOtherGroup).cwiseAbs();
+		
+		// Constraint: C(x) = x_j - x_k = 0 (position consistency)
+		constraint_C = posThisGroup - posOtherGroup;
+		
+		// Get vertex mass (assuming same mass for both vertices at shared location)
+		float m_l = vertexThisGroup->vertexMass;
+		
+		// XPBD constraint solver:
+		// Δλ = -C(x) / (α̃/Δt² + ∇C M⁻¹ ∇Cᵀ)
+		// where ∇C M⁻¹ ∇Cᵀ = 1/m_l + 1/m_l = 2/m_l for position consistency
+		// α̃ is the compliance matrix (inverse stiffness)
+		float denominator = alpha_tilde / (timeStep * timeStep) + 2.0f / m_l;
+		deltaLambda = -constraint_C / denominator;
+		
+		// Position corrections:
+		// Δx_j = (1/m_l) * Δλ
+		// Δx_k = -(1/m_l) * Δλ
+		deltaX_j = deltaLambda / m_l;
+		deltaX_k = -deltaLambda / m_l;
+		
+		// Convert position corrections to forces (F = ma, so F = m * Δx / Δt²)
+		Eigen::Vector3f force_j = m_l * deltaX_j / (timeStep * timeStep);
+		Eigen::Vector3f force_k = m_l * deltaX_k / (timeStep * timeStep);
+		
+		// Apply force limiting to prevent numerical instability (optional)
+		/*float maxForce = 100000.0f;
+		for (int dim = 0; dim < 3; ++dim) {
+			if (abs(force_j[dim]) > maxForce) {
+				force_j[dim] = (force_j[dim] > 0 ? 1.0f : -1.0f) * maxForce;
+			}
+		}*/
+		
+		// Apply the constraint force to this group's vertex
+		// Note: The force on the other group's vertex will be applied when that group calls this function
+		Fbind.segment<3>(3 * vertexThisGroup->localIndex) += force_j;
 	}
-	
 }
 
 void Group::calBindFixed() {

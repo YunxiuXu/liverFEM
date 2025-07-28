@@ -471,7 +471,7 @@ int main() {
 		}*/
 
 
-		object.PBDLOOP(5);
+		object.PBDLOOP(50);
 
 		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
 			std::ofstream file("vbdcomp_our.txt", std::ios::out | std::ios::trunc);
