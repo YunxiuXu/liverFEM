@@ -1086,9 +1086,12 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 	// Following the mathematical derivation in XPBD_position_consistency.md
 	
 	extern float youngs; // Access global Young's modulus parameter
+	extern float constraintHardness; // Access constraint hardness factor
 	
-	// Compliance α̃ = 1/E (inverse of Young's modulus)
-	float alpha_tilde = 1.0f / youngs;
+	// Compliance α̃ = (1/E) * (1/hardness_factor)
+	// Lower hardness factor = harder constraints
+	// Higher hardness factor = softer constraints
+	float alpha_tilde = 1.0f / (youngs * constraintHardness);
 	
 	// Process all common vertex pairs between groups
 	for (size_t i = 0; i < commonVerticesGroup1.size(); ++i) {

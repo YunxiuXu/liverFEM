@@ -8,7 +8,7 @@
 float youngs, youngs1, youngs2, youngs3, poisson, density;
 int groupNum, groupNumX, groupNumY, groupNumZ;
 const float PI = 3.1415926535f; // This can be hardcoded as it won't change
-float timeStep, dampingConst, Gravity, bindForce, bindVelocity;
+float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
 std::string stlFile, tetgenArgs;
 
 void loadParams(const std::string& filename) {
@@ -22,7 +22,8 @@ void loadParams(const std::string& filename) {
         {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
         {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
         {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
-        {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity}
+        {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
+        {"constraintHardness", &constraintHardness}
     };
 
     std::unordered_map<std::string, int*> intParams = {
