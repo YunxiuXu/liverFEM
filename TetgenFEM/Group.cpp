@@ -1172,16 +1172,18 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 }
 
 void Group::calBindFixed() {
+	// Fixed vertices: directly set position and velocity to initial values
+	// No constraint forces needed - hard enforcement
 	for (auto& vertexPair : verticesMap) {
 		Vertex* vertex = vertexPair.second;
 		if (vertex->isFixed) {
-			Eigen::Vector3f initPos(vertex->initx, vertex->inity, vertex->initz);
-			Eigen::Vector3f currentPos = currentPosition.segment<3>(3 * vertex->localIndex);
-			Eigen::Vector3f diff = currentPos - initPos;
-
-			// Compute the constraint force for fixed vertices
-			Eigen::Vector3f constraintForce = -100 * diff;
-			Fbind.segment<3>(3 * vertex->localIndex) += constraintForce;
+			// Set current position to initial position
+			currentPosition.segment<3>(3 * vertex->localIndex) = 
+				Eigen::Vector3f(vertex->initx, vertex->inity, vertex->initz);
+			
+			// Set velocity to zero (fixed points don't move)
+			groupVelocity.segment<3>(3 * vertex->localIndex) = 
+				Eigen::Vector3f::Zero();
 		}
 	}
 }
@@ -1262,12 +1264,21 @@ void Group::updatePosition() {
 		Vertex* vertex = vertexPair.second;
 		int localIndex = vertex->localIndex;
 
-		
-		pos = currentPosition.segment<3>(3 * localIndex);
-
-		vertex->x = pos.x();
-		vertex->y = pos.y();
-		vertex->z = pos.z();
+		if (vertex->isFixed) {
+			// Fixed vertices: keep at initial position
+			vertex->x = vertex->initx;
+			vertex->y = vertex->inity;
+			vertex->z = vertex->initz;
+			
+			// Also ensure currentPosition reflects the fixed position
+			currentPosition.segment<3>(3 * localIndex) = 
+				Eigen::Vector3f(vertex->initx, vertex->inity, vertex->initz);
+		} else {
+			pos = currentPosition.segment<3>(3 * localIndex);
+			vertex->x = pos.x();
+			vertex->y = pos.y();
+			vertex->z = pos.z();
+		}
 		/*vertex->x = pos.x();
 		vertex->y = pos.y();
 		vertex->z = pos.z();*/
@@ -1309,8 +1320,10 @@ void Group::updateVelocity() {
 	for (auto& vertexPair : verticesMap) {
 		Vertex* vertex = vertexPair.second;
 		int localIndex = vertex->localIndex;
-		if (vertex->isFixed == false)
-		{
+		if (vertex->isFixed) {
+			// Fixed vertices: set velocity to zero
+			groupVelocity.segment<3>(3 * localIndex) = Eigen::Vector3f::Zero();
+		} else {
 			previousPos.x() = vertex->x;
 			previousPos.y() = vertex->y;
 			previousPos.z() = vertex->z;

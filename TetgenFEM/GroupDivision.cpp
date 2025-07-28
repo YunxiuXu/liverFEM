@@ -1237,6 +1237,10 @@ void Group::updatePosition() {
 			vertex->x = vertex->initx;
 			vertex->y = vertex->inity;
 			vertex->z = vertex->initz;
+			
+			// Also ensure currentPosition reflects the fixed position
+			currentPosition.segment<3>(3 * localIndex) = 
+				Eigen::Vector3f(vertex->initx, vertex->inity, vertex->initz);
 		}
 		else {
 			// 使用旋转矩阵块乘以primeVec中的位置
@@ -1268,6 +1272,10 @@ void Group::updatePositionFEM() {
 			vertex->x = vertex->initx;
 			vertex->y = vertex->inity;
 			vertex->z = vertex->initz;
+			
+			// Also ensure currentPosition reflects the fixed position
+			currentPosition.segment<3>(3 * localIndex) = 
+				Eigen::Vector3f(vertex->initx, vertex->inity, vertex->initz);
 		}
 		else {
 			// 使用旋转矩阵块乘以primeVec中的位置
@@ -1292,17 +1300,22 @@ void Group::updateVelocity() {
 		Vertex* vertex = vertexPair.second;
 		int localIndex = vertex->localIndex;
 
-		// 获取当前位置
-		previousPos.x() = vertex->x;
-		previousPos.y() = vertex->y;
-		previousPos.z() = vertex->z;
+		if (vertex->isFixed) {
+			// Fixed vertices: set velocity to zero
+			groupVelocity.segment<3>(3 * localIndex) = Eigen::Vector3f::Zero();
+		} else {
+			// 获取当前位置
+			previousPos.x() = vertex->x;
+			previousPos.y() = vertex->y;
+			previousPos.z() = vertex->z;
 
-		// 从 previousPosition 获取上一帧的位置
-		currentPos = currentPosition.segment<3>(3 * localIndex);
+			// 从 previousPosition 获取上一帧的位置
+			currentPos = currentPosition.segment<3>(3 * localIndex);
 
-		// 计算速度
-		velocity = (currentPos - previousPos) / timeStep;
-		groupVelocity.segment<3>(3 * localIndex) = velocity;
+			// 计算速度
+			velocity = (currentPos - previousPos) / timeStep;
+			groupVelocity.segment<3>(3 * localIndex) = velocity;
+		}
 		// 更新 vertex 的速度
 		// 例如：vertex->velocity = velocity;
 
