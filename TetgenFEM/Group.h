@@ -69,6 +69,9 @@ public:
 	
 	// XPBD Lambda accumulation storage: [adjacentGroupIdx][vertexPairIdx] -> Lambda_vector(3)
 	std::map<int, std::map<int, Eigen::Vector3f>> constraintLambdas;
+	
+	// Debug mode for constraint monitoring (set to true to enable debug output)
+	static bool debug_constraints;
 
 	Eigen::MatrixXf LHS_I;
 	Eigen::MatrixXf LHS_A;

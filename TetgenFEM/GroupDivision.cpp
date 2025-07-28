@@ -1105,26 +1105,54 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		// Vertex mass (assuming equal mass for simplification per document)
 		float m_l = vertex_j->vertexMass;
 		
-		// Get accumulated Lambda for this constraint pair
-		// Initialize to zero if this is the first time accessing this constraint
-		Eigen::Vector3f& lambda = constraintLambdas[adjacentGroupIdx][i];
-		if (constraintLambdas[adjacentGroupIdx].find(i) == constraintLambdas[adjacentGroupIdx].end()) {
-			lambda = Eigen::Vector3f::Zero();
+		// Ensure mass is not too small to prevent numerical instability
+		if (m_l < 1e-6f) {
+			m_l = 1e-6f;
+		}
+		
+		// Thread-safe Lambda access and initialization
+		Eigen::Vector3f lambda;
+		Eigen::Vector3f deltaLambda;
+		
+		// Critical section for Lambda access to prevent race conditions
+		#pragma omp critical
+		{
+			// Get accumulated Lambda for this constraint pair
+			auto& constraintMap = constraintLambdas[adjacentGroupIdx];
+			if (constraintMap.find(i) == constraintMap.end()) {
+				constraintMap[i] = Eigen::Vector3f::Zero();
+			}
+			lambda = constraintMap[i];
 		}
 		
 		// XPBD solver calculation from document:
 		// Δλ = -(x_j - x_k)/(α̃/Δt² + 2/m_l)
 		// With regularization: Δλ = -(C(x) + α̃λ/Δt²)/(α̃/Δt² + 2/m_l)
 		
+		// Numerical stability protection
 		float denominator = alpha_tilde / (timeStep * timeStep) + 2.0f / m_l;
+		if (std::abs(denominator) < 1e-12f) {
+			denominator = (denominator > 0) ? 1e-12f : -1e-12f;
+		}
+		
 		Eigen::Vector3f regularization_term = alpha_tilde * lambda / (timeStep * timeStep);
 		Eigen::Vector3f numerator = C_constraint + regularization_term;
 		
-		// Solve for Δλ
-		Eigen::Vector3f deltaLambda = -numerator / denominator;
+		// Solve for Δλ with magnitude limiting for stability
+		deltaLambda = -numerator / denominator;
 		
-		// Accumulate Lambda across iterations
-		lambda += deltaLambda;
+		// Limit deltaLambda magnitude to prevent explosive behavior
+		float deltaLambda_norm = deltaLambda.norm();
+		float max_deltaLambda = 1000.0f; // Reasonable force limit
+		if (deltaLambda_norm > max_deltaLambda) {
+			deltaLambda = deltaLambda * (max_deltaLambda / deltaLambda_norm);
+		}
+		
+		// Critical section for Lambda update to prevent race conditions
+		#pragma omp critical
+		{
+			constraintLambdas[adjacentGroupIdx][i] += deltaLambda;
+		}
 		
 		// Position corrections from document:
 		// Δx_j = (1/m_l) * Δλ
@@ -1135,6 +1163,18 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		// Convert position corrections to forces: F = m * Δx / Δt²
 		Eigen::Vector3f force_j = m_l * deltaX_j / (timeStep * timeStep);
 		Eigen::Vector3f force_k = m_l * deltaX_k / (timeStep * timeStep);
+		
+		// Additional force magnitude limiting for numerical stability
+		float force_norm = force_j.norm();
+		float max_force = 100000.0f; // Maximum allowable force magnitude
+		if (force_norm > max_force) {
+			force_j = force_j * (max_force / force_norm);
+		}
+		
+		// Check for NaN or infinite values
+		if (!force_j.allFinite()) {
+			force_j = Eigen::Vector3f::Zero();
+		}
 		
 		// Apply constraint force to this group's vertex
 		// The corresponding force on the adjacent group's vertex will be applied 
