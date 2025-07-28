@@ -272,8 +272,8 @@ int main() {
 	object.groupNumZ = groupNumZ;
 	divideIntoGroups(out, object, groupNumX, groupNumY, groupNumZ); //convert tetgen to our data structure
 
-	out.save_nodes("vbdbeam");
-	out.save_elements("vbdbeam");
+	/*out.save_nodes("vbdbeam");
+	out.save_elements("vbdbeam");*/
 	//writeSTL(object, "vbdbeam.stl");
 	//writeOBJ(object, "vbdbeam.obj");
 
@@ -471,7 +471,7 @@ int main() {
 		}*/
 
 
-		object.PBDLOOP(50);
+		object.PBDLOOP(10);
 
 		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
 			std::ofstream file("vbdcomp_our.txt", std::ios::out | std::ios::trunc);

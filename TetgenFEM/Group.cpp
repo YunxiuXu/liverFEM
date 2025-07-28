@@ -1062,11 +1062,9 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 	Eigen::Vector3f deltaLambda;
 	Eigen::Vector3f deltaX_j, deltaX_k;
 	
-	// Compliance matrix α̃ = 1/E (inverse of Young's modulus)
-	// This is a block diagonal matrix, but for position consistency constraints
-	// we use the scalar compliance value for each direction
+	// Compliance matrix α̃ = 1/E (3x3 diagonal matrix, inverse of Young's modulus)
 	extern float youngs; // Access global Young's modulus from params
-	float alpha_tilde = 1.0f / youngs; // Compliance parameter (inverse stiffness)
+	Eigen::Matrix3f alpha_tilde = (1.0f / youngs) * Eigen::Matrix3f::Identity(); // 3x3 compliance matrix
 	
 	// Iterate through all common vertices
 	for (size_t i = 0; i < commonVerticesGroup1.size(); ++i) {
@@ -1081,25 +1079,32 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		// Constraint: C(x) = x_j - x_k = 0 (position consistency)
 		constraint_C = posThisGroup - posOtherGroup;
 		
-		// Get vertex mass (assuming same mass for both vertices at shared location)
+		// Mass matrices (3x3 diagonal matrices for each vertex)
 		float m_l = vertexThisGroup->vertexMass;
+		Eigen::Matrix3f M_j = m_l * Eigen::Matrix3f::Identity(); // Mass matrix for vertex j
+		Eigen::Matrix3f M_k = m_l * Eigen::Matrix3f::Identity(); // Mass matrix for vertex k (assuming same mass)
+		Eigen::Matrix3f M_j_inv = (1.0f / m_l) * Eigen::Matrix3f::Identity();
+		Eigen::Matrix3f M_k_inv = (1.0f / m_l) * Eigen::Matrix3f::Identity();
 		
 		// XPBD constraint solver:
-		// Δλ = -C(x) / (α̃/Δt² + ∇C M⁻¹ ∇Cᵀ)
-		// where ∇C M⁻¹ ∇Cᵀ = 1/m_l + 1/m_l = 2/m_l for position consistency
-		// α̃ is the compliance matrix (inverse stiffness)
-		float denominator = alpha_tilde / (timeStep * timeStep) + 2.0f / m_l;
-		deltaLambda = -constraint_C / denominator;
+		// Δλ = -(α̃/Δt² + ∇C M⁻¹ ∇Cᵀ)⁻¹ * C(x)
+		// For position consistency: ∇C_j = I, ∇C_k = -I
+		// ∇C M⁻¹ ∇Cᵀ = I * M_j⁻¹ * I + (-I) * M_k⁻¹ * (-I) = M_j⁻¹ + M_k⁻¹
+		Eigen::Matrix3f gradC_M_inv_gradC_T = M_j_inv + M_k_inv;
+		Eigen::Matrix3f denominator_matrix = alpha_tilde / (timeStep * timeStep) + gradC_M_inv_gradC_T;
+		
+		// Solve for Δλ (3x3 matrix inversion)
+		deltaLambda = -denominator_matrix.inverse() * constraint_C;
 		
 		// Position corrections:
-		// Δx_j = (1/m_l) * Δλ
-		// Δx_k = -(1/m_l) * Δλ
-		deltaX_j = deltaLambda / m_l;
-		deltaX_k = -deltaLambda / m_l;
+		// Δx_j = M_j⁻¹ * ∇C_j^T * Δλ = M_j⁻¹ * I * Δλ = M_j⁻¹ * Δλ
+		// Δx_k = M_k⁻¹ * ∇C_k^T * Δλ = M_k⁻¹ * (-I) * Δλ = -M_k⁻¹ * Δλ
+		deltaX_j = M_j_inv * deltaLambda;
+		deltaX_k = -M_k_inv * deltaLambda;
 		
-		// Convert position corrections to forces (F = ma, so F = m * Δx / Δt²)
-		Eigen::Vector3f force_j = m_l * deltaX_j / (timeStep * timeStep);
-		Eigen::Vector3f force_k = m_l * deltaX_k / (timeStep * timeStep);
+		// Convert position corrections to forces (F = M * Δx / Δt²)
+		Eigen::Vector3f force_j = M_j * deltaX_j / (timeStep * timeStep);
+		Eigen::Vector3f force_k = M_k * deltaX_k / (timeStep * timeStep);
 		
 		// Apply force limiting to prevent numerical instability (optional)
 		/*float maxForce = 100000.0f;

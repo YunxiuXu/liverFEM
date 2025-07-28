@@ -329,8 +329,8 @@ void Object::PBDLOOP(int looptime) {
 #pragma omp parallel for
 	for (int i = 0; i < groupNum; ++i) {
 		auto& g = groups[i];
-		g.Fbind = 0.75 * g.prevFbind;
-		//g.Fbind = Eigen::VectorXf::Zero(3 * g.verticesMap.size()); // 假设 Group 类有一个方法来清除 Fbind
+		//g.Fbind = 0.75 * g.prevFbind;
+		g.Fbind = Eigen::VectorXf::Zero(3 * g.verticesMap.size()); // 假设 Group 类有一个方法来清除 Fbind
 		g.rotationTransSparse = g.rotationMatrix.transpose().sparseView(reference, epsilon);
 
 		g.RHS_F = g.RHS_E * g.rotationTransSparse;//RHS的部分
