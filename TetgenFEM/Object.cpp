@@ -380,7 +380,7 @@ void Object::PBDLOOP(int looptime) {
 
 					//Calculate bind force
 					currentGroup.calFbind1(commonVerticesPair.first, commonVerticesPair.second,
-						currentGroup.currentPosition, adjacentGroup.currentPosition, currentGroup.groupVelocity, adjacentGroup.groupVelocity, bindForce);
+						currentGroup.currentPosition, adjacentGroup.currentPosition, currentGroup.groupVelocity, adjacentGroup.groupVelocity, bindForce, adjacentGroupIdx);
 					//if (direction == 0 || direction == 1) {
 					//	currentGroup.distancesX = Eigen::VectorXf::Zero(commonVerticesPair.first.size() * 3);
 

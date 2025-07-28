@@ -60,12 +60,15 @@ public:
 	Eigen::SparseMatrix<float> massDistributionSparse;
 	Eigen::SparseMatrix<float> massDampingSparseInv; //(M+C').inv sparse
 	Eigen::SparseMatrix<float> inverseTermSparse;
-	Eigen::VectorXf currentPosition;//?Zbindf—p“IˆÊ’uM‘§C•s—p˜ôˆÊ’uXV
+	Eigen::VectorXf currentPosition;//?ï¿½Zbindfï¿½pï¿½Iï¿½Ê’uï¿½Mï¿½ï¿½ï¿½Cï¿½sï¿½pï¿½ï¿½Ê’uï¿½Xï¿½V
 	Eigen::VectorXf currentPositionFEM;
 	Eigen::VectorXf distancesX; 
 	std::array<int, 6> adjacentGroupIDs;
 	int groupIndex;
-	std::vector<std::pair<std::vector<Vertex*>, std::vector<Vertex*>>> commonVerticesInDirections;//Še˜¢‘Š??“I‹¤“¯“_
+	std::vector<std::pair<std::vector<Vertex*>, std::vector<Vertex*>>> commonVerticesInDirections;//ï¿½eï¿½ï¿½ï¿½ï¿½??ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½_
+	
+	// XPBD Lambda accumulation storage: [adjacentGroupIdx][vertexPairIdx] -> Lambda_vector(3)
+	std::map<int, std::map<int, Eigen::Vector3f>> constraintLambdas;
 
 	Eigen::MatrixXf LHS_I;
 	Eigen::MatrixXf LHS_A;
@@ -124,7 +127,7 @@ public:
 	void calPrimeVec();
 	//void updateVertexPositions();
 	void calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
-		const std::vector<Vertex*>& commonVerticesGroup2, const Eigen::VectorXf& currentPositionGroup1, const Eigen::VectorXf& currentPositionGroup2, const Eigen::VectorXf& velGroup1, const Eigen::VectorXf& velGroup2, float k);
+		const std::vector<Vertex*>& commonVerticesGroup2, const Eigen::VectorXf& currentPositionGroup1, const Eigen::VectorXf& currentPositionGroup2, const Eigen::VectorXf& velGroup1, const Eigen::VectorXf& velGroup2, float k, int adjacentGroupIdx);
 	void calRInvLocalPos();
 	void calGroupKFEM(float E, float nu);
 

@@ -120,6 +120,9 @@ public:
 	std::array<int, 6> adjacentGroupIDs;
 	int groupIndex;//每组的编号
 	std::vector<std::pair<std::vector<Vertex*>, std::vector<Vertex*>>> commonVerticesInDirections;//各个相邻组的共同点
+	
+	// XPBD Lambda accumulation storage: [adjacentGroupIdx][vertexPairIdx] -> Lambda_vector(3)
+	std::map<int, std::map<int, Eigen::Vector3f>> constraintLambdas;
 
 	Eigen::MatrixXf LHS_I;
 	Eigen::MatrixXf LHS_A;
@@ -174,7 +177,7 @@ public:
 	void calPrimeVec();
 	//void updateVertexPositions();
 	void calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
-		const std::vector<Vertex*>& commonVerticesGroup2, const Eigen::VectorXf& currentPositionGroup1, const Eigen::VectorXf& currentPositionGroup2, float k);
+		const std::vector<Vertex*>& commonVerticesGroup2, const Eigen::VectorXf& currentPositionGroup1, const Eigen::VectorXf& currentPositionGroup2, float k, int adjacentGroupIdx);
 	void calRInvLocalPos();
 	void calGroupKFEM(float E, float nu);
 

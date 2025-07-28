@@ -965,7 +965,7 @@ void Object::PBDLOOP(int looptime) {
 
 					// 使用 calFbind1 计算约束力
 					currentGroup.calFbind1(commonVerticesPair.first, commonVerticesPair.second,
-						currentGroup.currentPosition, adjacentGroup.currentPosition, bindForce);
+						currentGroup.currentPosition, adjacentGroup.currentPosition, bindForce, adjacentGroupIdx);
 				}
 			}
 		}
@@ -1080,69 +1080,66 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 	const std::vector<Vertex*>& commonVerticesGroup2,
 	const Eigen::VectorXf& currentPositionGroup1,
 	const Eigen::VectorXf& currentPositionGroup2,
-	float k) {
+	float k, int adjacentGroupIdx) {
+	
 	// XPBD Position Consistency Constraint Implementation
-	Eigen::Vector3f posThisGroup;
-	Eigen::Vector3f posOtherGroup;
-	Eigen::Vector3f constraint_C;
-	Eigen::Vector3f deltaLambda;
-	Eigen::Vector3f deltaX_j, deltaX_k;
+	// Following the mathematical derivation in XPBD_position_consistency.md
 	
-	// Compliance matrix α̃ = 1/E (3x3 diagonal matrix, inverse of Young's modulus)
-	extern float youngs; // Access global Young's modulus from params
-	Eigen::Matrix3f alpha_tilde = (1.0f / youngs) * Eigen::Matrix3f::Identity(); // 3x3 compliance matrix
+	extern float youngs; // Access global Young's modulus parameter
 	
-	// Iterate through all common vertices
+	// Compliance α̃ = 1/E (inverse of Young's modulus)
+	float alpha_tilde = 1.0f / youngs;
+	
+	// Process all common vertex pairs between groups
 	for (size_t i = 0; i < commonVerticesGroup1.size(); ++i) {
-		// Get the common vertex in this group and the other group
-		Vertex* vertexThisGroup = commonVerticesGroup1[i];
-		Vertex* vertexOtherGroup = commonVerticesGroup2[i];
+		Vertex* vertex_j = commonVerticesGroup1[i];  // Vertex in this group
+		Vertex* vertex_k = commonVerticesGroup2[i];  // Corresponding vertex in adjacent group
 
-		// Get current positions
-		posThisGroup = currentPositionGroup1.segment<3>(3 * vertexThisGroup->localIndex);
-		posOtherGroup = currentPositionGroup2.segment<3>(3 * vertexOtherGroup->localIndex);
+		// Get current positions for both vertices
+		Eigen::Vector3f x_j = currentPositionGroup1.segment<3>(3 * vertex_j->localIndex);
+		Eigen::Vector3f x_k = currentPositionGroup2.segment<3>(3 * vertex_k->localIndex);
 		
-		// Constraint: C(x) = x_j - x_k = 0 (position consistency)
-		constraint_C = posThisGroup - posOtherGroup;
+		// Position consistency constraint: C(x) = x_j - x_k = 0
+		Eigen::Vector3f C_constraint = x_j - x_k;
 		
-		// Mass matrices (3x3 diagonal matrices for each vertex)
-		float m_l = vertexThisGroup->vertexMass;
-		Eigen::Matrix3f M_j = m_l * Eigen::Matrix3f::Identity(); // Mass matrix for vertex j
-		Eigen::Matrix3f M_k = m_l * Eigen::Matrix3f::Identity(); // Mass matrix for vertex k (assuming same mass)
-		Eigen::Matrix3f M_j_inv = (1.0f / m_l) * Eigen::Matrix3f::Identity();
-		Eigen::Matrix3f M_k_inv = (1.0f / m_l) * Eigen::Matrix3f::Identity();
+		// Vertex mass (assuming equal mass for simplification per document)
+		float m_l = vertex_j->vertexMass;
 		
-		// XPBD constraint solver:
-		// Δλ = -(α̃/Δt² + ∇C M⁻¹ ∇Cᵀ)⁻¹ * C(x)
-		// For position consistency: ∇C_j = I, ∇C_k = -I
-		// ∇C M⁻¹ ∇Cᵀ = I * M_j⁻¹ * I + (-I) * M_k⁻¹ * (-I) = M_j⁻¹ + M_k⁻¹
-		Eigen::Matrix3f gradC_M_inv_gradC_T = M_j_inv + M_k_inv;
-		Eigen::Matrix3f denominator_matrix = alpha_tilde / (timeStep * timeStep) + gradC_M_inv_gradC_T;
+		// Get accumulated Lambda for this constraint pair
+		// Initialize to zero if this is the first time accessing this constraint
+		Eigen::Vector3f& lambda = constraintLambdas[adjacentGroupIdx][i];
+		if (constraintLambdas[adjacentGroupIdx].find(i) == constraintLambdas[adjacentGroupIdx].end()) {
+			lambda = Eigen::Vector3f::Zero();
+		}
 		
-		// Solve for Δλ (3x3 matrix inversion)
-		deltaLambda = -denominator_matrix.inverse() * constraint_C;
+		// XPBD solver calculation from document:
+		// Δλ = -(x_j - x_k)/(α̃/Δt² + 2/m_l)
+		// With regularization: Δλ = -(C(x) + α̃λ/Δt²)/(α̃/Δt² + 2/m_l)
 		
-		// Position corrections:
-		// Δx_j = M_j⁻¹ * ∇C_j^T * Δλ = M_j⁻¹ * I * Δλ = M_j⁻¹ * Δλ
-		// Δx_k = M_k⁻¹ * ∇C_k^T * Δλ = M_k⁻¹ * (-I) * Δλ = -M_k⁻¹ * Δλ
-		deltaX_j = M_j_inv * deltaLambda;
-		deltaX_k = -M_k_inv * deltaLambda;
+		float denominator = alpha_tilde / (timeStep * timeStep) + 2.0f / m_l;
+		Eigen::Vector3f regularization_term = alpha_tilde * lambda / (timeStep * timeStep);
+		Eigen::Vector3f numerator = C_constraint + regularization_term;
 		
-		// Convert position corrections to forces (F = M * Δx / Δt²)
-		Eigen::Vector3f force_j = M_j * deltaX_j / (timeStep * timeStep);
-		Eigen::Vector3f force_k = M_k * deltaX_k / (timeStep * timeStep);
+		// Solve for Δλ
+		Eigen::Vector3f deltaLambda = -numerator / denominator;
 		
-		// Apply force limiting to prevent numerical instability (optional)
-		/*float maxForce = 100000.0f;
-		for (int dim = 0; dim < 3; ++dim) {
-			if (abs(force_j[dim]) > maxForce) {
-				force_j[dim] = (force_j[dim] > 0 ? 1.0f : -1.0f) * maxForce;
-			}
-		}*/
+		// Accumulate Lambda across iterations
+		lambda += deltaLambda;
 		
-		// Apply the constraint force to this group's vertex
-		// Note: The force on the other group's vertex will be applied when that group calls this function
-		Fbind.segment<3>(3 * vertexThisGroup->localIndex) += force_j;
+		// Position corrections from document:
+		// Δx_j = (1/m_l) * Δλ
+		// Δx_k = -(1/m_l) * Δλ
+		Eigen::Vector3f deltaX_j = deltaLambda / m_l;
+		Eigen::Vector3f deltaX_k = -deltaLambda / m_l;
+		
+		// Convert position corrections to forces: F = m * Δx / Δt²
+		Eigen::Vector3f force_j = m_l * deltaX_j / (timeStep * timeStep);
+		Eigen::Vector3f force_k = m_l * deltaX_k / (timeStep * timeStep);
+		
+		// Apply constraint force to this group's vertex
+		// The corresponding force on the adjacent group's vertex will be applied 
+		// when that group calls this function with its own adjacentGroupIdx
+		Fbind.segment<3>(3 * vertex_j->localIndex) += force_j;
 	}
 }
 
