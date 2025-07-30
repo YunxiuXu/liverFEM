@@ -9,7 +9,8 @@ float youngs, youngs1, youngs2, youngs3, poisson, density;
 int groupNum, groupNumX, groupNumY, groupNumZ;
 const float PI = 3.1415926535f; // This can be hardcoded as it won't change
 float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
-std::string stlFile, tetgenArgs;
+std::string stlFile, tetgenArgs, nodeFile, eleFile;
+bool useDirectLoading;
 
 void loadParams(const std::string& filename) {
     std::ifstream file(filename);
@@ -31,7 +32,12 @@ void loadParams(const std::string& filename) {
     };
 
     std::unordered_map<std::string, std::string*> stringParams = {
-        {"stlFile", &stlFile}, {"tetgenArgs", &tetgenArgs}
+        {"stlFile", &stlFile}, {"tetgenArgs", &tetgenArgs}, 
+        {"nodeFile", &nodeFile}, {"eleFile", &eleFile}
+    };
+    
+    std::unordered_map<std::string, bool*> boolParams = {
+        {"useDirectLoading", &useDirectLoading}
     };
 
     std::string line;
@@ -50,6 +56,9 @@ void loadParams(const std::string& filename) {
         }
         else if (stringParams.find(key) != stringParams.end()) {
             *stringParams[key] = value;
+        }
+        else if (boolParams.find(key) != boolParams.end()) {
+            *boolParams[key] = (value == "true" || value == "1" || value == "True" || value == "TRUE");
         }
     }
 

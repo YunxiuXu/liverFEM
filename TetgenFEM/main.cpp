@@ -236,33 +236,58 @@ int main() {
 
 	tetgenio in, out;
 	in.firstnumber = 1;  // All indices start from 1
-	readSTL(stlFile.c_str(), in);
-	//readOBJ("./TetgenFEM/vbdbeam.obj", in);
-	// Configure TetGen behavior
-	tetgenbehavior behavior;
-	//char args[] = "pq1.414a0.1";
-	char* args = const_cast<char*>(tetgenArgs.c_str());  // pq1.414a0.1 minratio 1/ mindihedral -q maxvolume -a switches='pq1.1/15a0.003' "pq1.1/15a0.0005 pq1.15a0.0001"
-	behavior.parse_commandline(args);
-
-	//char argsNode[] = "./armadillo_4k";
-	//char argsEle[] = "./armadillo_4k";
-	//if (!in.load_node(argsNode)) {
-	//    std::cerr << "Error loading .node file!" << std::endl;
-	//    return 1;
-	//}
-
-	//// Load the ele file
-	//if (!in.load_tet(argsEle)) {
-	//    std::cerr << "Error loading .ele file!" << std::endl;
-	//    return 1;
-	//}
-
-	// Call TetGen to tetrahedralize the geometry
-	tetrahedralize(&behavior, &in, &out);
+	
+	if (useDirectLoading) {
+		// Direct loading mode: load node and element files without meshing
+		std::cout << "Using direct loading mode with node file: " << nodeFile << " and element file: " << eleFile << std::endl;
+		
+		// Extract base filename without extension for TetGen (it will append .node and .ele automatically)
+		std::string nodeFileBase = nodeFile;
+		size_t nodeExtPos = nodeFileBase.find_last_of('.');
+		if (nodeExtPos != std::string::npos) {
+			nodeFileBase = nodeFileBase.substr(0, nodeExtPos);
+		}
+		
+		std::string eleFileBase = eleFile;
+		size_t eleExtPos = eleFileBase.find_last_of('.');
+		if (eleExtPos != std::string::npos) {
+			eleFileBase = eleFileBase.substr(0, eleExtPos);
+		}
+		
+		char* nodeFileC = const_cast<char*>(nodeFileBase.c_str());
+		char* eleFileC = const_cast<char*>(eleFileBase.c_str());
+		
+		std::cout << "Loading base filename: " << nodeFileBase << " (TetGen will append .node/.ele)" << std::endl;
+		
+		if (!in.load_node(nodeFileC)) {
+			std::cerr << "Error loading .node file: " << nodeFileBase << ".node" << std::endl;
+			return 1;
+		}
+		
+		if (!in.load_tet(eleFileC)) {
+			std::cerr << "Error loading .ele file: " << eleFileBase << ".ele" << std::endl;
+			return 1;
+		}
+		
+		// Copy input directly to output without meshing
+		out = in;
+	} else {
+		// STL meshing mode: load STL file and use TetGen for meshing
+		std::cout << "Using STL meshing mode with file: " << stlFile << std::endl;
+		
+		readSTL(stlFile.c_str(), in);
+		
+		// Configure TetGen behavior
+		tetgenbehavior behavior;
+		char* args = const_cast<char*>(tetgenArgs.c_str());
+		behavior.parse_commandline(args);
+		
+		// Call TetGen to tetrahedralize the geometry
+		tetrahedralize(&behavior, &in, &out);
+	}
 	
 
 
-	//out = in;
 
 	Object object;
 	groupNum = groupNumX * groupNumY * groupNumZ;

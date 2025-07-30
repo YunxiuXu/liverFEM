@@ -378,9 +378,16 @@ void Object::PBDLOOP(int looptime) {
 					Group& adjacentGroup = groups[adjacentGroupIdx];
 					const auto& commonVerticesPair = currentGroup.commonVerticesInDirections[direction];
 
-					//Calculate bind force
+					//Calculate bind force with damping
+					extern float youngs;
+					extern float constraintHardness;
+					extern float dampingConst; // 使用现有的阻尼常数作为Beta
+					
 					currentGroup.calFbind1(commonVerticesPair.first, commonVerticesPair.second,
-						currentGroup.currentPosition, adjacentGroup.currentPosition, currentGroup.groupVelocity, adjacentGroup.groupVelocity, bindForce, adjacentGroupIdx);
+						currentGroup.currentPosition, adjacentGroup.currentPosition, 
+						currentGroup.groupVelocity, adjacentGroup.groupVelocity, 
+						currentGroup.massMatrix, adjacentGroup.massMatrix,
+						youngs, constraintHardness, dampingConst, adjacentGroupIdx);
 					//if (direction == 0 || direction == 1) {
 					//	currentGroup.distancesX = Eigen::VectorXf::Zero(commonVerticesPair.first.size() * 3);
 

@@ -963,9 +963,16 @@ void Object::PBDLOOP(int looptime) {
 					Group& adjacentGroup = groups[adjacentGroupIdx];
 					const auto& commonVerticesPair = currentGroup.commonVerticesInDirections[direction];
 
-					// 使用 calFbind1 计算约束力
+					// 使用 calFbind1 计算约束力 (with damping)
+					extern float youngs;
+					extern float constraintHardness;
+					extern float dampingConst;
+					
 					currentGroup.calFbind1(commonVerticesPair.first, commonVerticesPair.second,
-						currentGroup.currentPosition, adjacentGroup.currentPosition, bindForce, adjacentGroupIdx);
+						currentGroup.currentPosition, adjacentGroup.currentPosition,
+						currentGroup.groupVelocity, adjacentGroup.groupVelocity,
+						currentGroup.massMatrix, adjacentGroup.massMatrix,
+						youngs, constraintHardness, dampingConst, adjacentGroupIdx);
 				}
 			}
 		}
@@ -1076,115 +1083,6 @@ void Group::calculateCurrentPositionsFEM() {
 //	}
 //}
 
-void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
-	const std::vector<Vertex*>& commonVerticesGroup2,
-	const Eigen::VectorXf& currentPositionGroup1,
-	const Eigen::VectorXf& currentPositionGroup2,
-	float k, int adjacentGroupIdx) {
-	
-	// XPBD Position Consistency Constraint Implementation
-	// Following the mathematical derivation in XPBD_position_consistency.md
-	
-	extern float youngs; // Access global Young's modulus parameter
-	extern float constraintHardness; // Access constraint hardness factor
-	
-	// Compliance α̃ = (1/E) * (1/hardness_factor)
-	// Lower hardness factor = harder constraints
-	// Higher hardness factor = softer constraints
-	float alpha_tilde = 1.0f / (youngs * constraintHardness);
-	
-	// Process all common vertex pairs between groups
-	for (size_t i = 0; i < commonVerticesGroup1.size(); ++i) {
-		Vertex* vertex_j = commonVerticesGroup1[i];  // Vertex in this group
-		Vertex* vertex_k = commonVerticesGroup2[i];  // Corresponding vertex in adjacent group
-
-		// Get current positions for both vertices
-		Eigen::Vector3f x_j = currentPositionGroup1.segment<3>(3 * vertex_j->localIndex);
-		Eigen::Vector3f x_k = currentPositionGroup2.segment<3>(3 * vertex_k->localIndex);
-		
-		// Position consistency constraint: C(x) = x_j - x_k = 0
-		Eigen::Vector3f C_constraint = x_j - x_k;
-		
-		// Vertex mass (assuming equal mass for simplification per document)
-		float m_l = vertex_j->vertexMass;
-		
-		// Ensure mass is not too small to prevent numerical instability
-		if (m_l < 1e-6f) {
-			m_l = 1e-6f;
-		}
-		
-		// Thread-safe Lambda access and initialization
-		Eigen::Vector3f lambda;
-		Eigen::Vector3f deltaLambda;
-		
-		// Critical section for Lambda access to prevent race conditions
-		#pragma omp critical
-		{
-			// Get accumulated Lambda for this constraint pair
-			auto& constraintMap = constraintLambdas[adjacentGroupIdx];
-			if (constraintMap.find(i) == constraintMap.end()) {
-				constraintMap[i] = Eigen::Vector3f::Zero();
-			}
-			lambda = constraintMap[i];
-		}
-		
-		// XPBD solver calculation from document:
-		// Δλ = -(x_j - x_k)/(α̃/Δt² + 2/m_l)
-		// With regularization: Δλ = -(C(x) + α̃λ/Δt²)/(α̃/Δt² + 2/m_l)
-		
-		// Numerical stability protection
-		float denominator = alpha_tilde / (timeStep * timeStep) + 2.0f / m_l;
-		if (std::abs(denominator) < 1e-12f) {
-			denominator = (denominator > 0) ? 1e-12f : -1e-12f;
-		}
-		
-		Eigen::Vector3f regularization_term = alpha_tilde * lambda / (timeStep * timeStep);
-		Eigen::Vector3f numerator = C_constraint + regularization_term;
-		
-		// Solve for Δλ with magnitude limiting for stability
-		deltaLambda = -numerator / denominator;
-		
-		// Limit deltaLambda magnitude to prevent explosive behavior
-		float deltaLambda_norm = deltaLambda.norm();
-		float max_deltaLambda = 1000.0f; // Reasonable force limit
-		if (deltaLambda_norm > max_deltaLambda) {
-			deltaLambda = deltaLambda * (max_deltaLambda / deltaLambda_norm);
-		}
-		
-		// Critical section for Lambda update to prevent race conditions
-		#pragma omp critical
-		{
-			constraintLambdas[adjacentGroupIdx][i] += deltaLambda;
-		}
-		
-		// Position corrections from document:
-		// Δx_j = (1/m_l) * Δλ
-		// Δx_k = -(1/m_l) * Δλ
-		Eigen::Vector3f deltaX_j = deltaLambda / m_l;
-		Eigen::Vector3f deltaX_k = -deltaLambda / m_l;
-		
-		// Convert position corrections to forces: F = m * Δx / Δt²
-		Eigen::Vector3f force_j = m_l * deltaX_j / (timeStep * timeStep);
-		Eigen::Vector3f force_k = m_l * deltaX_k / (timeStep * timeStep);
-		
-		// Additional force magnitude limiting for numerical stability
-		float force_norm = force_j.norm();
-		float max_force = 100000.0f; // Maximum allowable force magnitude
-		if (force_norm > max_force) {
-			force_j = force_j * (max_force / force_norm);
-		}
-		
-		// Check for NaN or infinite values
-		if (!force_j.allFinite()) {
-			force_j = Eigen::Vector3f::Zero();
-		}
-		
-		// Apply constraint force to this group's vertex
-		// The corresponding force on the adjacent group's vertex will be applied 
-		// when that group calls this function with its own adjacentGroupIdx
-		Fbind.segment<3>(3 * vertex_j->localIndex) += force_j;
-	}
-}
 
 void Group::calFbind(const Eigen::VectorXf& currentPositionThisGroup, const std::vector<Eigen::VectorXf>& allCurrentPositionsOtherGroups, float k) {
 	Eigen::Vector3f posThisGroup;

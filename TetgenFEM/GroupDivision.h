@@ -177,7 +177,17 @@ public:
 	void calPrimeVec();
 	//void updateVertexPositions();
 	void calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
-		const std::vector<Vertex*>& commonVerticesGroup2, const Eigen::VectorXf& currentPositionGroup1, const Eigen::VectorXf& currentPositionGroup2, float k, int adjacentGroupIdx);
+		const std::vector<Vertex*>& commonVerticesGroup2, 
+		const Eigen::VectorXf& currentPositionGroup1, 
+		const Eigen::VectorXf& currentPositionGroup2, 
+		const Eigen::VectorXf& velGroup1, 
+		const Eigen::VectorXf& velGroup2, 
+		const Eigen::MatrixXf& massMatrixGroup1,
+		const Eigen::MatrixXf& massMatrixGroup2,
+		float youngs, 
+		float hardness, 
+		float dampingBeta, 
+		int adjacentGroupIdx);
 	void calRInvLocalPos();
 	void calGroupKFEM(float E, float nu);
 

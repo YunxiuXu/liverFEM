@@ -812,7 +812,7 @@ void Group::calPrimeVec() {
 
 	if (!gravityApplied) {
 		for (int i = 0; i < 3 * verticesVector.size(); i += 3) {
-			gravity(i) = -Gravity;
+			gravity(i + 1) = Gravity;
 			/*float rotatedGravityX = -Gravity * sqrt(2) / 2;
 			float rotatedGravityY = -Gravity * sqrt(2) / 2;
 			gravity(i) = rotatedGravityX;
@@ -1057,47 +1057,69 @@ void Group::calculateCurrentPositionsFEM() {
 void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 	const std::vector<Vertex*>& commonVerticesGroup2,
 	const Eigen::VectorXf& currentPositionGroup1,
-	const Eigen::VectorXf& currentPositionGroup2, const Eigen::VectorXf& velGroup1, const Eigen::VectorXf& velGroup2, float k, int adjacentGroupIdx) {
+	const Eigen::VectorXf& currentPositionGroup2, 
+	const Eigen::VectorXf& velGroup1, 
+	const Eigen::VectorXf& velGroup2, 
+	const Eigen::MatrixXf& massMatrixGroup1,
+	const Eigen::MatrixXf& massMatrixGroup2,
+	float youngs, 
+	float hardness, 
+	float dampingBeta, 
+	int adjacentGroupIdx) {
 	
-	// XPBD Position Consistency Constraint Implementation
-	// Following the mathematical derivation in XPBD_position_consistency.md
-	
-	extern float youngs; // Access global Young's modulus parameter
-	extern float constraintHardness; // Access constraint hardness factor
-	
-	// Compliance α̃ = (1/E) * (1/hardness_factor)
-	// Lower hardness factor = harder constraints
-	// Higher hardness factor = softer constraints
-	float alpha_tilde = 1.0f / (youngs * constraintHardness);
+	// XPBD Position Consistency Constraint with Damping Implementation
+	// Following the mathematical derivation from bind.txt
+	// All matrices are diagonal: M, β, α, γ
 	
 	// Process all common vertex pairs between groups
-	for (size_t i = 0; i < commonVerticesGroup1.size(); ++i) {
-		Vertex* vertex_j = commonVerticesGroup1[i];  // Vertex in this group
-		Vertex* vertex_k = commonVerticesGroup2[i];  // Corresponding vertex in adjacent group
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(commonVerticesGroup1.size()); ++i) {
+		Vertex* vtx_j = commonVerticesGroup1[i];  // 本组顶点
+		Vertex* vtx_k = commonVerticesGroup2[i];  // 邻组同物理顶点
 
-		// Get current positions for both vertices
-		Eigen::Vector3f x_j = currentPositionGroup1.segment<3>(3 * vertex_j->localIndex);
-		Eigen::Vector3f x_k = currentPositionGroup2.segment<3>(3 * vertex_k->localIndex);
+		// Get current positions and velocities for both vertices
+		Eigen::Vector3f x_j = currentPositionGroup1.segment<3>(3 * vtx_j->localIndex);
+		Eigen::Vector3f x_k = currentPositionGroup2.segment<3>(3 * vtx_k->localIndex);
+		Eigen::Vector3f v_j = velGroup1.segment<3>(3 * vtx_j->localIndex);
+		Eigen::Vector3f v_k = velGroup2.segment<3>(3 * vtx_k->localIndex);
 		
 		// Position consistency constraint: C(x) = x_j - x_k = 0
-		Eigen::Vector3f C_constraint = x_j - x_k;
+		Eigen::Vector3f C = x_j - x_k;              // 约束值
+		Eigen::Vector3f Cdot = v_j - v_k;           // 约束速度
 		
-		// Vertex mass (assuming equal mass for simplification per document)
-		float m_l = vertex_j->vertexMass;
+		// Extract 3x3 mass matrix blocks from group mass matrices
+		// M_j from group1's mass matrix (this group)
+		Eigen::Matrix3f M_j = massMatrixGroup1.block<3, 3>(3 * vtx_j->localIndex, 3 * vtx_j->localIndex);
 		
-		// Ensure mass is not too small to prevent numerical instability
-		if (m_l < 1e-6f) {
-			m_l = 1e-6f;
+		// M_k from group2's mass matrix (adjacent group)
+		Eigen::Matrix3f M_k = massMatrixGroup2.block<3, 3>(3 * vtx_k->localIndex, 3 * vtx_k->localIndex);
+		
+		// Ensure numerical stability by checking for zero or very small eigenvalues
+		if (M_j.determinant() < 1e-12f) {
+			M_j += Eigen::Matrix3f::Identity() * 1e-6f;
 		}
+		if (M_k.determinant() < 1e-12f) {
+			M_k += Eigen::Matrix3f::Identity() * 1e-6f;
+		}
+		
+		Eigen::Matrix3f W_sum = M_j.inverse() + M_k.inverse();  // W = M^(-1)
+		
+		// Alpha matrix (diagonal compliance) - α = 1/(E·hardness) * I
+		Eigen::Matrix3f alpha = Eigen::Matrix3f::Identity() * (1.0f / (youngs * hardness));
+		
+		// Beta matrix (diagonal damping parameter) - β * I
+		Eigen::Matrix3f beta = Eigen::Matrix3f::Identity() * dampingBeta;
+		
+		// Gamma matrix (diagonal): γ = α * β
+		Eigen::Matrix3f gamma = alpha * beta;
+		
+		// α/Δt² matrix
+		Eigen::Matrix3f alphaDivDt2 = alpha / (timeStep * timeStep);
 		
 		// Thread-safe Lambda access and initialization
 		Eigen::Vector3f lambda;
-		Eigen::Vector3f deltaLambda;
-		
-		// Critical section for Lambda access to prevent race conditions
 		#pragma omp critical
 		{
-			// Get accumulated Lambda for this constraint pair
 			auto& constraintMap = constraintLambdas[adjacentGroupIdx];
 			if (constraintMap.find(i) == constraintMap.end()) {
 				constraintMap[i] = Eigen::Vector3f::Zero();
@@ -1105,69 +1127,66 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 			lambda = constraintMap[i];
 		}
 		
-		// XPBD solver calculation from document:
-		// Δλ = -(x_j - x_k)/(α̃/Δt² + 2/m_l)
-		// With regularization: Δλ = -(C(x) + α̃λ/Δt²)/(α̃/Δt² + 2/m_l)
+		// Gauss-Seidel single constraint update (XPBD-damping)
+		// numerator = C + α/Δt² * λ + γ * Cdot * Δt
+		Eigen::Vector3f numerator = C + alphaDivDt2 * lambda + gamma * Cdot * timeStep;
 		
-		// Numerical stability protection
-		float denominator = alpha_tilde / (timeStep * timeStep) + 2.0f / m_l;
-		if (std::abs(denominator) < 1e-12f) {
-			denominator = (denominator > 0) ? 1e-12f : -1e-12f;
+		// denominator = (I + γ) * W_sum + α/Δt²
+		Eigen::Matrix3f denominator_matrix = (Eigen::Matrix3f::Identity() + gamma) * W_sum + alphaDivDt2;
+		
+		// Solve for Δλ using matrix inverse: Δλ = -denominator^(-1) * numerator
+		Eigen::Vector3f deltaLambda;
+		try {
+			deltaLambda = -denominator_matrix.inverse() * numerator;
+		} catch (...) {
+			// Fallback to regularized inverse if singular
+			Eigen::Matrix3f regularized = denominator_matrix + Eigen::Matrix3f::Identity() * 1e-6f;
+			deltaLambda = -regularized.inverse() * numerator;
 		}
-		
-		Eigen::Vector3f regularization_term = alpha_tilde * lambda / (timeStep * timeStep);
-		Eigen::Vector3f numerator = C_constraint + regularization_term;
-		
-		// Solve for Δλ with magnitude limiting for stability
-		deltaLambda = -numerator / denominator;
 		
 		// Limit deltaLambda magnitude to prevent explosive behavior
 		float deltaLambda_norm = deltaLambda.norm();
-		float max_deltaLambda = 1000.0f; // Reasonable force limit
+		float max_deltaLambda = 1000.0f;
 		if (deltaLambda_norm > max_deltaLambda) {
 			deltaLambda = deltaLambda * (max_deltaLambda / deltaLambda_norm);
 		}
 		
-		// Critical section for Lambda update to prevent race conditions
+		// Thread-safe Lambda update
 		#pragma omp critical
 		{
 			constraintLambdas[adjacentGroupIdx][i] += deltaLambda;
 		}
 		
-		// Position corrections from document:
-		// Δx_j = (1/m_l) * Δλ
-		// Δx_k = -(1/m_l) * Δλ
-		Eigen::Vector3f deltaX_j = deltaLambda / m_l;
-		Eigen::Vector3f deltaX_k = -deltaLambda / m_l;
+		// Position correction: Δx_j = M_j^(-1) * Δλ
+		Eigen::Vector3f deltaX_j = M_j.inverse() * deltaLambda;
 		
-		// Convert position corrections to forces: F = m * Δx / Δt²
-		Eigen::Vector3f force_j = m_l * deltaX_j / (timeStep * timeStep);
-		Eigen::Vector3f force_k = m_l * deltaX_k / (timeStep * timeStep);
+		// Convert to force: F = M * Δx / Δt²
+		Eigen::Vector3f forceJ = M_j * deltaX_j / (timeStep * timeStep);
 		
 		// Additional force magnitude limiting for numerical stability
-		float force_norm = force_j.norm();
-		float max_force = 100000.0f; // Maximum allowable force magnitude
+		/*float force_norm = forceJ.norm();
+		float max_force = 100000.0f;
 		if (force_norm > max_force) {
-			force_j = force_j * (max_force / force_norm);
-		}
+			forceJ = forceJ * (max_force / force_norm);
+		}*/
 		
 		// Check for NaN or infinite values
-		if (!force_j.allFinite()) {
-			force_j = Eigen::Vector3f::Zero();
+		if (!forceJ.allFinite()) {
+			forceJ = Eigen::Vector3f::Zero();
 		}
 		
-		// Optional debug output (enable by setting Group::debug_constraints = true)
-		if (debug_constraints && i == 0) { // Only output for first constraint to avoid spam
+		// Optional debug output
+		if (debug_constraints && i == 0) {
 			std::cout << "Group " << groupIndex << " -> Group " << adjacentGroupIdx 
-					  << ": Constraint=" << C_constraint.norm()
-					  << ", Lambda=" << constraintLambdas[adjacentGroupIdx][i].norm()
-					  << ", Force=" << force_j.norm() << std::endl;
+					  << ": C=" << C.norm()
+					  << ", Cdot=" << Cdot.norm()
+					  << ", γ_trace=" << gamma.trace()
+					  << ", Force=" << forceJ.norm() << std::endl;
 		}
 		
 		// Apply constraint force to this group's vertex
-		// The corresponding force on the adjacent group's vertex will be applied 
-		// when that group calls this function with its own adjacentGroupIdx
-		Fbind.segment<3>(3 * vertex_j->localIndex) = force_j;
+		// (邻组在它自己的 calFbind1 调用里会写入反向力)
+		Fbind.segment<3>(3 * vtx_j->localIndex) +=forceJ;
 	}
 }
 

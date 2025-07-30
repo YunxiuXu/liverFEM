@@ -1,14 +1,14 @@
-youngs=1000000
+youngs=10000000
 youngs1=100000
 youngs2=100000
 youngs3=100000
 poisson=0.28
 density=1000
-groupNumX=5
-groupNumY=8
-groupNumZ=4
+groupNumX=4
+groupNumY=4
+groupNumZ=2
 timeStep=0.01
-dampingConst=20.0
+dampingConst=100.0
 Gravity=-10.0
 bindForce= -1000000
 bindVelocity=-0.0
@@ -18,4 +18,3 @@ tetgenArgs=pq2a0.0005
 nodeFile=armadillo_4k.node
 eleFile=armadillo_4k.ele
 useDirectLoading=true
-	
