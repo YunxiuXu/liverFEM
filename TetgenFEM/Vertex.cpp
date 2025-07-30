@@ -10,13 +10,14 @@ Vertex::Vertex(float x, float y, float z, int index)
 {}
 
 void Vertex::setFixedIfBelowThreshold() {
-    if (initx < -0.5) {
+    // 固定左上10%的点：x < -0.8 且 y > 0.5
+    if (initx < -0.8 && inity > 0.5) {
         isFixed = true;
     }
 }
 
 //bunnyfront ymin=-0.61
 //cloth (initx < -0.6 && inity < -0.25) || (initx > 0.6 && inity < -0.25)
-//armadillo ��r initx < -1.1 && inity > 0.63) || (initx > 1.1 && inity > 0.63) || inity < -0.42
+//armadillo ��r initx < -1.1 && inity > 0.63) || (initx > 1.1 && inity > 0.63) || inity < -0.42
 //bunny x<-0.5
 //CLOTH initx < -0.61 || initx > 0.61

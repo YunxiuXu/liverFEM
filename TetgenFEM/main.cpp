@@ -236,7 +236,7 @@ int main() {
 
 	tetgenio in, out;
 	in.firstnumber = 1;  // All indices start from 1
-	//readSTL(stlFile.c_str(), in);
+	readSTL(stlFile.c_str(), in);
 	//readOBJ("./TetgenFEM/vbdbeam.obj", in);
 	// Configure TetGen behavior
 	tetgenbehavior behavior;
@@ -244,25 +244,25 @@ int main() {
 	char* args = const_cast<char*>(tetgenArgs.c_str());  // pq1.414a0.1 minratio 1/ mindihedral -q maxvolume -a switches='pq1.1/15a0.003' "pq1.1/15a0.0005 pq1.15a0.0001"
 	behavior.parse_commandline(args);
 
-	char argsNode[] = "./armadillo_4k";
-	char argsEle[] = "./armadillo_4k";
-	if (!in.load_node(argsNode)) {
-	    std::cerr << "Error loading .node file!" << std::endl;
-	    return 1;
-	}
+	//char argsNode[] = "./armadillo_4k";
+	//char argsEle[] = "./armadillo_4k";
+	//if (!in.load_node(argsNode)) {
+	//    std::cerr << "Error loading .node file!" << std::endl;
+	//    return 1;
+	//}
 
-	// Load the ele file
-	if (!in.load_tet(argsEle)) {
-	    std::cerr << "Error loading .ele file!" << std::endl;
-	    return 1;
-	}
+	//// Load the ele file
+	//if (!in.load_tet(argsEle)) {
+	//    std::cerr << "Error loading .ele file!" << std::endl;
+	//    return 1;
+	//}
 
 	// Call TetGen to tetrahedralize the geometry
-	//tetrahedralize(&behavior, &in, &out);
+	tetrahedralize(&behavior, &in, &out);
 	
 
 
-	out = in;
+	//out = in;
 
 	Object object;
 	groupNum = groupNumX * groupNumY * groupNumZ;
@@ -335,9 +335,27 @@ int main() {
 			Vertex* vertex = vertexPair.second;
 			/*if (vertex->x > 0.91189f && vertex->y > 1.1693f)
 				vertex->isFixed = true;*/
-			vertex->setFixedIfBelowThreshold();
+			// vertex->setFixedIfBelowThreshold(); // 注释掉，改用统一的方法
 		}
 
+	}
+	
+	// 使用新的方法固定左上10%的点
+	object.fixTopLeft10PercentVertices();
+	
+	// 额外测试：手动固定前几个顶点
+	int testFixedCount = 0;
+	for (Group& g : object.groups) {
+		for (const auto& vertexPair : g.verticesMap) {
+			Vertex* vertex = vertexPair.second;
+			if (testFixedCount < 5) { // 固定前5个顶点用于测试
+				vertex->isFixed = true;
+				std::cout << "TEST: Manually fixed vertex " << vertex->index 
+					<< " at (" << vertex->initx << ", " << vertex->inity << ", " << vertex->initz << ")" << std::endl;
+				testFixedCount++;
+			}
+		}
+		if (testFixedCount >= 5) break;
 	}
 	
 	std::vector<int> topVertexLocalIndices;
@@ -471,7 +489,7 @@ int main() {
 		}*/
 
 
-		object.PBDLOOP(3);
+		object.PBDLOOP(10);
 
 		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
 			std::ofstream file("vbdcomp_our.txt", std::ios::out | std::ios::trunc);

@@ -483,3 +483,85 @@ void Object::updateAdjacentGroupIndices(int numX, int numY, int numZ) {
 		}
 	}
 }
+
+void Object::fixTopLeft10PercentVertices() {
+	std::vector<Vertex*> allVertices;
+	
+	std::cout << "=== Starting fixTopLeft10PercentVertices ===" << std::endl;
+	std::cout << "Number of groups: " << groups.size() << std::endl;
+	
+	// 收集所有顶点
+	for (Group& group : groups) {
+		std::cout << "Group has " << group.verticesMap.size() << " vertices" << std::endl;
+		for (const auto& vertexPair : group.verticesMap) {
+			allVertices.push_back(vertexPair.second);
+		}
+	}
+	
+	std::cout << "Total vertices collected: " << allVertices.size() << std::endl;
+	
+	if (allVertices.empty()) {
+		std::cout << "No vertices found! Returning." << std::endl;
+		return;
+	}
+	
+	// 找到x、y、z坐标的范围
+	float minX = allVertices[0]->initx;
+	float maxX = allVertices[0]->initx;
+	float minY = allVertices[0]->inity;
+	float maxY = allVertices[0]->inity;
+	float minZ = allVertices[0]->initz;
+	float maxZ = allVertices[0]->initz;
+	
+	for (Vertex* vertex : allVertices) {
+		if (vertex->initx < minX) minX = vertex->initx;
+		if (vertex->initx > maxX) maxX = vertex->initx;
+		if (vertex->inity < minY) minY = vertex->inity;
+		if (vertex->inity > maxY) maxY = vertex->inity;
+		if (vertex->initz < minZ) minZ = vertex->initz;
+		if (vertex->initz > maxZ) maxZ = vertex->initz;
+	}
+	
+	// 计算左上前10%的阈值
+	float rangeX = maxX - minX;
+	float rangeY = maxY - minY;
+	float rangeZ = maxZ - minZ;
+	float leftThresholdX = minX + rangeX * 0.1f;  // 左边10%
+	float topThresholdY = maxY - rangeY * 0.1f;   // 上边10%
+	float frontThresholdZ = maxZ - rangeZ * 0.1f; // 前面10%
+	
+	// 固定满足条件的顶点
+	int fixedCount = 0;
+	int candidateCount = 0; // 记录满足部分条件的点
+	for (Vertex* vertex : allVertices) {
+		bool xCondition = vertex->initx <= leftThresholdX;
+		bool yCondition = vertex->inity >= topThresholdY;
+		bool zCondition = vertex->initz >= frontThresholdZ;
+		
+		if (xCondition || yCondition || zCondition) {
+			candidateCount++;
+			if (candidateCount <= 5) { // 只打印前5个候选点的信息
+				std::cout << "Vertex(" << vertex->initx << ", " << vertex->inity << ", " << vertex->initz 
+					<< ") - X:" << (xCondition ? "YES" : "NO") 
+					<< " Y:" << (yCondition ? "YES" : "NO") 
+					<< " Z:" << (zCondition ? "YES" : "NO") << std::endl;
+			}
+		}
+		
+		// 暂时简化条件，先只用x方向测试
+		if (xCondition) {
+			vertex->isFixed = true;
+			fixedCount++;
+			if (fixedCount <= 3) { // 打印前3个被固定的点
+				std::cout << "FIXED vertex(" << vertex->initx << ", " << vertex->inity << ", " << vertex->initz << ")" << std::endl;
+			}
+		}
+	}
+	
+	std::cout << "Candidate vertices (satisfying at least one condition): " << candidateCount << std::endl;
+	
+	std::cout << "Fixed " << fixedCount << " vertices in the top-left-front 10% region." << std::endl;
+	std::cout << "X range: [" << minX << ", " << maxX << "], left 10% threshold: " << leftThresholdX << std::endl;
+	std::cout << "Y range: [" << minY << ", " << maxY << "], top 10% threshold: " << topThresholdY << std::endl;
+	std::cout << "Z range: [" << minZ << ", " << maxZ << "], front 10% threshold: " << frontThresholdZ << std::endl;
+}

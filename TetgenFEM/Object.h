@@ -46,6 +46,7 @@ public:
 	void calDistance(std::pair<std::vector<Vertex*>, std::vector<Vertex*>> commonpoints);
 	void storeAdjacentGroupsCommonVertices(int groupIndex);
 	void writeVerticesToFile(const std::string& filename);
+	void fixTopLeft10PercentVertices();
 };
 
 void findBoundaryEdges(tetgenio& out);

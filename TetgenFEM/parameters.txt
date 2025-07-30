@@ -1,18 +1,18 @@
-youngs=1000000
+youngs=10000000
 youngs1=100000
 youngs2=100000
 youngs3=100000
 poisson=0.28
 density=1000
 groupNumX=4
-groupNumY=2
+groupNumY=4
 groupNumZ=2
 timeStep=0.01
-dampingConst=500.0
-Gravity=-50.0
+dampingConst=100.0
+Gravity=-10.0
 bindForce= -1000000
 bindVelocity=-0.0
-constraintHardness=1
+constraintHardness= 1000000 
 stlFile=stls/ring.stl
 tetgenArgs=pq2a0.0005
 	
