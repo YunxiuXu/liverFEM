@@ -1108,10 +1108,10 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		Eigen::Matrix3f alpha = Eigen::Matrix3f::Identity() * (1.0f / (youngs * hardness));
 		
 		// Beta matrix (diagonal damping parameter) - β * I
-		Eigen::Matrix3f beta = Eigen::Matrix3f::Identity() * dampingBeta;
+		Eigen::Matrix3f beta = Eigen::Matrix3f::Identity() * M_j * dampingBeta;
 		
 		// Gamma matrix (diagonal): γ = α * β
-		Eigen::Matrix3f gamma = alpha * beta;
+		Eigen::Matrix3f gamma = alpha * beta / timeStep;
 		
 		// α/Δt² matrix
 		Eigen::Matrix3f alphaDivDt2 = alpha / (timeStep * timeStep);
@@ -1129,7 +1129,7 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		
 		// Gauss-Seidel single constraint update (XPBD-damping)
 		// numerator = C + α/Δt² * λ + γ * Cdot * Δt
-		Eigen::Vector3f numerator = C + alphaDivDt2 * lambda + gamma * Cdot * timeStep;
+		Eigen::Vector3f numerator = C + alphaDivDt2 * lambda + gamma * Cdot;
 		
 		// denominator = (I + γ) * W_sum + α/Δt²
 		Eigen::Matrix3f denominator_matrix = (Eigen::Matrix3f::Identity() + gamma) * W_sum + alphaDivDt2;
@@ -1186,7 +1186,7 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		
 		// Apply constraint force to this group's vertex
 		// (邻组在它自己的 calFbind1 调用里会写入反向力)
-		Fbind.segment<3>(3 * vtx_j->localIndex) +=forceJ;
+		Fbind.segment<3>(3 * vtx_j->localIndex) += forceJ;
 	}
 }
 

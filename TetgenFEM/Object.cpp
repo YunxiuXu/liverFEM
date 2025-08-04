@@ -361,7 +361,7 @@ void Object::PBDLOOP(int looptime) {
 			g.calRHS();
 			g.calDeltaX();
 			g.calculateCurrentPositions();
-			g.calBindFixed();
+			//g.calBindFixed();
 			//g.calFbind(allGroup, bindForce);
 
 		}
