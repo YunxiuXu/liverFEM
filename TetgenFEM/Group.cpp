@@ -1,4 +1,4 @@
-﻿#include "Group.h"
+#include "Group.h"
 #include "params.h"
 
 // Initialize debug flag (set to false by default, change to true for debugging)
@@ -1294,6 +1294,16 @@ void Group::updatePosition() {
 				Eigen::Vector3f(vertex->initx, vertex->inity, vertex->initz);
 		} else {
 			pos = currentPosition.segment<3>(3 * localIndex);
+			
+			// 位置平滑处理 - 防止突然的大幅度跳变（仅限制极端情况）
+			Eigen::Vector3f oldPos(vertex->x, vertex->y, vertex->z);
+			Eigen::Vector3f displacement = pos - oldPos;
+			float maxDisplacement = 5.0f;  // 单帧最大位移限制（放宽以保持性能）
+			float dispMag = displacement.norm();
+			if (dispMag > maxDisplacement) {
+				pos = oldPos + displacement * (maxDisplacement / dispMag);
+			}
+			
 			vertex->x = pos.x();
 			vertex->y = pos.y();
 			vertex->z = pos.z();
@@ -1347,11 +1357,19 @@ void Group::updateVelocity() {
 			previousPos.y() = vertex->y;
 			previousPos.z() = vertex->z;
 
-			
+
 			currentPos = currentPosition.segment<3>(3 * localIndex);
 
-		
+
 			velocity = (currentPos - previousPos) / timeStep;
+			
+			// 速度限制 - 防止数值不稳定导致的抖动（仅限制极端情况）
+			float maxVelocity = 100.0f;  // 最大速度限制
+			float velocityMag = velocity.norm();
+			if (velocityMag > maxVelocity) {
+				velocity = velocity * (maxVelocity / velocityMag);
+			}
+			
 			groupVelocity.segment<3>(3 * localIndex) = velocity;
 
 			//Kinematics += 0.5 * vertex->vertexMass * velocity.norm();
