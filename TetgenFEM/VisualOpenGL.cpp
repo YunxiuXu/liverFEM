@@ -1,6 +1,8 @@
 #include "VisualOpenGL.h"
-#include <Windows.h>
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 double lastX, lastY;
 bool mousePressed = false;
@@ -11,22 +13,31 @@ Eigen::Quaternionf rotation = Eigen::Quaternionf::Identity();
 #define MAX_CHAR    128
 GLuint TextFont;
 
-//Ó¢ÎÄ¡¢Êı×Ö
+//Ó¢ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ï¿½
 void XPrintString(const char* s)
 {
-
+#ifdef _WIN32
 	glListBase(TextFont);
 	glCallLists(strlen(s), GL_UNSIGNED_BYTE, s);
+#else
+	// Mac/Linux: Text rendering not implemented, can use FreeType or similar
+	// For now, just skip text rendering on non-Windows platforms
+#endif
 }
 
 
 
 
-//ÆôÓÃÎÄ×Ö£¬²»Ö§³Öºº×Ö¡¢unicode
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½Ö§ï¿½Öºï¿½ï¿½Ö¡ï¿½unicode
 void initFontData()
 {
+#ifdef _WIN32
 	TextFont = glGenLists(MAX_CHAR);
 	wglUseFontBitmaps(wglGetCurrentDC(), 0, MAX_CHAR, TextFont);
+#else
+	// Mac/Linux: Font initialization not needed without Windows-specific text rendering
+	TextFont = 0;
+#endif
 }
 
 
@@ -117,8 +128,8 @@ void drawEdge(Vertex* vertex1, Vertex* vertex2, float r, float g, float b) {
 	);
 }
 void drawAxis(float length) {
-	glPushMatrix();  // ±£´æµ±Ç°µÄÄ£ĞÍÊÓÍ¼¾ØÕE
-	glTranslatef(-length * 3, -length * 3, 0);  // ½«×ø±EáÔ­µãÒÆ¶¯µ½´°¿ÚµÄÓÒÏÂ½?
+	glPushMatrix();  // ï¿½ï¿½ï¿½æµ±Ç°ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ÕE
+	glTranslatef(-length * 3, -length * 3, 0);  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Eï¿½ï¿½?ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½??
 	
 
 	glBegin(GL_LINES);
