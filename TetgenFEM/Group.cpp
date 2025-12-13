@@ -805,7 +805,7 @@ void Group::calPrimeVec2(int w) {
 //	}
 //
 //}
-void Group::calPrimeVec() {
+void Group::calPrimeVec(const Eigen::Vector3f& externalForce) {
 	primeVec = Eigen::VectorXf::Zero(3 * verticesVector.size());
 	static int frameCount = 0;
 	frameCount++;
@@ -837,12 +837,17 @@ void Group::calPrimeVec() {
 		gravity.setZero(); // 撤去力，将重力设为零
 
 	}
-	
-	//groupVelocity += gravity * timeStep;
 
-	//Eigen::VectorXf exfUpdate = timeStep * timeStep * massMatrix * gravity;
-	//Eigen::VectorXf exfUpdate = timeStep * timeStep *inverseTerm * massMatrix * gravity;
-	Eigen::VectorXf exfUpdate = timeStep * timeStep * inverseTerm * massMatrix * gravity;
+	// Combine base gravity with user-applied force for this frame.
+	Eigen::VectorXf totalForce = gravity;
+	if (externalForce.squaredNorm() > 0.0f) {
+		for (const auto* vertex : verticesVector) {
+			int base = 3 * vertex->localIndex;
+			totalForce.segment<3>(base) += externalForce;
+		}
+	}
+
+	Eigen::VectorXf exfUpdate = timeStep * timeStep * inverseTerm * massMatrix * totalForce;
 	Eigen::VectorXf velocityUpdate = inverseTerm * massMatrix * groupVelocity * timeStep;
 
 	for (auto& vertexPair : verticesVector) {

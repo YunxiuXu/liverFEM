@@ -488,12 +488,28 @@ int main() {
 		}
 		else
 			wKey = 0;
+
+		// Arrow keys apply a directional force to the whole object.
+		const float arrowForceMagnitude = 50.0f;
+		Eigen::Vector3f inputForce = Eigen::Vector3f::Zero();
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+			inputForce.y() += arrowForceMagnitude;
+		}
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+			inputForce.y() -= arrowForceMagnitude;
+		}
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+			inputForce.x() -= arrowForceMagnitude;
+		}
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+			inputForce.x() += arrowForceMagnitude;
+		}
 		//std::cout << wKey << std::endl;
 		//double aa = object.groups[0].tetrahedra[0]->calMassTetra(density);
 #pragma omp parallel for
 		for (int i = 0; i < groupNum; i++) {
 			//object.groups[i].calGroupKFEM(youngs, poisson);
-			object.groups[i].calPrimeVec();
+			object.groups[i].calPrimeVec(inputForce);
 			//object.groups[i].calPrimeVecS(topVertexLocalIndices, bottomVertexLocalIndices);
 			//object.groups[i].calPrimeVec2(wKey);
 			//object.groups[i].calPrimeVec(wKey);

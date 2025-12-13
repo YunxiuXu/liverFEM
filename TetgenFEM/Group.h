@@ -127,7 +127,7 @@ public:
 	void updateVelocityFEM();
 	void initialize();
 	void calPrimeVec2(int w);
-	void calPrimeVec();
+	void calPrimeVec(const Eigen::Vector3f& externalForce = Eigen::Vector3f::Zero());
 	//void updateVertexPositions();
 	void calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		const std::vector<Vertex*>& commonVerticesGroup2, 
