@@ -45,11 +45,6 @@ void divideIntoGroups(tetgenio& out, Object& object, int numX, int numY, int num
 		if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
 	}
 
-	// Calculate group ranges for each direction
-	float groupRangeX = (maxX - minX) / numX;
-	float groupRangeY = (maxY - minY) / numY;
-	float groupRangeZ = (maxZ - minZ) / numZ;
-
 	// Create vertices
 	std::vector<Vertex*> vertices;
 	for (int i = 0; i < out.numberofpoints; ++i) {
@@ -61,17 +56,15 @@ void divideIntoGroups(tetgenio& out, Object& object, int numX, int numY, int num
 
 	// Resize groups vector
 	object.groups.resize(numX * numY * numZ);
-	
-	// 临时存储四面体和它们的初始分组
-	struct TetAssignment {
-		Tetrahedron* tet;
-		int initialGroupIdx;
-		float avgX, avgY, avgZ;
-	};
-	std::vector<TetAssignment> tetAssignments;
-	tetAssignments.reserve(out.numberoftetrahedra);
 
-	// 第一步：按xyz网格初始分组
+	// 收集所有四面体及其质心，保持在各自空间块内（不跨格子搬运，避免破坏邻接假设）
+	struct TetInfo {
+		Tetrahedron* tet;
+		Eigen::Vector3f centroid;
+	};
+	std::vector<TetInfo> tetInfos;
+	tetInfos.reserve(out.numberoftetrahedra);
+
 	for (int i = 0; i < out.numberoftetrahedra; ++i) {
 		Vertex* v1 = vertices[out.tetrahedronlist[i * 4] - 1];
 		Vertex* v2 = vertices[out.tetrahedronlist[i * 4 + 1] - 1];
@@ -79,20 +72,10 @@ void divideIntoGroups(tetgenio& out, Object& object, int numX, int numY, int num
 		Vertex* v4 = vertices[out.tetrahedronlist[i * 4 + 3] - 1];
 		Tetrahedron* tet = new Tetrahedron(v1, v2, v3, v4);
 
-		// Determine group based on average coordinates
-		float avgX = (v1->x + v2->x + v3->x + v4->x) / 4;
-		float avgY = (v1->y + v2->y + v3->y + v4->y) / 4;
-		float avgZ = (v1->z + v2->z + v3->z + v4->z) / 4;
-
-		int groupIndexX = std::min(static_cast<int>((avgX - minX) / groupRangeX), numX - 1);
-		int groupIndexY = std::min(static_cast<int>((avgY - minY) / groupRangeY), numY - 1);
-		int groupIndexZ = std::min(static_cast<int>((avgZ - minZ) / groupRangeZ), numZ - 1);
-
-		int groupIdx = groupIndexZ * numX * numY + groupIndexY * numX + groupIndexX;
-		
-		tetAssignments.push_back({tet, groupIdx, avgX, avgY, avgZ});
-		object.groups[groupIdx].addTetrahedron(tet);
-		object.groups[groupIdx].groupIndex = groupIdx;
+		Eigen::Vector3f centroid(
+			(v1->x + v2->x + v3->x + v4->x) / 4.0f,
+			(v1->y + v2->y + v3->y + v4->y) / 4.0f,
+			(v1->z + v2->z + v3->z + v4->z) / 4.0f);
 
 		// Set up edges for each tetrahedron
 		static int edgeIndices[6][2] = { {0, 1}, {1, 2}, {2, 0}, {0, 3}, {1, 3}, {2, 3} };
@@ -106,272 +89,85 @@ void divideIntoGroups(tetgenio& out, Object& object, int numX, int numY, int num
 			edge->isBoundary = boundaryEdgesSet.count(edgeKey) > 0;
 			tet->edges[j] = edge;
 		}
+
+		tetInfos.push_back({ tet, centroid });
 	}
-	
-	// 第二步：优化分组 - 平衡组大小并消除空组
-	// 计算平均组大小和目标大小范围
+
+	// 自适应分位点切分：沿 x/y/z 轴按质心分布划分 numX/numY/numZ 段，尽量均匀又保持规则网格
+	auto makeEdges = [](std::vector<float>& values, int bins, float minVal, float maxVal) {
+		std::vector<float> edges;
+		edges.reserve(bins + 1);
+		if (values.empty() || bins <= 0) return edges;
+		std::sort(values.begin(), values.end());
+
+		edges.push_back(minVal - 1e-4f); // 左边界偏移一点点
+		for (int i = 1; i < bins; ++i) {
+			int idx = static_cast<int>(std::round(static_cast<float>(i) * values.size() / bins));
+			idx = std::max(0, std::min(static_cast<int>(values.size()) - 1, idx));
+			edges.push_back(values[idx]);
+		}
+		edges.push_back(maxVal + 1e-4f);
+
+		// 保证严格递增，避免上界相同导致 upper_bound 失败
+		float step = std::max(1e-5f, (maxVal - minVal) * 1e-5f);
+		for (size_t i = 1; i < edges.size(); ++i) {
+			if (edges[i] <= edges[i - 1]) {
+				edges[i] = edges[i - 1] + step;
+			}
+		}
+		return edges;
+	};
+
+	std::vector<float> xVals, yVals, zVals;
+	xVals.reserve(tetInfos.size());
+	yVals.reserve(tetInfos.size());
+	zVals.reserve(tetInfos.size());
+	for (const auto& ti : tetInfos) {
+		xVals.push_back(ti.centroid.x());
+		yVals.push_back(ti.centroid.y());
+		zVals.push_back(ti.centroid.z());
+	}
+
+	std::vector<float> xEdges = makeEdges(xVals, numX, minX, maxX);
+	std::vector<float> yEdges = makeEdges(yVals, numY, minY, maxY);
+	std::vector<float> zEdges = makeEdges(zVals, numZ, minZ, maxZ);
+
+	auto findBin = [](float v, const std::vector<float>& edges, int fallbackBins) {
+		if (edges.size() < 2) {
+			return std::max(0, std::min(fallbackBins - 1, fallbackBins - 1));
+		}
+		auto it = std::upper_bound(edges.begin(), edges.end(), v);
+		int idx = static_cast<int>(it - edges.begin()) - 1;
+		idx = std::max(0, std::min(static_cast<int>(edges.size()) - 2, idx));
+		return idx;
+	};
+
+	// 重新按照自适应网格分组
+	for (const auto& ti : tetInfos) {
+		int gx = findBin(ti.centroid.x(), xEdges, numX);
+		int gy = findBin(ti.centroid.y(), yEdges, numY);
+		int gz = findBin(ti.centroid.z(), zEdges, numZ);
+
+		int groupIdx = gz * numX * numY + gy * numX + gx;
+		object.groups[groupIdx].addTetrahedron(ti.tet);
+		object.groups[groupIdx].groupIndex = groupIdx;
+	}
+
+	// 统计分布情况
 	int totalTets = out.numberoftetrahedra;
 	int totalGroups = numX * numY * numZ;
-	int avgGroupSize = totalTets / totalGroups;
-	int minGroupSize = avgGroupSize / 2;  // 最小组大小
-	int maxGroupSize = avgGroupSize * 2;   // 最大组大小
-	
-	// 找出空组和超大组
-	std::vector<int> emptyGroups;
-	std::vector<int> oversizedGroups;
-	
-	for (int i = 0; i < totalGroups; ++i) {
-		int size = object.groups[i].tetrahedra.size();
-		if (size == 0) {
-			emptyGroups.push_back(i);
-		} else if (size > maxGroupSize) {
-			oversizedGroups.push_back(i);
-		}
-	}
-	
-	// 第三步：填充空组
-	// 策略1：将超大组的四面体重新分配到相邻的空组
-	for (int oversizedIdx : oversizedGroups) {
-		Group& oversizedGroup = object.groups[oversizedIdx];
-		if (oversizedGroup.tetrahedra.size() <= maxGroupSize) continue;
-		
-		// 计算这个组在xyz网格中的位置
-		int z = oversizedIdx / (numX * numY);
-		int y = (oversizedIdx % (numX * numY)) / numX;
-		int x = oversizedIdx % numX;
-		
-		// 找到相邻的空组（6个方向）
-		std::vector<int> adjacentEmptyGroups;
-		int directions[6][3] = {{1,0,0}, {-1,0,0}, {0,1,0}, {0,-1,0}, {0,0,1}, {0,0,-1}};
-		
-		for (int d = 0; d < 6; ++d) {
-			int nx = x + directions[d][0];
-			int ny = y + directions[d][1];
-			int nz = z + directions[d][2];
-			
-			if (nx >= 0 && nx < numX && ny >= 0 && ny < numY && nz >= 0 && nz < numZ) {
-				int neighborIdx = nz * numX * numY + ny * numX + nx;
-				if (object.groups[neighborIdx].tetrahedra.empty()) {
-					adjacentEmptyGroups.push_back(neighborIdx);
-				}
-			}
-		}
-		
-		// 将超大组的部分四面体重新分配到相邻的空组
-		int excessTets = oversizedGroup.tetrahedra.size() - maxGroupSize;
-		if (!adjacentEmptyGroups.empty() && excessTets > 0) {
-			// 按距离空组的距离排序四面体
-			std::vector<std::pair<Tetrahedron*, float>> tetsWithDist;
-			for (Tetrahedron* tet : oversizedGroup.tetrahedra) {
-				float avgX = (tet->vertices[0]->x + tet->vertices[1]->x + 
-				              tet->vertices[2]->x + tet->vertices[3]->x) / 4;
-				float avgY = (tet->vertices[0]->y + tet->vertices[1]->y + 
-				              tet->vertices[2]->y + tet->vertices[3]->y) / 4;
-				float avgZ = (tet->vertices[0]->z + tet->vertices[1]->z + 
-				              tet->vertices[2]->z + tet->vertices[3]->z) / 4;
-				
-				// 计算到最近空组的距离
-				float minDist = 1e10f;
-				for (int emptyIdx : adjacentEmptyGroups) {
-					int ez = emptyIdx / (numX * numY);
-					int ey = (emptyIdx % (numX * numY)) / numX;
-					int ex = emptyIdx % numX;
-					
-					float emptyCenterX = minX + (ex + 0.5f) * groupRangeX;
-					float emptyCenterY = minY + (ey + 0.5f) * groupRangeY;
-					float emptyCenterZ = minZ + (ez + 0.5f) * groupRangeZ;
-					
-					float dist = std::sqrt((avgX - emptyCenterX) * (avgX - emptyCenterX) +
-					                        (avgY - emptyCenterY) * (avgY - emptyCenterY) +
-					                        (avgZ - emptyCenterZ) * (avgZ - emptyCenterZ));
-					minDist = std::min(minDist, dist);
-				}
-				tetsWithDist.push_back({tet, minDist});
-			}
-			
-			// 按距离排序，优先分配距离空组近的四面体
-			std::sort(tetsWithDist.begin(), tetsWithDist.end(),
-			          [](const auto& a, const auto& b) { return a.second < b.second; });
-			
-			// 重新分配四面体 - 先收集要移动的四面体，再批量移动
-			int tetsToMove = std::min(excessTets, (int)tetsWithDist.size());
-			std::vector<std::pair<Tetrahedron*, int>> tetsToReassign; // pair<tet, targetGroupIdx>
-			
-			for (int i = 0; i < tetsToMove && !adjacentEmptyGroups.empty(); ++i) {
-				Tetrahedron* tet = tetsWithDist[i].first;
-				
-				// 找到最近的空组
-				float avgX = (tet->vertices[0]->x + tet->vertices[1]->x + 
-				              tet->vertices[2]->x + tet->vertices[3]->x) / 4;
-				float avgY = (tet->vertices[0]->y + tet->vertices[1]->y + 
-				              tet->vertices[2]->y + tet->vertices[3]->y) / 4;
-				float avgZ = (tet->vertices[0]->z + tet->vertices[1]->z + 
-				              tet->vertices[2]->z + tet->vertices[3]->z) / 4;
-				
-				int bestEmptyIdx = adjacentEmptyGroups[0];
-				float minDist = 1e10f;
-				for (int emptyIdx : adjacentEmptyGroups) {
-					int ez = emptyIdx / (numX * numY);
-					int ey = (emptyIdx % (numX * numY)) / numX;
-					int ex = emptyIdx % numX;
-					
-					float emptyCenterX = minX + (ex + 0.5f) * groupRangeX;
-					float emptyCenterY = minY + (ey + 0.5f) * groupRangeY;
-					float emptyCenterZ = minZ + (ez + 0.5f) * groupRangeZ;
-					
-					float dist = std::sqrt((avgX - emptyCenterX) * (avgX - emptyCenterX) +
-					                        (avgY - emptyCenterY) * (avgY - emptyCenterY) +
-					                        (avgZ - emptyCenterZ) * (avgZ - emptyCenterZ));
-					if (dist < minDist) {
-						minDist = dist;
-						bestEmptyIdx = emptyIdx;
-					}
-				}
-				
-				tetsToReassign.push_back({tet, bestEmptyIdx});
-				
-				// 如果空组已满，从列表中移除
-				if (object.groups[bestEmptyIdx].tetrahedra.size() + 1 >= avgGroupSize) {
-					adjacentEmptyGroups.erase(
-						std::remove(adjacentEmptyGroups.begin(), 
-						            adjacentEmptyGroups.end(), bestEmptyIdx),
-						adjacentEmptyGroups.end());
-				}
-			}
-			
-			// 批量移动四面体
-			for (auto& pair : tetsToReassign) {
-				Tetrahedron* tet = pair.first;
-				int targetIdx = pair.second;
-				
-				// 从原组移除
-				auto it = std::find(oversizedGroup.tetrahedra.begin(), 
-				                    oversizedGroup.tetrahedra.end(), tet);
-				if (it != oversizedGroup.tetrahedra.end()) {
-					oversizedGroup.tetrahedra.erase(it);
-				}
-				
-				// 添加到目标组
-				object.groups[targetIdx].addTetrahedron(tet);
-				object.groups[targetIdx].groupIndex = targetIdx;
-			}
-		}
-	}
-	
-	// 策略2：对于剩余的空组，从相邻的非空组分配四面体
-	// 重新计算空组列表（因为可能已经被填充）
-	emptyGroups.clear();
-	for (int i = 0; i < totalGroups; ++i) {
-		if (object.groups[i].tetrahedra.empty()) {
-			emptyGroups.push_back(i);
-		}
-	}
-	
-	for (int emptyIdx : emptyGroups) {
-		if (!object.groups[emptyIdx].tetrahedra.empty()) continue;
-		
-		// 计算空组在xyz网格中的位置
-		int z = emptyIdx / (numX * numY);
-		int y = (emptyIdx % (numX * numY)) / numX;
-		int x = emptyIdx % numX;
-		
-		// 找到相邻的非空组
-		std::vector<std::pair<int, int>> adjacentNonEmptyGroups; // pair<groupIdx, size>
-		int directions[6][3] = {{1,0,0}, {-1,0,0}, {0,1,0}, {0,-1,0}, {0,0,1}, {0,0,-1}};
-		
-		for (int d = 0; d < 6; ++d) {
-			int nx = x + directions[d][0];
-			int ny = y + directions[d][1];
-			int nz = z + directions[d][2];
-			
-			if (nx >= 0 && nx < numX && ny >= 0 && ny < numY && nz >= 0 && nz < numZ) {
-				int neighborIdx = nz * numX * numY + ny * numX + nx;
-				int neighborSize = object.groups[neighborIdx].tetrahedra.size();
-				if (neighborSize > avgGroupSize) {  // 只从大于平均大小的组分配
-					adjacentNonEmptyGroups.push_back({neighborIdx, neighborSize});
-				}
-			}
-		}
-		
-		// 按大小排序，优先从大组分配
-		std::sort(adjacentNonEmptyGroups.begin(), adjacentNonEmptyGroups.end(),
-		          [](const auto& a, const auto& b) { return a.second > b.second; });
-		
-		// 从相邻组分配四面体到空组
-		int targetSize = avgGroupSize;
-		for (auto& neighborPair : adjacentNonEmptyGroups) {
-			int neighborIdx = neighborPair.first;
-			Group& neighborGroup = object.groups[neighborIdx];
-			
-			if (neighborGroup.tetrahedra.size() <= avgGroupSize) break;
-			if (object.groups[emptyIdx].tetrahedra.size() >= targetSize) break;
-			
-			// 计算空组中心
-			float emptyCenterX = minX + (x + 0.5f) * groupRangeX;
-			float emptyCenterY = minY + (y + 0.5f) * groupRangeY;
-			float emptyCenterZ = minZ + (z + 0.5f) * groupRangeZ;
-			
-			// 按距离空组中心的距离排序四面体
-			std::vector<std::pair<Tetrahedron*, float>> tetsWithDist;
-			for (Tetrahedron* tet : neighborGroup.tetrahedra) {
-				float avgX = (tet->vertices[0]->x + tet->vertices[1]->x + 
-				              tet->vertices[2]->x + tet->vertices[3]->x) / 4;
-				float avgY = (tet->vertices[0]->y + tet->vertices[1]->y + 
-				              tet->vertices[2]->y + tet->vertices[3]->y) / 4;
-				float avgZ = (tet->vertices[0]->z + tet->vertices[1]->z + 
-				              tet->vertices[2]->z + tet->vertices[3]->z) / 4;
-				
-				float dist = std::sqrt((avgX - emptyCenterX) * (avgX - emptyCenterX) +
-				                        (avgY - emptyCenterY) * (avgY - emptyCenterY) +
-				                        (avgZ - emptyCenterZ) * (avgZ - emptyCenterZ));
-				tetsWithDist.push_back({tet, dist});
-			}
-			
-			std::sort(tetsWithDist.begin(), tetsWithDist.end(),
-			          [](const auto& a, const auto& b) { return a.second < b.second; });
-			
-			// 分配四面体 - 先收集再批量移动
-			int needed = targetSize - object.groups[emptyIdx].tetrahedra.size();
-			int available = neighborGroup.tetrahedra.size() - avgGroupSize;
-			int toMove = std::min(needed, available);
-			
-			std::vector<Tetrahedron*> tetsToMove;
-			for (int i = 0; i < toMove && i < tetsWithDist.size(); ++i) {
-				tetsToMove.push_back(tetsWithDist[i].first);
-			}
-			
-			// 批量移动
-			for (Tetrahedron* tet : tetsToMove) {
-				auto it = std::find(neighborGroup.tetrahedra.begin(), 
-				                    neighborGroup.tetrahedra.end(), tet);
-				if (it != neighborGroup.tetrahedra.end()) {
-					neighborGroup.tetrahedra.erase(it);
-					object.groups[emptyIdx].addTetrahedron(tet);
-				}
-			}
-			
-			if (object.groups[emptyIdx].tetrahedra.size() >= targetSize) break;
-		}
-	}
-	
-	// 统计优化结果
 	int finalEmptyGroups = 0;
-	int finalOversizedGroups = 0;
 	int minSize = INT_MAX, maxSize = 0;
 	for (int i = 0; i < totalGroups; ++i) {
 		int size = object.groups[i].tetrahedra.size();
 		if (size == 0) finalEmptyGroups++;
-		if (size > maxGroupSize) finalOversizedGroups++;
 		minSize = std::min(minSize, size);
 		maxSize = std::max(maxSize, size);
 	}
-	
-	std::cout << "分组优化: 空组 " << emptyGroups.size() << " -> " << finalEmptyGroups 
-	          << ", 超大组 " << oversizedGroups.size() << " -> " << finalOversizedGroups
-	          << ", 组大小范围 [" << minSize << ", " << maxSize << "]" << std::endl;
+
+	std::cout << "分组完成: 空组 " << finalEmptyGroups
+		<< ", 组大小范围 [" << minSize << ", " << maxSize << "]" << std::endl;
 }
-
-
 
 void Object::assignLocalIndicesToAllGroups() { // local index generation
 	for (Group& group : groups) {
