@@ -3074,3 +3074,315 @@ events:
         
       exitCode: 2
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-9FpIkb"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-9FpIkb"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-9FpIkb'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_81d00/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_81d00.dir/build.make CMakeFiles/cmTC_81d00.dir/build
+        Building CXX object CMakeFiles/cmTC_81d00.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_81d00.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_81d00.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_81d00.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-9FpIkb/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-9FpIkb/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_81d00.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_81d00/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-UxBfZg"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-UxBfZg"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-UxBfZg'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_46faf/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_46faf.dir/build.make CMakeFiles/cmTC_46faf.dir/build
+        Building CXX object CMakeFiles/cmTC_46faf.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_46faf.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_46faf.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_46faf.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-UxBfZg/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-UxBfZg/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_46faf.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_46faf/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-zz816l"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-zz816l"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-zz816l'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_49a1c/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_49a1c.dir/build.make CMakeFiles/cmTC_49a1c.dir/build
+        Building CXX object CMakeFiles/cmTC_49a1c.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_49a1c.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_49a1c.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_49a1c.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-zz816l/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-zz816l/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_49a1c.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_49a1c/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-4xjt65"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-4xjt65"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-4xjt65'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_48219/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_48219.dir/build.make CMakeFiles/cmTC_48219.dir/build
+        Building CXX object CMakeFiles/cmTC_48219.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_48219.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_48219.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_48219.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-4xjt65/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-4xjt65/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_48219.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_48219/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-LAnI1H"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-LAnI1H"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-LAnI1H'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_c8bee/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_c8bee.dir/build.make CMakeFiles/cmTC_c8bee.dir/build
+        Building CXX object CMakeFiles/cmTC_c8bee.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_c8bee.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_c8bee.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_c8bee.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-LAnI1H/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-LAnI1H/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_c8bee.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_c8bee/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-z9QmZL"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-z9QmZL"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-z9QmZL'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_1ff32/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_1ff32.dir/build.make CMakeFiles/cmTC_1ff32.dir/build
+        Building CXX object CMakeFiles/cmTC_1ff32.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_1ff32.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_1ff32.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_1ff32.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-z9QmZL/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-z9QmZL/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_1ff32.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_1ff32/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-gw9X0i"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-gw9X0i"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-gw9X0i'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_53783/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_53783.dir/build.make CMakeFiles/cmTC_53783.dir/build
+        Building CXX object CMakeFiles/cmTC_53783.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_53783.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_53783.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_53783.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-gw9X0i/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-gw9X0i/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_53783.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_53783/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-l2KpFF"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-l2KpFF"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-l2KpFF'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_653c6/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_653c6.dir/build.make CMakeFiles/cmTC_653c6.dir/build
+        Building CXX object CMakeFiles/cmTC_653c6.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_653c6.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_653c6.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_653c6.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-l2KpFF/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-l2KpFF/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_653c6.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_653c6/fast] Error 2
+        
+      exitCode: 2
+...

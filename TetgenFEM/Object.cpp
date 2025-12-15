@@ -570,13 +570,17 @@ void Object::fixTopLeft10PercentVertices() {
 	std::cout << "=== Starting fixTopLeft10PercentVertices ===" << std::endl;
 	std::cout << "Number of groups: " << groups.size() << std::endl;
 	
+	int nonEmptyGroups = 0;
 	// 收集所有顶点
 	for (Group& group : groups) {
+		if (group.verticesMap.empty()) continue;
+		++nonEmptyGroups;
 		std::cout << "Group has " << group.verticesMap.size() << " vertices" << std::endl;
 		for (const auto& vertexPair : group.verticesMap) {
 			allVertices.push_back(vertexPair.second);
 		}
 	}
+	std::cout << "Non-empty groups: " << nonEmptyGroups << "/" << groups.size() << std::endl;
 	
 	std::cout << "Total vertices collected: " << allVertices.size() << std::endl;
 	

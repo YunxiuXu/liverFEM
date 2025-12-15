@@ -315,11 +315,17 @@ int main() {
 	
 	// Accessing and printing the groups and their tetrahedra
 //#pragma omp parallel for
+	int nonEmptyGroupCount = 0;
 	for (int i = 0; i < groupNum; ++i) {  // Loop over the groups
 		Group& group = object.getGroup(i);
-		std::cout << "Group " << i << " has " << group.tetrahedra.size() << " tetrahedra." << std::endl;
 		group.LHS_I = Eigen::MatrixXf::Identity(3 * group.verticesMap.size(), 3 * group.verticesMap.size()); //ｽﾚﾊ｡ﾊｱｼ菻｡ﾄﾜﾊﾖ
+		if (group.tetrahedra.empty()) {
+			continue; // Skip noisy logging for empty groups
+		}
+		++nonEmptyGroupCount;
+		std::cout << "Group " << i << " has " << group.tetrahedra.size() << " tetrahedra." << std::endl;
 	}
+	std::cout << "Non-empty groups: " << nonEmptyGroupCount << "/" << groupNum << std::endl;
 
 
 	// Initialize the GLFW library
