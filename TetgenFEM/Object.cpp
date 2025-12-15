@@ -602,13 +602,13 @@ void Object::fixTopLeft10PercentVertices() {
 		if (vertex->initz > maxZ) maxZ = vertex->initz;
 	}
 	
-	// 计算左上前10%的阈值
+	// 计算左上前3%的阈值
 	float rangeX = maxX - minX;
 	float rangeY = maxY - minY;
 	float rangeZ = maxZ - minZ;
-	float leftThresholdX = minX + rangeX * 0.1f;  // 左边10%
-	float topThresholdY = maxY - rangeY * 0.1f;   // 上边10%
-	float frontThresholdZ = maxZ - rangeZ * 0.1f; // 前面10%
+	float leftThresholdX = minX + rangeX * 0.03f;  // 左边3%
+	float topThresholdY = maxY - rangeY * 0.03f;   // 上边3%
+	float frontThresholdZ = maxZ - rangeZ * 0.03f; // 前面3%
 	
 	// 固定满足条件的顶点
 	int fixedCount = 0;
@@ -628,20 +628,20 @@ void Object::fixTopLeft10PercentVertices() {
 			}
 		}
 		
-		// 暂时简化条件，先只用x方向测试
-		if (xCondition) {
-			vertex->isFixed = true;
-			fixedCount++;
-			if (fixedCount <= 3) { // 打印前3个被固定的点
-				std::cout << "FIXED vertex(" << vertex->initx << ", " << vertex->inity << ", " << vertex->initz << ")" << std::endl;
-			}
+			// 暂时简化条件，先只用x方向测试
+			if (xCondition) {
+				vertex->isFixed = true;
+				fixedCount++;
+				if (fixedCount <= 3) { // 打印前3个被固定的点
+					std::cout << "FIXED vertex(" << vertex->initx << ", " << vertex->inity << ", " << vertex->initz << ")" << std::endl;
+				}
 		}
 	}
 	
 	std::cout << "Candidate vertices (satisfying at least one condition): " << candidateCount << std::endl;
 	
-	std::cout << "Fixed " << fixedCount << " vertices in the top-left-front 10% region." << std::endl;
-	std::cout << "X range: [" << minX << ", " << maxX << "], left 10% threshold: " << leftThresholdX << std::endl;
-	std::cout << "Y range: [" << minY << ", " << maxY << "], top 10% threshold: " << topThresholdY << std::endl;
-	std::cout << "Z range: [" << minZ << ", " << maxZ << "], front 10% threshold: " << frontThresholdZ << std::endl;
+	std::cout << "Fixed " << fixedCount << " vertices in the top-left-front 3% region." << std::endl;
+	std::cout << "X range: [" << minX << ", " << maxX << "], left 3% threshold: " << leftThresholdX << std::endl;
+	std::cout << "Y range: [" << minY << ", " << maxY << "], top 3% threshold: " << topThresholdY << std::endl;
+	std::cout << "Z range: [" << minZ << ", " << maxZ << "], front 3% threshold: " << frontThresholdZ << std::endl;
 }

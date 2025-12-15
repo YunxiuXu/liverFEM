@@ -2996,3 +2996,81 @@ events:
         
       exitCode: 2
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-aCouQ8"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-aCouQ8"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-aCouQ8'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_44a2f/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_44a2f.dir/build.make CMakeFiles/cmTC_44a2f.dir/build
+        Building CXX object CMakeFiles/cmTC_44a2f.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_44a2f.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_44a2f.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_44a2f.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-aCouQ8/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-aCouQ8/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_44a2f.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_44a2f/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:250 (try_compile)"
+      - "/opt/homebrew/share/cmake/Modules/FindOpenMP.cmake:557 (_OPENMP_GET_FLAGS)"
+      - "CMakeLists.txt:12 (find_package)"
+    description: "Detecting CXX OpenMP compiler info"
+    directories:
+      source: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-mOACOh"
+      binary: "/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-mOACOh"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_OSX_ARCHITECTURES: ""
+      CMAKE_OSX_DEPLOYMENT_TARGET: ""
+      CMAKE_OSX_SYSROOT: ""
+    buildResult:
+      variable: "OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp"
+      cached: true
+      stdout: |
+        Change Dir: '/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-mOACOh'
+        
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_e964e/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_e964e.dir/build.make CMakeFiles/cmTC_e964e.dir/build
+        Building CXX object CMakeFiles/cmTC_e964e.dir/OpenMPTryFlag.cpp.o
+        /usr/bin/c++   -Xclang -fopenmp -std=gnu++17 -arch arm64 -MD -MT CMakeFiles/cmTC_e964e.dir/OpenMPTryFlag.cpp.o -MF CMakeFiles/cmTC_e964e.dir/OpenMPTryFlag.cpp.o.d -o CMakeFiles/cmTC_e964e.dir/OpenMPTryFlag.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-mOACOh/OpenMPTryFlag.cpp
+        /Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles/CMakeScratch/TryCompile-mOACOh/OpenMPTryFlag.cpp:2:10: fatal error: 'omp.h' file not found
+            2 | #include <omp.h>
+              |          ^~~~~~~
+        1 error generated.
+        make[1]: *** [CMakeFiles/cmTC_e964e.dir/OpenMPTryFlag.cpp.o] Error 1
+        make: *** [cmTC_e964e/fast] Error 2
+        
+      exitCode: 2
+...
