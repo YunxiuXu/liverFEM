@@ -397,29 +397,14 @@ void Object::PBDLOOP(int looptime) {
 
 
 		 //#pragma omp parallel for
-	float reference = 0.0f; // float类型的参考值
-	float epsilon = std::numeric_limits<float>::epsilon(); // float类型的epsilon
 #pragma omp parallel for
 	for (int i = 0; i < groupNum; ++i) {
 		auto& g = groups[i];
 		//g.Fbind = 0.75 * g.prevFbind;
 		g.Fbind = Eigen::VectorXf::Zero(3 * g.verticesMap.size()); // 假设 Group 类有一个方法来清除 Fbind
-		g.rotationTransSparse = g.rotationMatrix.transpose().sparseView(reference, epsilon);
-
-		g.RHS_F = g.RHS_E * g.rotationTransSparse;//RHS的部分
-		g.RHS_B = g.RHS_F * g.primeVec; //46ms
-
-		//g.RHS_F_MassD = g.RHS_F * g.massDistributionSparse;
-
-		//auto fff = g.RHS_F.toDense();
-		//auto massssss = g.massDistributionSparse.toDense();
-
-		//Eigen::MatrixXf producttt = (10000*fff) * (10000*massssss);
-		//auto aa = g.RHS_F_MassD.toDense();
-
-		//g.RHS_C = g.RHS_F_MassD * g.primeVec; //54ms
-		g.RHS_G = timeStep * timeStep * g.massDampingSparseInv * g.rotationTransSparse;
-		g.RHS_AsubBplusC = g.RHS_A - g.RHS_B;// +g.RHS_C; //24ms
+		g.applyRotationTranspose(g.primeVec, g.rotatedPrimeVec);
+		g.RHS_B = g.RHS_E * g.rotatedPrimeVec; //46ms
+		g.RHS_AsubBplusC = g.RHS_A - g.RHS_B; //24ms
 
 	}
 

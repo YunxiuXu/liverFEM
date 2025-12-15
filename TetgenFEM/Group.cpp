@@ -176,41 +176,17 @@ void Group::calRotationMatrix() {
 	Eigen::MatrixXf Apq = Eigen::MatrixXf::Zero(3, 3);
 	Eigen::Vector3f center_grid = Eigen::Vector3f::Zero();
 
-	// 计算质心
-	Eigen::Vector3f tempCenterGrid = Eigen::Vector3f::Zero();
-	//#pragma omp parallel num_threads(4)
-	{
-		Eigen::Vector3f localCenterGrid = Eigen::Vector3f::Zero();
-		//#pragma omp for
-		for (int i = 0; i < static_cast<int>(verticesMap.size()); ++i) {
-			auto it = verticesMap.begin();
-			std::advance(it, i);
-			const std::pair<const int, Vertex*>& vertexEntry = *it;
-			localCenterGrid.noalias() += massDistribution(0, 3 * vertexEntry.second->localIndex) * primeVec.segment<3>(3 * vertexEntry.second->localIndex);
-		}
-		//#pragma omp critical
-		{
-			tempCenterGrid += localCenterGrid;
-		}
+	// 计算质心，按局部索引顺序直接遍历数组，避免在 unordered_map 上反复 advance 产生 O(n^2) 开销
+	for (const auto* vertex : verticesVector) {
+		const int base = 3 * vertex->localIndex;
+		center_grid.noalias() += massDistribution(0, base) * primeVec.segment<3>(base);
 	}
-	center_grid = tempCenterGrid;
 
 	// 计算Apq矩阵
-//#pragma omp parallel num_threads(4)
-	{
-		Eigen::MatrixXf localApq = Eigen::MatrixXf::Zero(3, 3);
-		//#pragma omp for
-		for (int i = 0; i < static_cast<int>(verticesMap.size()); ++i) {
-			auto it = verticesMap.begin();
-			std::advance(it, i);
-			const std::pair<const int, Vertex*>& vertexEntry = *it;
-			Eigen::MatrixXf tempA = (primeVec.segment<3>(3 * vertexEntry.second->localIndex) - center_grid) * initLocalPos.segment<3>(3 * vertexEntry.second->localIndex).transpose();
-			localApq.noalias() += massMatrix(3 * vertexEntry.second->localIndex, 3 * vertexEntry.second->localIndex) * tempA;
-		}
-		//#pragma omp critical
-		{
-			Apq += localApq;
-		}
+	for (const auto* vertex : verticesVector) {
+		const int base = 3 * vertex->localIndex;
+		Eigen::MatrixXf tempA = (primeVec.segment<3>(base) - center_grid) * initLocalPos.segment<3>(base).transpose();
+		Apq.noalias() += massMatrix(base, base) * tempA;
 	}
 
 	// 进行极分解以确保Apq为正交矩阵
@@ -227,16 +203,21 @@ void Group::calRotationMatrix() {
 
 	// 最终的旋转矩阵
 	rotate_matrix = R;
+}
 
-	// 构建旋转矩阵的3N x 3N版本
-	rotationMatrix = Eigen::MatrixXf::Zero(3 * verticesMap.size(), 3 * verticesMap.size());
-	//#pragma omp parallel for
-	for (int pi = 0; pi < static_cast<int>(verticesMap.size()); pi++) {
-		rotationMatrix.block<3, 3>(3 * pi, 3 * pi) = rotate_matrix;
+void Group::applyRotation(const Eigen::VectorXf& src, Eigen::VectorXf& dst) const {
+	dst.resize(src.size());
+	for (Eigen::Index i = 0; i < src.size(); i += 3) {
+		dst.segment<3>(i) = rotate_matrix * src.segment<3>(i);
 	}
+}
 
-	// 打印调试信息
-	//std::cout << "Final rotation matrix: " << rotate_matrix << std::endl;
+void Group::applyRotationTranspose(const Eigen::VectorXf& src, Eigen::VectorXf& dst) const {
+	const Eigen::Matrix3f rotT = rotate_matrix.transpose();
+	dst.resize(src.size());
+	for (Eigen::Index i = 0; i < src.size(); i += 3) {
+		dst.segment<3>(i) = rotT * src.segment<3>(i);
+	}
 }
 void Group::calGroupK(float E, float nu) {
 	// Initialize groupK to the right size. Assuming 3 degrees of freedom per vertex
@@ -940,18 +921,8 @@ void Group::calLHSFEM() {
 }
 void Group::calRHS() {
 
-	//Fbind = Eigen::VectorXf::Zero(3 * verticesMap.size());
-	//A = timeStep * timeStep * (massMatrix + timeStep * dampingMatrix).inverse() * groupK * initLocalPos;
-	//B = timeStep * timeStep * (massMatrix + timeStep * dampingMatrix).inverse() * groupK * rotationMatrix.transpose() * primeVec;
-	//C = timeStep * timeStep * (massMatrix + timeStep * dampingMatrix).inverse() * groupK * rotationMatrix.transpose() * massDistribution * primeVec;
-	//D = timeStep * timeStep * (massMatrix + timeStep * dampingMatrix).inverse() * rotationMatrix.inverse() * Fbind;
-	//rotationTransSparse = rotationMatrix.transpose().sparseView();
-
-
-
-
-	RHS_D = RHS_G * Fbind;
-	FEMRHS = RHS_AsubBplusC + RHS_D;
+	applyRotationTranspose(Fbind, rotatedFbind);
+	FEMRHS = RHS_AsubBplusC + timeStep * timeStep * massDampingSparseInv * rotatedFbind;
 
 }
 void Group::calRHSFEM()
@@ -971,7 +942,10 @@ void Group::calRInvLocalPos() {
 		
 		curLocalPos.segment<3>(vertex->localIndex * 3) = positiondifference;
 	}
-	RInvPos = rotationMatrix.inverse() * curLocalPos;
+	const Eigen::Matrix3f rotInv = rotate_matrix.inverse();
+	for (Eigen::Index i = 0; i < curLocalPos.size(); i += 3) {
+		RInvPos.segment<3>(i) = rotInv * curLocalPos.segment<3>(i);
+	}
 	std::cout << RInvPos << std::endl;
 }
 
@@ -992,7 +966,7 @@ void Group::calDeltaX() {
 	//solver.compute(sparseFEMLHS);
 	//deltaX = solver.solve(FEMRHS);
 
-	deltaX = rotationMatrix * deltaX;
+	applyRotation(deltaX, deltaX);
 }
 void Group::calDeltaXFEM() {// For nonlinear FEM
 

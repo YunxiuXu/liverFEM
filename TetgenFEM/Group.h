@@ -62,6 +62,8 @@ public:
 	Eigen::SparseMatrix<float> inverseTermSparse;
 	Eigen::VectorXf currentPosition;//?�Zbindf�p�I�ʒu�M���C�s�p��ʒu�X�V
 	Eigen::VectorXf currentPositionFEM;
+	Eigen::VectorXf rotatedPrimeVec;
+	Eigen::VectorXf rotatedFbind;
 	Eigen::VectorXf distancesX; 
 	std::array<int, 6> adjacentGroupIDs;
 	int groupIndex;
@@ -118,6 +120,8 @@ public:
 	void calRHSFEM();
 	void calDeltaX();
 	void calDeltaXFEM();
+	void applyRotation(const Eigen::VectorXf& src, Eigen::VectorXf& dst) const;
+	void applyRotationTranspose(const Eigen::VectorXf& src, Eigen::VectorXf& dst) const;
 	void calculateCurrentPositions();
 	void calculateCurrentPositionsFEM();
 	void calFbind(const Eigen::VectorXf& currentPositionThisGroup, const std::vector<Eigen::VectorXf>& allCurrentPositionsOtherGroups, float k);
