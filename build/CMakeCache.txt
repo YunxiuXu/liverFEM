@@ -377,6 +377,10 @@ CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 FIND_PACKAGE_MESSAGE_DETAILS_GLEW:INTERNAL=[/opt/homebrew/lib/cmake/glew/glew-config.cmake][v()]
 //Details about finding OpenGL
 FIND_PACKAGE_MESSAGE_DETAILS_OpenGL:INTERNAL=[/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework][/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework][ ][v()]
+//Details about finding OpenMP
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP:INTERNAL=[TRUE][ ][v5.1()]
+//Details about finding OpenMP_CXX
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_CXX:INTERNAL=[-Xclang -fopenmp -I/opt/homebrew/opt/libomp/include][/opt/homebrew/opt/libomp/lib/libomp.dylib][v5.1()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //ADVANCED property for variable: GLEW_LIBRARY_DEBUG
@@ -397,6 +401,10 @@ OpenMP_COMPILE_RESULT_CXX_Xclang fopenmp:INTERNAL=FALSE
 OpenMP_CXX_FLAGS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OpenMP_CXX_LIB_NAMES
 OpenMP_CXX_LIB_NAMES-ADVANCED:INTERNAL=1
+//CXX compiler's OpenMP specification date
+OpenMP_CXX_SPEC_DATE:INTERNAL=202011
+//Result of TRY_COMPILE
+OpenMP_SPECTEST_CXX_:INTERNAL=TRUE
 //ADVANCED property for variable: OpenMP_libomp_LIBRARY
 OpenMP_libomp_LIBRARY-ADVANCED:INTERNAL=1
 
