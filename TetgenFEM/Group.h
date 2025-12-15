@@ -64,16 +64,19 @@ public:
 	Eigen::VectorXf currentPositionFEM;
 	Eigen::VectorXf rotatedPrimeVec;
 	Eigen::VectorXf rotatedFbind;
+	Eigen::VectorXf prevPrimeVec;
 	Eigen::VectorXf distancesX; 
 	std::array<int, 6> adjacentGroupIDs;
 	int groupIndex;
 	std::vector<std::pair<std::vector<Vertex*>, std::vector<Vertex*>>> commonVerticesInDirections;//�e����??�I�����_
+	int lastRotationUpdate = -100;
 	
 	// XPBD Lambda accumulation storage: [adjacentGroupIdx][vertexPairIdx] -> Lambda_vector(3)
 	std::map<int, std::map<int, Eigen::Vector3f>> constraintLambdas;
 	
 	// Debug mode for constraint monitoring (set to true to enable debug output)
 	static bool debug_constraints;
+	bool accumulateConstraintLambdas = false; // 性能优先时关闭XPBD Lambda累积
 
 	Eigen::MatrixXf LHS_I;
 	Eigen::MatrixXf LHS_A;
@@ -109,7 +112,7 @@ public:
 	void calPrimeVecS(const std::vector<int>& topVertexLocalIndices, const std::vector<int>& bottomVertexLocalIndices);
 	void calDampingMatrix();
 	void calInitCOM();
-	void calRotationMatrix();
+	void calRotationMatrix(int frame, float threshold = 1e-4f, int minInterval = 2);
 	void calLocalPos();//calculate initial local position
 	Eigen::Vector3f axlAPD(Eigen::Matrix3f a);
 	Eigen::Vector3f clamp2(Eigen::Vector3f x, float y, float z);

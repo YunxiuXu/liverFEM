@@ -480,6 +480,21 @@ int main() {
 		else
 			wKey = 0;
 
+		static bool drawFaces = true;
+		static bool drawEdges = true;
+		static bool lastZ = false;
+		static bool lastX = false;
+		bool zPressed = glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS;
+		bool xPressed = glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS;
+		if (zPressed && !lastZ) {
+			drawEdges = !drawEdges; // Z 切换线框
+		}
+		if (xPressed && !lastX) {
+			drawFaces = !drawFaces; // X 切换面片
+		}
+		lastZ = zPressed;
+		lastX = xPressed;
+
 		// Arrow keys apply a directional force to the whole object.
 		const float arrowForceMagnitude = 50.0f;
 		Eigen::Vector3f inputForce = Eigen::Vector3f::Zero();
@@ -513,7 +528,7 @@ int main() {
 			object.groups[i].updateVelocityFEM();
 			object.groups[i].updatePositionFEM();*/
 
-			object.groups[i].calRotationMatrix();
+			object.groups[i].calRotationMatrix(frame);
 
 		}
 		/*for (int i = 0; i < groupNum; i++) {
@@ -642,45 +657,45 @@ int main() {
 
 		//	
 		//}
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		if (drawFaces) {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glBegin(GL_TRIANGLES);
+			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+				Group& group = object.getGroup(groupIdx);
+				for (Tetrahedron* tet : group.tetrahedra) {
+					Vertex* vertex0 = tet->vertices[0];
+					Vertex* vertex1 = tet->vertices[1];
+					Vertex* vertex2 = tet->vertices[2];
+					Vertex* vertex3 = tet->vertices[3];
 
-		glBegin(GL_TRIANGLES);
-		for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
-			Group& group = object.getGroup(groupIdx);
-			for (Tetrahedron* tet : group.tetrahedra) {
-				Vertex* vertex0 = tet->vertices[0];
-				Vertex* vertex1 = tet->vertices[1];
-				Vertex* vertex2 = tet->vertices[2];
-				Vertex* vertex3 = tet->vertices[3];
+					// 使用HSV转换为RGB创建每个组的唯一颜色
+					float hue = (360.0f * groupIdx) / groupNum;
+					float saturation = 1.0f;
+					float value = 1.0f;
 
-				// 使用HSV转换为RGB创建每个组的唯一颜色
-				float hue = (360.0f * groupIdx) / groupNum;
-				float saturation = 1.0f;
-				float value = 1.0f;
+					// 转换HSV为RGB
+					float red, green, blue;
+					hsvToRgb(hue, saturation, value, red, green, blue);
 
-				// 转换HSV为RGB
-				float red, green, blue;
-				hsvToRgb(hue, saturation, value, red, green, blue);
+					// 设置颜色并绘制四个三角形面
+					glColor3f(red, green, blue);
+					glVertex3f(vertex0->x, vertex0->y, vertex0->z);
+					glVertex3f(vertex1->x, vertex1->y, vertex1->z);
+					glVertex3f(vertex2->x, vertex2->y, vertex2->z);
 
-				// 设置颜色并绘制四个三角形面
-				glColor3f(red, green, blue);
-				glVertex3f(vertex0->x, vertex0->y, vertex0->z);
-				glVertex3f(vertex1->x, vertex1->y, vertex1->z);
-				glVertex3f(vertex2->x, vertex2->y, vertex2->z);
+					glVertex3f(vertex0->x, vertex0->y, vertex0->z);
+					glVertex3f(vertex1->x, vertex1->y, vertex1->z);
+					glVertex3f(vertex3->x, vertex3->y, vertex3->z);
 
-				glVertex3f(vertex0->x, vertex0->y, vertex0->z);
-				glVertex3f(vertex1->x, vertex1->y, vertex1->z);
-				glVertex3f(vertex3->x, vertex3->y, vertex3->z);
+					glVertex3f(vertex0->x, vertex0->y, vertex0->z);
+					glVertex3f(vertex2->x, vertex2->y, vertex2->z);
+					glVertex3f(vertex3->x, vertex3->y, vertex3->z);
 
-				glVertex3f(vertex0->x, vertex0->y, vertex0->z);
-				glVertex3f(vertex2->x, vertex2->y, vertex2->z);
-				glVertex3f(vertex3->x, vertex3->y, vertex3->z);
-
-				glVertex3f(vertex1->x, vertex1->y, vertex1->z);
-				glVertex3f(vertex2->x, vertex2->y, vertex2->z);
-				glVertex3f(vertex3->x, vertex3->y, vertex3->z);
+					glVertex3f(vertex1->x, vertex1->y, vertex1->z);
+					glVertex3f(vertex2->x, vertex2->y, vertex2->z);
+					glVertex3f(vertex3->x, vertex3->y, vertex3->z);
+				}
 			}
-		}
 
 
 		// 恢复线框模式
@@ -689,53 +704,56 @@ int main() {
 
 
 
-		glEnd();
+			glEnd();
+		}
 		// Draw edges
-		glLineWidth(2.5f);  // 设置线宽为 3.0
-		glBegin(GL_LINES);
+		if (drawEdges) {
+			glLineWidth(2.5f);  // 设置线宽为 3.0
+			glBegin(GL_LINES);
 
-		for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
-			//float hhh;
-			Group& group = object.getGroup(groupIdx);
-			for (Tetrahedron* tet : group.tetrahedra) {
-				for (int edgeIdx = 0; edgeIdx < 6; ++edgeIdx) {  // Loop through each edge in the tetrahedron
-					Edge* edge = tet->edges[edgeIdx];
-					Vertex* vertex1 = edge->vertices[0];
-					Vertex* vertex2 = edge->vertices[1];
-					bool isSurfaceEdge = edge->isBoundary;
+			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+				//float hhh;
+				Group& group = object.getGroup(groupIdx);
+				for (Tetrahedron* tet : group.tetrahedra) {
+					for (int edgeIdx = 0; edgeIdx < 6; ++edgeIdx) {  // Loop through each edge in the tetrahedron
+						Edge* edge = tet->edges[edgeIdx];
+						Vertex* vertex1 = edge->vertices[0];
+						Vertex* vertex2 = edge->vertices[1];
+						bool isSurfaceEdge = edge->isBoundary;
 
-					//Use HSV to RGB conversion to create a unique color for each group
-					float hue = (360.0f * groupIdx) / groupNum;  // Distribute hues evenly across the spectrum
-					//hhh = hue;
-					float saturation = 1.0f;  // Full saturation
-					float value = 1.0f;      // Full brightness
+						//Use HSV to RGB conversion to create a unique color for each group
+						float hue = (360.0f * groupIdx) / groupNum;  // Distribute hues evenly across the spectrum
+						//hhh = hue;
+						float saturation = 1.0f;  // Full saturation
+						float value = 1.0f;      // Full brightness
 
-					//Convert HSV to RGB
-					float red, green, blue;
-					hsvToRgb(hue, saturation, value, red, green, blue);
+						//Convert HSV to RGB
+						float red, green, blue;
+						hsvToRgb(hue, saturation, value, red, green, blue);
 
-					// If it's a boundary edge, you may want to adjust the color or keep as is
-					// For example, make the color brighter if it's a boundary edge
-					if (isSurfaceEdge == false) {
-						/*red = std::min(1.0f, red);
-						green = std::min(1.0f, green);
-						blue = std::min(1.0f, blue);*/
-						red = std::min(1.0f, red + 0.3f);
-						green = std::min(1.0f, green + 0.3f);
-						blue = std::min(1.0f, blue + 0.3f);
-						float darkenFactor = 0.75f; // 调整这个系数以控制颜色深浅
-						red *= darkenFactor;
-						green *= darkenFactor;
-						blue *= darkenFactor;
+						// If it's a boundary edge, you may want to adjust the color or keep as is
+						// For example, make the color brighter if it's a boundary edge
+						if (isSurfaceEdge == false) {
+							/*red = std::min(1.0f, red);
+							green = std::min(1.0f, green);
+							blue = std::min(1.0f, blue);*/
+							red = std::min(1.0f, red + 0.3f);
+							green = std::min(1.0f, green + 0.3f);
+							blue = std::min(1.0f, blue + 0.3f);
+							float darkenFactor = 0.75f; // 调整这个系数以控制颜色深浅
+							red *= darkenFactor;
+							green *= darkenFactor;
+							blue *= darkenFactor;
 
-						drawEdge(vertex1, vertex2, red, green, blue);
+							drawEdge(vertex1, vertex2, red, green, blue);
+						}
+
+						
 					}
-
-					
 				}
 			}
+			glEnd();
 		}
-		glEnd();
 
 		
 		//saveOBJ("43224.obj", object.groups);

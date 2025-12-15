@@ -424,6 +424,9 @@ void Object::PBDLOOP(int looptime) {
 
 		}
 
+		float avgConstraintNorm = 0.0f;
+		int samples = 0;
+
 		for (int groupIdx = 0; groupIdx < groups.size(); ++groupIdx) {
 			Group& currentGroup = groups[groupIdx];
 
@@ -446,6 +449,12 @@ void Object::PBDLOOP(int looptime) {
 						currentGroup.groupVelocity, adjacentGroup.groupVelocity, 
 						currentGroup.massMatrix, adjacentGroup.massMatrix,
 						youngs, constraintHardness, dampingConst, adjacentGroupIdx);
+					if (samples < 16 && !commonVerticesPair.first.empty()) {
+						Eigen::Vector3f posThis = currentGroup.currentPosition.segment<3>(3 * commonVerticesPair.first[0]->localIndex);
+						Eigen::Vector3f posOther = adjacentGroup.currentPosition.segment<3>(3 * commonVerticesPair.second[0]->localIndex);
+						avgConstraintNorm += (posThis - posOther).norm();
+						++samples;
+					}
 					//if (direction == 0 || direction == 1) {
 					//	currentGroup.distancesX = Eigen::VectorXf::Zero(commonVerticesPair.first.size() * 3);
 
@@ -480,6 +489,12 @@ void Object::PBDLOOP(int looptime) {
 
 			}
 
+		}
+		if (samples > 0) {
+			avgConstraintNorm /= static_cast<float>(samples);
+			if (avgConstraintNorm < 5e-4f) {
+				break;
+			}
 		}
 
 	}

@@ -1,5 +1,6 @@
 #include "Group.h"
 #include "params.h"
+#include <algorithm>
 
 // Initialize debug flag (set to false by default, change to true for debugging)
 bool Group::debug_constraints = false;
@@ -172,7 +173,21 @@ Eigen::Quaternionf Group::Exp2(Eigen::Vector3f a) {
 //	}
 //}
 //
-void Group::calRotationMatrix() {
+void Group::calRotationMatrix(int frame, float threshold, int minInterval) {
+	// 位置变化很小且距离上次更新帧数不足，直接复用旋转矩阵
+	if (!prevPrimeVec.size()) {
+		prevPrimeVec = primeVec;
+	}
+	if (frame - lastRotationUpdate < minInterval) {
+		float maxDelta = 0.0f;
+		for (Eigen::Index i = 0; i < primeVec.size(); i += 3) {
+			maxDelta = std::max(maxDelta, (primeVec.segment<3>(i) - prevPrimeVec.segment<3>(i)).norm());
+			if (maxDelta > threshold) break;
+		}
+		if (maxDelta < threshold) {
+			return;
+		}
+	}
 	Eigen::MatrixXf Apq = Eigen::MatrixXf::Zero(3, 3);
 	Eigen::Vector3f center_grid = Eigen::Vector3f::Zero();
 
@@ -203,6 +218,8 @@ void Group::calRotationMatrix() {
 
 	// 最终的旋转矩阵
 	rotate_matrix = R;
+	prevPrimeVec = primeVec;
+	lastRotationUpdate = frame;
 }
 
 void Group::applyRotation(const Eigen::VectorXf& src, Eigen::VectorXf& dst) const {
@@ -1095,15 +1112,17 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		// α/Δt² matrix
 		Eigen::Matrix3f alphaDivDt2 = alpha / (timeStep * timeStep);
 		
-		// Thread-safe Lambda access and initialization
-		Eigen::Vector3f lambda;
-		#pragma omp critical
-		{
-			auto& constraintMap = constraintLambdas[adjacentGroupIdx];
-			if (constraintMap.find(i) == constraintMap.end()) {
-				constraintMap[i] = Eigen::Vector3f::Zero();
+		// Lambda（XPBD累计项），性能优先时可跳过
+		Eigen::Vector3f lambda = Eigen::Vector3f::Zero();
+		if (accumulateConstraintLambdas) {
+			#pragma omp critical
+			{
+				auto& constraintMap = constraintLambdas[adjacentGroupIdx];
+				if (constraintMap.find(i) == constraintMap.end()) {
+					constraintMap[i] = Eigen::Vector3f::Zero();
+				}
+				lambda = constraintMap[i];
 			}
-			lambda = constraintMap[i];
 		}
 		
 		// Gauss-Seidel single constraint update (XPBD-damping)
@@ -1130,10 +1149,11 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 			deltaLambda = deltaLambda * (max_deltaLambda / deltaLambda_norm);
 		}
 		
-		// Thread-safe Lambda update
-		#pragma omp critical
-		{
-			constraintLambdas[adjacentGroupIdx][i] += deltaLambda;
+		if (accumulateConstraintLambdas) {
+			#pragma omp critical
+			{
+				constraintLambdas[adjacentGroupIdx][i] += deltaLambda;
+			}
 		}
 		
 		// Position correction: Δx_j = M_j^(-1) * Δλ
