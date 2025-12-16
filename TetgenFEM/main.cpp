@@ -2,10 +2,12 @@
 //#define EIGEN_USE_MKL_ALL
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <cstring>  // for std::strcpy
 #include "tetgen.h"  // Include the TetGen header file
 #include <fstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <limits>
 #include "GL/glew.h" 
 #include "GLFW/glfw3.h"
@@ -450,8 +452,68 @@ int main() {
 
 	}
 	
-	// 使用“最左 3%”自动固定
-	object.fixTopLeft10PercentVertices();
+	// 在肝门区域使用球形区域进行固定：取背面一定厚度的质心作为中心
+	std::unordered_set<Vertex*> visitedVertices;
+	std::vector<Vertex*> uniqueVertices;
+	for (const auto& g : object.groups) {
+		for (const auto& pair : g.verticesMap) {
+			Vertex* v = pair.second;
+			if (visitedVertices.insert(v).second) {
+				uniqueVertices.push_back(v);
+			}
+		}
+	}
+
+	if (!uniqueVertices.empty()) {
+		Eigen::Vector3f minBound(
+			std::numeric_limits<float>::max(),
+			std::numeric_limits<float>::max(),
+			std::numeric_limits<float>::max());
+		Eigen::Vector3f maxBound(
+			-std::numeric_limits<float>::max(),
+			-std::numeric_limits<float>::max(),
+			-std::numeric_limits<float>::max());
+
+		for (const auto* v : uniqueVertices) {
+			minBound.x() = std::min(minBound.x(), v->initx);
+			minBound.y() = std::min(minBound.y(), v->inity);
+			minBound.z() = std::min(minBound.z(), v->initz);
+			maxBound.x() = std::max(maxBound.x(), v->initx);
+			maxBound.y() = std::max(maxBound.y(), v->inity);
+			maxBound.z() = std::max(maxBound.z(), v->initz);
+		}
+
+		const float depth = maxBound.z() - minBound.z();
+		const float backSliceZ = minBound.z() + depth * 0.12f; // 取最靠背面 12% 的区域
+		Eigen::Vector3f backCentroid(0.0f, 0.0f, 0.0f);
+		int backCount = 0;
+		for (const auto* v : uniqueVertices) {
+			if (v->initz <= backSliceZ) {
+				backCentroid.x() += v->initx;
+				backCentroid.y() += v->inity;
+				backCentroid.z() += v->initz;
+				++backCount;
+			}
+		}
+
+		if (backCount > 0) {
+			backCentroid /= static_cast<float>(backCount);
+		}
+		else {
+			backCentroid = Eigen::Vector3f(
+				0.5f * (minBound.x() + maxBound.x()),
+				0.5f * (minBound.y() + maxBound.y()),
+				minBound.z());
+		}
+
+		// 稍微往内部推一点，避免只作用在表面三角面
+		backCentroid.z() = std::min(backCentroid.z() + depth * 0.02f, maxBound.z());
+
+		const float anchorRadius = std::max(depth * 0.2f, 0.001f);
+		object.fixRegion(backCentroid, anchorRadius);
+	} else {
+		std::cout << "No vertices collected for fixing region." << std::endl;
+	}
 	
 	std::vector<int> topVertexLocalIndices;
 	std::vector<int> bottomVertexLocalIndices;
