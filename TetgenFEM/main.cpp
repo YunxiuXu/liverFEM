@@ -238,6 +238,8 @@ struct DragState {
 	Vertex* target = nullptr;
 	double lastX = 0.0;
 	double lastY = 0.0;
+	float grabbedNdcZ = 0.0f;
+	Eigen::Vector3f grabOffset = Eigen::Vector3f::Zero(); // targetPos - cursorWorldPos (prevents jump)
 };
 
 Eigen::Vector2f projectToScreen(const Eigen::Vector3f& pos,
@@ -278,6 +280,23 @@ Vertex* pickVertexAtCursor(const std::vector<Vertex*>& vertices,
 		return bestVertex;
 	}
 	return nullptr;
+}
+
+static Eigen::Vector3f unprojectCursorToWorld(double fbMouseX,
+	double fbMouseY,
+	float ndcZ,
+	const Eigen::Matrix4f& invProjectionModel,
+	int width,
+	int height) {
+	const float safeW = static_cast<float>(width ? width : 1);
+	const float safeH = static_cast<float>(height ? height : 1);
+	const float ndcX = static_cast<float>(fbMouseX) / safeW * 2.0f - 1.0f;
+	const float ndcY = 1.0f - static_cast<float>(fbMouseY) / safeH * 2.0f;
+
+	Eigen::Vector4f clip(ndcX, ndcY, ndcZ, 1.0f);
+	Eigen::Vector4f world = invProjectionModel * clip;
+	const float invW = (std::abs(world.w()) > 1e-8f) ? (1.0f / world.w()) : 1.0f;
+	return world.head<3>() * invW;
 }
 
 int main() {
@@ -591,6 +610,8 @@ int main() {
 		Eigen::Matrix4f modelMatrix = Eigen::Matrix4f::Identity();
 		modelMatrix.block<3, 3>(0, 0) = rotation.toRotationMatrix();
 		Eigen::Matrix4f projectionMatrix = buildProjectionMatrix();
+		Eigen::Matrix4f projectionModel = projectionMatrix * modelMatrix;
+		Eigen::Matrix4f invProjectionModel = projectionModel.inverse();
 
 		static bool rightWasHeld = false;
 		bool rightHeld = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
@@ -606,6 +627,12 @@ int main() {
 				dragState.target = pickedVertex;
 				dragState.lastX = fbMouseX;
 				dragState.lastY = fbMouseY;
+				Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
+				Eigen::Vector4f clip = projectionModel * Eigen::Vector4f(targetPos.x(), targetPos.y(), targetPos.z(), 1.0f);
+				const float invW = (std::abs(clip.w()) > 1e-8f) ? (1.0f / clip.w()) : 1.0f;
+				dragState.grabbedNdcZ = clip.z() * invW;
+				Eigen::Vector3f cursorWorld = unprojectCursorToWorld(fbMouseX, fbMouseY, dragState.grabbedNdcZ, invProjectionModel, windowWidth, windowHeight);
+				dragState.grabOffset = targetPos - cursorWorld;
 				std::cout << "Picked vertex id " << pickedVertex->index << " for dragging." << std::endl;
 			}
 			else {
@@ -624,19 +651,21 @@ int main() {
 			double fbMouseX = mouseX * scaleX;
 			double fbMouseY = mouseY * scaleY;
 
-			double dx = fbMouseX - dragState.lastX;
-			double dy = fbMouseY - dragState.lastY;
-			dragState.lastX = fbMouseX;
-			dragState.lastY = fbMouseY;
-
-			float worldDx = static_cast<float>(dx) / static_cast<float>(windowWidth) * 2.0f * zoomFactor * aspectRatio;
-			float worldDy = static_cast<float>(-dy) / static_cast<float>(windowHeight) * 2.0f * zoomFactor;
-			Eigen::Vector3f viewDelta(worldDx, worldDy, 0.0f);
-			Eigen::Vector3f worldDelta = rotation.conjugate() * viewDelta;
-
-			const float influenceRadius = 0.6f;
-			const float dragStrength = 10000.0f; // Tunable multiplier for how strong the drag feels.
+			Eigen::Vector3f cursorWorld = unprojectCursorToWorld(fbMouseX, fbMouseY, dragState.grabbedNdcZ, invProjectionModel, windowWidth, windowHeight);
+			Eigen::Vector3f desiredTargetPos = cursorWorld + dragState.grabOffset;
+			const float influenceRadius = dragInfluenceRadius;
+			const float stiffness = dragStiffness; // Higher = stronger pull toward cursor.
+			const float maxAccel = dragMaxAccel; // Clamp to avoid exploding forces.
 			Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
+			Eigen::Vector3f displacement = desiredTargetPos - targetPos;
+			float displacementNorm = displacement.norm();
+			if (displacementNorm > 1e-6f) {
+				float maxDisp = dragMaxDisplacement;
+				if (displacementNorm > maxDisp) {
+					displacement *= (maxDisp / displacementNorm);
+					displacementNorm = maxDisp;
+				}
+			}
 
 			for (Vertex* vertex : objectUniqueVertices) {
 				Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
@@ -646,7 +675,12 @@ int main() {
 					if (vertex == dragState.target) {
 						falloff *= 1.5f; // slightly prioritize the grabbed vertex
 					}
-					dragForces[vertex->index] = worldDelta * dragStrength * falloff;
+					Eigen::Vector3f accel = displacement * (stiffness * falloff);
+					float accelNorm = accel.norm();
+					if (accelNorm > maxAccel) {
+						accel *= (maxAccel / accelNorm);
+					}
+					dragForces[vertex->index] = accel;
 				}
 			}
 		}

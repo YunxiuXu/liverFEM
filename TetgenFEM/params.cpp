@@ -9,6 +9,10 @@ float youngs, youngs1, youngs2, youngs3, poisson, density;
 int groupNum, groupNumX, groupNumY, groupNumZ;
 const float PI = 3.1415926535f; // This can be hardcoded as it won't change
 float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
+float dragInfluenceRadius = 0.6f;
+float dragStiffness = 2500.0f;
+float dragMaxAccel = 50000.0f;
+float dragMaxDisplacement = 1.0f;
 std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
 
@@ -19,13 +23,17 @@ void loadParams(const std::string& filename) {
         return;
     }
 
-    std::unordered_map<std::string, float*> floatParams = {
-        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
-        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
-        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
-        {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
-        {"constraintHardness", &constraintHardness}
-    };
+	    std::unordered_map<std::string, float*> floatParams = {
+	        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
+	        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
+	        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
+	        {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
+	        {"constraintHardness", &constraintHardness},
+	        {"dragInfluenceRadius", &dragInfluenceRadius},
+	        {"dragStiffness", &dragStiffness},
+	        {"dragMaxAccel", &dragMaxAccel},
+	        {"dragMaxDisplacement", &dragMaxDisplacement}
+	    };
 
     std::unordered_map<std::string, int*> intParams = {
         {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ}

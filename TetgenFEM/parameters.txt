@@ -18,4 +18,8 @@ tetgenArgs=pq20a0.000083
 nodeFile=armadillo_4k.node
 eleFile=armadillo_4k.ele
 useDirectLoading=false
-	
+dragInfluenceRadius=0.6
+dragStiffness=2500.0
+dragMaxAccel=50000.0
+dragMaxDisplacement=1.0
+		
