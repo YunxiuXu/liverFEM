@@ -1,7 +1,7 @@
 youngs=1000000
-youngs1=100000
-youngs2=100000
-youngs3=100000
+youngs1=10000000
+youngs2=1000000
+youngs3=1000000
 poisson=0.28
 density=1000
 groupNumX=8

@@ -1,4 +1,4 @@
-﻿
+
 //#define EIGEN_USE_MKL_ALL
 #include <iostream>
 #include <vector>
@@ -29,6 +29,34 @@
 
 Eigen::Matrix4f transformationMatrix = Eigen::Matrix4f::Identity();
 int wKey = 0;
+
+// Force recording variables
+bool isRecordingForce = false;
+std::vector<float> recordedForces;
+std::vector<float> recordedTime;
+		double recordStartTime = 0.0;
+		// Auto-Test Variables
+		bool isAutoTestActive = false;
+		int autoTestAxis = 0; // 0:X, 1:Y
+		double autoTestStartTime = 0.0;
+		const double autoTestDuration = 2.0;
+		const float autoTestDistance = 0.5f;
+		Vertex* g_selectedVertex = nullptr;
+		Eigen::Vector3f autoTestStartPos;
+
+void saveForceData(const std::string& filename) {
+	std::ofstream file(filename);
+	if (!file.is_open()) {
+		std::cerr << "Failed to open force data file.\n";
+		return;
+	}
+	file << "Time(s) ForceMagnitude\n";
+	for (size_t i = 0; i < recordedForces.size(); ++i) {
+		file << recordedTime[i] << " " << recordedForces[i] << "\n";
+	}
+	file.close();
+	std::cout << "Force data saved to " << filename << " (" << recordedForces.size() << " samples)\n";
+}
 
 void saveOBJ(const std::string& filename, std::vector<Group>& groups) {
 	std::ofstream objFile(filename);
@@ -553,8 +581,17 @@ int main() {
 		object.groups[i].calCenterofMass();
 		object.groups[i].calInitCOM();//initial com
 		object.groups[i].calLocalPos(); // initial local positions
-		object.groups[i].calGroupK(youngs, poisson);	
-		//object.groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
+		
+		// Check if anisotropic parameters are used (youngs1 != youngs2)
+		// Assuming youngs1, youngs2, youngs3 are global variables from params.h
+		if (std::abs(youngs1 - youngs2) > 1e-1f || std::abs(youngs1 - youngs3) > 1e-1f) {
+			object.groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
+			if (i == 0) std::cout << "Using Anisotropic Stiffness Matrix (E1=" << youngs1 << ", E2=" << youngs2 << ", E3=" << youngs3 << ")\n";
+		} else {
+			object.groups[i].calGroupK(youngs, poisson);
+			if (i == 0) std::cout << "Using Isotropic Stiffness Matrix (E=" << youngs << ")\n";
+		}
+		
 		object.groups[i].setVertexMassesFromMassMatrix();//vertex mass
 		object.groups[i].calMassGroup();
 		object.groups[i].calMassDistributionMatrix();
@@ -621,20 +658,67 @@ int main() {
 		else
 			wKey = 0;
 
+		// Force Recording Controls
+		static bool rPressed = false;
+		static bool sPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && !rPressed) {
+			isRecordingForce = true;
+			recordedForces.clear();
+			recordedTime.clear();
+			recordStartTime = glfwGetTime();
+			std::cout << ">>> Started recording force data..." << std::endl;
+			rPressed = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE) rPressed = false;
+
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && !sPressed) {
+			if (isRecordingForce) {
+				isRecordingForce = false;
+				saveForceData("force_data.txt");
+				std::cout << ">>> Stopped recording. Data saved." << std::endl;
+			}
+			sPressed = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE) sPressed = false;
+
 		static bool drawFaces = true;
 		static bool drawEdges = true;
-		static bool lastZ = false;
-		static bool lastX = false;
-		bool zPressed = glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS;
-		bool xPressed = glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS;
-		if (zPressed && !lastZ) {
-			drawEdges = !drawEdges; // Z 切换线框
+		// Keys for Auto-Test: X and Y.
+		// Disabled Z/X display toggles to avoid conflict.
+
+		if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS && !isAutoTestActive && g_selectedVertex) {
+			isAutoTestActive = true;
+			autoTestAxis = 0; // X-axis
+			autoTestStartTime = glfwGetTime();
+			autoTestStartPos = Eigen::Vector3f(g_selectedVertex->x, g_selectedVertex->y, g_selectedVertex->z);
+			
+			dragState.active = true;
+			dragState.target = g_selectedVertex;
+			
+			isRecordingForce = true;
+			recordedForces.clear();
+			recordedTime.clear();
+			recordStartTime = glfwGetTime();
+			
+			std::cout << ">>> STARTING AUTO TEST (X-AXIS) on Vertex " << g_selectedVertex->index << std::endl;
 		}
-		if (xPressed && !lastX) {
-			drawFaces = !drawFaces; // X 切换面片
+
+		if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS && !isAutoTestActive && g_selectedVertex) {
+			isAutoTestActive = true;
+			autoTestAxis = 1; // Y-axis
+			autoTestStartTime = glfwGetTime();
+			autoTestStartPos = Eigen::Vector3f(g_selectedVertex->x, g_selectedVertex->y, g_selectedVertex->z);
+			
+			dragState.active = true;
+			dragState.target = g_selectedVertex;
+			
+			isRecordingForce = true;
+			recordedForces.clear();
+			recordedTime.clear();
+			recordStartTime = glfwGetTime();
+			
+			std::cout << ">>> STARTING AUTO TEST (Y-AXIS) on Vertex " << g_selectedVertex->index << std::endl;
 		}
-		lastZ = zPressed;
-		lastX = xPressed;
 
 		// Arrow keys apply a directional force to the whole object.
 		const float arrowForceMagnitude = 50.0f;
@@ -687,6 +771,8 @@ int main() {
 			if (pickedVertex != nullptr) {
 				dragState.active = true;
 				dragState.target = pickedVertex;
+				g_selectedVertex = pickedVertex; // Save for auto-test
+				
 				dragState.lastX = fbMouseX;
 				dragState.lastY = fbMouseY;
 				Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
@@ -695,54 +781,88 @@ int main() {
 				dragState.grabbedNdcZ = clip.z() * invW;
 				Eigen::Vector3f cursorWorld = unprojectCursorToWorld(fbMouseX, fbMouseY, dragState.grabbedNdcZ, invProjectionModel, windowWidth, windowHeight);
 				dragState.grabOffset = targetPos - cursorWorld;
-				std::cout << "Picked vertex id " << pickedVertex->index << " for dragging." << std::endl;
+				std::cout << "Picked vertex id " << pickedVertex->index 
+					<< " at (" << pickedVertex->x << ", " << pickedVertex->y << ", " << pickedVertex->z << ")" << std::endl;
 			}
 			else {
 				std::cout << "No vertex picked under cursor." << std::endl;
 			}
 		}
-		else if (!rightHeld) {
+		else if (!rightHeld && !isAutoTestActive) {
 			dragState.active = false;
 			dragState.target = nullptr;
 		}
 
-		if (dragState.active && dragState.target != nullptr && rightHeld) {
-			double mouseX = 0.0;
-			double mouseY = 0.0;
-			glfwGetCursorPos(window, &mouseX, &mouseY);
-			double fbMouseX = mouseX * scaleX;
-			double fbMouseY = mouseY * scaleY;
+		if (dragState.active && dragState.target != nullptr && (rightHeld || isAutoTestActive)) {
+			Eigen::Vector3f desiredTargetPos;
+			bool processPhysics = true;
 
-			Eigen::Vector3f cursorWorld = unprojectCursorToWorld(fbMouseX, fbMouseY, dragState.grabbedNdcZ, invProjectionModel, windowWidth, windowHeight);
-			Eigen::Vector3f desiredTargetPos = cursorWorld + dragState.grabOffset;
-			const float influenceRadius = dragInfluenceRadius;
-			const float stiffness = dragStiffness; // Higher = stronger pull toward cursor.
-			const float maxAccel = dragMaxAccel; // Clamp to avoid exploding forces.
-			Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
-			Eigen::Vector3f displacement = desiredTargetPos - targetPos;
-			float displacementNorm = displacement.norm();
-			if (displacementNorm > 1e-6f) {
-				float maxDisp = dragMaxDisplacement;
-				if (displacementNorm > maxDisp) {
-					displacement *= (maxDisp / displacementNorm);
-					displacementNorm = maxDisp;
+			if (isAutoTestActive) {
+				double elapsed = glfwGetTime() - autoTestStartTime;
+				if (elapsed > autoTestDuration) {
+					// End Auto Test
+					isAutoTestActive = false;
+					isRecordingForce = false;
+					dragState.active = false;
+					processPhysics = false;
+					std::string fname = (autoTestAxis == 0) ? "force_data_x.txt" : "force_data_y.txt";
+					saveForceData(fname);
+					std::cout << ">>> Auto Test Finished. Saved to " << fname << std::endl;
+				} else {
+					// Interpolate
+					float t = static_cast<float>(elapsed / autoTestDuration);
+					desiredTargetPos = autoTestStartPos;
+					if (autoTestAxis == 0) desiredTargetPos.x() += autoTestDistance * t; // X Axis
+					else desiredTargetPos.y() += autoTestDistance * t; // Y Axis
 				}
+			} else {
+				// Mouse Logic
+				double mouseX = 0.0;
+				double mouseY = 0.0;
+				glfwGetCursorPos(window, &mouseX, &mouseY);
+				double fbMouseX = mouseX * scaleX;
+				double fbMouseY = mouseY * scaleY;
+				Eigen::Vector3f cursorWorld = unprojectCursorToWorld(fbMouseX, fbMouseY, dragState.grabbedNdcZ, invProjectionModel, windowWidth, windowHeight);
+				desiredTargetPos = cursorWorld + dragState.grabOffset;
 			}
 
-			for (Vertex* vertex : objectUniqueVertices) {
-				Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
-				float dist = (currentPos - targetPos).norm();
-				if (dist <= influenceRadius) {
-					float falloff = std::max(0.05f, 1.0f - dist / influenceRadius); // keep a small minimum
-					if (vertex == dragState.target) {
-						falloff *= 1.5f; // slightly prioritize the grabbed vertex
+			if (processPhysics && dragState.active) {
+				const float influenceRadius = dragInfluenceRadius;
+				const float stiffness = dragStiffness; // Higher = stronger pull toward cursor.
+				const float maxAccel = dragMaxAccel; // Clamp to avoid exploding forces.
+				Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
+				Eigen::Vector3f displacement = desiredTargetPos - targetPos;
+				float displacementNorm = displacement.norm();
+				if (displacementNorm > 1e-6f) {
+					float maxDisp = dragMaxDisplacement;
+					if (displacementNorm > maxDisp) {
+						displacement *= (maxDisp / displacementNorm);
+						displacementNorm = maxDisp;
 					}
-					Eigen::Vector3f accel = displacement * (stiffness * falloff);
-					float accelNorm = accel.norm();
-					if (accelNorm > maxAccel) {
-						accel *= (maxAccel / accelNorm);
+				}
+	
+				float currentFrameTotalForce = 0.0f;
+				for (Vertex* vertex : objectUniqueVertices) {
+					Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
+					float dist = (currentPos - targetPos).norm();
+					if (dist <= influenceRadius) {
+						float falloff = std::max(0.05f, 1.0f - dist / influenceRadius); // keep a small minimum
+						if (vertex == dragState.target) {
+							falloff *= 1.5f; // slightly prioritize the grabbed vertex
+						}
+						Eigen::Vector3f accel = displacement * (stiffness * falloff);
+						float accelNorm = accel.norm();
+						if (accelNorm > maxAccel) {
+							accel *= (maxAccel / accelNorm);
+						}
+						dragForces[vertex->index] = accel;
+						currentFrameTotalForce += accel.norm(); // Approximate force magnitude (proportional to accel)
 					}
-					dragForces[vertex->index] = accel;
+				}
+				
+				if (isRecordingForce) {
+					recordedForces.push_back(currentFrameTotalForce);
+					recordedTime.push_back(glfwGetTime() - recordStartTime);
 				}
 			}
 		}
