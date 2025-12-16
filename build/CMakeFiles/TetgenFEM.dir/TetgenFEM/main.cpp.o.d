@@ -887,6 +887,7 @@ CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o: \
   /opt/homebrew/Cellar/llvm/21.1.7/bin/../include/c++/v1/__random/student_t_distribution.h \
   /opt/homebrew/Cellar/llvm/21.1.7/bin/../include/c++/v1/__random/uniform_random_bit_generator.h \
   /opt/homebrew/Cellar/llvm/21.1.7/bin/../include/c++/v1/__random/weibull_distribution.h \
+  /opt/homebrew/opt/libomp/include/omp.h \
   /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.h \
   /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/eigen-3.4.0/Eigen/Core \
   /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/eigen-3.4.0/Eigen/src/Core/util/DisableStupidWarnings.h \
@@ -899,7 +900,6 @@ CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o: \
   /opt/homebrew/Cellar/llvm/21.1.7/bin/../include/c++/v1/complex \
   /opt/homebrew/Cellar/llvm/21.1.7/bin/../include/c++/v1/sstream \
   /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/eigen-3.4.0/Eigen/src/Core/util/MKL_support.h \
-  /opt/homebrew/opt/libomp/include/omp.h \
   /opt/homebrew/Cellar/llvm/21.1.7/bin/../include/c++/v1/cassert \
   /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/usr/include/assert.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/usr/include/_static_assert.h \

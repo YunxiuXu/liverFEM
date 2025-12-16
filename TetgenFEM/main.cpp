@@ -12,6 +12,7 @@
 #include "params.h"
 #include <cmath>
 #include <random>
+#include <omp.h>
 #include "VisualOpenGL.h"
 #include "ReadSTL.h"
 #include "Object.h"
@@ -282,6 +283,11 @@ Vertex* pickVertexAtCursor(const std::vector<Vertex*>& vertices,
 int main() {
 
 	loadParams("parameters.txt");
+	// Make sure both OpenMP and Eigen use all available cores
+	omp_set_dynamic(0);
+	omp_set_num_threads(omp_get_max_threads());
+	Eigen::initParallel();
+	Eigen::setNbThreads(omp_get_max_threads());
 
 	tetgenio in, out;
 	in.firstnumber = 1;  // All indices start from 1
