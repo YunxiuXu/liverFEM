@@ -72,20 +72,11 @@ void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 float aspectRatio = 1.0f;
 float zoomFactor = 1.0f;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-	glViewport(0, 0, width, height);
-	aspectRatio = static_cast<float>(width) / static_cast<float>(height ? height : 1);  // Avoid division by zero
-}
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	zoomFactor *= (1.0f + 0.1f * yoffset);  // Adjust zoom factor
-
-	// Update projection matrix
+Eigen::Matrix4f buildProjectionMatrix(float nearVal, float farVal) {
 	float left = -zoomFactor * aspectRatio;
 	float right = zoomFactor * aspectRatio;
 	float bottom = -zoomFactor;
 	float top = zoomFactor;
-	float nearVal = -3.0f;
-	float farVal = 3.0f;
 
 	Eigen::Matrix4f projectionMatrix;
 	projectionMatrix <<
@@ -94,10 +85,29 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 		0.0f, 0.0f, -2.0f / (farVal - nearVal), -(farVal + nearVal) / (farVal - nearVal),
 		0.0f, 0.0f, 0.0f, 1.0f;
 
+	return projectionMatrix;
+}
+
+void applyProjectionMatrix() {
+	const float nearVal = -3.0f;
+	const float farVal = 3.0f;
+	Eigen::Matrix4f projectionMatrix = buildProjectionMatrix(nearVal, farVal);
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glMultMatrixf(projectionMatrix.data());
 	glMatrixMode(GL_MODELVIEW);
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+	glViewport(0, 0, width, height);
+	aspectRatio = static_cast<float>(width) / static_cast<float>(height ? height : 1);  // Avoid division by zero
+	applyProjectionMatrix();
+}
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	zoomFactor *= (1.0f + 0.1f * yoffset);  // Adjust zoom factor
+
+	applyProjectionMatrix();
 }
 
 std::string createEdgeId(Vertex* vertex1, Vertex* vertex2) {

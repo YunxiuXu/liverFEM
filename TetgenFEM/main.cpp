@@ -1,10 +1,12 @@
-
+﻿
 //#define EIGEN_USE_MKL_ALL
 #include <iostream>
 #include <vector>
 #include <cstring>  // for std::strcpy
 #include "tetgen.h"  // Include the TetGen header file
 #include <fstream>
+#include <unordered_map>
+#include <limits>
 #include "GL/glew.h" 
 #include "GLFW/glfw3.h"
 #include "params.h"
@@ -230,6 +232,53 @@ void findUpperAndLowerVertices(const std::vector<Group>& groups, std::vector<int
 	}
 }
 
+struct DragState {
+	bool active = false;
+	Vertex* target = nullptr;
+	double lastX = 0.0;
+	double lastY = 0.0;
+};
+
+Eigen::Vector2f projectToScreen(const Eigen::Vector3f& pos,
+	const Eigen::Matrix4f& model,
+	const Eigen::Matrix4f& projection,
+	int width,
+	int height) {
+	Eigen::Vector4f clip = projection * model * Eigen::Vector4f(pos.x(), pos.y(), pos.z(), 1.0f);
+	Eigen::Vector3f ndc = clip.head<3>() / clip.w();
+	float sx = (ndc.x() * 0.5f + 0.5f) * static_cast<float>(width);
+	float sy = (1.0f - (ndc.y() * 0.5f + 0.5f)) * static_cast<float>(height);
+	return Eigen::Vector2f(sx, sy);
+}
+
+Vertex* pickVertexAtCursor(const std::vector<Vertex*>& vertices,
+	double mouseX,
+	double mouseY,
+	const Eigen::Matrix4f& model,
+	const Eigen::Matrix4f& projection,
+	int width,
+	int height,
+	float maxScreenDistance = 60.0f) {
+	float bestDist2 = std::numeric_limits<float>::max();
+	Vertex* bestVertex = nullptr;
+
+	for (const auto* vertex : vertices) {
+		Eigen::Vector2f screenPos = projectToScreen(Eigen::Vector3f(vertex->x, vertex->y, vertex->z), model, projection, width, height);
+		float dx = static_cast<float>(mouseX) - screenPos.x();
+		float dy = static_cast<float>(mouseY) - screenPos.y();
+		float dist2 = dx * dx + dy * dy;
+		if (dist2 < bestDist2) {
+			bestDist2 = dist2;
+			bestVertex = const_cast<Vertex*>(vertex);
+		}
+	}
+
+	if (bestVertex && bestDist2 <= maxScreenDistance * maxScreenDistance) {
+		return bestVertex;
+	}
+	return nullptr;
+}
+
 int main() {
 
 	loadParams("parameters.txt");
@@ -347,6 +396,11 @@ int main() {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 	glfwSetCursorPosCallback(window, cursorPosCallback);
+	int fbWidth = 0;
+	int fbHeight = 0;
+	glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+	framebuffer_size_callback(window, fbWidth, fbHeight);
+	applyProjectionMatrix();
 
 	Eigen::MatrixXd Ke;
 	//Ke = object.groups[1].tetrahedra[0]->createElementK(youngs, poisson, );
@@ -435,7 +489,7 @@ int main() {
 		Group& group = object.getGroup(groupIdx);
 		auto& verticesMap = group.verticesMap; 
 
-		for (const auto& pair : verticesMap) {
+	for (const auto& pair : verticesMap) {
 			bool found = false;
 			for (const auto& vertex : objectUniqueVertices) {
 				if (vertex->x == pair.second->initx && vertex->inity == pair.second->inity && vertex->initz == pair.second->initz) {
@@ -453,7 +507,7 @@ int main() {
 		return a->index < b->index;
 		});//index from min to max
 
-	
+	DragState dragState;
 
 	int frame = 1;
 	while (!glfwWindowShouldClose(window)) {
@@ -512,10 +566,90 @@ int main() {
 		}
 		//std::cout << wKey << std::endl;
 		//double aa = object.groups[0].tetrahedra[0]->calMassTetra(density);
+
+		// Handle right-click dragging to apply a localized force.
+		std::unordered_map<int, Eigen::Vector3f> dragForces;
+		int windowWidth = 1;
+		int windowHeight = 1;
+		glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+		int logicalWidth = 1;
+		int logicalHeight = 1;
+		glfwGetWindowSize(window, &logicalWidth, &logicalHeight);
+		windowWidth = windowWidth == 0 ? 1 : windowWidth;
+		windowHeight = windowHeight == 0 ? 1 : windowHeight;
+		logicalWidth = logicalWidth == 0 ? 1 : logicalWidth;
+		logicalHeight = logicalHeight == 0 ? 1 : logicalHeight;
+		const double scaleX = static_cast<double>(windowWidth) / static_cast<double>(logicalWidth);
+		const double scaleY = static_cast<double>(windowHeight) / static_cast<double>(logicalHeight);
+
+		Eigen::Matrix4f modelMatrix = Eigen::Matrix4f::Identity();
+		modelMatrix.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+		Eigen::Matrix4f projectionMatrix = buildProjectionMatrix();
+
+		static bool rightWasHeld = false;
+		bool rightHeld = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+		if (rightHeld && !rightWasHeld) {
+			double mouseX = 0.0;
+			double mouseY = 0.0;
+			glfwGetCursorPos(window, &mouseX, &mouseY);
+			double fbMouseX = mouseX * scaleX;
+			double fbMouseY = mouseY * scaleY;
+			Vertex* pickedVertex = pickVertexAtCursor(objectUniqueVertices, fbMouseX, fbMouseY, modelMatrix, projectionMatrix, windowWidth, windowHeight);
+			if (pickedVertex != nullptr) {
+				dragState.active = true;
+				dragState.target = pickedVertex;
+				dragState.lastX = fbMouseX;
+				dragState.lastY = fbMouseY;
+				std::cout << "Picked vertex id " << pickedVertex->index << " for dragging." << std::endl;
+			}
+			else {
+				std::cout << "No vertex picked under cursor." << std::endl;
+			}
+		}
+		else if (!rightHeld) {
+			dragState.active = false;
+			dragState.target = nullptr;
+		}
+
+		if (dragState.active && dragState.target != nullptr && rightHeld) {
+			double mouseX = 0.0;
+			double mouseY = 0.0;
+			glfwGetCursorPos(window, &mouseX, &mouseY);
+			double fbMouseX = mouseX * scaleX;
+			double fbMouseY = mouseY * scaleY;
+
+			double dx = fbMouseX - dragState.lastX;
+			double dy = fbMouseY - dragState.lastY;
+			dragState.lastX = fbMouseX;
+			dragState.lastY = fbMouseY;
+
+			float worldDx = static_cast<float>(dx) / static_cast<float>(windowWidth) * 2.0f * zoomFactor * aspectRatio;
+			float worldDy = static_cast<float>(-dy) / static_cast<float>(windowHeight) * 2.0f * zoomFactor;
+			Eigen::Vector3f viewDelta(worldDx, worldDy, 0.0f);
+			Eigen::Vector3f worldDelta = rotation.conjugate() * viewDelta;
+
+			const float influenceRadius = 0.6f;
+			const float dragStrength = 10000.0f; // Tunable multiplier for how strong the drag feels.
+			Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
+
+			for (Vertex* vertex : objectUniqueVertices) {
+				Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
+				float dist = (currentPos - targetPos).norm();
+				if (dist <= influenceRadius) {
+					float falloff = std::max(0.05f, 1.0f - dist / influenceRadius); // keep a small minimum
+					if (vertex == dragState.target) {
+						falloff *= 1.5f; // slightly prioritize the grabbed vertex
+					}
+					dragForces[vertex->index] = worldDelta * dragStrength * falloff;
+				}
+			}
+		}
+
+		rightWasHeld = rightHeld;
 #pragma omp parallel for
 		for (int i = 0; i < groupNum; i++) {
 			//object.groups[i].calGroupKFEM(youngs, poisson);
-			object.groups[i].calPrimeVec(inputForce);
+			object.groups[i].calPrimeVec(inputForce, dragForces);
 			//object.groups[i].calPrimeVecS(topVertexLocalIndices, bottomVertexLocalIndices);
 			//object.groups[i].calPrimeVec2(wKey);
 			//object.groups[i].calPrimeVec(wKey);

@@ -134,7 +134,8 @@ public:
 	void updateVelocityFEM();
 	void initialize();
 	void calPrimeVec2(int w);
-	void calPrimeVec(const Eigen::Vector3f& externalForce = Eigen::Vector3f::Zero());
+	void calPrimeVec(const Eigen::Vector3f& externalForce = Eigen::Vector3f::Zero(),
+		const std::unordered_map<int, Eigen::Vector3f>& vertexForces = emptyVertexForce);
 	//void updateVertexPositions();
 	void calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		const std::vector<Vertex*>& commonVerticesGroup2, 
@@ -163,4 +164,5 @@ public:
 	{
 		// Additional initialization logic, if needed
 	}
+	static const std::unordered_map<int, Eigen::Vector3f> emptyVertexForce;
 };

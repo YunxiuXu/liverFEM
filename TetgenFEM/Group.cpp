@@ -4,6 +4,7 @@
 
 // Initialize debug flag (set to false by default, change to true for debugging)
 bool Group::debug_constraints = false;
+const std::unordered_map<int, Eigen::Vector3f> Group::emptyVertexForce = {};
 
 void Group::initialize() {
 	groupVelocity = Eigen::VectorXf::Zero(3 * verticesMap.size());
@@ -803,7 +804,8 @@ void Group::calPrimeVec2(int w) {
 //	}
 //
 //}
-void Group::calPrimeVec(const Eigen::Vector3f& externalForce) {
+void Group::calPrimeVec(const Eigen::Vector3f& externalForce,
+	const std::unordered_map<int, Eigen::Vector3f>& vertexForces) {
 	primeVec = Eigen::VectorXf::Zero(3 * verticesVector.size());
 	static int frameCount = 0;
 	frameCount++;
@@ -842,6 +844,15 @@ void Group::calPrimeVec(const Eigen::Vector3f& externalForce) {
 		for (const auto* vertex : verticesVector) {
 			int base = 3 * vertex->localIndex;
 			totalForce.segment<3>(base) += externalForce;
+		}
+	}
+	if (!vertexForces.empty()) {
+		for (const auto& entry : vertexForces) {
+			auto it = verticesMap.find(entry.first);
+			if (it != verticesMap.end()) {
+				int base = 3 * it->second->localIndex;
+				totalForce.segment<3>(base) += entry.second;
+			}
 		}
 	}
 
