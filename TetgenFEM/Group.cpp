@@ -1079,7 +1079,6 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 	// All matrices are diagonal: M, β, α, γ
 	
 	// Process all common vertex pairs between groups
-	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(commonVerticesGroup1.size()); ++i) {
 		Vertex* vtx_j = commonVerticesGroup1[i];  // 本组顶点
 		Vertex* vtx_k = commonVerticesGroup2[i];  // 邻组同物理顶点

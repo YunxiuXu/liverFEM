@@ -8,6 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 设置输出目录
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+# Release 默认优化更激进
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -DNDEBUG -mcpu=native -stdlib=libc++")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+
 # 查找 OpenMP
 find_package(OpenMP)
 
@@ -55,14 +59,22 @@ add_executable(TetgenFEM ${SOURCES})
 
 # 链接库
 if(APPLE)
-    target_link_libraries(TetgenFEM
+    # 优先使用 Homebrew LLVM 的 libc++/unwind
+    link_directories(/opt/homebrew/opt/llvm/lib /opt/homebrew/opt/llvm/lib/c++ /opt/homebrew/opt/llvm/lib/unwind)
+    target_link_options(TetgenFEM PRIVATE -stdlib=libc++ -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind -lunwind)
+
+    target_link_libraries(TetgenFEM PRIVATE
         ${OPENGL_LIBRARIES}
         GLEW::GLEW
         glfw
         ${PROJECT_SOURCE_DIR}/TetgenFEM/libtet.a
+        "-framework OpenGL"
+        "-framework Cocoa"
+        "-framework IOKit"
+        "-framework CoreVideo"
     )
 else()
-    target_link_libraries(TetgenFEM
+    target_link_libraries(TetgenFEM PRIVATE
         ${OPENGL_LIBRARIES}
         GLEW::GLEW
         glfw
@@ -70,19 +82,15 @@ else()
     )
 endif()
 
-# Mac 特定的链接设置
-if(APPLE)
-    target_link_libraries(TetgenFEM
-        "-framework OpenGL"
-        "-framework Cocoa"
-        "-framework IOKit"
-        "-framework CoreVideo"
-    )
-endif()
-
 # 如果找到 OpenMP，则链接
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(TetgenFEM OpenMP::OpenMP_CXX)
+    target_link_libraries(TetgenFEM PRIVATE OpenMP::OpenMP_CXX)
+elseif(APPLE)
+    # clang 在 macOS 上需要手动指定 libomp
+    target_include_directories(TetgenFEM PRIVATE /opt/homebrew/opt/libomp/include)
+    target_link_libraries(TetgenFEM PRIVATE /opt/homebrew/opt/libomp/lib/libomp.dylib)
+    target_compile_options(TetgenFEM PRIVATE -Xpreprocessor -fopenmp)
+    target_link_options(TetgenFEM PRIVATE -Xpreprocessor -fopenmp -L/opt/homebrew/opt/libomp/lib -lomp)
 endif()
 
 # 设置编译选项

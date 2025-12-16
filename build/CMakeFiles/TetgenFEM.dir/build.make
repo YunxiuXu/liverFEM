@@ -76,127 +76,127 @@ CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o: CMakeFiles/TetgenFEM.dir/flags.ma
 CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/main.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/main.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/main.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/main.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/main.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/main.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/main.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/main.cpp.s
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Object.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Object.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Object.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Object.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Object.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Object.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Object.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.s
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Group.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Group.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Group.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Group.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Group.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Group.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Group.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Group.cpp.s
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Vertex.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Vertex.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Vertex.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Vertex.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Vertex.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Vertex.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Vertex.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.s
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Edge.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Edge.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Edge.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Edge.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Edge.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Edge.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Edge.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.s
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Tetrahedron.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Tetrahedron.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Tetrahedron.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Tetrahedron.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Tetrahedron.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Tetrahedron.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/Tetrahedron.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.s
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.s
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.s
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.i
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.i
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.s
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.s
 
 # Object files for target TetgenFEM
 TetgenFEM_OBJECTS = \
@@ -226,6 +226,7 @@ TetgenFEM: CMakeFiles/TetgenFEM.dir/build.make
 TetgenFEM: /opt/homebrew/lib/libGLEW.2.2.0.dylib
 TetgenFEM: /opt/homebrew/lib/libglfw.3.4.dylib
 TetgenFEM: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/libtet.a
+TetgenFEM: /opt/homebrew/opt/libomp/lib/libomp.dylib
 TetgenFEM: CMakeFiles/TetgenFEM.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX executable TetgenFEM"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/TetgenFEM.dir/link.txt --verbose=$(VERBOSE)

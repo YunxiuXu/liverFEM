@@ -424,9 +424,7 @@ void Object::PBDLOOP(int looptime) {
 
 		}
 
-		float avgConstraintNorm = 0.0f;
-		int samples = 0;
-
+#pragma omp parallel for
 		for (int groupIdx = 0; groupIdx < groups.size(); ++groupIdx) {
 			Group& currentGroup = groups[groupIdx];
 
@@ -444,17 +442,11 @@ void Object::PBDLOOP(int looptime) {
 					extern float constraintHardness;
 					extern float dampingConst; // 使用现有的阻尼常数作为Beta
 					
-					currentGroup.calFbind1(commonVerticesPair.first, commonVerticesPair.second,
-						currentGroup.currentPosition, adjacentGroup.currentPosition, 
-						currentGroup.groupVelocity, adjacentGroup.groupVelocity, 
-						currentGroup.massMatrix, adjacentGroup.massMatrix,
-						youngs, constraintHardness, dampingConst, adjacentGroupIdx);
-					if (samples < 16 && !commonVerticesPair.first.empty()) {
-						Eigen::Vector3f posThis = currentGroup.currentPosition.segment<3>(3 * commonVerticesPair.first[0]->localIndex);
-						Eigen::Vector3f posOther = adjacentGroup.currentPosition.segment<3>(3 * commonVerticesPair.second[0]->localIndex);
-						avgConstraintNorm += (posThis - posOther).norm();
-						++samples;
-					}
+						currentGroup.calFbind1(commonVerticesPair.first, commonVerticesPair.second,
+							currentGroup.currentPosition, adjacentGroup.currentPosition, 
+							currentGroup.groupVelocity, adjacentGroup.groupVelocity, 
+							currentGroup.massMatrix, adjacentGroup.massMatrix,
+							youngs, constraintHardness, dampingConst, adjacentGroupIdx);
 					//if (direction == 0 || direction == 1) {
 					//	currentGroup.distancesX = Eigen::VectorXf::Zero(commonVerticesPair.first.size() * 3);
 
@@ -489,6 +481,25 @@ void Object::PBDLOOP(int looptime) {
 
 			}
 
+		}
+		// Sample a few constraints (serially) for early-exit heuristic without paying OMP overhead
+		float avgConstraintNorm = 0.0f;
+		int samples = 0;
+		for (int groupIdx = 0; groupIdx < groups.size() && samples < 16; ++groupIdx) {
+			Group& currentGroup = groups[groupIdx];
+			for (int direction = 0; direction < 6 && samples < 16; ++direction) {
+				int adjacentGroupIdx = currentGroup.adjacentGroupIDs[direction];
+				if (adjacentGroupIdx != -1) {
+					Group& adjacentGroup = groups[adjacentGroupIdx];
+					const auto& commonVerticesPair = currentGroup.commonVerticesInDirections[direction];
+					if (!commonVerticesPair.first.empty()) {
+						Eigen::Vector3f posThis = currentGroup.currentPosition.segment<3>(3 * commonVerticesPair.first[0]->localIndex);
+						Eigen::Vector3f posOther = adjacentGroup.currentPosition.segment<3>(3 * commonVerticesPair.second[0]->localIndex);
+						avgConstraintNorm += (posThis - posOther).norm();
+						++samples;
+					}
+				}
+			}
 		}
 		if (samples > 0) {
 			avgConstraintNorm /= static_cast<float>(samples);
