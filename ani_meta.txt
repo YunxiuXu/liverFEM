@@ -1,0 +1,11 @@
+experiment=exp3_anisotropy
+youngs1=1e+07
+youngs2=1e+06
+youngs3=1e+06
+poisson=0.28
+autoTestDuration=2
+autoTestDistance=0.5
+dragInfluenceRadius=0.6
+selectedVertex=774
+selectedPos=0.496218 0.487669 1.06922
+neighbors=774,1441,821,1472,852,1438,1471,854,1439,1437,1436,780

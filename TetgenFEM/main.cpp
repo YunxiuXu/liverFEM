@@ -41,6 +41,15 @@ const double benchmarkForceMag = 10.0f; // Newtons
 Eigen::Vector3f benchmarkForceDir(1.0f, 0.0f, 0.0f); // Direction
 double benchmarkStartTime = 0.0;
 
+// Auto-Test Variables (Restored)
+bool isAutoTestActive = false;
+int autoTestAxis = 0; // 0:X, 1:Y
+double autoTestStartTime = 0.0;
+const double autoTestDuration = 2.0;
+const float autoTestDistance = 0.5f;
+Vertex* g_selectedVertex = nullptr;
+Eigen::Vector3f autoTestStartPos;
+
 namespace {
 struct KeyLatch {
 	bool latched = false;
@@ -665,197 +674,107 @@ int main() {
 			std::cout << ">>> STARTING AUTO TEST (" << axisName << ") on Vertex " << g_selectedVertex->index << std::endl;
 		};
 
-		//object.commonPoints1 = object.findCommonVertices(object.groups[1], object.groups[2]);
+		// ------------------ Automated Experiment State Machine
+		static int experimentState = 0; // 0: Idle, 1: Start X, 2: Wait X, 3: Start Y, 4: Wait Y, 5: Done
+		static int framesWait = 0;
+
 		// ------------------ UI layout (window coordinates, origin at top-left)
 		const float uiMargin = 12.0f;
-		const float uiPanelW = 280.0f;
-		const float uiPanelH = 240.0f;
-		const SimpleUI::Rect uiPanelRect{ uiMargin, uiMargin, uiPanelW, uiPanelH };
+		const float uiW = 200.0f;
+		const float uiH = 50.0f;
+		const SimpleUI::Rect uiRunRect{ uiMargin, uiMargin, uiW, uiH };
 
-		const float innerPad = 12.0f;
-		const float gap = 8.0f;
-		const float buttonH = 34.0f;
-		const float innerX = uiPanelRect.x + innerPad;
-		const float innerY = uiPanelRect.y + innerPad;
-		const float innerW = uiPanelRect.w - innerPad * 2.0f;
+		// UI button is display-only (no action).
 
-		const float colW = (innerW - gap) * 0.5f;
+		// ------------------ Manual right-click drag force (restores RMB "apply force")
+		// Holding RMB drags the nearest vertex under the cursor and applies a spring-like force.
+		static bool prevRightDown = false;
+		const bool rightDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+		const bool rightPressed = rightDown && !prevRightDown;
+		const bool rightReleased = !rightDown && prevRightDown;
+		prevRightDown = rightDown;
 
-		const SimpleUI::Rect uiRecRect{ innerX, innerY, colW, buttonH };
-		const SimpleUI::Rect uiStopRect{ innerX + colW + gap, innerY, colW, buttonH };
-		const SimpleUI::Rect uiAutoXRect{ innerX, innerY + (buttonH + gap), colW, buttonH };
-		const SimpleUI::Rect uiAutoYRect{ innerX + colW + gap, innerY + (buttonH + gap), colW, buttonH };
-		const SimpleUI::Rect uiBenchRect{ innerX, innerY + 2.0f * (buttonH + gap), innerW, buttonH }; // Replaced Save with Benchmark
-		// const SimpleUI::Rect uiSaveRect{ innerX, innerY + 2.0f * (buttonH + gap), innerW, buttonH };
+		auto pointInRect = [](double x, double y, const SimpleUI::Rect& r) {
+			return x >= r.x && x <= (r.x + r.w) && y >= r.y && y <= (r.y + r.h);
+		};
+		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
 
-		const float dpadTop = innerY + 3.0f * (buttonH + gap);
-		const float dpadCell = 34.0f;
-		const float dpadGap = 6.0f;
-		const float dpadW = dpadCell * 3.0f + dpadGap * 2.0f;
-		const float dpadX = innerX + (innerW - dpadW) * 0.5f;
-		const float dpadY = dpadTop;
-
-		const SimpleUI::Rect uiUpRect{ dpadX + (dpadCell + dpadGap), dpadY, dpadCell, dpadCell };
-		const SimpleUI::Rect uiLeftRect{ dpadX, dpadY + (dpadCell + dpadGap), dpadCell, dpadCell };
-		const SimpleUI::Rect uiRightRect{ dpadX + 2.0f * (dpadCell + dpadGap), dpadY + (dpadCell + dpadGap), dpadCell, dpadCell };
-		const SimpleUI::Rect uiDownRect{ dpadX + (dpadCell + dpadGap), dpadY + 2.0f * (dpadCell + dpadGap), dpadCell, dpadCell };
-
-		const bool canStartAutoTest = (!isAutoTestActive && g_selectedVertex != nullptr);
-		const bool uiStartRecClicked = ui.clicked(uiRecRect);
-		const bool uiStopRecClicked = ui.clicked(uiStopRect, isRecordingForce);
-		const bool uiAutoXClicked = ui.clicked(uiAutoXRect, canStartAutoTest);
-		const bool uiAutoYClicked = ui.clicked(uiAutoYRect, canStartAutoTest);
-		const bool uiBenchClicked = ui.clicked(uiBenchRect, !isBenchmarkActive);
-		//const bool uiSaveClicked = ui.clicked(uiSaveRect);
-
-		// ------------------ Force Recording Controls (keyboard + UI)
-		static KeyLatch rLatch;
-		static KeyLatch sLatch;
-		static KeyLatch bLatch; // Benchmark key
-		if (rLatch.consume(window, GLFW_KEY_R) || uiStartRecClicked) {
-			beginForceRecording();
-		}
-		if (sLatch.consume(window, GLFW_KEY_S) || uiStopRecClicked) {
-			stopForceRecordingAndSave("force_data.txt");
-		}
-		
-		// --- Benchmark Logic ---
-		if (bLatch.consume(window, GLFW_KEY_B) || uiBenchClicked) {
-			if (!isBenchmarkActive) {
-				isBenchmarkActive = true;
-				benchmarkStartTime = glfwGetTime();
-				std::cout << ">>> STARTING BENCHMARK (Cantilever Test)..." << std::endl;
-				
-				// 1. Find the right-most vertices (Simulating tip of the liver)
-				benchmarkVertices.clear();
-				float maxX = -std::numeric_limits<float>::max();
-				for (Vertex* v : objectUniqueVertices) {
-					if (v->x > maxX) maxX = v->x;
-				}
-				// Select vertices within 5% of the max X extent
-				float threshold = maxX - (maxX - (-10.0f)) * 0.05f; // rough approximation
-				// Better: just take top 20 vertices by X
-				std::vector<std::pair<float, Vertex*>> sortedVerts;
-				for (Vertex* v : objectUniqueVertices) {
-					sortedVerts.push_back({v->x, v});
-				}
-				std::sort(sortedVerts.begin(), sortedVerts.end(), [](auto& a, auto& b){ return a.first > b.first; });
-				
-				int count = 0;
-				for (auto& pair : sortedVerts) {
-					benchmarkVertices.push_back(pair.second);
-					if (++count > 20) break; 
-				}
-				std::cout << "Selected " << benchmarkVertices.size() << " vertices at the tip for loading." << std::endl;
-				
-			} else {
-				isBenchmarkActive = false;
-				std::cout << ">>> STOPPING BENCHMARK." << std::endl;
+		if (!isAutoTestActive) {
+			if (rightReleased) {
+				dragState.active = false;
+				dragState.target = nullptr;
 			}
-		}
 
-		if (isBenchmarkActive) {
-			// Apply constant force to selected vertices
-			// Force is distributed among vertices
-			Eigen::Vector3f forcePerVertex = (benchmarkForceMag / benchmarkVertices.size()) * benchmarkForceDir;
-			for (Vertex* v : benchmarkVertices) {
-				// We need to add this to dragForces or inputForce. 
-				// Since dragForces is cleared every frame, we can just insert it.
-				// However, dragForces map uses index as key.
-				if (dragForces.find(v->index) == dragForces.end()) {
-					dragForces[v->index] = forcePerVertex;
-				} else {
-					dragForces[v->index] += forcePerVertex;
+			if (rightPressed && !cursorInUiButton) {
+				Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+				model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+				const Eigen::Matrix4f projection = buildProjectionMatrix();
+
+				Vertex* picked = pickVertexAtCursor(
+					objectUniqueVertices,
+					ui.state().mouseXWindow,
+					ui.state().mouseYWindow,
+					model,
+					projection,
+					ui.state().windowWidth,
+					ui.state().windowHeight);
+
+				if (picked) {
+					g_selectedVertex = picked;
+					dragState.active = true;
+					dragState.target = picked;
+					dragState.lastX = ui.state().mouseXWindow;
+					dragState.lastY = ui.state().mouseYWindow;
+
+					const Eigen::Vector4f clip = projection * model *
+						Eigen::Vector4f(picked->x, picked->y, picked->z, 1.0f);
+					dragState.grabbedNdcZ = (std::abs(clip.w()) > 1e-8f) ? (clip.z() / clip.w()) : 0.0f;
+
+					const Eigen::Matrix4f invProjectionModel = (projection * model).inverse();
+					const Eigen::Vector3f cursorWorld = unprojectCursorToWorld(
+						ui.state().mouseXFramebuffer,
+						ui.state().mouseYFramebuffer,
+						dragState.grabbedNdcZ,
+						invProjectionModel,
+						ui.state().framebufferWidth,
+						ui.state().framebufferHeight);
+					const Eigen::Vector3f targetPos(picked->x, picked->y, picked->z);
+					dragState.grabOffset = targetPos - cursorWorld;
 				}
 			}
 		}
 
-		static bool drawFaces = true;
-		static bool drawEdges = true;
-		// Keys for Auto-Test: X and Y.
-		// Disabled Z/X display toggles to avoid conflict.
-
-		if (((glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) || uiAutoXClicked) && canStartAutoTest) {
-			beginAutoTest(0);
+		// State Machine
+		if (experimentState == 1) {
+			beginAutoTest(0); // Start X Axis Test
+			experimentState = 2;
+		}
+		else if (experimentState == 2) {
+			if (!isAutoTestActive) { // Wait for finish
+				framesWait++;
+				if (framesWait > 30) { // Wait a bit between tests
+					experimentState = 3;
+					framesWait = 0;
+				}
+			}
+		}
+		else if (experimentState == 3) {
+			beginAutoTest(1); // Start Y Axis Test
+			experimentState = 4;
+		}
+		else if (experimentState == 4) {
+			if (!isAutoTestActive) { // Wait for finish
+				std::cout << ">>> ALL EXPERIMENTS COMPLETED. EXITING..." << std::endl;
+				experimentState = 5;
+				glfwSetWindowShouldClose(window, true);
+			}
 		}
 
-		if (((glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) || uiAutoYClicked) && canStartAutoTest) {
-			beginAutoTest(1);
-		}
-
-		// Arrow keys apply a directional force to the whole object.
-		const float arrowForceMagnitude = 50.0f;
-		Eigen::Vector3f inputForce = Eigen::Vector3f::Zero();
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || ui.held(uiUpRect)) {
-			inputForce.y() += arrowForceMagnitude;
-		}
-		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || ui.held(uiDownRect)) {
-			inputForce.y() -= arrowForceMagnitude;
-		}
-		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || ui.held(uiLeftRect)) {
-			inputForce.x() -= arrowForceMagnitude;
-		}
-		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || ui.held(uiRightRect)) {
-			inputForce.x() += arrowForceMagnitude;
-		}
-		//double aa = object.groups[0].tetrahedra[0]->calMassTetra(density);
-
-		// Handle right-click dragging to apply a localized force.
+		// ------------------ Interaction Logic (Simplified)
 		std::unordered_map<int, Eigen::Vector3f> dragForces;
-		int windowWidth = 1;
-		int windowHeight = 1;
-		glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-		int logicalWidth = 1;
-		int logicalHeight = 1;
-		glfwGetWindowSize(window, &logicalWidth, &logicalHeight);
-		windowWidth = windowWidth == 0 ? 1 : windowWidth;
-		windowHeight = windowHeight == 0 ? 1 : windowHeight;
-		logicalWidth = logicalWidth == 0 ? 1 : logicalWidth;
-		logicalHeight = logicalHeight == 0 ? 1 : logicalHeight;
-		const double scaleX = static_cast<double>(windowWidth) / static_cast<double>(logicalWidth);
-		const double scaleY = static_cast<double>(windowHeight) / static_cast<double>(logicalHeight);
-
-		Eigen::Matrix4f modelMatrix = Eigen::Matrix4f::Identity();
-		modelMatrix.block<3, 3>(0, 0) = rotation.toRotationMatrix();
-		Eigen::Matrix4f projectionMatrix = buildProjectionMatrix();
-		Eigen::Matrix4f projectionModel = projectionMatrix * modelMatrix;
-		Eigen::Matrix4f invProjectionModel = projectionModel.inverse();
-
-		static bool rightWasHeld = false;
-		bool rightHeld = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-		if (rightHeld && !rightWasHeld) {
-			double mouseX = 0.0;
-			double mouseY = 0.0;
-			glfwGetCursorPos(window, &mouseX, &mouseY);
-			double fbMouseX = mouseX * scaleX;
-			double fbMouseY = mouseY * scaleY;
-			Vertex* pickedVertex = pickVertexAtCursor(objectUniqueVertices, fbMouseX, fbMouseY, modelMatrix, projectionMatrix, windowWidth, windowHeight);
-			if (pickedVertex != nullptr) {
-				dragState.active = true;
-				dragState.target = pickedVertex;
-				g_selectedVertex = pickedVertex; // Save for auto-test
-				
-				dragState.lastX = fbMouseX;
-				dragState.lastY = fbMouseY;
-				Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
-				Eigen::Vector4f clip = projectionModel * Eigen::Vector4f(targetPos.x(), targetPos.y(), targetPos.z(), 1.0f);
-				const float invW = (std::abs(clip.w()) > 1e-8f) ? (1.0f / clip.w()) : 1.0f;
-				dragState.grabbedNdcZ = clip.z() * invW;
-				Eigen::Vector3f cursorWorld = unprojectCursorToWorld(fbMouseX, fbMouseY, dragState.grabbedNdcZ, invProjectionModel, windowWidth, windowHeight);
-				dragState.grabOffset = targetPos - cursorWorld;
-				std::cout << "Picked vertex id " << pickedVertex->index 
-					<< " at (" << pickedVertex->x << ", " << pickedVertex->y << ", " << pickedVertex->z << ")" << std::endl;
-			}
-			else {
-				std::cout << "No vertex picked under cursor." << std::endl;
-			}
-		}
-		else if (!rightHeld && !isAutoTestActive) {
-			dragState.active = false;
-			dragState.target = nullptr;
-		}
-
-		if (dragState.active && dragState.target != nullptr && (rightHeld || isAutoTestActive)) {
+		
+		// Handle Dragging Physics
+		if (dragState.active && dragState.target != nullptr) {
 			Eigen::Vector3f desiredTargetPos;
 			bool processPhysics = true;
 
@@ -878,20 +797,30 @@ int main() {
 					else desiredTargetPos.y() += autoTestDistance * t; // Y Axis
 				}
 			} else {
-				// Mouse Logic
-				double mouseX = 0.0;
-				double mouseY = 0.0;
-				glfwGetCursorPos(window, &mouseX, &mouseY);
-				double fbMouseX = mouseX * scaleX;
-				double fbMouseY = mouseY * scaleY;
-				Eigen::Vector3f cursorWorld = unprojectCursorToWorld(fbMouseX, fbMouseY, dragState.grabbedNdcZ, invProjectionModel, windowWidth, windowHeight);
-				desiredTargetPos = cursorWorld + dragState.grabOffset;
+				const bool manualRightDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+				if (!manualRightDown) {
+					processPhysics = false;
+					dragState.active = false;
+					dragState.target = nullptr;
+				} else {
+					Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+					model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+					const Eigen::Matrix4f projection = buildProjectionMatrix();
+					const Eigen::Matrix4f invProjectionModel = (projection * model).inverse();
+					desiredTargetPos = unprojectCursorToWorld(
+						ui.state().mouseXFramebuffer,
+						ui.state().mouseYFramebuffer,
+						dragState.grabbedNdcZ,
+						invProjectionModel,
+						ui.state().framebufferWidth,
+						ui.state().framebufferHeight) + dragState.grabOffset;
+				}
 			}
-
+			
 			if (processPhysics && dragState.active) {
 				const float influenceRadius = dragInfluenceRadius;
-				const float stiffness = dragStiffness; // Higher = stronger pull toward cursor.
-				const float maxAccel = dragMaxAccel; // Clamp to avoid exploding forces.
+				const float stiffness = dragStiffness; 
+				const float maxAccel = dragMaxAccel; 
 				Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
 				Eigen::Vector3f displacement = desiredTargetPos - targetPos;
 				float displacementNorm = displacement.norm();
@@ -908,9 +837,9 @@ int main() {
 					Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
 					float dist = (currentPos - targetPos).norm();
 					if (dist <= influenceRadius) {
-						float falloff = std::max(0.05f, 1.0f - dist / influenceRadius); // keep a small minimum
+						float falloff = std::max(0.05f, 1.0f - dist / influenceRadius); 
 						if (vertex == dragState.target) {
-							falloff *= 1.5f; // slightly prioritize the grabbed vertex
+							falloff *= 1.5f; 
 						}
 						Eigen::Vector3f accel = displacement * (stiffness * falloff);
 						float accelNorm = accel.norm();
@@ -918,7 +847,7 @@ int main() {
 							accel *= (maxAccel / accelNorm);
 						}
 						dragForces[vertex->index] = accel;
-						currentFrameTotalForce += accel.norm(); // Approximate force magnitude (proportional to accel)
+						currentFrameTotalForce += accel.norm(); 
 					}
 				}
 				
@@ -929,7 +858,11 @@ int main() {
 			}
 		}
 
-		rightWasHeld = rightHeld;
+		Eigen::Vector3f inputForce = Eigen::Vector3f::Zero(); // Placeholder for removed manual input
+
+
+		static bool drawFaces = true;
+		static bool drawEdges = true;
 #pragma omp parallel for
 		for (int i = 0; i < groupNum; i++) {
 			//object.groups[i].calGroupKFEM(youngs, poisson);
@@ -1114,16 +1047,8 @@ int main() {
 
 		// ------------------ UI overlay (draw last)
 		ui.beginDraw2D();
-		ui.drawPanelBackground(uiPanelRect);
-		ui.renderButton(uiRecRect, "REC");
-		ui.renderButton(uiStopRect, "STOP", isRecordingForce);
-		ui.renderButton(uiAutoXRect, "AUTO X", (!isAutoTestActive && g_selectedVertex != nullptr));
-		ui.renderButton(uiAutoYRect, "AUTO Y", (!isAutoTestActive && g_selectedVertex != nullptr));
-		ui.renderButton(uiBenchRect, isBenchmarkActive ? "STOP BENCH" : "BENCHMARK");
-		ui.renderButton(uiUpRect, "U");
-		ui.renderButton(uiLeftRect, "L");
-		ui.renderButton(uiRightRect, "R");
-		ui.renderButton(uiDownRect, "D");
+		// ui.drawPanelBackground(uiPanelRect); // removed
+		ui.renderButton(uiRunRect, "RUN EXPERIMENTS", true);
 		ui.endDraw2D();
 
 		// Swap front and back buffers

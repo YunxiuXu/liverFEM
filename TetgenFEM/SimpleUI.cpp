@@ -11,9 +11,9 @@
 namespace SimpleUI {
 namespace {
 
-constexpr PanelLayout kDefaultPanel{};
+[[maybe_unused]] constexpr PanelLayout kDefaultPanel{};
 
-Rect defaultPanelRect() {
+[[maybe_unused]] Rect defaultPanelRect() {
 	return Rect{ kDefaultPanel.margin, kDefaultPanel.margin, kDefaultPanel.width, kDefaultPanel.height };
 }
 
@@ -101,9 +101,12 @@ float approximateTextWidth(const std::string& text, float sizePx) {
 } // namespace
 
 bool IsCursorInDefaultPanel(GLFWwindow* window, double cursorX, double cursorY) {
+	// UI is currently display-only (no interactive controls), so it should never
+	// block mouse interactions in the 3D view (camera rotate/drag/etc.).
 	(void)window;
-	const Rect panel = defaultPanelRect();
-	return (cursorX >= panel.x && cursorX <= panel.x + panel.w && cursorY >= panel.y && cursorY <= panel.y + panel.h);
+	(void)cursorX;
+	(void)cursorY;
+	return false;
 }
 
 bool Context::pointInRect(double x, double y, const Rect& rect) {
