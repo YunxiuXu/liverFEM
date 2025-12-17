@@ -56,6 +56,7 @@ set(SOURCES
     TetgenFEM/Experiment3.cpp
     TetgenFEM/Experiment1.cpp
     TetgenFEM/Experiment2.cpp
+    TetgenFEM/Experiment4.cpp
 )
 
 # 创建可执行文件

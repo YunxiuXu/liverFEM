@@ -49,6 +49,20 @@ float exp2PullStiffness = 3500.0f;
 float exp2PullMaxAccel = 50000.0f;
 int exp2PbdIterations = 60;
 bool exp2ResetAfterFinish = true;
+int exp4WarmupFrames = 60;
+int exp4MeasureFrames = 240;
+int exp4PbdIterations = 10;
+int exp4TargetTets1 = 5000;
+int exp4TargetTets2 = 20000;
+int exp4TargetTets3 = 50000;
+float exp4MaxVolumeStart = 0.0f;
+float exp4MaxVolume1 = 0.0f;
+float exp4MaxVolume2 = 0.0f;
+float exp4MaxVolume3 = 0.0f;
+int exp4TuneIters = 3;
+int exp4Thread1 = 1;
+int exp4Thread2 = 4;
+int exp4Thread3 = 8;
 std::string modelDir;
 std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
@@ -120,7 +134,11 @@ void loadParams(const std::string& filename) {
 	        {"exp2_anchorSliceFrac", &exp2AnchorSliceFrac},
 	        {"exp2_pullSliceFrac", &exp2PullSliceFrac},
 	        {"exp2_pullStiffness", &exp2PullStiffness},
-	        {"exp2_pullMaxAccel", &exp2PullMaxAccel}
+	        {"exp2_pullMaxAccel", &exp2PullMaxAccel},
+	        {"exp4_maxVolumeStart", &exp4MaxVolumeStart},
+	        {"exp4_maxVolume1", &exp4MaxVolume1},
+	        {"exp4_maxVolume2", &exp4MaxVolume2},
+	        {"exp4_maxVolume3", &exp4MaxVolume3}
 	    };
 
     std::unordered_map<std::string, int*> intParams = {
@@ -136,7 +154,17 @@ void loadParams(const std::string& filename) {
         {"exp2_dragSteps", &exp2DragSteps},
         {"exp2_holdSteps", &exp2HoldSteps},
         {"exp2_minRegionVertexCount", &exp2MinRegionVertexCount},
-        {"exp2_pbdIterations", &exp2PbdIterations}
+        {"exp2_pbdIterations", &exp2PbdIterations},
+        {"exp4_warmupFrames", &exp4WarmupFrames},
+        {"exp4_measureFrames", &exp4MeasureFrames},
+        {"exp4_pbdIterations", &exp4PbdIterations},
+        {"exp4_targetTets1", &exp4TargetTets1},
+        {"exp4_targetTets2", &exp4TargetTets2},
+        {"exp4_targetTets3", &exp4TargetTets3},
+        {"exp4_tuneIters", &exp4TuneIters},
+        {"exp4_thread1", &exp4Thread1},
+        {"exp4_thread2", &exp4Thread2},
+        {"exp4_thread3", &exp4Thread3}
     };
 
     std::unordered_map<std::string, std::string*> stringParams = {

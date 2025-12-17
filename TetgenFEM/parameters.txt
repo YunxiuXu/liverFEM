@@ -63,5 +63,23 @@ exp2_pullStiffness=20000
 exp2_pullMaxAccel=200000
 exp2_pbdIterations=60
 exp2_resetAfterFinish=true
+
+# Experiment 4 (one-click) parameters (only used after pressing START EXP4)
+# Outputs: out/experiment4/<timestamp>/experiment4_performance.csv
+exp4_warmupFrames=60
+exp4_measureFrames=240
+exp4_pbdIterations=10
+exp4_targetTets1=5000
+exp4_targetTets2=20000
+exp4_targetTets3=50000
+# Optional: set these to skip auto-tuning and force fixed TetGen max volume for each target.
+exp4_maxVolumeStart=0
+exp4_maxVolume1=0
+exp4_maxVolume2=0
+exp4_maxVolume3=0
+exp4_tuneIters=3
+exp4_thread1=1
+exp4_thread2=10
+exp4_thread3=14
 		
 		

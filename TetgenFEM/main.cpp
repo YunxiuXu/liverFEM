@@ -24,6 +24,7 @@
 #include "Experiment3.h"
 #include "Experiment1.h"
 #include "Experiment2.h"
+#include "Experiment4.h"
 
 
 
@@ -353,14 +354,25 @@ static Eigen::Vector3f unprojectCursorToWorld(double fbMouseX,
 	return world.head<3>() * invW;
 }
 
-int main() {
+int main(int argc, char** argv) {
 
 	loadParams("parameters.txt");
 	// Make sure both OpenMP and Eigen use all available cores
 	omp_set_dynamic(0);
-	omp_set_num_threads(omp_get_max_threads());
+	omp_set_num_threads(std::max(1, omp_get_num_procs()));
 	Eigen::initParallel();
-	Eigen::setNbThreads(omp_get_max_threads());
+	Eigen::setNbThreads(std::max(1, omp_get_num_procs()));
+
+	for (int i = 1; i < argc; ++i) {
+		if (std::string(argv[i]) == "--exp4") {
+			Experiment4& experiment4 = Experiment4::instance();
+			experiment4.requestStart();
+			// Two updates: first transitions Idle->PendingStart, second runs benchmarks.
+			experiment4.update();
+			experiment4.update();
+			return 0;
+		}
+	}
 
 	tetgenio in, out;
 	in.firstnumber = 1;  // All indices start from 1
@@ -646,6 +658,7 @@ int main() {
 	experiment1.init(&object, objectUniqueVertices);
 	Experiment2& experiment2 = Experiment2::instance();
 	experiment2.init(&object, objectUniqueVertices);
+	Experiment4& experiment4 = Experiment4::instance();
 
 	DragState dragState;
 
@@ -656,6 +669,7 @@ int main() {
 		experiment3.update();
 		experiment1.update();
 		experiment2.update();
+		experiment4.update();
 
 		auto beginForceRecording = [&]() {
 			isRecordingForce = true;
@@ -712,7 +726,7 @@ int main() {
 		};
 		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
 
-		if (!isAutoTestActive && !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive()) {
+		if (!isAutoTestActive && !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive()) {
 			if (rightReleased) {
 				dragState.active = false;
 				dragState.target = nullptr;
@@ -808,6 +822,10 @@ int main() {
 		}
 		// Experiment2 does not use the mouse-like drag pipeline, so always disable it while active.
 		if (experiment2.isActive()) {
+			dragState.active = false;
+			dragState.target = nullptr;
+		}
+		if (experiment4.isActive()) {
 			dragState.active = false;
 			dragState.target = nullptr;
 		}
@@ -1112,19 +1130,24 @@ int main() {
 		// ------------------ UI overlay (draw last)
 		ui.beginDraw2D();
 		// ui.drawPanelBackground(uiPanelRect); // removed
-		const bool canStartExp3 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive();
+		const bool canStartExp3 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive();
 		if (ui.button(uiRunRect, experiment3.buttonLabel(), canStartExp3)) {
 			experiment3.requestStart();
 		}
 		const SimpleUI::Rect uiExp1Rect{ uiMargin, uiMargin + uiH + 8.0f, uiW, uiH };
-		const bool canStartExp1 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive();
+		const bool canStartExp1 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive();
 		if (ui.button(uiExp1Rect, experiment1.buttonLabel(), canStartExp1)) {
 			experiment1.requestStart();
 		}
 		const SimpleUI::Rect uiExp2Rect{ uiMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
-		const bool canStartExp2 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive();
+		const bool canStartExp2 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive();
 		if (ui.button(uiExp2Rect, experiment2.buttonLabel(), canStartExp2)) {
 			experiment2.requestStart();
+		}
+		const SimpleUI::Rect uiExp4Rect{ uiMargin, uiMargin + 3.0f * (uiH + 8.0f), uiW, uiH };
+		const bool canStartExp4 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive();
+		if (ui.button(uiExp4Rect, experiment4.buttonLabel(), canStartExp4)) {
+			experiment4.requestStart();
 		}
 		ui.endDraw2D();
 
