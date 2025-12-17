@@ -1,4 +1,4 @@
-
+﻿
 //#define EIGEN_USE_MKL_ALL
 #include <iostream>
 #include <vector>
@@ -32,15 +32,31 @@
 bool isRecordingForce = false;
 std::vector<float> recordedForces;
 std::vector<float> recordedTime;
-		double recordStartTime = 0.0;
-		// Auto-Test Variables
-		bool isAutoTestActive = false;
-		int autoTestAxis = 0; // 0:X, 1:Y
-		double autoTestStartTime = 0.0;
-		const double autoTestDuration = 2.0;
-		const float autoTestDistance = 0.5f;
-		Vertex* g_selectedVertex = nullptr;
-		Eigen::Vector3f autoTestStartPos;
+double recordStartTime = 0.0;
+
+// Benchmark Mode Variables
+bool isBenchmarkActive = false;
+std::vector<Vertex*> benchmarkVertices;
+const double benchmarkForceMag = 10.0f; // Newtons
+Eigen::Vector3f benchmarkForceDir(1.0f, 0.0f, 0.0f); // Direction
+double benchmarkStartTime = 0.0;
+
+namespace {
+struct KeyLatch {
+	bool latched = false;
+	bool consume(GLFWwindow* window, int key) {
+		const bool down = glfwGetKey(window, key) == GLFW_PRESS;
+		if (down && !latched) {
+			latched = true;
+			return true;
+		}
+		if (!down) {
+			latched = false;
+		}
+		return false;
+	}
+};
+} // namespace
 
 void saveForceData(const std::string& filename) {
 	std::ofstream file(filename);
@@ -619,6 +635,36 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		ui.beginFrame(window);
 
+		auto beginForceRecording = [&]() {
+			isRecordingForce = true;
+			recordedForces.clear();
+			recordedTime.clear();
+			recordStartTime = glfwGetTime();
+			std::cout << ">>> Started recording force data..." << std::endl;
+		};
+
+		auto stopForceRecordingAndSave = [&](const std::string& filename) {
+			if (!isRecordingForce) return;
+			isRecordingForce = false;
+			saveForceData(filename);
+			std::cout << ">>> Stopped recording. Data saved." << std::endl;
+		};
+
+		auto beginAutoTest = [&](int axis) {
+			isAutoTestActive = true;
+			autoTestAxis = axis;
+			autoTestStartTime = glfwGetTime();
+			autoTestStartPos = Eigen::Vector3f(g_selectedVertex->x, g_selectedVertex->y, g_selectedVertex->z);
+
+			dragState.active = true;
+			dragState.target = g_selectedVertex;
+
+			beginForceRecording();
+
+			const char* axisName = (axis == 0) ? "X-AXIS" : "Y-AXIS";
+			std::cout << ">>> STARTING AUTO TEST (" << axisName << ") on Vertex " << g_selectedVertex->index << std::endl;
+		};
+
 		//object.commonPoints1 = object.findCommonVertices(object.groups[1], object.groups[2]);
 		// ------------------ UI layout (window coordinates, origin at top-left)
 		const float uiMargin = 12.0f;
@@ -639,7 +685,8 @@ int main() {
 		const SimpleUI::Rect uiStopRect{ innerX + colW + gap, innerY, colW, buttonH };
 		const SimpleUI::Rect uiAutoXRect{ innerX, innerY + (buttonH + gap), colW, buttonH };
 		const SimpleUI::Rect uiAutoYRect{ innerX + colW + gap, innerY + (buttonH + gap), colW, buttonH };
-		const SimpleUI::Rect uiSaveRect{ innerX, innerY + 2.0f * (buttonH + gap), innerW, buttonH };
+		const SimpleUI::Rect uiBenchRect{ innerX, innerY + 2.0f * (buttonH + gap), innerW, buttonH }; // Replaced Save with Benchmark
+		// const SimpleUI::Rect uiSaveRect{ innerX, innerY + 2.0f * (buttonH + gap), innerW, buttonH };
 
 		const float dpadTop = innerY + 3.0f * (buttonH + gap);
 		const float dpadCell = 34.0f;
@@ -653,72 +700,87 @@ int main() {
 		const SimpleUI::Rect uiRightRect{ dpadX + 2.0f * (dpadCell + dpadGap), dpadY + (dpadCell + dpadGap), dpadCell, dpadCell };
 		const SimpleUI::Rect uiDownRect{ dpadX + (dpadCell + dpadGap), dpadY + 2.0f * (dpadCell + dpadGap), dpadCell, dpadCell };
 
+		const bool canStartAutoTest = (!isAutoTestActive && g_selectedVertex != nullptr);
 		const bool uiStartRecClicked = ui.clicked(uiRecRect);
-		const bool uiStopRecClicked = ui.clicked(uiStopRect);
-		const bool uiAutoXClicked = ui.clicked(uiAutoXRect, (!isAutoTestActive && g_selectedVertex != nullptr));
-		const bool uiAutoYClicked = ui.clicked(uiAutoYRect, (!isAutoTestActive && g_selectedVertex != nullptr));
-		const bool uiSaveClicked = ui.clicked(uiSaveRect);
+		const bool uiStopRecClicked = ui.clicked(uiStopRect, isRecordingForce);
+		const bool uiAutoXClicked = ui.clicked(uiAutoXRect, canStartAutoTest);
+		const bool uiAutoYClicked = ui.clicked(uiAutoYRect, canStartAutoTest);
+		const bool uiBenchClicked = ui.clicked(uiBenchRect, !isBenchmarkActive);
+		//const bool uiSaveClicked = ui.clicked(uiSaveRect);
 
 		// ------------------ Force Recording Controls (keyboard + UI)
-		static bool rPressed = false;
-		static bool sPressed = false;
-		if (((glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && !rPressed)) || uiStartRecClicked) {
-			isRecordingForce = true;
-			recordedForces.clear();
-			recordedTime.clear();
-			recordStartTime = glfwGetTime();
-			std::cout << ">>> Started recording force data..." << std::endl;
-			rPressed = true;
+		static KeyLatch rLatch;
+		static KeyLatch sLatch;
+		static KeyLatch bLatch; // Benchmark key
+		if (rLatch.consume(window, GLFW_KEY_R) || uiStartRecClicked) {
+			beginForceRecording();
 		}
-		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE) rPressed = false;
-
-		if (((glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && !sPressed)) || uiStopRecClicked) {
-			if (isRecordingForce) {
-				isRecordingForce = false;
-				saveForceData("force_data.txt");
-				std::cout << ">>> Stopped recording. Data saved." << std::endl;
+		if (sLatch.consume(window, GLFW_KEY_S) || uiStopRecClicked) {
+			stopForceRecordingAndSave("force_data.txt");
+		}
+		
+		// --- Benchmark Logic ---
+		if (bLatch.consume(window, GLFW_KEY_B) || uiBenchClicked) {
+			if (!isBenchmarkActive) {
+				isBenchmarkActive = true;
+				benchmarkStartTime = glfwGetTime();
+				std::cout << ">>> STARTING BENCHMARK (Cantilever Test)..." << std::endl;
+				
+				// 1. Find the right-most vertices (Simulating tip of the liver)
+				benchmarkVertices.clear();
+				float maxX = -std::numeric_limits<float>::max();
+				for (Vertex* v : objectUniqueVertices) {
+					if (v->x > maxX) maxX = v->x;
+				}
+				// Select vertices within 5% of the max X extent
+				float threshold = maxX - (maxX - (-10.0f)) * 0.05f; // rough approximation
+				// Better: just take top 20 vertices by X
+				std::vector<std::pair<float, Vertex*>> sortedVerts;
+				for (Vertex* v : objectUniqueVertices) {
+					sortedVerts.push_back({v->x, v});
+				}
+				std::sort(sortedVerts.begin(), sortedVerts.end(), [](auto& a, auto& b){ return a.first > b.first; });
+				
+				int count = 0;
+				for (auto& pair : sortedVerts) {
+					benchmarkVertices.push_back(pair.second);
+					if (++count > 20) break; 
+				}
+				std::cout << "Selected " << benchmarkVertices.size() << " vertices at the tip for loading." << std::endl;
+				
+			} else {
+				isBenchmarkActive = false;
+				std::cout << ">>> STOPPING BENCHMARK." << std::endl;
 			}
-			sPressed = true;
 		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE) sPressed = false;
+
+		if (isBenchmarkActive) {
+			// Apply constant force to selected vertices
+			// Force is distributed among vertices
+			Eigen::Vector3f forcePerVertex = (benchmarkForceMag / benchmarkVertices.size()) * benchmarkForceDir;
+			for (Vertex* v : benchmarkVertices) {
+				// We need to add this to dragForces or inputForce. 
+				// Since dragForces is cleared every frame, we can just insert it.
+				// However, dragForces map uses index as key.
+				if (dragForces.find(v->index) == dragForces.end()) {
+					dragForces[v->index] = forcePerVertex;
+				} else {
+					dragForces[v->index] += forcePerVertex;
+				}
+			}
+		}
 
 		static bool drawFaces = true;
 		static bool drawEdges = true;
 		// Keys for Auto-Test: X and Y.
 		// Disabled Z/X display toggles to avoid conflict.
 
-		if (((glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) || uiAutoXClicked) && !isAutoTestActive && g_selectedVertex) {
-			isAutoTestActive = true;
-			autoTestAxis = 0; // X-axis
-			autoTestStartTime = glfwGetTime();
-			autoTestStartPos = Eigen::Vector3f(g_selectedVertex->x, g_selectedVertex->y, g_selectedVertex->z);
-			
-			dragState.active = true;
-			dragState.target = g_selectedVertex;
-			
-			isRecordingForce = true;
-			recordedForces.clear();
-			recordedTime.clear();
-			recordStartTime = glfwGetTime();
-			
-			std::cout << ">>> STARTING AUTO TEST (X-AXIS) on Vertex " << g_selectedVertex->index << std::endl;
+		if (((glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) || uiAutoXClicked) && canStartAutoTest) {
+			beginAutoTest(0);
 		}
 
-		if (((glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) || uiAutoYClicked) && !isAutoTestActive && g_selectedVertex) {
-			isAutoTestActive = true;
-			autoTestAxis = 1; // Y-axis
-			autoTestStartTime = glfwGetTime();
-			autoTestStartPos = Eigen::Vector3f(g_selectedVertex->x, g_selectedVertex->y, g_selectedVertex->z);
-			
-			dragState.active = true;
-			dragState.target = g_selectedVertex;
-			
-			isRecordingForce = true;
-			recordedForces.clear();
-			recordedTime.clear();
-			recordStartTime = glfwGetTime();
-			
-			std::cout << ">>> STARTING AUTO TEST (Y-AXIS) on Vertex " << g_selectedVertex->index << std::endl;
+		if (((glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) || uiAutoYClicked) && canStartAutoTest) {
+			beginAutoTest(1);
 		}
 
 		// Arrow keys apply a directional force to the whole object.
@@ -736,7 +798,6 @@ int main() {
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || ui.held(uiRightRect)) {
 			inputForce.x() += arrowForceMagnitude;
 		}
-		//std::cout << wKey << std::endl;
 		//double aa = object.groups[0].tetrahedra[0]->calMassTetra(density);
 
 		// Handle right-click dragging to apply a localized force.
@@ -876,7 +937,6 @@ int main() {
 			//object.groups[i].calPrimeVecS(topVertexLocalIndices, bottomVertexLocalIndices);
 			//object.groups[i].calPrimeVec2(wKey);
 			//object.groups[i].calPrimeVec(wKey);
-			
 			//object.groups[i].calPrimeVecT(wKey);
 			/*object.groups[i].calLHSFEM();
 			object.groups[i].calRHSFEM();
@@ -895,10 +955,9 @@ int main() {
 
 		object.PBDLOOP(10);
 
-		static bool cPressed = false;
-		const bool cKeyDown = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
-		const bool cTriggered = (cKeyDown && !cPressed) || uiSaveClicked;
-		if (cTriggered) {
+		static KeyLatch cLatch;
+		// Replaced SAVE button with Benchmark, so allow saving via Key C only or re-map
+		if (cLatch.consume(window, GLFW_KEY_C)) {
 			std::ofstream file("vbdcomp_our.txt", std::ios::out | std::ios::trunc);
 			if (!file.is_open()) {
 				std::cerr << "Failed to open file." << std::endl;
@@ -910,7 +969,6 @@ int main() {
 			file.close();
 			std::cout << "Data has been written to the file." << std::endl;
 		}
-		cPressed = cKeyDown;
 
 		
 
@@ -1061,7 +1119,7 @@ int main() {
 		ui.renderButton(uiStopRect, "STOP", isRecordingForce);
 		ui.renderButton(uiAutoXRect, "AUTO X", (!isAutoTestActive && g_selectedVertex != nullptr));
 		ui.renderButton(uiAutoYRect, "AUTO Y", (!isAutoTestActive && g_selectedVertex != nullptr));
-		ui.renderButton(uiSaveRect, "SAVE");
+		ui.renderButton(uiBenchRect, isBenchmarkActive ? "STOP BENCH" : "BENCHMARK");
 		ui.renderButton(uiUpRect, "U");
 		ui.renderButton(uiLeftRect, "L");
 		ui.renderButton(uiRightRect, "R");
