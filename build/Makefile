@@ -225,6 +225,30 @@ TetgenFEM/ReadSTL.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/TetgenFEM.dir/build.make CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.s
 .PHONY : TetgenFEM/ReadSTL.cpp.s
 
+TetgenFEM/SimpleUI.o: TetgenFEM/SimpleUI.cpp.o
+.PHONY : TetgenFEM/SimpleUI.o
+
+# target to build an object file
+TetgenFEM/SimpleUI.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TetgenFEM.dir/build.make CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o
+.PHONY : TetgenFEM/SimpleUI.cpp.o
+
+TetgenFEM/SimpleUI.i: TetgenFEM/SimpleUI.cpp.i
+.PHONY : TetgenFEM/SimpleUI.i
+
+# target to preprocess a source file
+TetgenFEM/SimpleUI.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TetgenFEM.dir/build.make CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.i
+.PHONY : TetgenFEM/SimpleUI.cpp.i
+
+TetgenFEM/SimpleUI.s: TetgenFEM/SimpleUI.cpp.s
+.PHONY : TetgenFEM/SimpleUI.s
+
+# target to generate assembly for a file
+TetgenFEM/SimpleUI.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TetgenFEM.dir/build.make CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.s
+.PHONY : TetgenFEM/SimpleUI.cpp.s
+
 TetgenFEM/Tetrahedron.o: TetgenFEM/Tetrahedron.cpp.o
 .PHONY : TetgenFEM/Tetrahedron.o
 
@@ -366,6 +390,9 @@ help:
 	@echo "... TetgenFEM/ReadSTL.o"
 	@echo "... TetgenFEM/ReadSTL.i"
 	@echo "... TetgenFEM/ReadSTL.s"
+	@echo "... TetgenFEM/SimpleUI.o"
+	@echo "... TetgenFEM/SimpleUI.i"
+	@echo "... TetgenFEM/SimpleUI.s"
 	@echo "... TetgenFEM/Tetrahedron.o"
 	@echo "... TetgenFEM/Tetrahedron.i"
 	@echo "... TetgenFEM/Tetrahedron.s"

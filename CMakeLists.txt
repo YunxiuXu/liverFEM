@@ -50,6 +50,7 @@ set(SOURCES
     TetgenFEM/Edge.cpp
     TetgenFEM/Tetrahedron.cpp
     TetgenFEM/VisualOpenGL.cpp
+    TetgenFEM/SimpleUI.cpp
     TetgenFEM/ReadSTL.cpp
     TetgenFEM/params.cpp
 )

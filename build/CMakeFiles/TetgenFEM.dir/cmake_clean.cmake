@@ -7,6 +7,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/TetgenFEM.dir/TetgenFEM/Object.cpp.o.d"
   "CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o"
   "CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o.d"
+  "CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o"
+  "CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o.d"
   "CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o"
   "CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o.d"
   "CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o"

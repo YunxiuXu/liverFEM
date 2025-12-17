@@ -170,10 +170,24 @@ CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.s"
 	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/VisualOpenGL.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.s
 
+CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
+CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/SimpleUI.cpp
+CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o"
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/SimpleUI.cpp
+
+CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.i"
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/SimpleUI.cpp > CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.i
+
+CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.s"
+	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/SimpleUI.cpp -o CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.s
+
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o"
 	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/ReadSTL.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.i: cmake_force
@@ -187,7 +201,7 @@ CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.s: cmake_force
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o: CMakeFiles/TetgenFEM.dir/flags.make
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o: CMakeFiles/TetgenFEM.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o"
 	/opt/homebrew/opt/llvm/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o -MF CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o.d -o CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o -c /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/params.cpp
 
 CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.i: cmake_force
@@ -207,6 +221,7 @@ TetgenFEM_OBJECTS = \
 "CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o" \
 "CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o" \
 "CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o" \
+"CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o" \
 "CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o" \
 "CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o"
 
@@ -220,6 +235,7 @@ TetgenFEM: CMakeFiles/TetgenFEM.dir/TetgenFEM/Vertex.cpp.o
 TetgenFEM: CMakeFiles/TetgenFEM.dir/TetgenFEM/Edge.cpp.o
 TetgenFEM: CMakeFiles/TetgenFEM.dir/TetgenFEM/Tetrahedron.cpp.o
 TetgenFEM: CMakeFiles/TetgenFEM.dir/TetgenFEM/VisualOpenGL.cpp.o
+TetgenFEM: CMakeFiles/TetgenFEM.dir/TetgenFEM/SimpleUI.cpp.o
 TetgenFEM: CMakeFiles/TetgenFEM.dir/TetgenFEM/ReadSTL.cpp.o
 TetgenFEM: CMakeFiles/TetgenFEM.dir/TetgenFEM/params.cpp.o
 TetgenFEM: CMakeFiles/TetgenFEM.dir/build.make
@@ -228,7 +244,7 @@ TetgenFEM: /opt/homebrew/lib/libglfw.3.4.dylib
 TetgenFEM: /Users/yunxiuxu/Documents/tetfemcpp/TetgenFEM/libtet.a
 TetgenFEM: /opt/homebrew/opt/libomp/lib/libomp.dylib
 TetgenFEM: CMakeFiles/TetgenFEM.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX executable TetgenFEM"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/yunxiuxu/Documents/tetfemcpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking CXX executable TetgenFEM"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/TetgenFEM.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

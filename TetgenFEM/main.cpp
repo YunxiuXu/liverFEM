@@ -16,6 +16,7 @@
 #include <random>
 #include <omp.h>
 #include "VisualOpenGL.h"
+#include "SimpleUI.h"
 #include "ReadSTL.h"
 #include "Object.h"
 #include "Vertex.h"
@@ -634,7 +635,9 @@ int main() {
 	DragState dragState;
 
 	int frame = 1;
+	SimpleUI::Context ui;
 	while (!glfwWindowShouldClose(window)) {
+		ui.beginFrame(window);
 
 		//object.commonPoints1 = object.findCommonVertices(object.groups[1], object.groups[2]);
 		
@@ -658,10 +661,49 @@ int main() {
 		else
 			wKey = 0;
 
-		// Force Recording Controls
+		// ------------------ UI layout (window coordinates, origin at top-left)
+		const float uiMargin = 12.0f;
+		const float uiPanelW = 280.0f;
+		const float uiPanelH = 240.0f;
+		const SimpleUI::Rect uiPanelRect{ uiMargin, uiMargin, uiPanelW, uiPanelH };
+
+		const float innerPad = 12.0f;
+		const float gap = 8.0f;
+		const float buttonH = 34.0f;
+		const float innerX = uiPanelRect.x + innerPad;
+		const float innerY = uiPanelRect.y + innerPad;
+		const float innerW = uiPanelRect.w - innerPad * 2.0f;
+
+		const float colW = (innerW - gap) * 0.5f;
+
+		const SimpleUI::Rect uiRecRect{ innerX, innerY, colW, buttonH };
+		const SimpleUI::Rect uiStopRect{ innerX + colW + gap, innerY, colW, buttonH };
+		const SimpleUI::Rect uiAutoXRect{ innerX, innerY + (buttonH + gap), colW, buttonH };
+		const SimpleUI::Rect uiAutoYRect{ innerX + colW + gap, innerY + (buttonH + gap), colW, buttonH };
+		const SimpleUI::Rect uiSaveRect{ innerX, innerY + 2.0f * (buttonH + gap), innerW, buttonH };
+
+		const float dpadTop = innerY + 3.0f * (buttonH + gap);
+		const float dpadCell = 34.0f;
+		const float dpadGap = 6.0f;
+		const float dpadW = dpadCell * 3.0f + dpadGap * 2.0f;
+		const float dpadX = innerX + (innerW - dpadW) * 0.5f;
+		const float dpadY = dpadTop;
+
+		const SimpleUI::Rect uiUpRect{ dpadX + (dpadCell + dpadGap), dpadY, dpadCell, dpadCell };
+		const SimpleUI::Rect uiLeftRect{ dpadX, dpadY + (dpadCell + dpadGap), dpadCell, dpadCell };
+		const SimpleUI::Rect uiRightRect{ dpadX + 2.0f * (dpadCell + dpadGap), dpadY + (dpadCell + dpadGap), dpadCell, dpadCell };
+		const SimpleUI::Rect uiDownRect{ dpadX + (dpadCell + dpadGap), dpadY + 2.0f * (dpadCell + dpadGap), dpadCell, dpadCell };
+
+		const bool uiStartRecClicked = ui.clicked(uiRecRect);
+		const bool uiStopRecClicked = ui.clicked(uiStopRect);
+		const bool uiAutoXClicked = ui.clicked(uiAutoXRect, (!isAutoTestActive && g_selectedVertex != nullptr));
+		const bool uiAutoYClicked = ui.clicked(uiAutoYRect, (!isAutoTestActive && g_selectedVertex != nullptr));
+		const bool uiSaveClicked = ui.clicked(uiSaveRect);
+
+		// ------------------ Force Recording Controls (keyboard + UI)
 		static bool rPressed = false;
 		static bool sPressed = false;
-		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && !rPressed) {
+		if (((glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && !rPressed)) || uiStartRecClicked) {
 			isRecordingForce = true;
 			recordedForces.clear();
 			recordedTime.clear();
@@ -671,7 +713,7 @@ int main() {
 		}
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE) rPressed = false;
 
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && !sPressed) {
+		if (((glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && !sPressed)) || uiStopRecClicked) {
 			if (isRecordingForce) {
 				isRecordingForce = false;
 				saveForceData("force_data.txt");
@@ -686,7 +728,7 @@ int main() {
 		// Keys for Auto-Test: X and Y.
 		// Disabled Z/X display toggles to avoid conflict.
 
-		if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS && !isAutoTestActive && g_selectedVertex) {
+		if (((glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) || uiAutoXClicked) && !isAutoTestActive && g_selectedVertex) {
 			isAutoTestActive = true;
 			autoTestAxis = 0; // X-axis
 			autoTestStartTime = glfwGetTime();
@@ -703,7 +745,7 @@ int main() {
 			std::cout << ">>> STARTING AUTO TEST (X-AXIS) on Vertex " << g_selectedVertex->index << std::endl;
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS && !isAutoTestActive && g_selectedVertex) {
+		if (((glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) || uiAutoYClicked) && !isAutoTestActive && g_selectedVertex) {
 			isAutoTestActive = true;
 			autoTestAxis = 1; // Y-axis
 			autoTestStartTime = glfwGetTime();
@@ -723,16 +765,16 @@ int main() {
 		// Arrow keys apply a directional force to the whole object.
 		const float arrowForceMagnitude = 50.0f;
 		Eigen::Vector3f inputForce = Eigen::Vector3f::Zero();
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || ui.held(uiUpRect)) {
 			inputForce.y() += arrowForceMagnitude;
 		}
-		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || ui.held(uiDownRect)) {
 			inputForce.y() -= arrowForceMagnitude;
 		}
-		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || ui.held(uiLeftRect)) {
 			inputForce.x() -= arrowForceMagnitude;
 		}
-		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || ui.held(uiRightRect)) {
 			inputForce.x() += arrowForceMagnitude;
 		}
 		//std::cout << wKey << std::endl;
@@ -894,7 +936,10 @@ int main() {
 
 		object.PBDLOOP(10);
 
-		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+		static bool cPressed = false;
+		const bool cKeyDown = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
+		const bool cTriggered = (cKeyDown && !cPressed) || uiSaveClicked;
+		if (cTriggered) {
 			std::ofstream file("vbdcomp_our.txt", std::ios::out | std::ios::trunc);
 			if (!file.is_open()) {
 				std::cerr << "Failed to open file." << std::endl;
@@ -906,6 +951,7 @@ int main() {
 			file.close();
 			std::cout << "Data has been written to the file." << std::endl;
 		}
+		cPressed = cKeyDown;
 
 		
 
@@ -944,7 +990,6 @@ int main() {
 			}
 		}
 		glEnd();
-
 
 		for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) { 
 			Group& group = object.getGroup(groupIdx);
@@ -1115,6 +1160,20 @@ int main() {
 		//saveOBJ("43224.obj", object.groups);
 
 		glPopMatrix();
+
+		// ------------------ UI overlay (draw last)
+		ui.beginDraw2D();
+		ui.drawPanelBackground(uiPanelRect);
+		ui.renderButton(uiRecRect, "REC");
+		ui.renderButton(uiStopRect, "STOP", isRecordingForce);
+		ui.renderButton(uiAutoXRect, "AUTO X", (!isAutoTestActive && g_selectedVertex != nullptr));
+		ui.renderButton(uiAutoYRect, "AUTO Y", (!isAutoTestActive && g_selectedVertex != nullptr));
+		ui.renderButton(uiSaveRect, "SAVE");
+		ui.renderButton(uiUpRect, "U");
+		ui.renderButton(uiLeftRect, "L");
+		ui.renderButton(uiRightRect, "R");
+		ui.renderButton(uiDownRect, "D");
+		ui.endDraw2D();
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);

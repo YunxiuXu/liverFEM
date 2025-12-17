@@ -1,4 +1,5 @@
 #include "VisualOpenGL.h"
+#include "SimpleUI.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -6,6 +7,7 @@
 
 double lastX, lastY;
 bool mousePressed = false;
+static bool rotationDragActive = false;
 // Global variables to hold rotation state
 Eigen::Quaternionf rotation = Eigen::Quaternionf::Identity();
 
@@ -46,11 +48,18 @@ void initFontData()
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
 		if (action == GLFW_PRESS) {
-			mousePressed = true;
 			glfwGetCursorPos(window, &lastX, &lastY);
+			if (SimpleUI::IsCursorInDefaultPanel(window, lastX, lastY)) {
+				mousePressed = false;
+				rotationDragActive = false;
+				return;
+			}
+			mousePressed = true;
+			rotationDragActive = true;
 		}
 		else if (action == GLFW_RELEASE) {
 			mousePressed = false;
+			rotationDragActive = false;
 		}
 	}
 }
@@ -58,7 +67,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
 // Callback to handle mouse motion events
 void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
-	if (mousePressed) {
+	if (mousePressed && rotationDragActive) {
 		float dx = (xpos - lastX) * 0.005f;
 		float dy = (ypos - lastY) * 0.005f;
 		Eigen::AngleAxisf aaX(dy, Eigen::Vector3f::UnitX());
