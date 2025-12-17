@@ -23,6 +23,7 @@
 #include "Edge.h"
 #include "Experiment3.h"
 #include "Experiment1.h"
+#include "Experiment2.h"
 
 
 
@@ -643,6 +644,8 @@ int main() {
 	experiment3.init(&object, objectUniqueVertices);
 	Experiment1& experiment1 = Experiment1::instance();
 	experiment1.init(&object, objectUniqueVertices);
+	Experiment2& experiment2 = Experiment2::instance();
+	experiment2.init(&object, objectUniqueVertices);
 
 	DragState dragState;
 
@@ -652,6 +655,7 @@ int main() {
 		ui.beginFrame(window);
 		experiment3.update();
 		experiment1.update();
+		experiment2.update();
 
 		auto beginForceRecording = [&]() {
 			isRecordingForce = true;
@@ -708,7 +712,7 @@ int main() {
 		};
 		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
 
-		if (!isAutoTestActive && !experiment3.isActive() && !experiment1.isActive()) {
+		if (!isAutoTestActive && !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive()) {
 			if (rightReleased) {
 				dragState.active = false;
 				dragState.target = nullptr;
@@ -785,6 +789,10 @@ int main() {
 		if (experiment1.isActive()) {
 			experiment1.appendVertexForces(dragForces);
 		}
+		// Experiment 2: deterministic uniaxial stretch (independent of dragging).
+		if (experiment2.isActive()) {
+			experiment2.appendVertexForces(dragForces);
+		}
 
 		// Let Experiment 3 drive the drag target deterministically when active.
 		if (experiment3.isActive() && !experiment3.wantsDrag()) {
@@ -797,6 +805,11 @@ int main() {
 			if (dragState.target) {
 				g_selectedVertex = dragState.target;
 			}
+		}
+		// Experiment2 does not use the mouse-like drag pipeline, so always disable it while active.
+		if (experiment2.isActive()) {
+			dragState.active = false;
+			dragState.target = nullptr;
 		}
 
 		// Handle dragging physics (manual / auto-test / experiment3)
@@ -866,8 +879,7 @@ int main() {
 
 				float currentFrameTotalForce = 0.0f;
 				const std::vector<Vertex*>& verticesForForces =
-					(experiment3.wantsDrag() ? experiment3.forceVertices()
-						: objectUniqueVertices);
+					(experiment3.wantsDrag() ? experiment3.forceVertices() : objectUniqueVertices);
 				for (Vertex* vertex : verticesForForces) {
 					Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
 					float dist = (currentPos - targetPos).norm();
@@ -931,10 +943,14 @@ int main() {
 
 
 		const int defaultPbdIterations = 10;
-		const int pbdIterations = experiment1.isActive()
-			? experiment1.pbdIterationsThisFrame(defaultPbdIterations)
-			: defaultPbdIterations;
+		int pbdIterations = defaultPbdIterations;
+		if (experiment1.isActive()) {
+			pbdIterations = experiment1.pbdIterationsThisFrame(defaultPbdIterations);
+		} else if (experiment2.isActive()) {
+			pbdIterations = experiment2.pbdIterationsThisFrame(defaultPbdIterations);
+		}
 		object.PBDLOOP(pbdIterations);
+		experiment2.onAfterPhysics();
 
 		static KeyLatch cLatch;
 		// Replaced SAVE button with Benchmark, so allow saving via Key C only or re-map
@@ -1096,14 +1112,19 @@ int main() {
 		// ------------------ UI overlay (draw last)
 		ui.beginDraw2D();
 		// ui.drawPanelBackground(uiPanelRect); // removed
-		const bool canStartExp3 = !experiment3.isActive() && !experiment1.isActive();
+		const bool canStartExp3 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive();
 		if (ui.button(uiRunRect, experiment3.buttonLabel(), canStartExp3)) {
 			experiment3.requestStart();
 		}
 		const SimpleUI::Rect uiExp1Rect{ uiMargin, uiMargin + uiH + 8.0f, uiW, uiH };
-		const bool canStartExp1 = !experiment3.isActive() && !experiment1.isActive();
+		const bool canStartExp1 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive();
 		if (ui.button(uiExp1Rect, experiment1.buttonLabel(), canStartExp1)) {
 			experiment1.requestStart();
+		}
+		const SimpleUI::Rect uiExp2Rect{ uiMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
+		const bool canStartExp2 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive();
+		if (ui.button(uiExp2Rect, experiment2.buttonLabel(), canStartExp2)) {
+			experiment2.requestStart();
 		}
 		ui.endDraw2D();
 

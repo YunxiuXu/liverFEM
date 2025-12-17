@@ -47,5 +47,21 @@ exp1_sweepAccel3=2000
 exp1_pbdIterationsFast=30
 exp1_pbdIterationsReference=150
 exp1_resetAfterFinish=true
+
+# Experiment 2 (one-click) parameters (only used after pressing START EXP2)
+exp2_poissonIncompressible=0.49
+exp2_settleSteps=120
+exp2_dragSteps=240
+exp2_holdSteps=240
+exp2_dragDistanceBboxScale=0.35
+exp2_dragDistanceMin=0.30
+exp2_dragDistanceMax=0.90
+exp2_anchorSliceFrac=0.05
+exp2_pullSliceFrac=0.12
+exp2_minRegionVertexCount=24
+exp2_pullStiffness=20000
+exp2_pullMaxAccel=200000
+exp2_pbdIterations=60
+exp2_resetAfterFinish=true
 		
 		

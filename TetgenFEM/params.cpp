@@ -35,6 +35,20 @@ float exp1SweepAccel3 = 2000.0f;
 int exp1PbdIterationsFast = 10;
 int exp1PbdIterationsReference = 60;
 bool exp1ResetAfterFinish = true;
+int exp2SettleSteps = 120;
+int exp2DragSteps = 240;
+int exp2HoldSteps = 240;
+float exp2PoissonIncompressible = 0.49f;
+float exp2DragDistanceBboxScale = 0.35f;
+float exp2DragDistanceMin = 0.30f;
+float exp2DragDistanceMax = 0.90f;
+float exp2AnchorSliceFrac = 0.05f;
+float exp2PullSliceFrac = 0.05f;
+int exp2MinRegionVertexCount = 24;
+float exp2PullStiffness = 3500.0f;
+float exp2PullMaxAccel = 50000.0f;
+int exp2PbdIterations = 60;
+bool exp2ResetAfterFinish = true;
 std::string modelDir;
 std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
@@ -98,6 +112,15 @@ void loadParams(const std::string& filename) {
 	        {"exp1_sweepAccel1", &exp1SweepAccel1},
 	        {"exp1_sweepAccel2", &exp1SweepAccel2},
 	        {"exp1_sweepAccel3", &exp1SweepAccel3}
+	        ,
+	        {"exp2_poissonIncompressible", &exp2PoissonIncompressible},
+	        {"exp2_dragDistanceBboxScale", &exp2DragDistanceBboxScale},
+	        {"exp2_dragDistanceMin", &exp2DragDistanceMin},
+	        {"exp2_dragDistanceMax", &exp2DragDistanceMax},
+	        {"exp2_anchorSliceFrac", &exp2AnchorSliceFrac},
+	        {"exp2_pullSliceFrac", &exp2PullSliceFrac},
+	        {"exp2_pullStiffness", &exp2PullStiffness},
+	        {"exp2_pullMaxAccel", &exp2PullMaxAccel}
 	    };
 
     std::unordered_map<std::string, int*> intParams = {
@@ -108,7 +131,12 @@ void loadParams(const std::string& filename) {
         {"exp1_dragSteps", &exp1DragSteps},
         {"exp1_holdSteps", &exp1HoldSteps},
         {"exp1_pbdIterationsFast", &exp1PbdIterationsFast},
-        {"exp1_pbdIterationsReference", &exp1PbdIterationsReference}
+        {"exp1_pbdIterationsReference", &exp1PbdIterationsReference},
+        {"exp2_settleSteps", &exp2SettleSteps},
+        {"exp2_dragSteps", &exp2DragSteps},
+        {"exp2_holdSteps", &exp2HoldSteps},
+        {"exp2_minRegionVertexCount", &exp2MinRegionVertexCount},
+        {"exp2_pbdIterations", &exp2PbdIterations}
     };
 
     std::unordered_map<std::string, std::string*> stringParams = {
@@ -121,7 +149,8 @@ void loadParams(const std::string& filename) {
         {"useDirectLoading", &useDirectLoading},
         {"exp3_overridePoisson", &exp3OverridePoisson},
         {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
-        {"exp1_resetAfterFinish", &exp1ResetAfterFinish}
+        {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
+        {"exp2_resetAfterFinish", &exp2ResetAfterFinish}
     };
 
     std::string line;
