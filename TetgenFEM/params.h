@@ -17,6 +17,13 @@ extern bool exp3OverridePoisson;
 extern float exp3PoissonOverride;
 extern float exp3DragDistanceBboxScale, exp3DragDistanceMin, exp3DragDistanceMax;
 extern bool exp3ResetAfterFinish;
+
+// Experiment 1 (one-click) configuration.
+extern int exp1SettleSteps, exp1DragSteps, exp1HoldSteps;
+extern float exp1PullAccel, exp1ForceInfluenceRadius;
+extern float exp1SweepAccel1, exp1SweepAccel2, exp1SweepAccel3;
+extern int exp1PbdIterationsFast, exp1PbdIterationsReference;
+extern bool exp1ResetAfterFinish;
 // If set, relative asset filenames (e.g. stlFile/nodeFile/eleFile) are resolved under this directory.
 extern std::string modelDir;
 extern std::string stlFile, tetgenArgs, nodeFile, eleFile;

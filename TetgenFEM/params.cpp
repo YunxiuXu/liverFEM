@@ -24,6 +24,17 @@ float exp3DragDistanceBboxScale = 0.15f;
 float exp3DragDistanceMin = 0.15f;
 float exp3DragDistanceMax = 0.8f;
 bool exp3ResetAfterFinish = true;
+int exp1SettleSteps = 120;
+int exp1DragSteps = 240;
+int exp1HoldSteps = 240;
+float exp1PullAccel = 800.0f;
+float exp1ForceInfluenceRadius = 0.6f;
+float exp1SweepAccel1 = 800.0f;
+float exp1SweepAccel2 = 1500.0f;
+float exp1SweepAccel3 = 2000.0f;
+int exp1PbdIterationsFast = 10;
+int exp1PbdIterationsReference = 60;
+bool exp1ResetAfterFinish = true;
 std::string modelDir;
 std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
@@ -80,12 +91,24 @@ void loadParams(const std::string& filename) {
 	        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
 	        {"exp3_dragDistanceMin", &exp3DragDistanceMin},
 	        {"exp3_dragDistanceMax", &exp3DragDistanceMax}
+	        ,
+	        {"exp1_pullAccel", &exp1PullAccel},
+	        {"exp1_forceInfluenceRadius", &exp1ForceInfluenceRadius}
+	        ,
+	        {"exp1_sweepAccel1", &exp1SweepAccel1},
+	        {"exp1_sweepAccel2", &exp1SweepAccel2},
+	        {"exp1_sweepAccel3", &exp1SweepAccel3}
 	    };
 
     std::unordered_map<std::string, int*> intParams = {
         {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
         {"exp3_settleSteps", &exp3SettleSteps},
-        {"exp3_dragSteps", &exp3DragSteps}
+        {"exp3_dragSteps", &exp3DragSteps},
+        {"exp1_settleSteps", &exp1SettleSteps},
+        {"exp1_dragSteps", &exp1DragSteps},
+        {"exp1_holdSteps", &exp1HoldSteps},
+        {"exp1_pbdIterationsFast", &exp1PbdIterationsFast},
+        {"exp1_pbdIterationsReference", &exp1PbdIterationsReference}
     };
 
     std::unordered_map<std::string, std::string*> stringParams = {
@@ -97,7 +120,8 @@ void loadParams(const std::string& filename) {
     std::unordered_map<std::string, bool*> boolParams = {
         {"useDirectLoading", &useDirectLoading},
         {"exp3_overridePoisson", &exp3OverridePoisson},
-        {"exp3_resetAfterFinish", &exp3ResetAfterFinish}
+        {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
+        {"exp1_resetAfterFinish", &exp1ResetAfterFinish}
     };
 
     std::string line;

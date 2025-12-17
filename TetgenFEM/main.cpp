@@ -22,6 +22,7 @@
 #include "Vertex.h"
 #include "Edge.h"
 #include "Experiment3.h"
+#include "Experiment1.h"
 
 
 
@@ -640,6 +641,8 @@ int main() {
 
 	Experiment3& experiment3 = Experiment3::instance();
 	experiment3.init(&object, objectUniqueVertices);
+	Experiment1& experiment1 = Experiment1::instance();
+	experiment1.init(&object, objectUniqueVertices);
 
 	DragState dragState;
 
@@ -648,6 +651,7 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		ui.beginFrame(window);
 		experiment3.update();
+		experiment1.update();
 
 		auto beginForceRecording = [&]() {
 			isRecordingForce = true;
@@ -704,7 +708,7 @@ int main() {
 		};
 		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
 
-		if (!isAutoTestActive && !experiment3.isActive()) {
+		if (!isAutoTestActive && !experiment3.isActive() && !experiment1.isActive()) {
 			if (rightReleased) {
 				dragState.active = false;
 				dragState.target = nullptr;
@@ -777,6 +781,10 @@ int main() {
 
 		// ------------------ Interaction Logic (Simplified)
 		std::unordered_map<int, Eigen::Vector3f> dragForces;
+		// Experiment 1: deterministic constant load (independent of dragging).
+		if (experiment1.isActive()) {
+			experiment1.appendVertexForces(dragForces);
+		}
 
 		// Let Experiment 3 drive the drag target deterministically when active.
 		if (experiment3.isActive() && !experiment3.wantsDrag()) {
@@ -858,7 +866,8 @@ int main() {
 
 				float currentFrameTotalForce = 0.0f;
 				const std::vector<Vertex*>& verticesForForces =
-					(experiment3.wantsDrag() ? experiment3.forceVertices() : objectUniqueVertices);
+					(experiment3.wantsDrag() ? experiment3.forceVertices()
+						: objectUniqueVertices);
 				for (Vertex* vertex : verticesForForces) {
 					Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
 					float dist = (currentPos - targetPos).norm();
@@ -872,7 +881,7 @@ int main() {
 						if (accelNorm > maxAccel) {
 							accel *= (maxAccel / accelNorm);
 						}
-						dragForces[vertex->index] = accel;
+						dragForces[vertex->index] += accel;
 						currentFrameTotalForce += accel.norm();
 					}
 				}
@@ -921,7 +930,11 @@ int main() {
 		}*/
 
 
-		object.PBDLOOP(10);
+		const int defaultPbdIterations = 10;
+		const int pbdIterations = experiment1.isActive()
+			? experiment1.pbdIterationsThisFrame(defaultPbdIterations)
+			: defaultPbdIterations;
+		object.PBDLOOP(pbdIterations);
 
 		static KeyLatch cLatch;
 		// Replaced SAVE button with Benchmark, so allow saving via Key C only or re-map
@@ -1083,9 +1096,14 @@ int main() {
 		// ------------------ UI overlay (draw last)
 		ui.beginDraw2D();
 		// ui.drawPanelBackground(uiPanelRect); // removed
-		const bool canStartExp3 = !experiment3.isActive();
+		const bool canStartExp3 = !experiment3.isActive() && !experiment1.isActive();
 		if (ui.button(uiRunRect, experiment3.buttonLabel(), canStartExp3)) {
 			experiment3.requestStart();
+		}
+		const SimpleUI::Rect uiExp1Rect{ uiMargin, uiMargin + uiH + 8.0f, uiW, uiH };
+		const bool canStartExp1 = !experiment3.isActive() && !experiment1.isActive();
+		if (ui.button(uiExp1Rect, experiment1.buttonLabel(), canStartExp1)) {
+			experiment1.requestStart();
 		}
 		ui.endDraw2D();
 

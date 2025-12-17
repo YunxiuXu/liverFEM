@@ -34,4 +34,18 @@ exp3_dragDistanceBboxScale=0.15
 exp3_dragDistanceMin=0.15
 exp3_dragDistanceMax=0.8
 exp3_resetAfterFinish=true
+
+# Experiment 1 (one-click) parameters (only used after pressing START EXP1)
+exp1_settleSteps=120
+exp1_dragSteps=240
+exp1_holdSteps=240
+exp1_pullAccel=800
+exp1_forceInfluenceRadius=0.6
+exp1_sweepAccel1=800
+exp1_sweepAccel2=1500
+exp1_sweepAccel3=2000
+exp1_pbdIterationsFast=30
+exp1_pbdIterationsReference=150
+exp1_resetAfterFinish=true
+		
 		
