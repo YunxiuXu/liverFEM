@@ -418,7 +418,7 @@ void Object::PBDLOOP(int looptime) {
 			g.calRHS();
 			g.calDeltaX();
 			g.calculateCurrentPositions();
-			//g.calBindFixed();
+			g.calBindFixed();
 			//g.calFbind(allGroup, bindForce);
 
 		}
@@ -480,31 +480,6 @@ void Object::PBDLOOP(int looptime) {
 
 			}
 
-		}
-		// Sample a few constraints (serially) for early-exit heuristic without paying OMP overhead
-		float avgConstraintNorm = 0.0f;
-		int samples = 0;
-		for (int groupIdx = 0; groupIdx < groups.size() && samples < 16; ++groupIdx) {
-			Group& currentGroup = groups[groupIdx];
-			for (int direction = 0; direction < 6 && samples < 16; ++direction) {
-				int adjacentGroupIdx = currentGroup.adjacentGroupIDs[direction];
-				if (adjacentGroupIdx != -1) {
-					Group& adjacentGroup = groups[adjacentGroupIdx];
-					const auto& commonVerticesPair = currentGroup.commonVerticesInDirections[direction];
-					if (!commonVerticesPair.first.empty()) {
-						Eigen::Vector3f posThis = currentGroup.currentPosition.segment<3>(3 * commonVerticesPair.first[0]->localIndex);
-						Eigen::Vector3f posOther = adjacentGroup.currentPosition.segment<3>(3 * commonVerticesPair.second[0]->localIndex);
-						avgConstraintNorm += (posThis - posOther).norm();
-						++samples;
-					}
-				}
-			}
-		}
-		if (samples > 0) {
-			avgConstraintNorm /= static_cast<float>(samples);
-			if (avgConstraintNorm < 5e-4f) {
-				break;
-			}
 		}
 
 	}

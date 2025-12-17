@@ -859,17 +859,11 @@ void Group::calPrimeVec(const Eigen::Vector3f& externalForce,
 	for (auto& vertexPair : verticesVector) {
 		Vertex* vertex = vertexPair;
 		int localPi = vertex->localIndex;
-		/*	if (vertexPair->isFixed == true)
-			{
-				primeVec.segment<3>(3 * static_cast<Eigen::Index>(localPi)) = Eigen::Vector3f(vertex->initx, vertex->inity, vertex->initz);
-			}
-			else
-			{
-				Eigen::Vector3f currentVelocityUpdate = velocityUpdate.segment<3>(3 * localPi);
-				Eigen::Vector3f currentExfUpdate = exfUpdate.segment<3>(3 * localPi);
-				Eigen::Vector3f newPosition = Eigen::Vector3f(vertex->x, vertex->y, vertex->z) + currentVelocityUpdate + currentExfUpdate;
-				primeVec.segment<3>(3 * static_cast<Eigen::Index>(localPi)) = newPosition;
-			}*/
+		if (vertex->isFixed) {
+			primeVec.segment<3>(3 * static_cast<Eigen::Index>(localPi)) =
+				Eigen::Vector3f(vertex->initx, vertex->inity, vertex->initz);
+			continue;
+		}
 		Eigen::Vector3f currentVelocityUpdate = velocityUpdate.segment<3>(3 * localPi);
 		Eigen::Vector3f currentExfUpdate = exfUpdate.segment<3>(3 * localPi);
 		Eigen::Vector3f newPosition = Eigen::Vector3f(vertex->x, vertex->y, vertex->z) + currentVelocityUpdate + currentExfUpdate;
@@ -1076,6 +1070,13 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 	for (int i = 0; i < static_cast<int>(commonVerticesGroup1.size()); ++i) {
 		Vertex* vtx_j = commonVerticesGroup1[i];  // 本组顶点
 		Vertex* vtx_k = commonVerticesGroup2[i];  // 邻组同物理顶点
+
+		// If this vertex is fixed (Dirichlet), never apply constraint force to it.
+		// The adjacent group will still receive the correction in its own call, which
+		// effectively makes this a one-sided constraint and avoids injecting energy.
+		if (vtx_j->isFixed) {
+			continue;
+		}
 
 		// Get current positions and velocities for both vertices
 		Eigen::Vector3f x_j = currentPositionGroup1.segment<3>(3 * vtx_j->localIndex);
