@@ -53,6 +53,7 @@ set(SOURCES
     TetgenFEM/SimpleUI.cpp
     TetgenFEM/ReadSTL.cpp
     TetgenFEM/params.cpp
+    TetgenFEM/Experiment3.cpp
 )
 
 # 创建可执行文件

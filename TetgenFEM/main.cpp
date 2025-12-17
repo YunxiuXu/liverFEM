@@ -21,6 +21,7 @@
 #include "Object.h"
 #include "Vertex.h"
 #include "Edge.h"
+#include "Experiment3.h"
 
 
 
@@ -637,12 +638,16 @@ int main() {
 		return a->index < b->index;
 		});//index from min to max
 
+	Experiment3& experiment3 = Experiment3::instance();
+	experiment3.init(&object, objectUniqueVertices);
+
 	DragState dragState;
 
 	int frame = 1;
 	SimpleUI::Context ui;
 	while (!glfwWindowShouldClose(window)) {
 		ui.beginFrame(window);
+		experiment3.update();
 
 		auto beginForceRecording = [&]() {
 			isRecordingForce = true;
@@ -684,7 +689,7 @@ int main() {
 		const float uiH = 50.0f;
 		const SimpleUI::Rect uiRunRect{ uiMargin, uiMargin, uiW, uiH };
 
-		// UI button is display-only (no action).
+		// UI button triggers deterministic Experiment 3 (one-click).
 
 		// ------------------ Manual right-click drag force (restores RMB "apply force")
 		// Holding RMB drags the nearest vertex under the cursor and applies a spring-like force.
@@ -699,7 +704,7 @@ int main() {
 		};
 		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
 
-		if (!isAutoTestActive) {
+		if (!isAutoTestActive && !experiment3.isActive()) {
 			if (rightReleased) {
 				dragState.active = false;
 				dragState.target = nullptr;
@@ -772,13 +777,29 @@ int main() {
 
 		// ------------------ Interaction Logic (Simplified)
 		std::unordered_map<int, Eigen::Vector3f> dragForces;
-		
-		// Handle Dragging Physics
+
+		// Let Experiment 3 drive the drag target deterministically when active.
+		if (experiment3.isActive() && !experiment3.wantsDrag()) {
+			dragState.active = false;
+			dragState.target = nullptr;
+		}
+		if (experiment3.wantsDrag()) {
+			dragState.active = true;
+			dragState.target = experiment3.targetVertex();
+			if (dragState.target) {
+				g_selectedVertex = dragState.target;
+			}
+		}
+
+		// Handle dragging physics (manual / auto-test / experiment3)
 		if (dragState.active && dragState.target != nullptr) {
-			Eigen::Vector3f desiredTargetPos;
+			Eigen::Vector3f desiredTargetPos = Eigen::Vector3f(dragState.target->x, dragState.target->y, dragState.target->z);
 			bool processPhysics = true;
 
-			if (isAutoTestActive) {
+			if (experiment3.wantsDrag()) {
+				desiredTargetPos = experiment3.desiredTargetPosition();
+			}
+			else if (isAutoTestActive) {
 				double elapsed = glfwGetTime() - autoTestStartTime;
 				if (elapsed > autoTestDuration) {
 					// End Auto Test
@@ -789,20 +810,23 @@ int main() {
 					std::string fname = (autoTestAxis == 0) ? "force_data_x.txt" : "force_data_y.txt";
 					saveForceData(fname);
 					std::cout << ">>> Auto Test Finished. Saved to " << fname << std::endl;
-				} else {
+				}
+				else {
 					// Interpolate
 					float t = static_cast<float>(elapsed / autoTestDuration);
 					desiredTargetPos = autoTestStartPos;
 					if (autoTestAxis == 0) desiredTargetPos.x() += autoTestDistance * t; // X Axis
 					else desiredTargetPos.y() += autoTestDistance * t; // Y Axis
 				}
-			} else {
+			}
+			else {
 				const bool manualRightDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 				if (!manualRightDown) {
 					processPhysics = false;
 					dragState.active = false;
 					dragState.target = nullptr;
-				} else {
+				}
+				else {
 					Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
 					model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
 					const Eigen::Matrix4f projection = buildProjectionMatrix();
@@ -816,11 +840,11 @@ int main() {
 						ui.state().framebufferHeight) + dragState.grabOffset;
 				}
 			}
-			
+
 			if (processPhysics && dragState.active) {
 				const float influenceRadius = dragInfluenceRadius;
-				const float stiffness = dragStiffness; 
-				const float maxAccel = dragMaxAccel; 
+				const float stiffness = dragStiffness;
+				const float maxAccel = dragMaxAccel;
 				Eigen::Vector3f targetPos(dragState.target->x, dragState.target->y, dragState.target->z);
 				Eigen::Vector3f displacement = desiredTargetPos - targetPos;
 				float displacementNorm = displacement.norm();
@@ -831,15 +855,15 @@ int main() {
 						displacementNorm = maxDisp;
 					}
 				}
-	
+
 				float currentFrameTotalForce = 0.0f;
 				for (Vertex* vertex : objectUniqueVertices) {
 					Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
 					float dist = (currentPos - targetPos).norm();
 					if (dist <= influenceRadius) {
-						float falloff = std::max(0.05f, 1.0f - dist / influenceRadius); 
+						float falloff = std::max(0.05f, 1.0f - dist / influenceRadius);
 						if (vertex == dragState.target) {
-							falloff *= 1.5f; 
+							falloff *= 1.5f;
 						}
 						Eigen::Vector3f accel = displacement * (stiffness * falloff);
 						float accelNorm = accel.norm();
@@ -847,10 +871,19 @@ int main() {
 							accel *= (maxAccel / accelNorm);
 						}
 						dragForces[vertex->index] = accel;
-						currentFrameTotalForce += accel.norm(); 
+						currentFrameTotalForce += accel.norm();
 					}
 				}
-				
+
+				float targetForce = 0.0f;
+				auto it = dragForces.find(dragState.target->index);
+				if (it != dragForces.end()) {
+					targetForce = it->second.norm();
+				}
+				if (experiment3.wantsDrag()) {
+					experiment3.onDragForces(currentFrameTotalForce, targetForce);
+				}
+
 				if (isRecordingForce) {
 					recordedForces.push_back(currentFrameTotalForce);
 					recordedTime.push_back(glfwGetTime() - recordStartTime);
@@ -1048,7 +1081,10 @@ int main() {
 		// ------------------ UI overlay (draw last)
 		ui.beginDraw2D();
 		// ui.drawPanelBackground(uiPanelRect); // removed
-		ui.renderButton(uiRunRect, "RUN EXPERIMENTS", true);
+		const bool canStartExp3 = !experiment3.isActive();
+		if (ui.button(uiRunRect, experiment3.buttonLabel(), canStartExp3)) {
+			experiment3.requestStart();
+		}
 		ui.endDraw2D();
 
 		// Swap front and back buffers
