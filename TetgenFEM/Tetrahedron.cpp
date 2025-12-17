@@ -1,5 +1,59 @@
 #include "Tetrahedron.h"
 
+#include <algorithm>
+#include <limits>
+
+namespace {
+float clampNuForStableCompliance(float E1, float E2, float E3, float nu) {
+	E1 = std::max(E1, 1e-12f);
+	E2 = std::max(E2, 1e-12f);
+	E3 = std::max(E3, 1e-12f);
+	nu = std::min(0.49f, std::max(0.0f, nu));
+
+	auto minEigenNormalBlock = [&](float candidate) -> float {
+		Eigen::Matrix3f Sn = Eigen::Matrix3f::Zero();
+		Sn(0, 0) = 1.0f / E1;
+		Sn(1, 1) = 1.0f / E2;
+		Sn(2, 2) = 1.0f / E3;
+		Sn(0, 1) = Sn(1, 0) = -candidate / E1;
+		Sn(0, 2) = Sn(2, 0) = -candidate / E1;
+		Sn(1, 2) = Sn(2, 1) = -candidate / E2;
+		Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> es(Sn);
+		if (es.info() != Eigen::Success) return -1.0f;
+		return es.eigenvalues().minCoeff();
+	};
+
+	const float target = 1e-10f;
+	if (minEigenNormalBlock(nu) > target) return nu;
+
+	float lo = 0.0f;
+	float hi = nu;
+	for (int iter = 0; iter < 30; ++iter) {
+		const float mid = 0.5f * (lo + hi);
+		if (minEigenNormalBlock(mid) > target) lo = mid;
+		else hi = mid;
+	}
+	return lo;
+}
+
+Eigen::Matrix<float, 6, 6> projectSPD(const Eigen::Matrix<float, 6, 6>& M) {
+	Eigen::Matrix<float, 6, 6> sym = 0.5f * (M + M.transpose());
+	Eigen::SelfAdjointEigenSolver<Eigen::Matrix<float, 6, 6>> es(sym);
+	if (es.info() != Eigen::Success) {
+		Eigen::Matrix<float, 6, 6> reg = sym;
+		reg.diagonal().array() += 1e-6f;
+		return reg;
+	}
+	Eigen::Matrix<float, 6, 1> evals = es.eigenvalues();
+	const float maxEval = std::max(1.0f, evals.maxCoeff());
+	const float minEval = std::max(1e-6f, maxEval * 1e-7f);
+	for (int i = 0; i < evals.size(); ++i) {
+		if (!(evals[i] >= minEval)) evals[i] = minEval;
+	}
+	return es.eigenvectors() * evals.asDiagonal() * es.eigenvectors().transpose();
+}
+} // namespace
+
 Eigen::MatrixXf Tetrahedron::createElementKAni(float E1, float E2, float E3, float nu, const Eigen::Vector3f& groupCenterOfMass)
 {
 	float x1 = vertices[0]->x - groupCenterOfMass.x();
@@ -15,17 +69,17 @@ Eigen::MatrixXf Tetrahedron::createElementKAni(float E1, float E2, float E3, flo
 	float y4 = vertices[3]->y - groupCenterOfMass.y();
 	float z4 = vertices[3]->z - groupCenterOfMass.z();
 
-	// ?Œš‘Ì??ŽZ‹é? A
+	// ?å¯¶æ‡±??å¶¼å¬®? A
 	Eigen::Matrix4d A;
 	A << x1, y1, z1, 1,
 		x2, y2, z2, 1,
 		x3, y3, z3, 1,
 		x4, y4, z4, 1;
 
-	// ?ŽZŽl–Ê‘Ì“I‘Ì?
+	// ?å¶¼å·æŸºæ‡±æ‘æ‡±?
 	float V = std::abs(A.determinant() / 6);
 
-	// ’è? mbeta, mgamma, mdelta ‹é?
+	// æŽ•? mbeta, mgamma, mdelta å¬®?
 	Eigen::Matrix3f mbeta1, mbeta2, mbeta3, mbeta4, mgamma1, mgamma2, mgamma3, mgamma4, mdelta1, mdelta2, mdelta3, mdelta4;
 
 
@@ -72,31 +126,65 @@ Eigen::MatrixXf Tetrahedron::createElementKAni(float E1, float E2, float E3, flo
 
 	B /= (6 * V);
 
-	
-	Eigen::MatrixXf D = Eigen::MatrixXf::Zero(6, 6);
+	// Orthotropic linear elasticity in global (x,y,z).
+	//
+	// Previous implementation used geometric-mean coupling terms (sqrt(Ei*Ej)) for both
+	// normal coupling and shear, which makes a test "drag along X vs Y" not isolate
+	// Ex/Ey well (increasing Ex also boosts multiple shear modes). That can invalidate
+	// the paper statement "Ex > Ey => stiffer along X".
+	//
+	// Here we build a symmetric compliance matrix S (Voigt order: xx,yy,zz,xy,yz,zx),
+	// enforce reciprocity via nu21=nu12*E2/E1 etc, choose shear moduli based on the
+	// softer axis (min(Ei,Ej)), then invert to get stiffness D.
+	const float eps = 1e-12f;
+	E1 = std::max(E1, eps);
+	E2 = std::max(E2, eps);
+	E3 = std::max(E3, eps);
+	nu = std::min(0.49f, std::max(0.0f, nu));
+	nu = clampNuForStableCompliance(E1, E2, E3, nu);
 
-	Eigen::Matrix3f A1;
-	A1 << E1 * (1 - nu), std::sqrt(E1 * E2)* nu, std::sqrt(E1 * E3)* nu,
-		std::sqrt(E1 * E2)* nu, E2* (1 - nu), std::sqrt(E2 * E3)* nu,
-		std::sqrt(E1 * E3)* nu, std::sqrt(E2 * E3)* nu, E3* (1 - nu);
+	const float nu12 = nu;
+	const float nu13 = nu;
+	const float nu23 = nu;
+	const float nu21 = nu12 * (E2 / E1);
+	const float nu31 = nu13 * (E3 / E1);
+	const float nu32 = nu23 * (E3 / E2);
 
-	A1 /= (nu + 1) * (1 - 2 * nu);
+	const float inv2pnu = 1.0f / (2.0f * (1.0f + nu));
+	const float G12 = std::max(std::min(E1, E2) * inv2pnu, eps); // xy
+	const float G23 = std::max(std::min(E2, E3) * inv2pnu, eps); // yz
+	const float G31 = std::max(std::min(E3, E1) * inv2pnu, eps); // zx
 
-	
-	Eigen::Matrix3f B1;
-	B1 << std::sqrt(E1 * E2) / 2, 0, 0,
-		0, std::sqrt(E2 * E3) / 2, 0,
-		0, 0, std::sqrt(E1 * E3) / 2;
+	Eigen::Matrix<float, 6, 6> S = Eigen::Matrix<float, 6, 6>::Zero();
+	S(0, 0) = 1.0f / E1;
+	S(1, 1) = 1.0f / E2;
+	S(2, 2) = 1.0f / E3;
 
-	B1 /= (1 + nu);
+	// Symmetric normal coupling (nu12/E1 == nu21/E2, etc).
+	S(0, 1) = -nu12 / E1;
+	S(1, 0) = -nu21 / E2;
+	S(0, 2) = -nu13 / E1;
+	S(2, 0) = -nu31 / E3;
+	S(1, 2) = -nu23 / E2;
+	S(2, 1) = -nu32 / E3;
 
-	// Now construct the complete compliance matrix
-	//Eigen::MatrixXf D = Eigen::MatrixXf::Zero(6, 6);
-	D.topLeftCorner<3, 3>() = A1;
-	D.bottomRightCorner<3, 3>() = B1;
+	S(3, 3) = 1.0f / G12;
+	S(4, 4) = 1.0f / G23;
+	S(5, 5) = 1.0f / G31;
+
+	Eigen::Matrix<float, 6, 6> Dm = S.inverse();
+	if (!Dm.allFinite()) {
+		Eigen::Matrix<float, 6, 6> Sreg = S;
+		Sreg.diagonal().array() += 1e-6f;
+		Dm = Sreg.inverse();
+	}
+	Dm = projectSPD(Dm);
+
+	Eigen::MatrixXf D = Dm;
 
 	// element K
 	Eigen::MatrixXf k = V * (B.transpose() * D * B);
+	k = 0.5f * (k + k.transpose());
 
 	elementK = k;
 	return k;

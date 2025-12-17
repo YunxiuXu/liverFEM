@@ -15,6 +15,15 @@ float dragInfluenceRadius = 0.6f;
 float dragStiffness = 2500.0f;
 float dragMaxAccel = 50000.0f;
 float dragMaxDisplacement = 1.0f;
+int exp3SettleSteps = 120;
+int exp3DragSteps = 240;
+float exp3ExOverEy = 5.0f;
+bool exp3OverridePoisson = true;
+float exp3PoissonOverride = 0.08f;
+float exp3DragDistanceBboxScale = 0.15f;
+float exp3DragDistanceMin = 0.15f;
+float exp3DragDistanceMax = 0.8f;
+bool exp3ResetAfterFinish = true;
 std::string modelDir;
 std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
@@ -65,11 +74,18 @@ void loadParams(const std::string& filename) {
 	        {"dragInfluenceRadius", &dragInfluenceRadius},
 	        {"dragStiffness", &dragStiffness},
 	        {"dragMaxAccel", &dragMaxAccel},
-	        {"dragMaxDisplacement", &dragMaxDisplacement}
+	        {"dragMaxDisplacement", &dragMaxDisplacement},
+	        {"exp3_exOverEy", &exp3ExOverEy},
+	        {"exp3_poissonOverride", &exp3PoissonOverride},
+	        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
+	        {"exp3_dragDistanceMin", &exp3DragDistanceMin},
+	        {"exp3_dragDistanceMax", &exp3DragDistanceMax}
 	    };
 
     std::unordered_map<std::string, int*> intParams = {
-        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ}
+        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
+        {"exp3_settleSteps", &exp3SettleSteps},
+        {"exp3_dragSteps", &exp3DragSteps}
     };
 
     std::unordered_map<std::string, std::string*> stringParams = {
@@ -79,7 +95,9 @@ void loadParams(const std::string& filename) {
     };
     
     std::unordered_map<std::string, bool*> boolParams = {
-        {"useDirectLoading", &useDirectLoading}
+        {"useDirectLoading", &useDirectLoading},
+        {"exp3_overridePoisson", &exp3OverridePoisson},
+        {"exp3_resetAfterFinish", &exp3ResetAfterFinish}
     };
 
     std::string line;

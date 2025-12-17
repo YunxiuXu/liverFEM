@@ -15,10 +15,14 @@ public:
         int settleSteps = 120; // ~1.2s if timeStep=0.01
         int dragSteps = 240;   // ~2.4s if timeStep=0.01
         float exOverEy = 5.0f; // Ex = exOverEy * Ey
+        // For Experiment 3, reducing nu weakens coupling and makes anisotropy response clearer.
+        bool overridePoisson = true;
+        float poissonOverride = 0.08f;
         // Drag distance is chosen automatically from model bbox and clamped by dragMaxDisplacement.
         float dragDistanceBboxScale = 0.15f; // fraction of bbox diagonal
         float dragDistanceMin = 0.15f;
         float dragDistanceMax = 0.8f; // additional clamp besides dragMaxDisplacement
+        bool resetAfterFinish = true; // return to normal demo state after saving
     };
 
     void init(Object* obj, const std::vector<Vertex*>& uniqueVertices);
@@ -38,6 +42,7 @@ public:
     // Getters for physics/drag driver.
     Vertex* targetVertex() const;
     Eigen::Vector3f desiredTargetPosition() const;
+    const std::vector<Vertex*>& forceVertices() const;
 
     // Input from drag driver (computed this frame).
     void onDragForces(float totalForceMagnitude, float targetForceMagnitude);
@@ -57,12 +62,14 @@ private:
     State state = State::Idle;
     Object* object = nullptr;
     std::vector<Vertex*> uniqueVertices;
+    std::vector<Vertex*> allVertices;
 
     Vertex* selectedTarget = nullptr;
     
     struct RunSpec {
         enum class Material { Isotropic, Anisotropic } material;
-        int axis; // 0:X, 1:Y
+        int dragAxis; // 0:X, 1:Y, 2:Z
+        int hardAxis; // for anisotropic only: 0:X, 1:Y, 2:Z
     };
 
     Config config{};
@@ -81,6 +88,10 @@ private:
     float oldYoungs1 = 0.0f;
     float oldYoungs2 = 0.0f;
     float oldYoungs3 = 0.0f;
+    bool hasOldMaterial = false;
+
+    float oldPoisson = 0.0f;
+    bool hasOldPoisson = false;
 
     std::string outputDir;
 

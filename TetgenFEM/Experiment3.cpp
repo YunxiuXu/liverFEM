@@ -21,11 +21,38 @@ Experiment3& Experiment3::instance() {
 void Experiment3::init(Object* obj, const std::vector<Vertex*>& vertices) {
     object = obj;
     uniqueVertices = vertices;
+    allVertices.clear();
+    if (object) {
+        std::unordered_set<Vertex*> visited;
+        visited.reserve(static_cast<size_t>(object->groupNum) * 1024);
+        for (Group& g : object->groups) {
+            for (const auto& kv : g.verticesMap) {
+                Vertex* v = kv.second;
+                if (!v) continue;
+                if (visited.insert(v).second) {
+                    allVertices.push_back(v);
+                }
+            }
+        }
+    }
+
+    config.settleSteps = exp3SettleSteps;
+    config.dragSteps = exp3DragSteps;
+    if (exp3ExOverEy > 1e-6f) config.exOverEy = exp3ExOverEy;
+    config.overridePoisson = exp3OverridePoisson;
+    config.poissonOverride = exp3PoissonOverride;
+    config.dragDistanceBboxScale = exp3DragDistanceBboxScale;
+    config.dragDistanceMin = exp3DragDistanceMin;
+    config.dragDistanceMax = exp3DragDistanceMax;
+    config.resetAfterFinish = exp3ResetAfterFinish;
+
     sequence = {
-        { RunSpec::Material::Isotropic, 0 },
-        { RunSpec::Material::Isotropic, 1 },
-        { RunSpec::Material::Anisotropic, 0 },
-        { RunSpec::Material::Anisotropic, 1 },
+        // Baseline: isotropic (to show geometry/boundary effects for each drag direction)
+        { RunSpec::Material::Isotropic, 0, 0 }, // drag X
+        { RunSpec::Material::Isotropic, 1, 0 }, // drag Y
+        // Experiment 3 (paper): fixed anisotropy Ex > Ey, compare hard-axis vs soft-axis pulling
+        { RunSpec::Material::Anisotropic, 0, 0 }, // hard axis X, drag X
+        { RunSpec::Material::Anisotropic, 1, 0 }, // hard axis X, drag Y
     };
 }
 
@@ -132,8 +159,8 @@ void Experiment3::resetSimulationToInitial() {
     if (!object) return;
 
     std::unordered_set<Vertex*> visited;
-    visited.reserve(uniqueVertices.size() * 2);
-    for (Vertex* v : uniqueVertices) {
+    visited.reserve(allVertices.size() * 2);
+    for (Vertex* v : allVertices) {
         if (!v) continue;
         if (!visited.insert(v).second) continue;
         v->x = v->initx;
@@ -148,6 +175,8 @@ void Experiment3::resetSimulationToInitial() {
         const int n = static_cast<int>(g.verticesVector.size());
         g.groupVelocity = Eigen::VectorXf::Zero(3 * n);
         g.groupVelocityFEM = Eigen::VectorXf::Zero(3 * n);
+        g.gravityApplied = false;
+        g.gravity = Eigen::VectorXf::Zero(3 * n);
 
         g.currentPosition = Eigen::VectorXf::Zero(3 * n);
         g.currentPositionFEM = Eigen::VectorXf::Zero(3 * n);
@@ -178,9 +207,13 @@ void Experiment3::applyMaterial(const RunSpec& spec) {
         youngs2 = baseE;
         youngs3 = baseE;
     } else {
-        youngs1 = config.exOverEy * baseE;
+        const float hardE = config.exOverEy * baseE;
+        youngs1 = baseE;
         youngs2 = baseE;
         youngs3 = baseE;
+        if (spec.hardAxis == 0) youngs1 = hardE;
+        else if (spec.hardAxis == 1) youngs2 = hardE;
+        else youngs3 = hardE;
     }
 
 #pragma omp parallel for
@@ -196,6 +229,7 @@ void Experiment3::applyMaterial(const RunSpec& spec) {
 
 void Experiment3::restoreMaterial() {
     if (!object) return;
+    if (!hasOldMaterial) return;
     youngs1 = oldYoungs1;
     youngs2 = oldYoungs2;
     youngs3 = oldYoungs3;
@@ -209,6 +243,7 @@ void Experiment3::restoreMaterial() {
         }
         object->groups[i].calLHS();
     }
+    hasOldMaterial = false;
 }
 
 void Experiment3::update() {
@@ -228,6 +263,14 @@ void Experiment3::update() {
             oldYoungs1 = youngs1;
             oldYoungs2 = youngs2;
             oldYoungs3 = youngs3;
+            hasOldMaterial = true;
+
+            if (config.overridePoisson) {
+                oldPoisson = poisson;
+                hasOldPoisson = true;
+                const float clamped = std::min(0.49f, std::max(0.0f, config.poissonOverride));
+                poisson = clamped;
+            }
 
             computeDragDistance();
 
@@ -238,6 +281,7 @@ void Experiment3::update() {
 
             std::cout << "[Experiment3] Start (one-click). Vertex=" << selectedTarget->index
                       << ", dragDistance=" << dragDistance
+                      << ", poisson=" << poisson
                       << ", steps(settle/drag)=" << config.settleSteps << "/" << config.dragSteps
                       << ", sequenceRuns=" << sequence.size() << "\n";
 
@@ -249,10 +293,11 @@ void Experiment3::update() {
                 state = State::SaveAndFinish;
                 return;
             }
-            applyMaterial(sequence[runIndex]);
             resetSimulationToInitial();
+            applyMaterial(sequence[runIndex]);
             currentDesiredPos = Eigen::Vector3f(selectedTarget->x, selectedTarget->y, selectedTarget->z);
             stepInState = 0;
+            lastDragStep = 0;
             advanceToNextRunPending = false;
             state = State::Settle;
             return;
@@ -264,6 +309,7 @@ void Experiment3::update() {
             if (stepInState >= std::max(1, config.settleSteps)) {
                 runStartPos = Eigen::Vector3f(selectedTarget->x, selectedTarget->y, selectedTarget->z);
                 stepInState = 0;
+                lastDragStep = 0;
                 state = State::Drag;
             }
             return;
@@ -280,7 +326,7 @@ void Experiment3::update() {
             const float denom = static_cast<float>(std::max(1, steps - 1));
             const float t = std::min(1.0f, static_cast<float>(stepInState) / denom);
             Eigen::Vector3f axis = Eigen::Vector3f::Zero();
-            axis[sequence[runIndex].axis] = 1.0f;
+            axis[sequence[runIndex].dragAxis] = 1.0f;
             currentDesiredPos = runStartPos + axis * (dragDistance * t);
 
             lastDragStep = stepInState;
@@ -292,7 +338,14 @@ void Experiment3::update() {
         }
         case State::SaveAndFinish: {
             saveData();
+            if (hasOldPoisson) {
+                poisson = oldPoisson;
+                hasOldPoisson = false;
+            }
             restoreMaterial();
+            if (config.resetAfterFinish) {
+                resetSimulationToInitial();
+            }
             std::cout << "[Experiment3] Finished.\n";
             state = State::Idle;
             return;
@@ -324,6 +377,10 @@ Eigen::Vector3f Experiment3::desiredTargetPosition() const {
     return currentDesiredPos;
 }
 
+const std::vector<Vertex*>& Experiment3::forceVertices() const {
+    return allVertices;
+}
+
 void Experiment3::saveData() {
     namespace fs = std::filesystem;
     std::error_code ec;
@@ -339,12 +396,16 @@ void Experiment3::saveData() {
         std::cerr << "[Experiment3] Failed to open " << csvPath.string() << " for writing\n";
         return;
     }
-    file << "run_index,material,axis,sim_time,imposed_displacement,actual_displacement,force_total,force_target,vertex_index\n";
-
+    file << "run_index,material,axis,sim_time,imposed_displacement,actual_displacement,force_total,force_target,vertex_index,fiber_axis\n";
+    
     for (const auto& p : data) {
         const RunSpec& spec = sequence[static_cast<size_t>(p.runIndex)];
         const char* material = (spec.material == RunSpec::Material::Isotropic) ? "isotropic" : "anisotropic";
-        const char* axis = (spec.axis == 0) ? "x" : "y";
+        const char* axis = (spec.dragAxis == 0) ? "x" : (spec.dragAxis == 1 ? "y" : "z");
+        const char* fiberAxis = "na";
+        if (spec.material == RunSpec::Material::Anisotropic) {
+            fiberAxis = (spec.hardAxis == 0) ? "x" : (spec.hardAxis == 1 ? "y" : "z");
+        }
         file << p.runIndex << ","
              << material << ","
              << axis << ","
@@ -353,7 +414,8 @@ void Experiment3::saveData() {
              << p.actualDisplacement << ","
              << p.totalForce << ","
              << p.targetForce << ","
-             << (selectedTarget ? selectedTarget->index : -1)
+             << (selectedTarget ? selectedTarget->index : -1) << ","
+             << fiberAxis
              << "\n";
     }
     file.close();
@@ -368,11 +430,16 @@ void Experiment3::saveData() {
         meta << "timeStep=" << timeStep << "\n";
         meta << "youngs=" << youngs << "\n";
         meta << "poisson=" << poisson << "\n";
+        if (hasOldPoisson) {
+            meta << "poisson_original=" << oldPoisson << "\n";
+        }
         meta << "dragInfluenceRadius=" << dragInfluenceRadius << "\n";
         meta << "dragStiffness=" << dragStiffness << "\n";
         meta << "dragMaxAccel=" << dragMaxAccel << "\n";
         meta << "dragMaxDisplacement=" << dragMaxDisplacement << "\n";
         meta << "exOverEy=" << config.exOverEy << "\n";
+        meta << "overridePoisson=" << (config.overridePoisson ? 1 : 0) << "\n";
+        meta << "poissonOverride=" << config.poissonOverride << "\n";
         meta << "dragDistance=" << dragDistance << "\n";
         meta << "settleSteps=" << config.settleSteps << "\n";
         meta << "dragSteps=" << config.dragSteps << "\n";
@@ -380,7 +447,11 @@ void Experiment3::saveData() {
         for (size_t i = 0; i < sequence.size(); ++i) {
             const auto& spec = sequence[i];
             meta << (i ? ";" : "");
-            meta << ((spec.material == RunSpec::Material::Isotropic) ? "iso" : "ani") << ":" << ((spec.axis == 0) ? "x" : "y");
+            meta << ((spec.material == RunSpec::Material::Isotropic) ? "iso" : "ani");
+            meta << ":drag" << ((spec.dragAxis == 0) ? "x" : (spec.dragAxis == 1 ? "y" : "z"));
+            if (spec.material == RunSpec::Material::Anisotropic) {
+                meta << ":hard" << ((spec.hardAxis == 0) ? "x" : (spec.hardAxis == 1 ? "y" : "z"));
+            }
         }
         meta << "\n";
         meta.close();

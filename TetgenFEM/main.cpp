@@ -857,7 +857,9 @@ int main() {
 				}
 
 				float currentFrameTotalForce = 0.0f;
-				for (Vertex* vertex : objectUniqueVertices) {
+				const std::vector<Vertex*>& verticesForForces =
+					(experiment3.wantsDrag() ? experiment3.forceVertices() : objectUniqueVertices);
+				for (Vertex* vertex : verticesForForces) {
 					Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
 					float dist = (currentPos - targetPos).norm();
 					if (dist <= influenceRadius) {

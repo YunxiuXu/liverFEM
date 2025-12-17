@@ -10,6 +10,13 @@ extern int groupNum, groupNumX, groupNumY, groupNumZ;
 extern const float PI;
 extern float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
 extern float dragInfluenceRadius, dragStiffness, dragMaxAccel, dragMaxDisplacement;
+// Experiment 3 (one-click) configuration (used only when EXP3 is started).
+extern int exp3SettleSteps, exp3DragSteps;
+extern float exp3ExOverEy;
+extern bool exp3OverridePoisson;
+extern float exp3PoissonOverride;
+extern float exp3DragDistanceBboxScale, exp3DragDistanceMin, exp3DragDistanceMax;
+extern bool exp3ResetAfterFinish;
 // If set, relative asset filenames (e.g. stlFile/nodeFile/eleFile) are resolved under this directory.
 extern std::string modelDir;
 extern std::string stlFile, tetgenArgs, nodeFile, eleFile;

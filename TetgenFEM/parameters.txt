@@ -1,5 +1,5 @@
 youngs=1000000
-youngs1=10000000
+youngs1=20000000
 youngs2=1000000
 youngs3=1000000
 poisson=0.28
@@ -23,4 +23,15 @@ dragInfluenceRadius=0.6
 dragStiffness=2500.0
 dragMaxAccel=50000.0
 dragMaxDisplacement=1.0
+
+# Experiment 3 (one-click) parameters (only used after pressing START EXP3)
+exp3_exOverEy=5
+exp3_overridePoisson=true
+exp3_poissonOverride=0.08
+exp3_settleSteps=120
+exp3_dragSteps=240
+exp3_dragDistanceBboxScale=0.15
+exp3_dragDistanceMin=0.15
+exp3_dragDistanceMax=0.8
+exp3_resetAfterFinish=true
 		
