@@ -154,7 +154,6 @@ void divideIntoGroups(tetgenio& out, Object& object, int numX, int numY, int num
 	}
 
 	// 统计分布情况
-	int totalTets = out.numberoftetrahedra;
 	int totalGroups = numX * numY * numZ;
 	int finalEmptyGroups = 0;
 	int minSize = INT_MAX, maxSize = 0;

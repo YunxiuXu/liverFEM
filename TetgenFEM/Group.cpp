@@ -346,8 +346,8 @@ Eigen::MatrixXf Group::calMassMatrix(float den) {
 		}
 	}
 	massMatrix = M;
+	massSparse = massMatrix.sparseView();
 	return M;
-	massSparse = massMatrix.sparseView();  // Commented out as it's not part of the provided code snippet
 }
 
 
@@ -382,8 +382,6 @@ void Group::calMassDistributionMatrix() {
 }
 
 void Group::setVertexMassesFromMassMatrix() {
-	int N = verticesMap.size();  // Number of unique vertices in the hash map
-
 	for (auto& vertexPair : verticesMap) {
 		int localIdx = vertexPair.second->localIndex;  // Access local index from the second value of the pair
 		float mass = massMatrix(3 * localIdx, 3 * localIdx);
@@ -720,7 +718,6 @@ void Group::calPrimeVec2(int w) {
 
 	gravity = Eigen::VectorXf::Zero(3 * verticesVector.size());
 
-	int localPi = 2; //set a specific vertex
 	int globalPi = 69;
 	if (globalPi < verticesVector.size()) {
 		Vertex* v = verticesVector[globalPi];
@@ -942,9 +939,6 @@ void Group::calLHS() {
 void Group::calLHSFEM() {
 	//A = timeStep * timeStep * (massMatrix + timeStep * dampingMatrix).inverse() * groupK;
 	//B = timeStep * timeStep * (massMatrix + timeStep * dampingMatrix).inverse() * groupK * massDistribution;
-
-	float reference = 0.0f; 
-	float epsilon = std::numeric_limits<float>::epsilon(); // float?型的epsilon
 	LHSFEM = (massMatrix.sparseView() + timeStep * dampingMatrix.sparseView() + timeStep * timeStep * kSparseFEM);
 }
 void Group::calRHS() {
@@ -1284,8 +1278,6 @@ void Group::updatePositionFEM() {
 	}
 }
 void Group::updatePosition() {
-	float frameTime = 0;
-	frameTime += timeStep;
 	Eigen::Vector3f pos = Eigen::Vector3f::Zero();
 	// ｱ・ﾋﾐ?ｵ・
 	for (auto& vertexPair : verticesMap) {
@@ -1317,29 +1309,6 @@ void Group::updatePosition() {
 			vertex->y = pos.y();
 			vertex->z = pos.z();
 		}
-		/*vertex->x = pos.x();
-		vertex->y = pos.y();
-		vertex->z = pos.z();*/
-	/*	if (vertex->initx > -0.01 && vertex->initx < 0.01) {
-			vertex->y = vertex->inity + (45 * frameTime);
-			vertex->x = pos.x();
-			vertex->z = pos.z();
-		}*/
-		//else if (vertex->inity < -0.52)
-		//{
-		//	vertex->y = vertex->inity + (9 * frameTime);
-		//	/*vertex->x = pos.x();
-		//	vertex->z = pos.z();*/
-		//} 	
-		//else {
-		//	// ﾊｹﾓﾃﾐ?ｾﾘ??ｳﾋﾒﾔprimeVecﾖﾐｵﾄﾎｻﾖﾃ
-
-
-		//	vertex->x = pos.x();
-		//	vertex->y = pos.y();
-		//	vertex->z = pos.z();
-		//}
-
 		/* ｸ・ﾂ?ｵ羞ﾄﾎｻﾖﾃ
 		if (vertex->isFixed == true)
 		{

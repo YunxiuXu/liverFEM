@@ -26,10 +26,7 @@
 
 //C:/Users/xu_yu/Desktop/tmp/arial.ttf
  
-// Global variables to store zoom factor and transformation matrix
-
-Eigen::Matrix4f transformationMatrix = Eigen::Matrix4f::Identity();
-int wKey = 0;
+// Global variables
 
 // Force recording variables
 bool isRecordingForce = false;
@@ -157,9 +154,7 @@ void writeSTL(const Object& object, const std::string& filename) {
 	// Count total number of triangles
 	uint32_t totalTriangles = 0;
 	for (const auto& group : object.groups) {
-		for (const auto& tetrahedron : group.tetrahedra) {
-			totalTriangles += 4; // Each tetrahedron has 4 triangular faces
-		}
+		totalTriangles += static_cast<uint32_t>(group.tetrahedra.size()) * 4u; // 4 faces per tetrahedron
 	}
 	file.write(reinterpret_cast<char*>(&totalTriangles), sizeof(totalTriangles));
 
@@ -458,9 +453,6 @@ int main() {
 	framebuffer_size_callback(window, fbWidth, fbHeight);
 	applyProjectionMatrix();
 
-	Eigen::MatrixXd Ke;
-	//Ke = object.groups[1].tetrahedra[0]->createElementK(youngs, poisson, );
-
 	Eigen::Matrix4f mat;
 	initFontData();
 	//object.findCommonVertices();
@@ -469,18 +461,6 @@ int main() {
 	//object.commonPoints2 = object.findCommonVertices1(object.groups[2], object.groups[3]);
 	//object.commonPoints3 = object.findCommonVertices1(object.groups[3], object.groups[4]);
 	//std::pair<std::vector<Vertex*>, std::vector<Vertex*>> commonVertices2 = object.findCommonVertices1(object.groups[0], object.groups[1]);
-	for (Group& g : object.groups) {
-		
-		for (const auto& vertexPair : g.verticesMap) {
-			// ｶﾔﾃｿｸ･ｵ羞ﾃsetFixedIfBelowThresholdｷｽｷｨ
-			Vertex* vertex = vertexPair.second;
-			/*if (vertex->x > 0.91189f && vertex->y > 1.1693f)
-				vertex->isFixed = true;*/
-			// vertex->setFixedIfBelowThreshold(); // 注释掉，改用统一的方法
-		}
-
-	}
-	
 	// 在肝门区域使用球形区域进行固定：取背面一定厚度的质心作为中心
 	std::unordered_set<Vertex*> visitedVertices;
 	std::vector<Vertex*> uniqueVertices;
@@ -640,27 +620,6 @@ int main() {
 		ui.beginFrame(window);
 
 		//object.commonPoints1 = object.findCommonVertices(object.groups[1], object.groups[2]);
-		
-
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			wKey = 1;
-
-		}
-		else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-			wKey = 2;
-
-		}
-		else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			wKey = 3;
-
-		}
-		else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			wKey = 4;
-
-		}
-		else
-			wKey = 0;
-
 		// ------------------ UI layout (window coordinates, origin at top-left)
 		const float uiMargin = 12.0f;
 		const float uiPanelW = 280.0f;
@@ -991,73 +950,7 @@ int main() {
 		}
 		glEnd();
 
-		for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) { 
-			Group& group = object.getGroup(groupIdx);
-
-			//ｻｭｲｻﾖﾘｸｴｵﾄｰ豎ｾ
-			//std::vector<Vertex*> uniqueVertices = group.getUniqueVertices();
-			//for (size_t i = 0; i < uniqueVertices.size(); ++i) {
-			//	Vertex* vertex = uniqueVertices[i];
-			//	char buffer[5]; m
-			//	sprintf_s(buffer, "%d", vertex->index); // ｽｫintﾗｪｻｻﾎｪchar*
-			//	glColor3f(1, 0.0f, 0.0f);
-			//	glRasterPos3f(vertex->x, vertex->y, vertex->z);
-			//	XPrintString(buffer);
-			//}
-
-
-			
-
-
-			//for (Tetrahedron* tetra : group.tetrahedra) { 
-			//	for (int i = 0; i < 4; ++i) { 
-			//		Vertex* vertex = tetra->vertices[i];
-			//		char buffer[5]; 
-			//		sprintf_s(buffer, "%d", vertex->index); // ｽｫintﾗｪｻｻﾎｪchar*
-			//		//if (groupIdx == 0) {
-			//		//	glColor3f(1, 0.0f, 0.0f);
-			//		//	glRasterPos3f(vertex->x, vertex->y, vertex->z);
-			//		//	XPrintString(buffer);
-			//		//}
-			//			
-			//		//if(groupIdx == 1)
-			//		//{
-			//		//	glColor3f(0, 1, 0.0f);
-			//		//	glRasterPos3f(vertex->x, vertex->y, vertex->z);
-			//		//	XPrintString(buffer);
-			//		//}
-			//		//	
-
-			//		//std::default_random_engine generator(vertex->index);
-			//		//std::uniform_real_distribution<float> distribution(0, 0.05);
-			//		//float random_number = distribution(generator);
-			//		glColor3f(1, 0.0f, 0.0f);
-			//		glRasterPos3f(vertex->x + 0, vertex->y + 0, vertex->z + 0);
-			//		XPrintString(buffer);
-			//		
-			//	}
-			//}
-
-		}
-		//for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
-		//	Group& group = object.getGroup(groupIdx);
-
-		//	
-		//	Eigen::Vector3f& center = group.centerofMass;
-
-		//	
-		//	char groupNumber[10];
-		//	sprintf_s(groupNumber, "%d", groupIdx);
-
-		//	
-		//	glColor3f(1.0f, 1.0f, 0.0f);
-
-		//	
-		//	glRasterPos3f(center[0] + 1, center[1], center[2]);
-		//	XPrintString(groupNumber);
-
-		//	
-		//}
+		// (Removed old debug text rendering code.)
 		if (drawFaces) {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glBegin(GL_TRIANGLES);

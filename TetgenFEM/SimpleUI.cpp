@@ -17,13 +17,6 @@ Rect defaultPanelRect() {
 	return Rect{ kDefaultPanel.margin, kDefaultPanel.margin, kDefaultPanel.width, kDefaultPanel.height };
 }
 
-Rect clampRectToWindow(const Rect& r, int winW, int winH) {
-	Rect out = r;
-	out.w = std::min(out.w, std::max(0.0f, static_cast<float>(winW) - out.x));
-	out.h = std::min(out.h, std::max(0.0f, static_cast<float>(winH) - out.y));
-	return out;
-}
-
 // A tiny "segment" font (enough for short uppercase labels).
 enum Segment : unsigned int {
 	SegTop = 1u << 0,

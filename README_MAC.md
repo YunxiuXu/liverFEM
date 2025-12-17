@@ -57,10 +57,10 @@ xcode-select --install
 
 ```bash
 cd TetgenFEM
-../build/TetgenFEM
+../out/build/TetgenFEM
 ```
 
-**注意**: 程序必须在 `TetgenFEM` 目录下运行，因为它需要读取该目录下的 `parameters.txt` 和 `stls/` 文件夹。
+**注意**: 程序必须在 `TetgenFEM` 目录下运行，因为它需要读取该目录下的 `parameters.txt` 和 `models/` 资源文件夹。
 
 ## 配置参数
 
@@ -76,7 +76,8 @@ groupNumZ=4             # Z 方向分组数
 timeStep=0.01           # 时间步长
 dampingConst=20.0       # 阻尼系数
 Gravity=-10.0           # 重力加速度
-stlFile=stls/ring.stl   # STL 文件路径
+modelDir=models         # 资源文件夹（STL / node / ele 等都放这里）
+stlFile=ring.stl        # STL 文件名（会自动拼到 modelDir 下）
 tetgenArgs=pq2a0.0005   # TetGen 参数
 ```
 

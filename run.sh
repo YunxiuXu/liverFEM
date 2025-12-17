@@ -5,8 +5,8 @@ echo "运行 TetgenFEM 仿真程序"
 echo "======================================"
 
 # 检查可执行文件是否存在
-if [ ! -f "build/TetgenFEM" ]; then
-    echo "错误: 未找到可执行文件 build/TetgenFEM"
+if [ ! -f "out/build/TetgenFEM" ]; then
+    echo "错误: 未找到可执行文件 out/build/TetgenFEM"
     echo "请先运行 ./build.sh 编译项目"
     exit 1
 fi
@@ -15,7 +15,7 @@ fi
 cd TetgenFEM
 
 # 运行程序
-../build/TetgenFEM
+../out/build/TetgenFEM
 
 echo "======================================"
 echo "程序已退出"

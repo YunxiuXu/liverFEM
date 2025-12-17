@@ -43,7 +43,7 @@ cd /Users/yunxiuxu/Documents/tetfemcpp
 如果修改了代码，只需要重新编译：
 
 ```bash
-cd build
+cd out/build
 make -j$(sysctl -n hw.ncpu)
 cd ..
 ./run.sh
@@ -65,10 +65,10 @@ tetfemcpp/
 ├── TetgenFEM/              # 源代码目录
 │   ├── main.cpp
 │   ├── parameters.txt      # 配置文件
-│   ├── stls/              # STL 模型文件
+│   ├── models/            # 模型资源（STL / node / ele 等）
 │   └── ...
-├── build/                  # 编译输出目录
-│   └── TetgenFEM          # 可执行文件
+├── out/build/              # 编译输出目录
+│   └── TetgenFEM           # 可执行文件
 ├── CMakeLists.txt         # CMake 配置文件
 ├── build.sh               # 编译脚本
 ├── run.sh                 # 运行脚本
@@ -100,7 +100,7 @@ brew install libomp
 
 ### 问题: 程序运行时找不到文件
 
-**解决方案:** 确保从项目根目录运行 `./run.sh`，不要直接运行 `build/TetgenFEM`
+**解决方案:** 确保从项目根目录运行 `./run.sh`，不要直接运行 `out/build/TetgenFEM`
 
 ## 修改参数
 

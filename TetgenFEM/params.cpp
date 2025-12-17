@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
+#include <algorithm>
+#include <cctype>
 #include <string>
 
 // Define global variables
@@ -13,8 +15,39 @@ float dragInfluenceRadius = 0.6f;
 float dragStiffness = 2500.0f;
 float dragMaxAccel = 50000.0f;
 float dragMaxDisplacement = 1.0f;
+std::string modelDir;
 std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
+
+namespace {
+std::string trim(std::string s) {
+	auto notSpace = [](unsigned char ch) { return !std::isspace(ch); };
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), notSpace));
+	s.erase(std::find_if(s.rbegin(), s.rend(), notSpace).base(), s.end());
+	return s;
+}
+
+bool isAbsolutePath(const std::string& p) {
+	if (p.empty()) return false;
+	if (p[0] == '/' || p[0] == '\\') return true;
+	if (p.size() >= 3 && std::isalpha(static_cast<unsigned char>(p[0])) && p[1] == ':' &&
+		(p[2] == '\\' || p[2] == '/')) {
+		return true;
+	}
+	return false;
+}
+
+bool hasDirSeparator(const std::string& p) {
+	return p.find('/') != std::string::npos || p.find('\\') != std::string::npos;
+}
+
+void prefixModelDirIfNeeded(std::string& path, const std::string& dir) {
+	if (dir.empty() || path.empty()) return;
+	if (isAbsolutePath(path) || hasDirSeparator(path)) return;
+	if (dir.back() == '/' || dir.back() == '\\') path = dir + path;
+	else path = dir + "/" + path;
+}
+} // namespace
 
 void loadParams(const std::string& filename) {
     std::ifstream file(filename);
@@ -40,6 +73,7 @@ void loadParams(const std::string& filename) {
     };
 
     std::unordered_map<std::string, std::string*> stringParams = {
+        {"modelDir", &modelDir},
         {"stlFile", &stlFile}, {"tetgenArgs", &tetgenArgs}, 
         {"nodeFile", &nodeFile}, {"eleFile", &eleFile}
     };
@@ -53,8 +87,8 @@ void loadParams(const std::string& filename) {
         size_t pos = line.find('=');
         if (pos == std::string::npos) continue;
 
-        std::string key = line.substr(0, pos);
-        std::string value = line.substr(pos + 1);
+        std::string key = trim(line.substr(0, pos));
+        std::string value = trim(line.substr(pos + 1));
 
         if (floatParams.find(key) != floatParams.end()) {
             *floatParams[key] = std::stof(value);
@@ -71,4 +105,9 @@ void loadParams(const std::string& filename) {
     }
 
     file.close();
+
+    // Convenience: if modelDir is set, treat stlFile/nodeFile/eleFile as filenames unless they already contain a path.
+    prefixModelDirIfNeeded(stlFile, modelDir);
+    prefixModelDirIfNeeded(nodeFile, modelDir);
+    prefixModelDirIfNeeded(eleFile, modelDir);
 }

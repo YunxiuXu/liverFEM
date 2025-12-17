@@ -43,15 +43,16 @@ if ! brew list glew &> /dev/null; then
     brew install glew
 fi
 
-# 创建 build 目录
-mkdir -p build
-cd build
+# 创建 build 目录（放到 out/ 下，避免把构建产物混进仓库）
+BUILD_DIR="out/build"
+mkdir -p "${BUILD_DIR}"
+cd "${BUILD_DIR}"
 # 清理旧的缓存以便切换编译器
 rm -f CMakeCache.txt
 
 # 运行 CMake
 echo "运行 CMake..."
-cmake .. -DCMAKE_BUILD_TYPE=Release \
+cmake ../.. -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER="${CC}" \
     -DCMAKE_CXX_COMPILER="${CXX}" \
     -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libc++ -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind -lunwind" \
@@ -70,7 +71,7 @@ make -j$(sysctl -n hw.ncpu)
 if [ $? -eq 0 ]; then
     echo "======================================"
     echo "编译成功！"
-    echo "可执行文件位于: build/TetgenFEM"
+    echo "可执行文件位于: ${BUILD_DIR}/TetgenFEM"
     echo "======================================"
 else
     echo "======================================"
