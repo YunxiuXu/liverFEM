@@ -22,7 +22,7 @@ if [[ ! -f "${NODE_PATH}" || ! -f "${ELE_PATH}" ]]; then
 fi
 
 # Basic integrity checks: header count vs actual rows.
-python3 - <<'PY'
+python3 - "${NODE_PATH}" "${ELE_PATH}" <<'PY'
 import sys
 from pathlib import Path
 
@@ -76,7 +76,7 @@ if ele_lines != ele_m:
     sys.exit(2)
 
 print(f"[XPBD] TetGen files look consistent: {node_n} nodes, {ele_m} tets")
-PY "${NODE_PATH}" "${ELE_PATH}"
+PY
 
 SCENE_DIR="${ROOT_DIR}/out/xpbd_autoscenes"
 SCENE_PATH="${SCENE_DIR}/TetgenFEM_LatestScene.json"
