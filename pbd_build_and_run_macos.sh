@@ -16,7 +16,7 @@ if ! command -v cmake >/dev/null 2>&1; then
   exit 1
 fi
 
-SCENE_PATH="${1:-"${PBD_DIR}/data/Scenes/CarScene.json"}"
+SCENE_PATH="${1:-"${PBD_DIR}/data/scenes/CarScene.json"}"
 if [[ ! -f "${SCENE_PATH}" ]]; then
   echo "Scene file not found: ${SCENE_PATH}" >&2
   echo "Usage: $0 [scene.json]" >&2
