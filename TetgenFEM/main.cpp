@@ -1,4 +1,4 @@
-﻿
+
 //#define EIGEN_USE_MKL_ALL
 #include <iostream>
 #include <vector>
@@ -546,6 +546,22 @@ int main(int argc, char** argv) {
 	object.groupNumZ = groupNumZ;
 	divideIntoGroups(out, object, groupNumX, groupNumY, groupNumZ); //convert tetgen to our data structure
 
+	// Use TetGen's native save function to save the initial mesh
+	// This is robust and avoids issues with vertex duplication/deduplication in the Object structure
+	if (!exportTetgenAndExit && autoSaveMesh) {
+		std::string exportDir = exportDirOverride.empty() ? "out/tetgenfem_exports" : exportDirOverride;
+		std::filesystem::create_directories(exportDir);
+		
+		std::string basePath = (std::filesystem::path(exportDir) / "latest").string();
+		std::cout << "[TetgenFEM] Saving initial mesh using TetGen native functions to: " << basePath << ".*" << std::endl;
+		
+		// TetGen's save functions take a char* base name and append extension
+		// Cast to char* is safe here because we're just passing the buffer address
+		char* basePathC = const_cast<char*>(basePath.c_str());
+		out.save_nodes(basePathC);
+		out.save_elements(basePathC);
+	}
+
 	/*out.save_nodes("vbdbeam");
 	out.save_elements("vbdbeam");*/
 	//writeSTL(object, "vbdbeam.stl");
@@ -739,32 +755,49 @@ int main(int argc, char** argv) {
 	//------------------- save coordinates
 	std::vector<Vertex*> objectUniqueVertices;
 
+	// Optimization: Collect all vertices first, then sort and unique to avoid O(N^2) complexity
+	size_t estimatedCount = 0;
+	for (int i = 0; i < groupNum; ++i) {
+		estimatedCount += object.getGroup(i).verticesMap.size();
+	}
+	objectUniqueVertices.reserve(estimatedCount);
+
 	for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 		Group& group = object.getGroup(groupIdx);
-		auto& verticesMap = group.verticesMap; 
-
-	for (const auto& pair : verticesMap) {
-			bool found = false;
-			for (const auto& vertex : objectUniqueVertices) {
-				if (vertex->x == pair.second->initx && vertex->inity == pair.second->inity && vertex->initz == pair.second->initz) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				objectUniqueVertices.push_back(pair.second);
-			}
+		for (const auto& pair : group.verticesMap) {
+			objectUniqueVertices.push_back(pair.second);
 		}
 	}
+
+	// Sort by initial coordinates to identify duplicates
+	std::sort(objectUniqueVertices.begin(), objectUniqueVertices.end(), [](const Vertex* a, const Vertex* b) {
+		if (std::abs(a->initx - b->initx) > 1e-6f) return a->initx < b->initx;
+		if (std::abs(a->inity - b->inity) > 1e-6f) return a->inity < b->inity;
+		return a->initz < b->initz;
+	});
+
+	// Remove duplicates based on initial coordinates
+	auto last = std::unique(objectUniqueVertices.begin(), objectUniqueVertices.end(), [](const Vertex* a, const Vertex* b) {
+		return std::abs(a->initx - b->initx) <= 1e-6f &&
+			   std::abs(a->inity - b->inity) <= 1e-6f &&
+			   std::abs(a->initz - b->initz) <= 1e-6f;
+	});
+	objectUniqueVertices.erase(last, objectUniqueVertices.end());
 
 	std::sort(objectUniqueVertices.begin(), objectUniqueVertices.end(), [](const Vertex* a, const Vertex* b) {
 		return a->index < b->index;
 		});//index from min to max
 
+	// [REMOVED] The previous custom export logic was causing "key not found" errors 
+	// because of vertex pointer mismatches after deduplication.
+	// We now use TetGen's native save functions immediately after meshing (see above).
+	
+	/* 
 	// Export a deterministic "latest" snapshot for XPBD/PBD to consume.
 	// Also export a timestamped snapshot for bookkeeping.
 	// (Skip when running in --export-tetgen mode; we'll export and exit later.)
-	if (!exportTetgenAndExit) {
+	// Only save if autoSaveMesh is enabled (controlled by parameters.txt)
+	if (!exportTetgenAndExit && autoSaveMesh) {
 		try {
 			const std::string exportDir = exportDirOverride.empty() ? "out/tetgenfem_exports" : exportDirOverride;
 			const auto latest = exportTetgenNodeEleSnapshot(object, objectUniqueVertices, exportDir, "latest");
@@ -777,6 +810,7 @@ int main(int argc, char** argv) {
 			std::cerr << "[TetgenFEM] Failed to export TetGen mesh: " << e.what() << "\n";
 		}
 	}
+	*/
 
 	Experiment3& experiment3 = Experiment3::instance();
 	experiment3.init(&object, objectUniqueVertices);

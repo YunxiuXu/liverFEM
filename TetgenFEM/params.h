@@ -45,6 +45,7 @@ extern int exp4Thread1, exp4Thread2, exp4Thread3;
 extern std::string modelDir;
 extern std::string stlFile, tetgenArgs, nodeFile, eleFile;
 extern bool useDirectLoading;
+extern bool autoSaveMesh;
 
 // Function to load parameters
 void loadParams(const std::string& filename);

@@ -66,6 +66,7 @@ int exp4Thread3 = 8;
 std::string modelDir;
 std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
+bool autoSaveMesh = true;
 
 namespace {
 std::string trim(std::string s) {
@@ -175,6 +176,7 @@ void loadParams(const std::string& filename) {
     
     std::unordered_map<std::string, bool*> boolParams = {
         {"useDirectLoading", &useDirectLoading},
+        {"autoSaveMesh", &autoSaveMesh},
         {"exp3_overridePoisson", &exp3OverridePoisson},
         {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
         {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
