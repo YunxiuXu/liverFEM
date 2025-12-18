@@ -9,6 +9,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <limits>
+#include <filesystem>
+#include <chrono>
+#include <ctime>
 #include "GL/glew.h" 
 #include "GLFW/glfw3.h"
 #include "params.h"
@@ -129,6 +132,102 @@ void saveOBJ(const std::string& filename, std::vector<Group>& groups) {
 	objFile.close();
 	std::cout << "OBJ file saved: " << filename << "\n";
 }
+
+namespace {
+struct TetgenExportPaths {
+	std::string nodePath;
+	std::string elePath;
+	std::string nodePathAbs;
+	std::string elePathAbs;
+};
+
+static std::string nowTimestampForFilename()
+{
+	const auto now = std::chrono::system_clock::now();
+	const std::time_t t = std::chrono::system_clock::to_time_t(now);
+	std::tm tm{};
+#if defined(_WIN32)
+	localtime_s(&tm, &t);
+#else
+	localtime_r(&t, &tm);
+#endif
+	char buf[32];
+	std::strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &tm);
+	return std::string(buf);
+}
+
+static std::string tryAbsolutePath(const std::string& path)
+{
+	try {
+		return std::filesystem::absolute(std::filesystem::path(path)).string();
+	}
+	catch (...) {
+		return path;
+	}
+}
+
+static TetgenExportPaths exportTetgenNodeEleSnapshot(
+	const Object& object,
+	const std::vector<Vertex*>& objectUniqueVertices,
+	const std::string& outDir,
+	const std::string& baseName)
+{
+	std::filesystem::create_directories(outDir);
+
+	const std::string nodePath = (std::filesystem::path(outDir) / (baseName + ".node")).string();
+	const std::string elePath = (std::filesystem::path(outDir) / (baseName + ".ele")).string();
+
+	std::unordered_map<const Vertex*, int> exportIndex;
+	exportIndex.reserve(objectUniqueVertices.size());
+	for (size_t i = 0; i < objectUniqueVertices.size(); ++i) {
+		exportIndex[objectUniqueVertices[i]] = static_cast<int>(i + 1); // 1-based for TetGen
+	}
+
+	// Write .node
+	{
+		std::ofstream nodeFile(nodePath);
+		if (!nodeFile.is_open()) {
+			throw std::runtime_error("Failed to open for writing: " + nodePath);
+		}
+		nodeFile << objectUniqueVertices.size() << " 3 0 0\n";
+		for (size_t i = 0; i < objectUniqueVertices.size(); ++i) {
+			const Vertex* v = objectUniqueVertices[i];
+			nodeFile << (i + 1) << " " << v->x << " " << v->y << " " << v->z << "\n";
+		}
+	}
+
+	// Count and write .ele
+	size_t tetCount = 0;
+	for (const auto& g : object.groups) {
+		tetCount += g.tetrahedra.size();
+	}
+	{
+		std::ofstream eleFile(elePath);
+		if (!eleFile.is_open()) {
+			throw std::runtime_error("Failed to open for writing: " + elePath);
+		}
+		eleFile << tetCount << " 4 0\n";
+		size_t tetIndex = 1;
+		for (const auto& g : object.groups) {
+			for (const auto* tet : g.tetrahedra) {
+				const int a = exportIndex.at(tet->vertices[0]);
+				const int b = exportIndex.at(tet->vertices[1]);
+				const int c = exportIndex.at(tet->vertices[2]);
+				const int d = exportIndex.at(tet->vertices[3]);
+				eleFile << tetIndex++ << " " << a << " " << b << " " << c << " " << d << "\n";
+			}
+		}
+	}
+
+	TetgenExportPaths paths;
+	paths.nodePath = nodePath;
+	paths.elePath = elePath;
+	paths.nodePathAbs = tryAbsolutePath(nodePath);
+	paths.elePathAbs = tryAbsolutePath(elePath);
+	return paths;
+}
+} // namespace
+
 void writeOBJ(const Object& object, const std::string& filename) {
 	std::ofstream file(filename);
 	if (!file.is_open()) {
@@ -356,6 +455,8 @@ static Eigen::Vector3f unprojectCursorToWorld(double fbMouseX,
 
 int main(int argc, char** argv) {
 
+	bool exportTetgenAndExit = false;
+	std::string exportDirOverride;
 	loadParams("parameters.txt");
 	// Make sure both OpenMP and Eigen use all available cores
 	omp_set_dynamic(0);
@@ -364,6 +465,14 @@ int main(int argc, char** argv) {
 	Eigen::setNbThreads(std::max(1, omp_get_num_procs()));
 
 	for (int i = 1; i < argc; ++i) {
+		if (std::string(argv[i]) == "--export-tetgen") {
+			exportTetgenAndExit = true;
+			continue;
+		}
+		if (std::string(argv[i]) == "--export-dir" && i + 1 < argc) {
+			exportDirOverride = argv[++i];
+			continue;
+		}
 		if (std::string(argv[i]) == "--exp4") {
 			Experiment4& experiment4 = Experiment4::instance();
 			experiment4.requestStart();
@@ -652,6 +761,23 @@ int main(int argc, char** argv) {
 		return a->index < b->index;
 		});//index from min to max
 
+	// Export a deterministic "latest" snapshot for XPBD/PBD to consume.
+	// Also export a timestamped snapshot for bookkeeping.
+	// (Skip when running in --export-tetgen mode; we'll export and exit later.)
+	if (!exportTetgenAndExit) {
+		try {
+			const std::string exportDir = exportDirOverride.empty() ? "out/tetgenfem_exports" : exportDirOverride;
+			const auto latest = exportTetgenNodeEleSnapshot(object, objectUniqueVertices, exportDir, "latest");
+			const auto stamped = exportTetgenNodeEleSnapshot(object, objectUniqueVertices, exportDir, "snapshot_" + nowTimestampForFilename());
+			std::cout << "[TetgenFEM] Exported TetGen mesh (.node/.ele)\n"
+					  << "  latest:   " << latest.nodePathAbs << " | " << latest.elePathAbs << "\n"
+					  << "  snapshot: " << stamped.nodePathAbs << " | " << stamped.elePathAbs << "\n";
+		}
+		catch (const std::exception& e) {
+			std::cerr << "[TetgenFEM] Failed to export TetGen mesh: " << e.what() << "\n";
+		}
+	}
+
 	Experiment3& experiment3 = Experiment3::instance();
 	experiment3.init(&object, objectUniqueVertices);
 	Experiment1& experiment1 = Experiment1::instance();
@@ -664,6 +790,23 @@ int main(int argc, char** argv) {
 
 	int frame = 1;
 	SimpleUI::Context ui;
+
+	if (exportTetgenAndExit) {
+		try {
+			const std::string exportDir = exportDirOverride.empty() ? "out/tetgenfem_exports" : exportDirOverride;
+			const auto latest = exportTetgenNodeEleSnapshot(object, objectUniqueVertices, exportDir, "latest");
+			const auto stamped = exportTetgenNodeEleSnapshot(object, objectUniqueVertices, exportDir, "snapshot_" + nowTimestampForFilename());
+			std::cout << "[TetgenFEM] Exported TetGen mesh (.node/.ele)\n"
+					  << "  latest:   " << latest.nodePathAbs << " | " << latest.elePathAbs << "\n"
+					  << "  snapshot: " << stamped.nodePathAbs << " | " << stamped.elePathAbs << "\n";
+			return 0;
+		}
+		catch (const std::exception& e) {
+			std::cerr << "[TetgenFEM] Failed to export TetGen mesh: " << e.what() << "\n";
+			return 1;
+		}
+	}
+
 	while (!glfwWindowShouldClose(window)) {
 		ui.beginFrame(window);
 		experiment3.update();
@@ -725,6 +868,21 @@ int main(int argc, char** argv) {
 			return x >= r.x && x <= (r.x + r.w) && y >= r.y && y <= (r.y + r.h);
 		};
 		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
+
+		// Press 'P' to export current (possibly deformed) tet mesh to .node/.ele for XPBD/PBD.
+		static KeyLatch exportLatch;
+		if (exportLatch.consume(window, GLFW_KEY_P)) {
+			try {
+				const std::string exportDir = exportDirOverride.empty() ? "out/tetgenfem_exports" : exportDirOverride;
+				const auto paths = exportTetgenNodeEleSnapshot(object, objectUniqueVertices, exportDir, "latest");
+				std::cout << "[TetgenFEM] Exported current TetGen mesh (P)\n"
+						  << "  " << paths.nodePathAbs << "\n"
+						  << "  " << paths.elePathAbs << "\n";
+			}
+			catch (const std::exception& e) {
+				std::cerr << "[TetgenFEM] Export failed: " << e.what() << "\n";
+			}
+		}
 
 		if (!isAutoTestActive && !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive()) {
 			if (rightReleased) {
