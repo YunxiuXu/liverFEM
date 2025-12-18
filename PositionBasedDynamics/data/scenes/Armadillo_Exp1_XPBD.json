@@ -1,0 +1,72 @@
+{
+  "Name": "Armadillo_Exp1_XPBD",
+  "Simulation": {
+    "timeStepSize": 0.01,
+    "numberOfStepsPerRenderUpdate": 1,
+    "subSteps": 5,
+    "maxIterations": 30,
+    "maxIterationsV": 5,
+    "velocityUpdateMethod": 0,
+    "contactTolerance": 0.0,
+    "solidSimulationMethod": 3,
+    "solid_stiffness": 1.0,
+    "solid_volumeStiffness": 1.0,
+    "solid_poissonRatio": 0.28,
+    "solid_normalizeStretch": 0,
+    "solid_normalizeShear": 0,
+    "contactStiffnessRigidBody": 1.0,
+    "contactStiffnessParticleRigidBody": 100.0,
+    "gravitation": [0, -9.81, 0]
+  },
+  "cameraLookat": [0, 6, 0],
+  "cameraPosition": [0, 12, 30],
+  "TetModels": [
+    {
+      "id": 0,
+      "nodeFile": "../models/armadillo_4k.node",
+      "eleFile": "../models/armadillo_4k.ele",
+      "visFile": "../models/armadillo.obj",
+      "resolutionSDF": [20,20,20],
+      "translation": [0, 10, 0],
+      "rotationAxis": [0, 1, 0],
+      "rotationAngle": 1.57,
+      "scale": [2, 2, 2],
+      "staticParticles": [],
+      "restitution": 0.1,
+      "friction": 0.3,
+      "collisionObjectType": 5,
+      "collisionObjectFileName": "",
+      "collisionObjectScale": [2, 2, 2],
+      "testMesh": 1
+    }
+  ],
+  "RigidBodies": [
+    {
+      "id": 2,
+      "geometryFile": "../models/cube.obj",
+      "flatShading": true,
+      "isDynamic": 0,
+      "density": 500,
+      "translation": [0, 0, 0],
+      "rotationAxis": [1, 0, 0],
+      "rotationAngle": 0.0,
+      "scale": [100, 1, 100],
+      "restitution": 0.6,
+      "friction": 0.0,
+      "collisionObjectType": 2,
+      "collisionObjectScale": [100, 1, 100]
+    }
+  ],
+  "BallJoints": [],
+  "BallOnLineJoints": [],
+  "DamperJoints": [],
+  "DistanceJoints": [],
+  "HingeJoints": [],
+  "UniversalJoints": [],
+  "SliderJoints": [],
+  "TargetAngleMotorHingeJoints": [],
+  "TargetVelocityMotorHingeJoints": [],
+  "TargetPositionMotorSliderJoints": [],
+  "TargetVelocityMotorSliderJoints": [],
+  "RigidBodyParticleBallJoints": []
+}
