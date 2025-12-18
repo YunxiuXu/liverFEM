@@ -318,9 +318,15 @@ void Simulator_GUI_imgui::createSimulationParameterGUI()
 	if (ImGui::CollapsingHeader("Experiment1 (XPBD)", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::Text("Status: %s", Exp1XPBD::status().c_str());
+		static float pullAccel = Exp1XPBD::getPullAccel();
+		if (ImGui::InputFloat("Pull accel (+X)", &pullAccel, 100.0f, 500.0f, "%.1f"))
+		{
+			Exp1XPBD::setPullAccel(pullAccel);
+		}
+
 		if (!Exp1XPBD::isPulling())
 		{
-			if (ImGui::Button("Reset + Run + Pull (+X=|g|)"))
+			if (ImGui::Button("Reset + Run + Pull"))
 				Exp1XPBD::startPull();
 		}
 		else

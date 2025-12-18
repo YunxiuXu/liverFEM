@@ -154,7 +154,6 @@ void timeStep ()
 
 		base->step();
 	}
-	Exp1XPBD::step();
 
 	// Update visualization models
 	const ParticleData &pd = model->getParticles();

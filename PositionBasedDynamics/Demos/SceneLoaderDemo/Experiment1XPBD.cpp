@@ -10,7 +10,11 @@ namespace Exp1XPBD
 	void (*resetFunc)() = nullptr;
 	DemoBase *base = nullptr;
 
-	static bool s_pulling = false;
+	namespace
+	{
+		static bool s_pulling = false;
+		static float s_pullAccel = 800.0f; // m/s^2 along +X, defaults to a strong horizontal pull. If <=0, uses |gravity|.
+	}
 
 	void init()
 	{
@@ -36,9 +40,14 @@ namespace Exp1XPBD
 		return s_pulling;
 	}
 
-	void step()
+	void setPullAccel(float a)
 	{
-		// no-op for now
+		s_pullAccel = a;
+	}
+
+	float getPullAccel()
+	{
+		return s_pullAccel;
 	}
 
 	std::function<void(ParticleData&)> externalAccelFunc()
@@ -47,10 +56,11 @@ namespace Exp1XPBD
 			if (!s_pulling)
 				return;
 
-			// Match gravity application: add an acceleration of the same magnitude as |g| along +X.
+			// Match gravity application: add a constant acceleration along +X.
 			Simulation *sim = Simulation::getCurrent();
 			const Vector3r grav(sim->getVecValue<Real>(Simulation::GRAVITATION));
-			const Real a = std::abs(grav[1]) > static_cast<Real>(1e-9) ? std::abs(grav[1]) : grav.norm();
+			const Real fallback = std::abs(grav[1]) > static_cast<Real>(1e-9) ? std::abs(grav[1]) : grav.norm();
+			const Real a = (s_pullAccel > 0.0f) ? static_cast<Real>(s_pullAccel) : fallback;
 			if (a <= static_cast<Real>(0.0))
 				return;
 
@@ -66,7 +76,8 @@ namespace Exp1XPBD
 
 	std::string status()
 	{
-		return s_pulling ? "Pulling (+X = |g|)" : "Idle";
+		if (!s_pulling)
+			return "Idle";
+		return "Pulling (+X)";
 	}
 }
-
