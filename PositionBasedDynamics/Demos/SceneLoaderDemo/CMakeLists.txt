@@ -37,6 +37,8 @@ add_executable(SceneLoaderDemo
 	  SceneLoaderDemo.cpp
 	  Experiment1XPBD.cpp
 	  Experiment1XPBD.h
+	  Experiment1.cpp
+	  Experiment1.h
 
 	  ../Common/LogWindow.cpp
 	  ../Common/LogWindow.h
@@ -59,7 +61,7 @@ set_target_properties(SceneLoaderDemo PROPERTIES RELWITHDEBINFO_POSTFIX ${CMAKE_
 set_target_properties(SceneLoaderDemo PROPERTIES MINSIZEREL_POSTFIX ${CMAKE_MINSIZEREL_POSTFIX})
 add_dependencies(SceneLoaderDemo ${SIMULATION_DEPENDENCIES})
 target_link_libraries(SceneLoaderDemo ${SIMULATION_LINK_LIBRARIES})
-target_compile_definitions(SceneLoaderDemo PRIVATE ENABLE_EXP1_XPBD=1)
+target_compile_definitions(SceneLoaderDemo PRIVATE ENABLE_EXP1_XPBD=1 ENABLE_EXP1=1)
 
 find_package( Eigen3 REQUIRED )
 include_directories( ${EIGEN3_INCLUDE_DIR} )

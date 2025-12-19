@@ -17,6 +17,7 @@
 #include "Demos/Common/DemoBase.h"
 #include "Simulation/Simulation.h"
 #include "Experiment1XPBD.h"
+#include "Experiment1.h"
 #include <filesystem>
 #include <fstream>
 
@@ -49,6 +50,10 @@ CubicSDFCollisionDetection *cd;
 namespace Exp1XPBD { extern DemoBase *base; }
 namespace Exp1XPBD { extern void (*resetFunc)(); }
 
+// Make accessible to Experiment1
+namespace Exp1 { extern DemoBase *base; }
+namespace Exp1 { extern void (*resetFunc)(); }
+
 
 // main 
 int main( int argc, char **argv )
@@ -70,6 +75,8 @@ int main( int argc, char **argv )
 	base->init(argc, argv, sceneFileName.c_str());
 	Exp1XPBD::base = base;
 	Exp1XPBD::resetFunc = reset;
+	Exp1::base = base;
+	Exp1::resetFunc = reset;
 
 	SimulationModel *model = new SimulationModel();
 	model->init();
@@ -81,9 +88,19 @@ int main( int argc, char **argv )
 	buildModel();
 
 	// Hook experiment external acceleration into timestep controller
+	// Priority: Experiment1 > Experiment1XPBD
 	TimeStepController *tsc = dynamic_cast<TimeStepController*>(Simulation::getCurrent()->getTimeStep());
 	if (tsc)
-		tsc->setExternalAccelerationFunc(Exp1XPBD::externalAccelFunc());
+	{
+		// Create a combined function that checks both experiments
+		auto combinedFunc = [](ParticleData &pd) {
+			if (Exp1::isRunning())
+				Exp1::externalAccelFunc()(pd);
+			else if (Exp1XPBD::isPulling())
+				Exp1XPBD::externalAccelFunc()(pd);
+		};
+		tsc->setExternalAccelerationFunc(combinedFunc);
+	}
 
 	base->createParameterGUI();
 
@@ -132,6 +149,7 @@ void reset()
 	readScene(false);
 	TimeManager::getCurrent()->setTimeStepSize(h);
 	Exp1XPBD::init();
+	Exp1::init();
 }
 
 void timeStep ()

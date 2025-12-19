@@ -9,6 +9,9 @@
 #ifdef ENABLE_EXP1_XPBD
 #include "Demos/SceneLoaderDemo/Experiment1XPBD.h"
 #endif
+#ifdef ENABLE_EXP1
+#include "Demos/SceneLoaderDemo/Experiment1.h"
+#endif
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -333,6 +336,31 @@ void Simulator_GUI_imgui::createSimulationParameterGUI()
 		{
 			if (ImGui::Button("Stop Pull"))
 				Exp1XPBD::stopPull();
+		}
+	}
+#endif
+
+#ifdef ENABLE_EXP1
+	// 实验1按钮（按照计划书的方法）
+	if (ImGui::CollapsingHeader("实验1 (Experiment 1)", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::Text("Status: %s", Exp1::status().c_str());
+		static float pullAccel = Exp1::getPullAccel();
+		if (ImGui::InputFloat("Pull accel (+X)", &pullAccel, 100.0f, 500.0f, "%.1f"))
+		{
+			Exp1::setPullAccel(pullAccel);
+		}
+		ImGui::Text("Medium: 800, High: 2000");
+
+		if (!Exp1::isRunning())
+		{
+			if (ImGui::Button("exp1"))
+				Exp1::startExperiment1();
+		}
+		else
+		{
+			if (ImGui::Button("Stop exp1"))
+				Exp1::stopExperiment1();
 		}
 	}
 #endif
