@@ -158,6 +158,9 @@ void timeStep ()
 	if ((pauseAt > 0.0) && (pauseAt < TimeManager::getCurrent()->getTime()))
 		base->setValue(DemoBase::PAUSE, true);
 
+	// Update experiment 1 state machine (even when paused, so it can progress)
+	Exp1::update();
+
 	if (base->getValue<bool>(DemoBase::PAUSE))
 		return;
 

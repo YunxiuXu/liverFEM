@@ -15,11 +15,28 @@ namespace Exp1
 
 	namespace
 	{
+		enum class State
+		{
+			Idle,
+			Settle,
+			LoadRamp,
+			HoldLoad,
+			Finished
+		};
+
 		static bool s_running = false;
+		static State s_state = State::Idle;
 		static float s_pullAccel = 800.0f; // m/s^2 along +X, Medium: 800, High: 2000
 		static std::vector<unsigned int> s_fixedIndices; // Indices of fixed hilum region vertices
 		static std::vector<unsigned int> s_edgeIndices; // Indices of edge vertices to apply force
 		static Vector3r s_savedGravity; // Saved gravity value to restore later
+		
+		// State machine parameters
+		static const int s_settleSteps = 120;
+		static const int s_loadRampSteps = 240;
+		static const int s_holdSteps = 240;
+		static int s_stepInState = 0;
+		static float s_currentLoadScale = 0.0f; // 0.0 = no force, 1.0 = full force
 	}
 
 	void init()
@@ -35,6 +52,9 @@ namespace Exp1
 		}
 		
 		s_running = false;
+		s_state = State::Idle;
+		s_stepInState = 0;
+		s_currentLoadScale = 0.0f;
 		s_fixedIndices.clear();
 		s_edgeIndices.clear();
 	}
@@ -136,13 +156,26 @@ namespace Exp1
 		if (resetFunc)
 			resetFunc(); // Reset simulation
 		
+		// Disable gravity again after reset (reset may restore it)
+		if (sim)
+		{
+			Vector3r zeroGravity(0.0, 0.0, 0.0);
+			sim->setVecValue<Real>(Simulation::GRAVITATION, zeroGravity.data());
+		}
+		
 		// Setup after reset
 		setupExperiment1();
+
+		// Initialize state machine
+		s_state = State::Settle;
+		s_stepInState = 0;
+		s_currentLoadScale = 0.0f;
 
 		if (base)
 			base->setValue(DemoBase::PAUSE, false); // Unpause (run)
 		
 		s_running = true;
+		LOG_INFO << "Experiment1: Started - Settle phase (120 steps)";
 	}
 
 	void stopExperiment1()
@@ -176,6 +209,89 @@ namespace Exp1
 		return s_running;
 	}
 
+	void update()
+	{
+		if (!s_running)
+			return;
+
+		switch (s_state)
+		{
+			case State::Idle:
+				return;
+
+			case State::Settle:
+			{
+				s_currentLoadScale = 0.0f; // No force during settle
+				++s_stepInState;
+				if (s_stepInState >= s_settleSteps)
+				{
+					s_stepInState = 0;
+					s_state = State::LoadRamp;
+					LOG_INFO << "Experiment1: Settle complete - Starting LoadRamp phase (240 steps)";
+				}
+				return;
+			}
+
+			case State::LoadRamp:
+			{
+				// Linear ramp from 0.0 to 1.0 over loadRampSteps
+				const float denom = static_cast<float>(std::max(1, s_loadRampSteps - 1));
+				const float t = std::min(1.0f, static_cast<float>(s_stepInState) / denom);
+				s_currentLoadScale = t;
+				++s_stepInState;
+				if (s_stepInState >= s_loadRampSteps)
+				{
+					s_stepInState = 0;
+					s_state = State::HoldLoad;
+					s_currentLoadScale = 1.0f; // Full force
+					LOG_INFO << "Experiment1: LoadRamp complete - Starting HoldLoad phase (240 steps)";
+				}
+				return;
+			}
+
+			case State::HoldLoad:
+			{
+				s_currentLoadScale = 1.0f; // Full force
+				++s_stepInState;
+				if (s_stepInState >= s_holdSteps)
+				{
+					// Experiment complete - stop and restore
+					s_state = State::Finished;
+					s_currentLoadScale = 0.0f; // Stop applying force
+					LOG_INFO << "Experiment1: HoldLoad complete - Stopping and restoring state";
+					
+					// Restore gravity
+					Simulation *sim = Simulation::getCurrent();
+					if (sim)
+					{
+						sim->setVecValue<Real>(Simulation::GRAVITATION, s_savedGravity.data());
+					}
+					
+					// Restore masses (unfix vertices)
+					SimulationModel *model = Simulation::getCurrent()->getModel();
+					if (model)
+					{
+						ParticleData &pd = model->getParticles();
+						for (unsigned int idx : s_fixedIndices)
+						{
+							if (idx < pd.size())
+								pd.setMass(idx, 1.0); // Restore mass
+						}
+					}
+					
+					s_running = false;
+					s_state = State::Idle;
+					LOG_INFO << "Experiment1: Finished - State restored";
+				}
+				return;
+			}
+
+			case State::Finished:
+			default:
+				return;
+		}
+	}
+
 	void setPullAccel(float a)
 	{
 		s_pullAccel = a;
@@ -189,12 +305,11 @@ namespace Exp1
 	std::function<void(ParticleData&)> externalAccelFunc()
 	{
 		return [](ParticleData &pd) {
-			if (!s_running)
+			if (!s_running || s_state == State::Settle || s_state == State::Finished || s_state == State::Idle)
 				return;
 
-			// Apply constant acceleration along +X for edge vertices only.
-			// Gravity is disabled during experiment 1, so no fallback needed.
-			const Real a = static_cast<Real>(s_pullAccel);
+			// Apply acceleration scaled by currentLoadScale (0.0 during settle, ramps up, 1.0 during hold)
+			const Real a = static_cast<Real>(s_pullAccel * s_currentLoadScale);
 			if (a <= static_cast<Real>(0.0))
 				return;
 
@@ -215,6 +330,18 @@ namespace Exp1
 	{
 		if (!s_running)
 			return "Idle";
-		return "Running Experiment1 (Pull: " + std::to_string(s_pullAccel) + " m/s²)";
+		
+		std::string stateStr;
+		switch (s_state)
+		{
+			case State::Settle: stateStr = "Settle"; break;
+			case State::LoadRamp: stateStr = "LoadRamp"; break;
+			case State::HoldLoad: stateStr = "HoldLoad"; break;
+			case State::Finished: stateStr = "Finished"; break;
+			default: stateStr = "Running"; break;
+		}
+		
+		return "Exp1: " + stateStr + " (Pull: " + std::to_string(s_pullAccel) + " m/s², Scale: " + 
+			std::to_string(s_currentLoadScale) + ")";
 	}
 }

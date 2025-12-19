@@ -19,6 +19,9 @@ namespace Exp1
 	void stopExperiment1();
 	bool isRunning();
 
+	// Update function to be called each time step (handles state machine)
+	void update();
+
 	// Provide lambda for TimeStepController external acceleration hook.
 	std::function<void(PBD::ParticleData&)> externalAccelFunc();
 
