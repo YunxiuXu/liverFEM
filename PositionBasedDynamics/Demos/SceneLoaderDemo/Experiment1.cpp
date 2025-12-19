@@ -13,7 +13,11 @@
 #include <ctime>
 #include <cmath>
 
+#include "Utils/Timing.h"
+#include <chrono>
+
 using namespace PBD;
+using namespace Utilities; // 确保可以访问 Timing
 
 namespace Exp1
 {
@@ -37,7 +41,9 @@ namespace Exp1
 		{
 			std::string runName;
 			float pullAccel;
-			unsigned int pbdIterations;
+			unsigned int pbdIterations;  
+			unsigned int pbdSubsteps;    
+			double avgStepTime;          // 新增：记录平均单步耗时(ms)
 			std::vector<Vector3r> positions;
 			std::vector<Vector3r> initPositions;
 			std::vector<unsigned int> vertexIndices;
@@ -63,9 +69,12 @@ namespace Exp1
 		static unsigned int s_targetVertexIndex = 0;
 		static Vector3r s_targetInitPos;
 		
-		// Sweep state: Only sweep accels now
+		// Sweep state: sweep both substeps and accels
+		// XPBD 的正确对比方式：固定迭代次数为1，对比子步数（subSteps）
 		static std::vector<float> s_sweepAccels = { 800.0f, 1500.0f, 2000.0f };
+		static std::vector<unsigned int> s_sweepSubsteps = { 5, 50 }; // Fast (real-time) then Reference (converged)
 		static int s_currentAccelIdx = 0;
+		static int s_currentSubstepIdx = 0;
 		static std::vector<Snapshot> s_allSnapshots;
 		static std::string s_currentOutputDir = "";
 	}
@@ -143,6 +152,7 @@ namespace Exp1
 			s_isSweep = false;
 			s_state = State::Idle;
 			s_currentAccelIdx = 0;
+			s_currentSubstepIdx = 0;
 		}
 		
 		// 总是清理这些（边界条件会在 setupExperiment1 中重新设置）
@@ -235,9 +245,20 @@ namespace Exp1
 
 		ParticleData &pd = model->getParticles();
 		Snapshot sn;
-		sn.pbdIterations = tsc->getMaxIterations();
-		sn.runName = "xpbd_run"; 
+		sn.pbdIterations = tsc->getMaxIterations();  // 固定为1
+		sn.pbdSubsteps = tsc->getSubSteps();         // 对比变量
+		// 根据子步数设置 run_name
+		sn.runName = (sn.pbdSubsteps >= 30) ? "reference" : "fast";
 		sn.pullAccel = s_pullAccel;
+		
+		// 记录性能数据：获取最近的 SimStep 平均耗时
+		sn.avgStepTime = 0.0;
+		for (std::unordered_map<int, AverageTime>::iterator iter = Timing::m_averageTimes.begin(); iter != Timing::m_averageTimes.end(); iter++) {
+			if (iter->second.name == "SimStep") {
+				sn.avgStepTime = iter->second.totalTime / (double)iter->second.counter;
+				break;
+			}
+		}
 		
 		for (size_t i = 0; i < s_physicalIndices.size(); ++i)
 		{
@@ -275,7 +296,7 @@ namespace Exp1
 		std::ofstream file(csvPath);
 		if (file.is_open())
 		{
-			file << "run_index,run_name,pull_accel,pbd_iterations,target_displacement,vertex_list_index,vertex_index,initx,inity,initz,x,y,z\n";
+			file << "run_index,run_name,pull_accel,pbd_iterations,pbd_substeps,target_displacement,vertex_list_index,vertex_index,initx,inity,initz,x,y,z\n";
 			for (size_t r = 0; r < s_allSnapshots.size(); ++r)
 			{
 				const auto &sn = s_allSnapshots[r];
@@ -283,12 +304,77 @@ namespace Exp1
 				{
 					const Vector3r &p = sn.positions[i];
 					const Vector3r &p0 = sn.initPositions[i];
-					file << r << "," << sn.runName << "," << sn.pullAccel << "," << sn.pbdIterations << "," << sn.targetDisplacement << ","
+					file << r << "," << sn.runName << "," << sn.pullAccel << "," << sn.pbdIterations << "," << sn.pbdSubsteps << "," << sn.targetDisplacement << ","
 						 << i << "," << sn.vertexIndices[i] << "," << p0[0] << "," << p0[1] << "," << p0[2] << ","
 						 << p[0] << "," << p[1] << "," << p[2] << "\n";
 				}
 			}
 			file.close();
+		}
+
+		// Generate sweep_summary.csv if we have both fast and reference runs
+		if (s_isSweep && s_allSnapshots.size() >= 2)
+		{
+			const std::string sweepPath = Utilities::FileSystem::normalizePath(outputDir + "/experiment1_sweep_summary.csv");
+			std::ofstream sweep(sweepPath);
+			if (sweep.is_open())
+			{
+				sweep << "pull_accel,pbd_fast_substeps,pbd_reference_substeps,target_disp_fast,target_disp_reference,target_disp_ratio_fast_over_ref,target_disp_rel_error,rmse,max_error,time_fast_ms,time_reference_ms,speedup_ref_over_fast\n";
+				
+				// Calculate bounding box diagonal for normalization
+				float diag = 0.5f;
+				if (!s_allSnapshots.empty() && !s_allSnapshots[0].initPositions.empty()) {
+					Vector3r bmin(1e9,1e9,1e9), bmax(-1e9,-1e9,-1e9);
+					for(const auto& p : s_allSnapshots[0].initPositions) {
+						for(int d=0; d<3; d++) { 
+							bmin[d] = std::min(bmin[d], p[d]); 
+							bmax[d] = std::max(bmax[d], p[d]); 
+						}
+					}
+					diag = static_cast<float>((bmax - bmin).norm());
+				}
+
+				// For each acceleration, find fast and reference runs
+				for (size_t a = 0; a < s_sweepAccels.size(); ++a)
+				{
+					float accel = s_sweepAccels[a];
+					const Snapshot *fast = nullptr, *ref = nullptr;
+					
+					// Find fast (5 substeps) and reference (50 substeps) for this acceleration
+					for(const auto& sn : s_allSnapshots) {
+						if(std::abs(sn.pullAccel - accel) < 1.0f) {
+							if(sn.runName == "fast" && sn.pbdSubsteps <= 10) {
+								fast = &sn;
+							} else if(sn.runName == "reference" && sn.pbdSubsteps >= 30) {
+								ref = &sn;
+							}
+						}
+					}
+					
+					if(fast && ref && fast->positions.size() == ref->positions.size() && fast->positions.size() > 0) {
+						// Calculate RMSE and max error
+						double sumSqErr = 0.0;
+						float maxErr = 0.0f;
+						for(size_t i=0; i<fast->positions.size(); ++i) {
+							float dist = (fast->positions[i] - ref->positions[i]).norm();
+							sumSqErr += dist * dist;
+							maxErr = std::max(maxErr, dist);
+						}
+						float rmse = std::sqrt(sumSqErr / fast->positions.size());
+						
+						// Calculate displacement ratio and relative error
+						float ratio = (ref->targetDisplacement > 1e-6f) ? (fast->targetDisplacement / ref->targetDisplacement) : 1.0f;
+						float relErr = std::abs(ratio - 1.0f);
+						
+						sweep << accel << "," << fast->pbdSubsteps << "," << ref->pbdSubsteps << ","
+							  << fast->targetDisplacement << "," << ref->targetDisplacement << ","
+							  << ratio << "," << relErr << "," << rmse << "," << maxErr << ","
+							  << fast->avgStepTime << "," << ref->avgStepTime << ","
+							  << (fast->avgStepTime > 1e-6 ? ref->avgStepTime / fast->avgStepTime : 0) << "\n";
+					}
+				}
+				sweep.close();
+			}
 		}
 
 		const std::string metaPath = Utilities::FileSystem::normalizePath(outputDir + "/experiment1_metadata.txt");
@@ -298,6 +384,8 @@ namespace Exp1
 			meta << "target_vertex_index=" << s_targetVertexIndex << "\n";
 			meta << "target_vertex_init=(" << s_targetInitPos[0] << "," << s_targetInitPos[1] << "," << s_targetInitPos[2] << ")\n";
 			meta << "pull_accels="; for(float a : s_sweepAccels) meta << a << " "; meta << "\n";
+			meta << "pbd_substeps="; for(unsigned int s : s_sweepSubsteps) meta << s << " "; meta << "\n";
+			meta << "pbd_iterations=1 (fixed)\n";
 			meta << "settleSteps=" << s_settleSteps << "\n";
 			meta << "loadRampSteps=" << s_loadRampSteps << "\n";
 			meta << "holdSteps=" << s_holdSteps << "\n";
@@ -328,11 +416,20 @@ namespace Exp1
 		startExperiment1();
 		s_isSweep = true;
 		s_currentAccelIdx = 0;
+		s_currentSubstepIdx = 0;
 		s_pullAccel = s_sweepAccels[0];
+		
+		// Set initial substeps and fix iterations to 1
+		TimeStepController *tsc = dynamic_cast<TimeStepController*>(Simulation::getCurrent()->getTimeStep());
+		if (tsc) {
+			tsc->setMaxIterations(1);  // 固定为1，这是XPBD的稳定配置
+			tsc->setSubSteps(s_sweepSubsteps[0]);
+		}
+		
 		std::string root = findProjectRoot();
 		std::string timestamp = nowTimestamp();
 		s_currentOutputDir = Utilities::FileSystem::normalizePath(root + "/out/experiment1/" + timestamp + "_xpbd");
-		LOG_INFO << "Started Experiment 1 Sweep (Accels only). Accel=" << s_pullAccel;
+		LOG_INFO << "Started Experiment 1 Sweep. Accel=" << s_pullAccel << " SubSteps=" << s_sweepSubsteps[0] << " (Iterations=1 fixed)";
 		LOG_INFO << "Output directory: " << s_currentOutputDir;
 	}
 
@@ -375,24 +472,31 @@ namespace Exp1
 			case State::Capture:
 				captureSnapshot();
 				if (s_isSweep) {
-					// 准备下一个拉力
-					s_currentAccelIdx++;
-					if (s_currentAccelIdx < s_sweepAccels.size()) {
-						// 保存状态
-						float nextAccel = s_sweepAccels[s_currentAccelIdx];
+					// 先遍历子步数，再遍历拉力
+					s_currentSubstepIdx++;
+					if (s_currentSubstepIdx < s_sweepSubsteps.size()) {
+						// 同一个拉力，下一个子步数
+						unsigned int nextSubsteps = s_sweepSubsteps[s_currentSubstepIdx];
 						bool wasSweeping = s_isSweep;
 						
-						LOG_INFO << "Sweep: Captured accel=" << s_pullAccel << ", next=" << nextAccel << " (idx=" << s_currentAccelIdx << ")";
+						LOG_INFO << "Sweep: Captured accel=" << s_pullAccel << " substeps=" << s_sweepSubsteps[s_currentSubstepIdx-1] 
+							<< ", next substeps=" << nextSubsteps;
 						
 						// 重置模拟
 						if (resetFunc) {
 							resetFunc();
 						}
 						
-						// 恢复扫频状态（必须在resetFunc之后）
+						// 恢复扫频状态
 						s_isSweep = wasSweeping;
 						s_running = true;
-						s_pullAccel = nextAccel;
+						
+						// 设置新的子步数，迭代次数固定为1
+						TimeStepController *tsc = dynamic_cast<TimeStepController*>(Simulation::getCurrent()->getTimeStep());
+						if (tsc) {
+							tsc->setMaxIterations(1);  // 固定为1
+							tsc->setSubSteps(nextSubsteps);
+						}
 						
 						Simulation *sim = Simulation::getCurrent();
 						if (sim) { 
@@ -405,11 +509,53 @@ namespace Exp1
 						s_currentLoadScale = 0.0f;
 						
 						if (base) base->setValue(DemoBase::PAUSE, false);
-						LOG_INFO << "Sweep: Started next run with Accel=" << s_pullAccel;
+						LOG_INFO << "Sweep: Started next run with Accel=" << s_pullAccel << " SubSteps=" << nextSubsteps << " (Iterations=1)";
 					} else {
-						// 所有拉力都完成了
-						saveData();
-						s_state = State::Finished;
+						// 当前拉力的所有子步数都完成了，切换到下一个拉力
+						s_currentSubstepIdx = 0; // 重置子步索引
+						s_currentAccelIdx++;
+						if (s_currentAccelIdx < s_sweepAccels.size()) {
+							// 下一个拉力
+							float nextAccel = s_sweepAccels[s_currentAccelIdx];
+							unsigned int firstSubsteps = s_sweepSubsteps[0];
+							bool wasSweeping = s_isSweep;
+							
+							LOG_INFO << "Sweep: Completed accel=" << s_pullAccel << ", next accel=" << nextAccel;
+							
+							// 重置模拟
+							if (resetFunc) {
+								resetFunc();
+							}
+							
+							// 恢复扫频状态
+							s_isSweep = wasSweeping;
+							s_running = true;
+							s_pullAccel = nextAccel;
+							
+							// 设置第一个子步数，迭代次数固定为1
+							TimeStepController *tsc = dynamic_cast<TimeStepController*>(Simulation::getCurrent()->getTimeStep());
+							if (tsc) {
+								tsc->setMaxIterations(1);  // 固定为1
+								tsc->setSubSteps(firstSubsteps);
+							}
+							
+							Simulation *sim = Simulation::getCurrent();
+							if (sim) { 
+								Vector3r zero(0,0,0); 
+								sim->setVecValue<Real>(Simulation::GRAVITATION, zero.data()); 
+							}
+							setupExperiment1();
+							s_state = State::Settle; 
+							s_stepInState = 0; 
+							s_currentLoadScale = 0.0f;
+							
+							if (base) base->setValue(DemoBase::PAUSE, false);
+							LOG_INFO << "Sweep: Started next accel=" << s_pullAccel << " SubSteps=" << firstSubsteps << " (Iterations=1)";
+						} else {
+							// 所有拉力和子步数都完成了
+							saveData();
+							s_state = State::Finished;
+						}
 					}
 				} else {
 					saveData();
