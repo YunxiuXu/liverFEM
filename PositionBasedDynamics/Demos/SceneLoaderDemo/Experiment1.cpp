@@ -86,6 +86,42 @@ namespace Exp1
 		return oss.str();
 	}
 
+	static std::string findProjectRoot()
+	{
+		// Get executable path (usually build/pbd_user/bin/SceneLoaderDemo)
+		std::string exePath = Utilities::FileSystem::getProgramPath();
+		
+		// Find "build" in the path
+		size_t buildPos = exePath.find("/build/");
+		if (buildPos == std::string::npos) {
+			buildPos = exePath.find("\\build\\");
+		}
+		
+		if (buildPos != std::string::npos) {
+			// Extract path up to and including "build"
+			std::string upToBuild = exePath.substr(0, buildPos);
+			// Go up one level from "build" to get project root
+			std::string root = Utilities::FileSystem::normalizePath(upToBuild);
+			
+			// Verify by checking if "out" directory exists
+			std::string testOut = Utilities::FileSystem::normalizePath(root + "/out");
+			if (Utilities::FileSystem::isDirectory(testOut)) {
+				return root;
+			}
+		}
+		
+		// Fallback: try going up from executable directory
+		std::string current = exePath;
+		size_t lastSlash = current.find_last_of("/\\");
+		if (lastSlash != std::string::npos) {
+			current = current.substr(0, lastSlash);
+		}
+		
+		// Go up 3 levels: bin -> pbd_user -> build -> project root
+		std::string root = Utilities::FileSystem::normalizePath(current + "/../../..");
+		return root;
+	}
+
 	void init()
 	{
 		// 如果正在扫频，保留扫频状态，只清理边界条件相关的数据
@@ -228,7 +264,11 @@ namespace Exp1
 		if (s_allSnapshots.empty()) return;
 
 		std::string outputDir = s_currentOutputDir;
-		if (outputDir.empty()) outputDir = "out/experiment1/" + nowTimestamp();
+		if (outputDir.empty()) {
+			std::string root = findProjectRoot();
+			std::string timestamp = nowTimestamp();
+			outputDir = Utilities::FileSystem::normalizePath(root + "/out/experiment1/" + timestamp + "_xpbd");
+		}
 		Utilities::FileSystem::makeDirs(outputDir);
 
 		const std::string csvPath = Utilities::FileSystem::normalizePath(outputDir + "/experiment1_positions.csv");
@@ -289,8 +329,11 @@ namespace Exp1
 		s_isSweep = true;
 		s_currentAccelIdx = 0;
 		s_pullAccel = s_sweepAccels[0];
-		s_currentOutputDir = "out/experiment1/" + nowTimestamp();
+		std::string root = findProjectRoot();
+		std::string timestamp = nowTimestamp();
+		s_currentOutputDir = Utilities::FileSystem::normalizePath(root + "/out/experiment1/" + timestamp + "_xpbd");
 		LOG_INFO << "Started Experiment 1 Sweep (Accels only). Accel=" << s_pullAccel;
+		LOG_INFO << "Output directory: " << s_currentOutputDir;
 	}
 
 	void stopExperiment1()
@@ -332,36 +375,42 @@ namespace Exp1
 			case State::Capture:
 				captureSnapshot();
 				if (s_isSweep) {
-					s_state = State::NextRun;
-				} else {
-					saveData();
-					s_state = State::Finished;
-				}
-				break;
-			case State::NextRun:
-				s_currentAccelIdx++;
-				if (s_currentAccelIdx < s_sweepAccels.size()) {
-					// 保存扫频状态
-					float nextAccel = s_sweepAccels[s_currentAccelIdx];
-					bool wasSweeping = s_isSweep;
-					int savedAccelIdx = s_currentAccelIdx;
-					
-					// 重置模拟
-					if (resetFunc) resetFunc();
-					
-					// 立即恢复扫频状态
-					s_isSweep = wasSweeping;
-					s_running = true;  // 确保实验继续运行
-					s_currentAccelIdx = savedAccelIdx;
-					s_pullAccel = nextAccel;
-					
-					Simulation *sim = Simulation::getCurrent();
-					if (sim) { Vector3r zero(0,0,0); sim->setVecValue<Real>(Simulation::GRAVITATION, zero.data()); }
-					setupExperiment1();
-					s_state = State::Settle; s_stepInState = 0; s_currentLoadScale = 0.0f;
-					
-					if (base) base->setValue(DemoBase::PAUSE, false); // 确保继续运行
-					LOG_INFO << "Sweep Next: Accel=" << s_pullAccel;
+					// 准备下一个拉力
+					s_currentAccelIdx++;
+					if (s_currentAccelIdx < s_sweepAccels.size()) {
+						// 保存状态
+						float nextAccel = s_sweepAccels[s_currentAccelIdx];
+						bool wasSweeping = s_isSweep;
+						
+						LOG_INFO << "Sweep: Captured accel=" << s_pullAccel << ", next=" << nextAccel << " (idx=" << s_currentAccelIdx << ")";
+						
+						// 重置模拟
+						if (resetFunc) {
+							resetFunc();
+						}
+						
+						// 恢复扫频状态（必须在resetFunc之后）
+						s_isSweep = wasSweeping;
+						s_running = true;
+						s_pullAccel = nextAccel;
+						
+						Simulation *sim = Simulation::getCurrent();
+						if (sim) { 
+							Vector3r zero(0,0,0); 
+							sim->setVecValue<Real>(Simulation::GRAVITATION, zero.data()); 
+						}
+						setupExperiment1();
+						s_state = State::Settle; 
+						s_stepInState = 0; 
+						s_currentLoadScale = 0.0f;
+						
+						if (base) base->setValue(DemoBase::PAUSE, false);
+						LOG_INFO << "Sweep: Started next run with Accel=" << s_pullAccel;
+					} else {
+						// 所有拉力都完成了
+						saveData();
+						s_state = State::Finished;
+					}
 				} else {
 					saveData();
 					s_state = State::Finished;

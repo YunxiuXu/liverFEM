@@ -220,7 +220,7 @@ cat > "${SCENE_PATH}" <<EOF
       "id": 0,
       "nodeFile": "${NODE_PATH}",
       "eleFile": "${ELE_PATH}",
-      "translation": [0, 6, 0],
+      "translation": [0, 0, 0],
       "rotationAxis": [1, 0, 0],
       "rotationAngle": 0.0,
       "scale": [1, 1, 1],
@@ -233,23 +233,7 @@ cat > "${SCENE_PATH}" <<EOF
       "testMesh": 1
     }
   ],
-  "RigidBodies": [
-    {
-      "id": 1,
-      "geometryFile": "${PBD_MODELS_DIR}/cube.obj",
-      "flatShading": true,
-      "isDynamic": 0,
-      "density": 500,
-      "translation": [0, 0, 0],
-      "rotationAxis": [1, 0, 0],
-      "rotationAngle": 0.0,
-      "scale": [100, 1, 100],
-      "restitution": 0.0,
-      "friction": 0.4,
-      "collisionObjectType": 2,
-      "collisionObjectScale": [100, 1, 100]
-    }
-  ],
+  "RigidBodies": [],
   "BallJoints": [],
   "BallOnLineJoints": [],
   "DamperJoints": [],
