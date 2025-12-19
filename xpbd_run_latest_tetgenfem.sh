@@ -209,7 +209,7 @@ cat > "${SCENE_PATH}" <<EOF
     "contactStiffnessRigidBody": 1.0,
     "contactStiffnessParticleRigidBody": 100.0,
     "gravitation": [0, -9.81, 0],
-    "solid_poissonRatio": 0.3,
+    "solid_poissonRatio": 0.28,
     "solid_normalizeStretch": 0,
     "solid_normalizeShear": 0
   },

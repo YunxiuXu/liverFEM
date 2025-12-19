@@ -2,6 +2,7 @@
 #include "Simulation/Simulation.h"
 #include "Simulation/SimulationModel.h"
 #include "Simulation/TimeManager.h"
+#include "Simulation/TimeStepController.h"
 #include "Utils/Logger.h"
 #include "Utils/FileSystem.h"
 #include <algorithm>
@@ -10,6 +11,7 @@
 #include <iomanip>
 #include <sstream>
 #include <ctime>
+#include <cmath>
 
 using namespace PBD;
 
@@ -27,6 +29,7 @@ namespace Exp1
 			LoadRamp,
 			HoldLoad,
 			Capture,
+			NextRun,
 			Finished
 		};
 
@@ -42,24 +45,29 @@ namespace Exp1
 		};
 
 		static bool s_running = false;
+		static bool s_isSweep = false;
 		static State s_state = State::Idle;
-		static float s_pullAccel = 800.0f; // m/s^2 along +X, Medium: 800, High: 2000
-		static std::vector<unsigned int> s_fixedIndices; // Indices of fixed hilum region vertices
-		static std::vector<unsigned int> s_edgeIndices; // Indices of edge vertices to apply force
-		static std::vector<unsigned int> s_physicalIndices; // All physical vertices
-		static std::vector<Vector3r> s_physicalInitPositions; // Initial positions of all physical vertices
-		static Vector3r s_savedGravity; // Saved gravity value to restore later
+		static float s_pullAccel = 800.0f; 
+		static std::vector<unsigned int> s_fixedIndices; 
+		static std::vector<unsigned int> s_edgeIndices; 
+		static std::vector<unsigned int> s_physicalIndices; 
+		static std::vector<Vector3r> s_physicalInitPositions; 
+		static Vector3r s_savedGravity; 
 		
-		// State machine parameters
 		static const int s_settleSteps = 120;
 		static const int s_loadRampSteps = 240;
 		static const int s_holdSteps = 240;
 		static int s_stepInState = 0;
-		static float s_currentLoadScale = 0.0f; // 0.0 = no force, 1.0 = full force
+		static float s_currentLoadScale = 0.0f; 
 
 		static unsigned int s_targetVertexIndex = 0;
 		static Vector3r s_targetInitPos;
-		static Snapshot s_snapshot;
+		
+		// Sweep state: Only sweep accels now
+		static std::vector<float> s_sweepAccels = { 800.0f, 1500.0f, 2000.0f };
+		static int s_currentAccelIdx = 0;
+		static std::vector<Snapshot> s_allSnapshots;
+		static std::string s_currentOutputDir = "";
 	}
 
 	static std::string nowTimestamp()
@@ -80,8 +88,10 @@ namespace Exp1
 
 	void init()
 	{
-		// If experiment was running, restore gravity before resetting
-		if (s_running)
+		// 如果正在扫频，保留扫频状态，只清理边界条件相关的数据
+		bool wasSweeping = s_isSweep && s_running;
+		
+		if (s_running && !wasSweeping)
 		{
 			Simulation *sim = Simulation::getCurrent();
 			if (sim)
@@ -90,103 +100,83 @@ namespace Exp1
 			}
 		}
 		
-		s_running = false;
-		s_state = State::Idle;
+		// 如果正在扫频，不清空这些状态
+		if (!wasSweeping)
+		{
+			s_running = false;
+			s_isSweep = false;
+			s_state = State::Idle;
+			s_currentAccelIdx = 0;
+		}
+		
+		// 总是清理这些（边界条件会在 setupExperiment1 中重新设置）
 		s_stepInState = 0;
 		s_currentLoadScale = 0.0f;
 		s_fixedIndices.clear();
 		s_edgeIndices.clear();
 		s_physicalIndices.clear();
 		s_physicalInitPositions.clear();
+		// 注意：不清空 s_allSnapshots，保留之前采集的数据
 	}
 
-	// Identify and fix hilum region (back region, smallest Z coordinates)
-	// Apply force to edge vertices (largest X coordinates)
 	static void setupExperiment1()
 	{
 		SimulationModel *model = Simulation::getCurrent()->getModel();
-		if (!model)
-			return;
+		if (!model) return;
 
 		ParticleData &pd = model->getParticles();
 		SimulationModel::TetModelVector &tetModels = model->getTetModels();
+		if (tetModels.empty()) return;
 
-		if (tetModels.empty())
-			return;
-
-		// Use the first tet model
 		TetModel *tm = tetModels[0];
 		unsigned int offset = tm->getIndexOffset();
 		unsigned int numVertices = tm->getParticleMesh().numVertices();
 
-		// Find bounds
-		float minX = std::numeric_limits<float>::max();
-		float maxX = std::numeric_limits<float>::lowest();
-		float minY = std::numeric_limits<float>::max();
-		float maxY = std::numeric_limits<float>::lowest();
-		float minZ = std::numeric_limits<float>::max();
-		float maxZ = std::numeric_limits<float>::lowest();
+		float minX = std::numeric_limits<float>::max(), maxX = std::numeric_limits<float>::lowest();
+		float minY = std::numeric_limits<float>::max(), maxY = std::numeric_limits<float>::lowest();
+		float minZ = std::numeric_limits<float>::max(), maxZ = std::numeric_limits<float>::lowest();
 
 		for (unsigned int i = 0; i < numVertices; ++i)
 		{
 			unsigned int idx = offset + i;
-			if (idx >= pd.size())
-				continue;
-
+			if (idx >= pd.size()) continue;
 			const Vector3r &pos = pd.getPosition(idx);
-			minX = std::min(minX, (float)pos[0]);
-			maxX = std::max(maxX, (float)pos[0]);
-			minY = std::min(minY, (float)pos[1]);
-			maxY = std::max(maxY, (float)pos[1]);
-			minZ = std::min(minZ, (float)pos[2]);
-			maxZ = std::max(maxZ, (float)pos[2]);
+			minX = std::min(minX, (float)pos[0]); maxX = std::max(maxX, (float)pos[0]);
+			minY = std::min(minY, (float)pos[1]); maxY = std::max(maxY, (float)pos[1]);
+			minZ = std::min(minZ, (float)pos[2]); maxZ = std::max(maxZ, (float)pos[2]);
 		}
 
 		const float depth = maxZ - minZ;
-		const float backSliceZ = minZ + depth * 0.12f; // 最靠背面 12% 的区域作为肝门区域
-		const float edgeSliceX = maxX - depth * 0.15f; // 最靠边缘 15% 的区域作为边缘区域
+		const float backSliceZ = minZ + depth * 0.12f;
+		const float edgeSliceX = maxX - depth * 0.15f;
 
 		s_fixedIndices.clear();
 		s_edgeIndices.clear();
 		s_physicalIndices.clear();
 		s_physicalInitPositions.clear();
 
-		// Record all physical vertices and their initial positions
 		for (unsigned int i = 0; i < numVertices; ++i)
 		{
 			unsigned int idx = offset + i;
-			if (idx >= pd.size())
-				continue;
+			if (idx >= pd.size()) continue;
 			s_physicalIndices.push_back(idx);
 			s_physicalInitPositions.push_back(pd.getPosition(idx));
-		}
-
-		// Fix hilum region (back region with smallest Z)
-		for (unsigned int i = 0; i < numVertices; ++i)
-		{
-			unsigned int idx = offset + i;
-			if (idx >= pd.size())
-				continue;
 
 			const Vector3r &pos = pd.getPosition(idx);
 			if (pos[2] <= backSliceZ)
 			{
 				s_fixedIndices.push_back(idx);
-				pd.setMass(idx, 0.0); // Fix by setting mass to 0
+				pd.setMass(idx, 0.0);
 			}
 		}
 
-		// Identify edge vertices (front region with largest X) for applying force
 		float maxTargetX = std::numeric_limits<float>::lowest();
 		for (unsigned int i = 0; i < numVertices; ++i)
 		{
 			unsigned int idx = offset + i;
-			if (idx >= pd.size())
-				continue;
-
+			if (idx >= pd.size() || pd.getMass(idx) == 0.0) continue;
 			const Vector3r &pos = pd.getPosition(idx);
-			// Check if it's an edge vertex (large X coordinate) and not fixed
-			if (pos[0] >= edgeSliceX && pd.getMass(idx) > 0.0)
+			if (pos[0] >= edgeSliceX)
 			{
 				s_edgeIndices.push_back(idx);
 				if (pos[0] > maxTargetX)
@@ -198,87 +188,79 @@ namespace Exp1
 			}
 		}
 
-		LOG_INFO << "Experiment1: Fixed " << s_fixedIndices.size() << " hilum vertices, "
-			<< s_edgeIndices.size() << " edge vertices for force application. Target index: " << s_targetVertexIndex;
+		LOG_INFO << "Experiment1 Setup: Fixed=" << s_fixedIndices.size() << " Edge=" << s_edgeIndices.size() << " TargetIdx=" << s_targetVertexIndex;
 	}
 
 	static void captureSnapshot()
 	{
 		SimulationModel *model = Simulation::getCurrent()->getModel();
-		if (!model)
-			return;
+		TimeStepController *tsc = dynamic_cast<TimeStepController*>(Simulation::getCurrent()->getTimeStep());
+		if (!model || !tsc) return;
 
 		ParticleData &pd = model->getParticles();
-		s_snapshot.runName = "fast"; // XPBD real-time run
-		s_snapshot.pullAccel = s_pullAccel;
-		s_snapshot.pbdIterations = 30; // Standard XPBD iterations for this experiment
-		s_snapshot.positions.clear();
-		s_snapshot.initPositions.clear();
-		s_snapshot.vertexIndices.clear();
+		Snapshot sn;
+		sn.pbdIterations = tsc->getMaxIterations();
+		sn.runName = "xpbd_run"; 
+		sn.pullAccel = s_pullAccel;
 		
-		// Capture all physical vertex positions
 		for (size_t i = 0; i < s_physicalIndices.size(); ++i)
 		{
 			unsigned int idx = s_physicalIndices[i];
 			if (idx < pd.size())
 			{
-				s_snapshot.vertexIndices.push_back(idx);
-				s_snapshot.initPositions.push_back(s_physicalInitPositions[i]);
-				s_snapshot.positions.push_back(pd.getPosition(idx));
+				sn.vertexIndices.push_back(idx);
+				sn.initPositions.push_back(s_physicalInitPositions[i]);
+				sn.positions.push_back(pd.getPosition(idx));
 			}
 		}
 		
-		// Calculate target displacement
 		if (s_targetVertexIndex < pd.size())
 		{
-			const Vector3r &currentPos = pd.getPosition(s_targetVertexIndex);
-			s_snapshot.targetDisplacement = (currentPos - s_targetInitPos).norm();
+			sn.targetDisplacement = (pd.getPosition(s_targetVertexIndex) - s_targetInitPos).norm();
 		}
+		
+		s_allSnapshots.push_back(sn);
+		LOG_INFO << "Captured snapshot: accel=" << sn.pullAccel << " iters=" << sn.pbdIterations;
 	}
 
 	static void saveData()
 	{
-		std::string outputDir = "out/experiment1/" + nowTimestamp();
+		if (s_allSnapshots.empty()) return;
+
+		std::string outputDir = s_currentOutputDir;
+		if (outputDir.empty()) outputDir = "out/experiment1/" + nowTimestamp();
 		Utilities::FileSystem::makeDirs(outputDir);
 
-		// Save positions CSV using the SAME format as FEM
 		const std::string csvPath = Utilities::FileSystem::normalizePath(outputDir + "/experiment1_positions.csv");
 		std::ofstream file(csvPath);
 		if (file.is_open())
 		{
 			file << "run_index,run_name,pull_accel,pbd_iterations,target_displacement,vertex_list_index,vertex_index,initx,inity,initz,x,y,z\n";
-			for (size_t i = 0; i < s_snapshot.positions.size(); ++i)
+			for (size_t r = 0; r < s_allSnapshots.size(); ++r)
 			{
-				const Vector3r &p = s_snapshot.positions[i];
-				const Vector3r &p0 = s_snapshot.initPositions[i];
-				unsigned int vertexIdx = s_snapshot.vertexIndices[i];
-				
-				file << 0 << "," // run_index
-					<< s_snapshot.runName << ","
-					<< s_snapshot.pullAccel << ","
-					<< s_snapshot.pbdIterations << ","
-					<< s_snapshot.targetDisplacement << ","
-					<< i << "," // vertex_list_index
-					<< vertexIdx << ","
-					<< p0[0] << "," << p0[1] << "," << p0[2] << ","
-					<< p[0] << "," << p[1] << "," << p[2]
-					<< "\n";
+				const auto &sn = s_allSnapshots[r];
+				for (size_t i = 0; i < sn.positions.size(); ++i)
+				{
+					const Vector3r &p = sn.positions[i];
+					const Vector3r &p0 = sn.initPositions[i];
+					file << r << "," << sn.runName << "," << sn.pullAccel << "," << sn.pbdIterations << "," << sn.targetDisplacement << ","
+						 << i << "," << sn.vertexIndices[i] << "," << p0[0] << "," << p0[1] << "," << p0[2] << ","
+						 << p[0] << "," << p[1] << "," << p[2] << "\n";
+				}
 			}
 			file.close();
 		}
 
-		// Save metadata
 		const std::string metaPath = Utilities::FileSystem::normalizePath(outputDir + "/experiment1_metadata.txt");
 		std::ofstream meta(metaPath);
 		if (meta.is_open())
 		{
 			meta << "target_vertex_index=" << s_targetVertexIndex << "\n";
 			meta << "target_vertex_init=(" << s_targetInitPos[0] << "," << s_targetInitPos[1] << "," << s_targetInitPos[2] << ")\n";
-			meta << "pull_accel=" << s_pullAccel << "\n";
+			meta << "pull_accels="; for(float a : s_sweepAccels) meta << a << " "; meta << "\n";
 			meta << "settleSteps=" << s_settleSteps << "\n";
 			meta << "loadRampSteps=" << s_loadRampSteps << "\n";
 			meta << "holdSteps=" << s_holdSteps << "\n";
-			meta << "pbd_iterations=" << s_snapshot.pbdIterations << "\n";
 			meta.close();
 		}
 
@@ -287,221 +269,142 @@ namespace Exp1
 
 	void startExperiment1()
 	{
-		// Save current gravity and disable it
+		init(); 
 		Simulation *sim = Simulation::getCurrent();
-		if (sim)
-		{
+		if (sim) {
 			s_savedGravity = Vector3r(sim->getVecValue<Real>(Simulation::GRAVITATION));
-			Vector3r zeroGravity(0.0, 0.0, 0.0);
-			sim->setVecValue<Real>(Simulation::GRAVITATION, zeroGravity.data());
+			Vector3r zero(0,0,0); sim->setVecValue<Real>(Simulation::GRAVITATION, zero.data());
 		}
-
-		if (resetFunc)
-			resetFunc(); // Reset simulation
-		
-		// Disable gravity again after reset (reset may restore it)
-		if (sim)
-		{
-			Vector3r zeroGravity(0.0, 0.0, 0.0);
-			sim->setVecValue<Real>(Simulation::GRAVITATION, zeroGravity.data());
-		}
-		
-		// Setup after reset
+		if (resetFunc) resetFunc();
+		if (sim) { Vector3r zero(0,0,0); sim->setVecValue<Real>(Simulation::GRAVITATION, zero.data()); }
 		setupExperiment1();
-
-		// Initialize state machine
-		s_state = State::Settle;
-		s_stepInState = 0;
-		s_currentLoadScale = 0.0f;
-
-		if (base)
-			base->setValue(DemoBase::PAUSE, false); // Unpause (run)
-		
+		s_state = State::Settle; s_stepInState = 0; s_currentLoadScale = 0.0f;
+		if (base) base->setValue(DemoBase::PAUSE, false);
 		s_running = true;
-		LOG_INFO << "Experiment1: Started - Settle phase (120 steps)";
+	}
+
+	void startSweep()
+	{
+		startExperiment1();
+		s_isSweep = true;
+		s_currentAccelIdx = 0;
+		s_pullAccel = s_sweepAccels[0];
+		s_currentOutputDir = "out/experiment1/" + nowTimestamp();
+		LOG_INFO << "Started Experiment 1 Sweep (Accels only). Accel=" << s_pullAccel;
 	}
 
 	void stopExperiment1()
 	{
 		s_running = false;
-		
-		// Restore gravity
 		Simulation *sim = Simulation::getCurrent();
-		if (sim)
-		{
-			sim->setVecValue<Real>(Simulation::GRAVITATION, s_savedGravity.data());
-		}
-		
-		// Restore masses (unfix vertices)
+		if (sim) sim->setVecValue<Real>(Simulation::GRAVITATION, s_savedGravity.data());
 		SimulationModel *model = Simulation::getCurrent()->getModel();
-		if (model)
-		{
+		if (model) {
 			ParticleData &pd = model->getParticles();
-			for (unsigned int idx : s_fixedIndices)
-			{
-				if (idx < pd.size())
-					pd.setMass(idx, 1.0); // Restore mass
-			}
+			for (unsigned int idx : s_fixedIndices) if (idx < pd.size()) pd.setMass(idx, 1.0);
 		}
-		s_fixedIndices.clear();
-		s_edgeIndices.clear();
+		s_fixedIndices.clear(); s_edgeIndices.clear();
 	}
 
-	bool isRunning()
-	{
-		return s_running;
-	}
+	bool isRunning() { return s_running; }
 
 	void update()
 	{
-		if (!s_running)
-			return;
+		if (!s_running) return;
 
 		switch (s_state)
 		{
-			case State::Idle:
-				return;
-
 			case State::Settle:
-			{
-				s_currentLoadScale = 0.0f; // No force during settle
-				++s_stepInState;
-				if (s_stepInState >= s_settleSteps)
-				{
-					s_stepInState = 0;
-					s_state = State::LoadRamp;
-					LOG_INFO << "Experiment1: Settle complete - Starting LoadRamp phase (240 steps)";
-				}
-				return;
-			}
-
+				s_currentLoadScale = 0.0f;
+				if (++s_stepInState >= s_settleSteps) { s_stepInState = 0; s_state = State::LoadRamp; }
+				break;
 			case State::LoadRamp:
 			{
-				// Linear ramp from 0.0 to 1.0 over loadRampSteps
 				const float denom = static_cast<float>(std::max(1, s_loadRampSteps - 1));
-				const float t = std::min(1.0f, static_cast<float>(s_stepInState) / denom);
-				s_currentLoadScale = t;
-				++s_stepInState;
-				if (s_stepInState >= s_loadRampSteps)
-				{
-					s_stepInState = 0;
-					s_state = State::HoldLoad;
-					s_currentLoadScale = 1.0f; // Full force
-					LOG_INFO << "Experiment1: LoadRamp complete - Starting HoldLoad phase (240 steps)";
-				}
-				return;
+				s_currentLoadScale = std::min(1.0f, static_cast<float>(s_stepInState) / denom);
+				if (++s_stepInState >= s_loadRampSteps) { s_stepInState = 0; s_state = State::HoldLoad; }
+				break;
 			}
-
 			case State::HoldLoad:
-			{
-				s_currentLoadScale = 1.0f; // Full force
-				++s_stepInState;
-				if (s_stepInState >= s_holdSteps)
-				{
-					s_stepInState = 0;
-					s_state = State::Capture;
-					LOG_INFO << "Experiment1: HoldLoad complete - Capturing data";
-				}
-				return;
-			}
-
+				s_currentLoadScale = 1.0f;
+				if (++s_stepInState >= s_holdSteps) { s_stepInState = 0; s_state = State::Capture; }
+				break;
 			case State::Capture:
-			{
 				captureSnapshot();
-				saveData();
-				
-				// Transition to finished
-				s_state = State::Finished;
-				return;
-			}
-
+				if (s_isSweep) {
+					s_state = State::NextRun;
+				} else {
+					saveData();
+					s_state = State::Finished;
+				}
+				break;
+			case State::NextRun:
+				s_currentAccelIdx++;
+				if (s_currentAccelIdx < s_sweepAccels.size()) {
+					// 保存扫频状态
+					float nextAccel = s_sweepAccels[s_currentAccelIdx];
+					bool wasSweeping = s_isSweep;
+					int savedAccelIdx = s_currentAccelIdx;
+					
+					// 重置模拟
+					if (resetFunc) resetFunc();
+					
+					// 立即恢复扫频状态
+					s_isSweep = wasSweeping;
+					s_running = true;  // 确保实验继续运行
+					s_currentAccelIdx = savedAccelIdx;
+					s_pullAccel = nextAccel;
+					
+					Simulation *sim = Simulation::getCurrent();
+					if (sim) { Vector3r zero(0,0,0); sim->setVecValue<Real>(Simulation::GRAVITATION, zero.data()); }
+					setupExperiment1();
+					s_state = State::Settle; s_stepInState = 0; s_currentLoadScale = 0.0f;
+					
+					if (base) base->setValue(DemoBase::PAUSE, false); // 确保继续运行
+					LOG_INFO << "Sweep Next: Accel=" << s_pullAccel;
+				} else {
+					saveData();
+					s_state = State::Finished;
+				}
+				break;
 			case State::Finished:
-			{
-				// Experiment complete - stop and restore
-				s_currentLoadScale = 0.0f; // Stop applying force
-				LOG_INFO << "Experiment1: Capture complete - Stopping and restoring state";
-				
-				// Restore gravity
-				Simulation *sim = Simulation::getCurrent();
-				if (sim)
-				{
-					sim->setVecValue<Real>(Simulation::GRAVITATION, s_savedGravity.data());
-				}
-				
-				// Restore masses (unfix vertices)
-				SimulationModel *model = Simulation::getCurrent()->getModel();
-				if (model)
-				{
-					ParticleData &pd = model->getParticles();
-					for (unsigned int idx : s_fixedIndices)
-					{
-						if (idx < pd.size())
-							pd.setMass(idx, 1.0); // Restore mass
-					}
-				}
-				
-				s_running = false;
+				stopExperiment1();
 				s_state = State::Idle;
-				LOG_INFO << "Experiment1: Finished - State restored";
-				return;
-			}
-
-			default:
-				return;
+				LOG_INFO << "Experiment 1 complete.";
+				break;
+			default: break;
 		}
-	}
-
-	void setPullAccel(float a)
-	{
-		s_pullAccel = a;
-	}
-
-	float getPullAccel()
-	{
-		return s_pullAccel;
 	}
 
 	std::function<void(ParticleData&)> externalAccelFunc()
 	{
 		return [](ParticleData &pd) {
-			if (!s_running || s_state == State::Settle || s_state == State::Finished || s_state == State::Idle)
-				return;
-
-			// Apply acceleration scaled by currentLoadScale (0.0 during settle, ramps up, 1.0 during hold)
+			if (!s_running || s_state == State::Settle || s_state == State::Finished || s_state == State::Idle) return;
 			const Real a = static_cast<Real>(s_pullAccel * s_currentLoadScale);
-			if (a <= static_cast<Real>(0.0))
-				return;
-
-			// Apply force only to edge vertices
-			for (unsigned int idx : s_edgeIndices)
-			{
-				if (idx >= pd.size())
-					continue;
-				if (pd.getMass(idx) == 0.0)
-					continue;
-				Vector3r &acc = pd.getAcceleration(idx);
-				acc[0] += a;
+			if (a <= static_cast<Real>(0.0)) return;
+			for (unsigned int idx : s_edgeIndices) {
+				if (idx >= pd.size() || pd.getMass(idx) == 0.0) continue;
+				pd.getAcceleration(idx)[0] += a;
 			}
 		};
 	}
 
 	std::string status()
 	{
-		if (!s_running)
-			return "Idle";
-		
-		std::string stateStr;
-		switch (s_state)
-		{
-			case State::Settle: stateStr = "Settle"; break;
-			case State::LoadRamp: stateStr = "LoadRamp"; break;
-			case State::HoldLoad: stateStr = "HoldLoad"; break;
-			case State::Capture: stateStr = "Capture"; break;
-			case State::Finished: stateStr = "Finished"; break;
-			default: stateStr = "Running"; break;
+		if (!s_running) return "Idle";
+		std::string s;
+		switch(s_state) {
+			case State::Settle: s="Settle"; break;
+			case State::LoadRamp: s="LoadRamp"; break;
+			case State::HoldLoad: s="HoldLoad"; break;
+			case State::Capture: s="Capture"; break;
+			case State::NextRun: s="NextRun"; break;
+			case State::Finished: s="Finished"; break;
+			default: s="Running"; break;
 		}
-		
-		return "Exp1: " + stateStr + " (Pull: " + std::to_string(s_pullAccel) + " m/s², Scale: " + 
-			std::to_string(s_currentLoadScale) + ")";
+		return (s_isSweep ? "Sweep " : "Exp1 ") + s + " (A=" + std::to_string((int)s_pullAccel) + ")";
 	}
+
+	void setPullAccel(float a) { s_pullAccel = a; }
+	float getPullAccel() { return s_pullAccel; }
 }

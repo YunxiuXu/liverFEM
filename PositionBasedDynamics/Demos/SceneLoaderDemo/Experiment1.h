@@ -16,6 +16,7 @@ namespace Exp1
 
 	// Button action: reset, unpause, fix hilum region, then enable constant +X accel on edge vertices.
 	void startExperiment1();
+	void startSweep(); // New: run a full sweep of accelerations and iterations
 	void stopExperiment1();
 	bool isRunning();
 

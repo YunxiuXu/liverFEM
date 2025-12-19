@@ -354,8 +354,8 @@ void Simulator_GUI_imgui::createSimulationParameterGUI()
 
 		if (!Exp1::isRunning())
 		{
-			if (ImGui::Button("exp1"))
-				Exp1::startExperiment1();
+			if (ImGui::Button("Start Exp1"))
+				Exp1::startSweep();
 		}
 		else
 		{
