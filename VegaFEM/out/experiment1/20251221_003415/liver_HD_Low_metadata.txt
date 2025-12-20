@@ -1,0 +1,13 @@
+Experiment 1 Metadata
+====================
+Target Vertex: 775
+Target Position: [0.485932 0.516361 1.07122]
+Pull Radius: 1.4864
+Time Step: 0.01
+Settle Steps: 30
+Drag Steps: 80
+Hold Steps: 40
+Fast Iterations: 1
+Reference Iterations: 5
+Isotropic E: 1e+06
+Isotropic Nu: 0.3

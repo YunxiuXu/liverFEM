@@ -1,0 +1,5 @@
+accel,runType,iterations,RMSE,maxError,targetDisplacementFast,targetDisplacementRef,relativeError,rmseNormalized,maxErrorNormalized
+800,fast,1,1.73617e-05,0.000129038,0.242951,0.242941,4.31132e-05,1.18511e-05,8.80808e-05
+800,reference,10,0,0,0.242941,0.242941,0,0,0
+800,fast,1,1.73617e-05,0.000129038,0.242951,0.242941,4.31132e-05,1.18511e-05,8.80808e-05
+800,reference,10,0,0,0.242941,0.242941,0,0,0

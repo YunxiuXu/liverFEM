@@ -1722,6 +1722,55 @@ void initSimulation()
 
   printf("Loaded %d fixed vertices. They are:\n",numFixedVertices);
   ListIO::print(numFixedVertices,fixedVertices);
+
+  // --- START OF CUSTOM TETGEN RULE FIX ---
+  // If we are simulating the liver and the indices look "scattered" or if we want to force consistency,
+  // we re-calculate fixed vertices based on geometry.
+  if (strstr(volumetricMeshFilename, "liver") != nullptr) {
+    printf("Custom Fix: Applying TetgenFEM geometric rule for liver anchoring...\n");
+    int nLocal = volumetricMesh->getNumVertices();
+    double zMin = 1e30, zMax = -1e30;
+    for (int i = 0; i < nLocal; i++) {
+        Vec3d p = volumetricMesh->getVertex(i);
+        if (p[2] < zMin) zMin = p[2];
+        if (p[2] > zMax) zMax = p[2];
+    }
+    double depth = zMax - zMin;
+    double backSliceZ = zMin + depth * 0.12;
+
+    Vec3d centroid(0, 0, 0);
+    int backCount = 0;
+    for (int i = 0; i < nLocal; i++) {
+        Vec3d p = volumetricMesh->getVertex(i);
+        if (p[2] <= backSliceZ) {
+            centroid += p;
+            backCount++;
+        }
+    }
+    if (backCount > 0) centroid /= backCount;
+
+    double anchorRadius = depth * 0.20;
+    std::vector<int> newFixedIndices;
+    for (int i = 0; i < nLocal; i++) {
+        Vec3d p = volumetricMesh->getVertex(i);
+        double dist = len(p - centroid);
+        // Geometric anchor + depth filter
+        if (dist <= anchorRadius && p[2] <= zMin + depth * 0.3) {
+            newFixedIndices.push_back(i + 1); // Store as 1-indexed to be compatible with below logic
+        }
+    }
+
+    if (!newFixedIndices.empty()) {
+        free(fixedVertices);
+        numFixedVertices = (int)newFixedIndices.size();
+        fixedVertices = (int*)malloc(sizeof(int) * numFixedVertices);
+        for (int i = 0; i < numFixedVertices; i++) fixedVertices[i] = newFixedIndices[i];
+        ListIO::sort(numFixedVertices, fixedVertices);
+        printf("Replaced with %d geometric fixed vertices.\n", numFixedVertices);
+    }
+  }
+  // --- END OF CUSTOM TETGEN RULE FIX ---
+
   // create 0-indexed fixed DOFs
   int numFixedDOFs = 3 * numFixedVertices;
   int * fixedDOFs = (int*) malloc (sizeof(int) * numFixedDOFs);
@@ -2409,19 +2458,25 @@ static void Experiment1_OnTimestepCompleted()
     experiment1.state = 2; // apply_run_reset
     experiment1.stageStep = 0;
     
-    // Apply isotropic material
+    // 1. Reset to rest FIRST
+    stopDeformations_buttonCallBack(0);
+
+    // 2. Apply isotropic material
     volumetricMesh->setSingleMaterial(exp1_isotropicE, exp1_isotropicNu, volumetricMesh->getMaterial(0)->getDensity());
     
-    // Set iterations based on run type
+    // 3. Set iterations based on run type
     experiment1.currentIterations = (experiment1.runTypes[experiment1.runTypeIndex] == 0) 
       ? exp1_pbdIterationsFast : exp1_pbdIterationsReference;
+    
     if (implicitNewmarkSparse != nullptr)
     {
+      // CRITICAL: Disable static solver mode to ensure iterations are respected
+      implicitNewmarkSparse->UseStaticSolver(0);
       implicitNewmarkSparse->SetMaxIterations(experiment1.currentIterations);
+      // Set a reasonable epsilon for FEM. If it converges earlier, it will be faster.
+      implicitNewmarkSparse->SetEpsilon(1e-6); 
+      printf("Experiment 1: Set solver iterations to %d (staticSolver=0, epsilon=1e-6)\n", experiment1.currentIterations);
     }
-    
-    // Reset to rest
-    stopDeformations_buttonCallBack(0);
     
     // Set current acceleration
     experiment1.accelTarget = experiment1.sweepAccels[experiment1.accelIndex];
@@ -2535,46 +2590,53 @@ static void Experiment1_OnTimestepCompleted()
 
   if (experiment1.state == 7) // save_complete
   {
-    // Check if we have both fast and reference results
-    if (experiment1.runTypeIndex == 1 && !experiment1.fastPositions.empty() && !experiment1.referencePositions.empty())
+    // Check if we have both fast and reference results for the current acceleration
+    if (experiment1.runTypes[experiment1.runTypeIndex] == 1)
     {
-      // Compute errors
-      double rmse = ComputeRMSE(experiment1.fastPositions, experiment1.referencePositions);
-      double maxErr = ComputeMaxError(experiment1.fastPositions, experiment1.referencePositions);
-      
-      // Compute target displacements (2D: [[x0,y0,z0], [x1,y1,z1], ...])
-      const Vec3d & p0 = volumetricMesh->getVertex(experiment1.targetVertex);
-      double targetDispFast = 0.0, targetDispRef = 0.0;
-      if (experiment1.fastPositions.size() > static_cast<size_t>(experiment1.targetVertex) && 
-          experiment1.fastPositions[experiment1.targetVertex].size() == 3)
+      if (!experiment1.fastPositions.empty() && !experiment1.referencePositions.empty())
       {
-        Vec3d pFast(experiment1.fastPositions[experiment1.targetVertex][0] - p0[0],
-                    experiment1.fastPositions[experiment1.targetVertex][1] - p0[1],
-                    experiment1.fastPositions[experiment1.targetVertex][2] - p0[2]);
-        targetDispFast = len(pFast);
-      }
-      if (experiment1.referencePositions.size() > static_cast<size_t>(experiment1.targetVertex) &&
-          experiment1.referencePositions[experiment1.targetVertex].size() == 3)
-      {
-        Vec3d pRef(experiment1.referencePositions[experiment1.targetVertex][0] - p0[0],
-                   experiment1.referencePositions[experiment1.targetVertex][1] - p0[1],
-                   experiment1.referencePositions[experiment1.targetVertex][2] - p0[2]);
-        targetDispRef = len(pRef);
+        // Compute errors
+        double rmse = ComputeRMSE(experiment1.fastPositions, experiment1.referencePositions);
+        double maxErr = ComputeMaxError(experiment1.fastPositions, experiment1.referencePositions);
+        
+        // Compute target displacements
+        const Vec3d & p0 = volumetricMesh->getVertex(experiment1.targetVertex);
+        double targetDispFast = 0.0, targetDispRef = 0.0;
+        if (experiment1.fastPositions.size() > static_cast<size_t>(experiment1.targetVertex))
+        {
+          Vec3d pFast(experiment1.fastPositions[experiment1.targetVertex][0] - p0[0],
+                      experiment1.fastPositions[experiment1.targetVertex][1] - p0[1],
+                      experiment1.fastPositions[experiment1.targetVertex][2] - p0[2]);
+          targetDispFast = len(pFast);
+        }
+        if (experiment1.referencePositions.size() > static_cast<size_t>(experiment1.targetVertex))
+        {
+          Vec3d pRef(experiment1.referencePositions[experiment1.targetVertex][0] - p0[0],
+                     experiment1.referencePositions[experiment1.targetVertex][1] - p0[1],
+                     experiment1.referencePositions[experiment1.targetVertex][2] - p0[2]);
+          targetDispRef = len(pRef);
+        }
+        
+        // Normalize errors
+        const double diag = BBoxDiagonal(volumetricMesh);
+        double rmseNorm = (diag > 0) ? rmse / diag : 0.0;
+        double maxErrNorm = (diag > 0) ? maxErr / diag : 0.0;
+        double relativeErr = (targetDispRef > 1e-9) ? fabs(targetDispFast - targetDispRef) / targetDispRef : 0.0;
+        
+        // Write to summary
+        experiment1.summaryCsv << experiment1.accelTarget << ",fast," << exp1_pbdIterationsFast 
+                              << "," << rmse << "," << maxErr << "," << targetDispFast << "," << targetDispRef
+                              << "," << relativeErr << "," << rmseNorm << "," << maxErrNorm << "\n";
+        experiment1.summaryCsv << experiment1.accelTarget << ",reference," << exp1_pbdIterationsReference 
+                              << "," << 0.0 << "," << 0.0 << "," << targetDispRef << "," << targetDispRef
+                              << "," << 0.0 << "," << 0.0 << "," << 0.0 << "\n";
+        experiment1.summaryCsv.flush();
+        printf("Experiment 1: Saved summary for accel %.0f (RMSE: %G)\n", experiment1.accelTarget, rmse);
       }
       
-      // Normalize errors
-      const double diag = BBoxDiagonal(volumetricMesh);
-      double rmseNorm = (diag > 0) ? rmse / diag : 0.0;
-      double maxErrNorm = (diag > 0) ? maxErr / diag : 0.0;
-      double relativeErr = (targetDispRef > 0) ? fabs(targetDispFast - targetDispRef) / targetDispRef : 0.0;
-      
-      // Write to summary
-      experiment1.summaryCsv << experiment1.accelTarget << ",fast," << exp1_pbdIterationsFast 
-                            << "," << rmse << "," << maxErr << "," << targetDispFast << "," << targetDispRef
-                            << "," << relativeErr << "," << rmseNorm << "," << maxErrNorm << "\n";
-      experiment1.summaryCsv << experiment1.accelTarget << ",reference," << exp1_pbdIterationsReference 
-                            << "," << 0.0 << "," << 0.0 << "," << targetDispRef << "," << targetDispRef
-                            << "," << 0.0 << "," << 0.0 << "," << 0.0 << "\n";
+      // We just finished a reference run, so we can clear positions for the next acceleration
+      experiment1.fastPositions.clear();
+      experiment1.referencePositions.clear();
     }
     
     // Advance to next run
@@ -2596,8 +2658,6 @@ static void Experiment1_OnTimestepCompleted()
     }
     
     // Reset for next run
-    experiment1.fastPositions.clear();
-    experiment1.referencePositions.clear();
     experiment1.state = 1; // waiting
     return;
   }
@@ -2650,9 +2710,10 @@ void experiment1_buttonCallBack(int code)
 
   // Create output directory
   const std::string modelName = BasenameNoExt(std::string(volumetricMeshFilename));
-  const std::string outDir = std::string("out/experiment1/") + TimestampForFilename();
+  // Use absolute path as requested: /Users/yunxiuxu/Documents/tetfemcpp/out/experiment1
+  const std::string outDir = std::string("/Users/yunxiuxu/Documents/tetfemcpp/out/experiment1/") + TimestampForFilename();
   EnsureDir(outDir);
-  experiment1.basePrefix = outDir + "/" + modelName;
+  experiment1.basePrefix = outDir + "/VegaFEM_" + modelName;
 
   // Open output files
   experiment1.positionsCsv.open((experiment1.basePrefix + "_positions.csv").c_str());
