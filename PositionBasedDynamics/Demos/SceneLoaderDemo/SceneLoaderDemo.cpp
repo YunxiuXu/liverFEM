@@ -19,6 +19,9 @@
 #include "Experiment1XPBD.h"
 #include "Experiment1.h"
 #include "Experiment2.h"
+#ifdef ENABLE_EXP4
+#include "Experiment4.h"
+#endif
 #include <filesystem>
 #include <fstream>
 
@@ -59,6 +62,12 @@ namespace Exp1 { extern void (*resetFunc)(); }
 namespace Exp2 { extern DemoBase *base; }
 namespace Exp2 { extern void (*resetFunc)(); }
 
+#ifdef ENABLE_EXP4
+// Make accessible to Experiment4
+namespace Exp4 { extern DemoBase *base; }
+namespace Exp4 { extern void (*resetFunc)(); }
+#endif
+
 
 // main 
 int main( int argc, char **argv )
@@ -84,6 +93,10 @@ int main( int argc, char **argv )
 	Exp1::resetFunc = reset;
 	Exp2::base = base;
 	Exp2::resetFunc = reset;
+#ifdef ENABLE_EXP4
+	Exp4::base = base;
+	Exp4::resetFunc = reset;
+#endif
 
 	SimulationModel *model = new SimulationModel();
 	model->init();
@@ -160,6 +173,9 @@ void reset()
 	Exp1XPBD::init();
 	Exp1::init();
 	Exp2::init();
+#ifdef ENABLE_EXP4
+	Exp4::init();
+#endif
 }
 
 void timeStep ()
@@ -171,6 +187,9 @@ void timeStep ()
 	// Update experiment state machines (even when paused, so they can progress)
 	Exp1::update();
 	Exp2::update();
+#ifdef ENABLE_EXP4
+	Exp4::update();
+#endif
 
 	if (base->getValue<bool>(DemoBase::PAUSE))
 		return;

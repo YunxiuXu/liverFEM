@@ -15,6 +15,9 @@
 #ifdef ENABLE_EXP2
 #include "Demos/SceneLoaderDemo/Experiment2.h"
 #endif
+#ifdef ENABLE_EXP4
+#include "Demos/SceneLoaderDemo/Experiment4.h"
+#endif
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -385,6 +388,27 @@ void Simulator_GUI_imgui::createSimulationParameterGUI()
 		{
 			if (ImGui::Button("Stop Exp2"))
 				Exp2::stopExperiment2();
+		}
+	}
+#endif
+
+#ifdef ENABLE_EXP4
+	// Experiment 4 button (Performance evaluation)
+	if (ImGui::CollapsingHeader("Experiment 4", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::Text("Status: %s", Exp4::status().c_str());
+		ImGui::Text("Performance evaluation");
+		ImGui::Text("Tests: Low/Mid/High mesh, 1/10 threads");
+
+		if (!Exp4::isRunning())
+		{
+			if (ImGui::Button("Start Exp4"))
+				Exp4::startExperiment4();
+		}
+		else
+		{
+			if (ImGui::Button("Stop Exp4"))
+				Exp4::stopExperiment4();
 		}
 	}
 #endif

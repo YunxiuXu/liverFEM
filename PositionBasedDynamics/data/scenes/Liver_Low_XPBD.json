@@ -1,0 +1,44 @@
+{
+  "Name": "Liver_Low_XPBD",
+  "Simulation": {
+    "timeStepSize": 0.01,
+    "numberOfStepsPerRenderUpdate": 1,
+    "subSteps": 5,
+    "maxIterations": 1,
+    "maxIterationsV": 5,
+    "velocityUpdateMethod": 0,
+    "contactTolerance": 0.0,
+    "solidSimulationMethod": 3,
+    "solid_stiffness": 1.0,
+    "solid_volumeStiffness": 1.0,
+    "solid_poissonRatio": 0.28,
+    "solid_normalizeStretch": 0,
+    "solid_normalizeShear": 0,
+    "contactStiffnessRigidBody": 1.0,
+    "contactStiffnessParticleRigidBody": 100.0,
+    "gravitation": [0, 0, 0]
+  },
+  "cameraLookat": [0, 0, 0],
+  "cameraPosition": [0, 5, 15],
+  "TetModels": [
+    {
+      "id": 0,
+      "nodeFile": "../models/liver.node",
+      "eleFile": "../models/liver.ele",
+      "visFile": "../models/liver_surface.obj",
+      "resolutionSDF": [20,20,20],
+      "translation": [0, 0, 0],
+      "rotationAxis": [0, 1, 0],
+      "rotationAngle": 0,
+      "scale": [1, 1, 1],
+      "staticParticles": [],
+      "restitution": 0.1,
+      "friction": 0.3,
+      "collisionObjectType": 0,
+      "collisionObjectFileName": "",
+      "collisionObjectScale": [1, 1, 1],
+      "testMesh": 1
+    }
+  ],
+  "RigidBodies": []
+}
