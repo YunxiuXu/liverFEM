@@ -1,0 +1,12 @@
+# This is a generated file and its contents are an internal implementation detail.
+# The download step will be re-executed if anything in this file changes.
+# No other meaning or use of this file is supported.
+
+method=url
+command=/opt/homebrew/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/Users/yunxiuxu/Documents/tetfemcpp/VegaFEM/build/macos-release/_deps/libigl-subbuild/libigl-populate-prefix/src/libigl-populate-stamp/download-libigl-populate.cmake;COMMAND;/opt/homebrew/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/Users/yunxiuxu/Documents/tetfemcpp/VegaFEM/build/macos-release/_deps/libigl-subbuild/libigl-populate-prefix/src/libigl-populate-stamp/verify-libigl-populate.cmake;COMMAND;/opt/homebrew/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/Users/yunxiuxu/Documents/tetfemcpp/VegaFEM/build/macos-release/_deps/libigl-subbuild/libigl-populate-prefix/src/libigl-populate-stamp/extract-libigl-populate.cmake
+source_dir=/Users/yunxiuxu/Documents/tetfemcpp/VegaFEM/build/macos-release/_deps/libigl-src
+work_dir=/Users/yunxiuxu/Documents/tetfemcpp/VegaFEM/build/macos-release/_deps
+url(s)=https://github.com/libigl/libigl/archive/refs/tags/v2.4.0.zip
+hash=MD5=0b4fea5dba2117b8db85c99a39a71f83
+      no_extract=
+
