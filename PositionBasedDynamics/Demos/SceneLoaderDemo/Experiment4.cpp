@@ -8,6 +8,7 @@
 #include "Utils/FileSystem.h"
 #include "Utils/Timing.h"
 #include "Utils/SceneLoader.h"
+#include "Demos/Common/DemoBase.h"
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -123,11 +124,37 @@ namespace Exp4
 			for (const auto &r : s_results)
 			{
 				file << r.meshName << "," << r.threads << "," << r.tetCount << ","
-				     << r.avgStepTime << "," << r.fps << "\n";
+				     << std::fixed << std::setprecision(3) << r.avgStepTime << ","
+				     << std::fixed << std::setprecision(2) << r.fps << "\n";
 			}
 			file.close();
+			LOG_INFO << "Experiment4: Results saved to " << csvPath;
 		}
-		LOG_INFO << "Experiment4: Results saved to " << csvPath;
+		else
+		{
+			LOG_ERR << "Experiment4: Failed to write CSV file: " << csvPath;
+		}
+
+		// Save metadata
+		const std::string metaPath = Utilities::FileSystem::normalizePath(outputDir + "/experiment4_metadata.txt");
+		std::ofstream meta(metaPath);
+		if (meta.is_open())
+		{
+			meta << "experiment=Experiment4_Performance\n";
+			meta << "warmup_steps=" << s_warmupSteps << "\n";
+			meta << "measure_steps=" << s_measureSteps << "\n";
+			meta << "total_runs=" << s_results.size() << "\n";
+			meta << "timestamp=" << nowTimestamp() << "\n";
+			meta << "sequence=\n";
+			for (size_t i = 0; i < s_sequence.size(); ++i)
+			{
+				meta << "  " << i << ": " << s_sequence[i].meshName 
+				     << " threads=" << s_sequence[i].threads 
+				     << " scene=" << s_sequence[i].sceneFile << "\n";
+			}
+			meta.close();
+			LOG_INFO << "Experiment4: Metadata saved to " << metaPath;
+		}
 	}
 
 	void startExperiment4()
@@ -193,17 +220,56 @@ namespace Exp4
 					std::string scenePath = Utilities::FileSystem::normalizePath(root + "/" + spec.sceneFile);
 					if (Utilities::FileSystem::fileExists(scenePath))
 					{
+						// Save running state before reset (resetFunc will call init() which clears state)
+						bool wasRunning = s_running;
+						int savedRunIdx = s_currentRunIdx;
+						std::vector<RunResult> savedResults = s_results;
+						std::string savedOutputDir = s_currentOutputDir;
+						State savedState = s_state;
+						
 						// First, load the new scene data (before cleanup)
 						Utilities::SceneLoader *loader = base->getSceneLoader();
 						if (loader == nullptr)
 							loader = new Utilities::SceneLoader();
 						
+						// Clear old model data definitions to prevent accumulation
+						base->getSceneData().m_tetModelData.clear();
+						base->getSceneData().m_rigidBodyData.clear();
+						base->getSceneData().m_triangleModelData.clear();
+
 						// Load scene data first (before cleanup clears it)
 						loader->readScene(scenePath.c_str(), base->getSceneData());
 						
 						// Now cleanup and rebuild model using the new scene data
 						// reset() will call readScene(false) which uses the already-loaded SceneData
+						// and also call Exp4::init() which will clear our state
 						if (resetFunc) resetFunc();
+						
+						// Restore running state after reset
+						s_running = wasRunning;
+						s_currentRunIdx = savedRunIdx;
+						s_results = savedResults;
+						s_currentOutputDir = savedOutputDir;
+						s_state = savedState;
+
+						// Fix particles using the same method as TetgenFEM: fix left side (initx < -0.619)
+						SimulationModel *model = Simulation::getCurrent()->getModel();
+						if (model) {
+							ParticleData &pd = model->getParticles();
+							for (auto *tm : model->getTetModels()) {
+								unsigned int offset = tm->getIndexOffset();
+								unsigned int nVert = tm->getParticleMesh().numVertices();
+								
+								// Use initial position (like TetgenFEM's initx, inity, initz)
+								// Fix particles on the left side: initX < -0.619
+								for (unsigned int i = 0; i < nVert; i++) {
+									const Vector3r &initPos = pd.getPosition0(i + offset);
+									if (initPos.x() < -0.619) {
+										pd.setMass(i + offset, 0.0);
+									}
+								}
+							}
+						}
 					}
 					else
 					{
@@ -245,11 +311,46 @@ namespace Exp4
 						}
 					}
 
-					SimulationModel *model = Simulation::getCurrent()->getModel();
+					// Read tet count directly from the scene file definition, not from loaded models
+					// This avoids counting residual models from previous scenes
 					int tets = 0;
-					if (model) {
-						for (auto *tm : model->getTetModels())
-							tets += tm->getParticleMesh().numTets();
+					if (base) {
+						Utilities::SceneLoader::SceneData &sceneData = base->getSceneData();
+						const std::string basePath = Utilities::FileSystem::getFilePath(base->getSceneFile());
+						
+						for (const auto &tmd : sceneData.m_tetModelData) {
+							// Get the .ele file path and normalize it
+							std::string eleFilePath = tmd.m_modelFileElements;
+							if (Utilities::FileSystem::isRelativePath(eleFilePath)) {
+								eleFilePath = Utilities::FileSystem::normalizePath(basePath + "/" + eleFilePath);
+							} else {
+								eleFilePath = Utilities::FileSystem::normalizePath(eleFilePath);
+							}
+							
+							// Read the .ele file to get the actual tet count
+							std::ifstream eleFile(eleFilePath);
+							if (eleFile.is_open()) {
+								std::string line;
+								// Skip comments and empty lines
+								while (std::getline(eleFile, line)) {
+									size_t first = line.find_first_not_of(" \t\r\n");
+									if (first == std::string::npos) continue;
+									if (line[first] == '#') continue;
+									
+									// First non-comment line contains: num_tets 4 0
+									std::istringstream iss(line);
+									int numTets;
+									if (iss >> numTets) {
+										tets += numTets;
+										LOG_INFO << "Experiment4: Read " << numTets << " tets from " << eleFilePath;
+										break;
+									}
+								}
+								eleFile.close();
+							} else {
+								LOG_WARN << "Experiment4: Cannot open .ele file: " << eleFilePath;
+							}
+						}
 					}
 
 					RunResult res;
