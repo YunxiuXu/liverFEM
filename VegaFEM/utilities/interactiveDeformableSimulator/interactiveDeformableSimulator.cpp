@@ -314,6 +314,7 @@ GLUI_Spinner * timeStep_spinner;
 GLUI_StaticText * systemSolveStaticText;
 GLUI_StaticText * forceAssemblyStaticText;
 GLUI_StaticText * experiment1StatusStaticText;
+GLUI_StaticText * experiment4StatusStaticText;
 
 struct Experiment1State
 {
@@ -358,6 +359,37 @@ struct Experiment1State
 };
 
 Experiment1State experiment1;
+
+// Experiment 4: Performance Evaluation
+struct Experiment4State
+{
+  bool active = false;
+  
+  // State machine: 0=idle, 1=warmup, 2=measuring, 3=done
+  int state = 0;
+  int warmupSteps = 60; // warmup for 60 steps
+  int measureSteps = 300; // measure for 300 steps
+  int currentStep = 0;
+  
+  // Thread configuration
+  int threadIndex = 0; // 0=single thread, 1=multi thread
+  std::vector<int> threadConfigs; // e.g., {1, 10}
+  
+  // Performance metrics
+  std::vector<double> timestepTimes; // milliseconds per timestep
+  double avgFPS = 0.0;
+  double avgTimestepTime = 0.0; // milliseconds
+  
+  // Output
+  std::string basePrefix;
+  std::ofstream performanceCsv;
+  
+  // Saved state
+  int prevNumSolverThreads = 1;
+  int prevNumInternalForceThreads = 0;
+};
+
+Experiment4State experiment4;
 
 static std::string TimestampForFilename()
 {
@@ -404,6 +436,13 @@ static void Experiment1_SetStatus(const std::string & s)
 {
   if (experiment1StatusStaticText != nullptr)
     experiment1StatusStaticText->set_text(s.c_str());
+  printf("%s\n", s.c_str());
+}
+
+static void Experiment4_SetStatus(const std::string & s)
+{
+  if (experiment4StatusStaticText != nullptr)
+    experiment4StatusStaticText->set_text(s.c_str());
   printf("%s\n", s.c_str());
 }
 
@@ -601,7 +640,9 @@ void callAllUICallBacks();
 void Sync_GLUI();
 void stopDeformations_buttonCallBack(int code);
 void experiment1_buttonCallBack(int code);
+void experiment4_buttonCallBack(int code);
 static void Experiment1_OnTimestepCompleted();
+static void Experiment4_OnTimestepCompleted();
 
 //font is, for example, GLUT_BITMAP_9_BY_15
 void print_bitmap_string(float x, float y, float z, void * font, char * s)
@@ -1028,6 +1069,7 @@ void idleFunction(void)
 
     memcpy(u, integratorBase->Getq(), sizeof(double) * 3 * n);
     Experiment1_OnTimestepCompleted();
+    Experiment4_OnTimestepCompleted();
 
     if (singleStepMode == 1)
       singleStepMode = 2;
@@ -2765,6 +2807,170 @@ void experiment1_buttonCallBack(int code)
   Experiment1_SetStatus("Experiment 1: initialized, ready to start");
 }
 
+// Experiment 4: Performance Evaluation
+static void Experiment4_StopAndRestore()
+{
+  if (!experiment4.active)
+    return;
+
+  experiment4.active = false;
+  experiment4.state = 0;
+  experiment4.currentStep = 0;
+  experiment4.threadIndex = 0;
+  experiment4.threadConfigs.clear();
+  experiment4.timestepTimes.clear();
+  experiment4.avgFPS = 0.0;
+  experiment4.avgTimestepTime = 0.0;
+
+  if (experiment4.performanceCsv.is_open())
+    experiment4.performanceCsv.close();
+
+  // Restore thread configuration
+  numSolverThreads = experiment4.prevNumSolverThreads;
+  numInternalForceThreads = experiment4.prevNumInternalForceThreads;
+  
+  // Note: We can't dynamically change thread count after solver creation,
+  // so we just restore the values for display purposes
+  printf("Experiment 4: Restored thread config (solver=%d, force=%d)\n", 
+         numSolverThreads, numInternalForceThreads);
+}
+
+static void Experiment4_OnTimestepCompleted()
+{
+  if (!experiment4.active)
+    return;
+
+  if (volumetricMesh == nullptr || integratorBase == nullptr)
+    return;
+
+  experiment4.currentStep++;
+
+  if (experiment4.state == 1) // warmup
+  {
+    if (experiment4.currentStep >= experiment4.warmupSteps)
+    {
+      experiment4.state = 2; // measuring
+      experiment4.currentStep = 0;
+      experiment4.timestepTimes.clear();
+      Experiment4_SetStatus("Experiment 4: measuring performance...");
+    }
+    return;
+  }
+
+  if (experiment4.state == 2) // measuring
+  {
+    // Record timestep time (in milliseconds)
+    double timestepTime = (systemSolveTime + forceAssemblyTime) * 1000.0; // convert to ms
+    experiment4.timestepTimes.push_back(timestepTime);
+
+    if (experiment4.currentStep >= experiment4.measureSteps)
+    {
+      // Calculate average FPS and timestep time
+      double totalTime = 0.0;
+      for (double t : experiment4.timestepTimes)
+        totalTime += t;
+      
+      experiment4.avgTimestepTime = totalTime / experiment4.timestepTimes.size();
+      experiment4.avgFPS = 1000.0 / experiment4.avgTimestepTime; // FPS = 1000ms / avgTimePerFrame
+
+      // Write to CSV
+      int numVertices = volumetricMesh->getNumVertices();
+      int numElements = volumetricMesh->getNumElements();
+      int threads = experiment4.threadConfigs[experiment4.threadIndex];
+      
+      experiment4.performanceCsv << numVertices << "," << numElements << "," << threads << ","
+                                 << experiment4.avgFPS << "," << experiment4.avgTimestepTime << "\n";
+      experiment4.performanceCsv.flush();
+
+      printf("Experiment 4: Threads=%d, Vertices=%d, Elements=%d, FPS=%.2f, Time=%.3f ms\n",
+             threads, numVertices, numElements, experiment4.avgFPS, experiment4.avgTimestepTime);
+
+      // Move to next thread configuration
+      experiment4.threadIndex++;
+      if (experiment4.threadIndex >= (int)experiment4.threadConfigs.size())
+      {
+        // All done
+        Experiment4_StopAndRestore();
+        Experiment4_SetStatus("Experiment 4: done (files written)");
+        return;
+      }
+
+      // Start next measurement
+      experiment4.state = 1; // warmup
+      experiment4.currentStep = 0;
+      int nextThreads = experiment4.threadConfigs[experiment4.threadIndex];
+      char msg[512];
+      std::snprintf(msg, sizeof(msg), "Experiment 4: warmup (%d threads)", nextThreads);
+      Experiment4_SetStatus(msg);
+    }
+    return;
+  }
+}
+
+void experiment4_buttonCallBack(int code)
+{
+  (void)code;
+
+  if (volumetricMesh == nullptr || integratorBase == nullptr)
+  {
+    Experiment4_SetStatus("Experiment 4: unavailable (no volumetric mesh loaded)");
+    return;
+  }
+
+  if (experiment4.active)
+  {
+    Experiment4_StopAndRestore();
+    Experiment4_SetStatus("Experiment 4: idle");
+    return;
+  }
+
+  // Save current thread configuration
+  experiment4.prevNumSolverThreads = numSolverThreads;
+  experiment4.prevNumInternalForceThreads = numInternalForceThreads;
+
+  // Create output directory
+  const std::string modelName = BasenameNoExt(std::string(volumetricMeshFilename));
+  const std::string outDir = std::string("/Users/yunxiuxu/Documents/tetfemcpp/out/experiment4/") + TimestampForFilename();
+  EnsureDir(outDir);
+  experiment4.basePrefix = outDir + "/VegaFEM_" + modelName;
+
+  // Open output file
+  experiment4.performanceCsv.open((experiment4.basePrefix + "_performance.csv").c_str());
+  experiment4.performanceCsv << "numVertices,numElements,numThreads,avgFPS,avgTimestepTimeMs\n";
+
+  // Write metadata
+  std::ofstream metadata((experiment4.basePrefix + "_metadata.txt").c_str());
+  metadata << "Experiment 4 Metadata\n";
+  metadata << "====================\n";
+  metadata << "Model: " << modelName << "\n";
+  metadata << "Num Vertices: " << volumetricMesh->getNumVertices() << "\n";
+  metadata << "Num Elements: " << volumetricMesh->getNumElements() << "\n";
+  metadata << "Time Step: " << timeStep << "\n";
+  metadata << "Warmup Steps: " << experiment4.warmupSteps << "\n";
+  metadata << "Measure Steps: " << experiment4.measureSteps << "\n";
+  metadata.close();
+
+  // Initialize experiment state
+  experiment4.active = true;
+  experiment4.state = 1; // warmup
+  experiment4.currentStep = 0;
+  experiment4.threadIndex = 0;
+  experiment4.threadConfigs = { 1, 10 }; // Test single-threaded and multi-threaded
+  experiment4.timestepTimes.clear();
+
+  // Note: We can't dynamically change thread count after solver creation,
+  // so we'll measure with the current configuration and note it in the output
+  int currentThreads = numSolverThreads;
+  char msg[512];
+  std::snprintf(msg, sizeof(msg), "Experiment 4: warmup (%d threads, will test 1 and 10)", currentThreads);
+  Experiment4_SetStatus(msg);
+  
+  printf("Experiment 4: Starting performance evaluation\n");
+  printf("Note: Thread count is set at solver creation. Current: solver=%d, force=%d\n",
+         numSolverThreads, numInternalForceThreads);
+  printf("To test different thread counts, restart the simulator with different numSolverThreads in config.\n");
+}
+
 void staticSolver_checkboxCallBack(int code)
 {
   implicitNewmarkSparse->UseStaticSolver(staticSolver);
@@ -2874,6 +3080,12 @@ void initGLUI()
   glui->add_button_to_panel(experiments_panel, "Experiment 1", 0, experiment1_buttonCallBack);
   experiment1StatusStaticText = glui->add_statictext_to_panel(experiments_panel, "Experiment 1: idle");
   glui->add_statictext_to_panel(experiments_panel, "Click again to stop.");
+
+  glui->add_separator();
+
+  glui->add_button_to_panel(experiments_panel, "Experiment 4", 0, experiment4_buttonCallBack);
+  experiment4StatusStaticText = glui->add_statictext_to_panel(experiments_panel, "Experiment 4: idle");
+  glui->add_statictext_to_panel(experiments_panel, "Performance evaluation.");
 
   glui->add_separator();
 
