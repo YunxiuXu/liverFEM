@@ -15,6 +15,9 @@
 #include <cmath>
 #include <chrono>
 
+#include "Simulation/Constraints.h"
+#include "Simulation/TimeStepController.h"
+
 using namespace PBD;
 
 namespace Exp2
@@ -75,7 +78,7 @@ namespace Exp2
 
 		static std::vector<RunSpec> s_sequence = {
 			{ "baseline", 0.28f },
-			{ "incompressible", 0.49f }
+			{ "incompressible", 0.47f }
 		};
 		static int s_currentRunIndex = 0;
 		static std::vector<DataPoint> s_data;
@@ -262,13 +265,34 @@ namespace Exp2
 		SimulationModel *model = Simulation::getCurrent()->getModel();
 		if (!model) return;
 
-		// Get current solid simulation method and update Poisson ratio
-		// Note: This might need adjustment based on how XPBD stores Poisson ratio
-		// For now, we'll try to set it through the model parameters
-		// The actual implementation depends on how the constraints are initialized
-		LOG_INFO << "Experiment2: Setting Poisson ratio to " << poisson;
-		// Note: XPBD constraints are initialized when model is built, so we may need to rebuild
-		// For a simpler approach, we'll just record the intended Poisson ratio
+		LOG_INFO << "Experiment2: Hard-resetting constraints with Poisson ratio " << poisson;
+		
+		// 1. 获取模型现有的参数 (Stiffness 等)
+		const Real stiffness = model->getValue<Real>(SimulationModel::SOLID_STIFFNESS);
+		const int method = model->getValue<int>(SimulationModel::SOLID_SIMULATION_METHOD);
+		const Real volumeStiffness = model->getValue<Real>(SimulationModel::SOLID_VOLUME_STIFFNESS);
+		const bool normalizeStretch = model->getValue<bool>(SimulationModel::SOLID_NORMALIZE_STRETCH);
+		const bool normalizeShear = model->getValue<bool>(SimulationModel::SOLID_NORMALIZE_SHEAR);
+
+		// 2. 清除所有约束
+		model->getConstraints().clear();
+		model->getConstraintGroups().clear();
+
+		// 3. 重新添加所有四面体模型的约束（使用新的泊松比）
+		for (unsigned int i = 0; i < model->getTetModels().size(); i++)
+		{
+			model->addSolidConstraints(model->getTetModels()[i], method, stiffness, 
+				static_cast<Real>(poisson), volumeStiffness, normalizeStretch, normalizeShear);
+		}
+
+		// 4. 重置子步数以保证稳定性 (参考计划书设置 Substeps=10)
+		TimeStepController *tsc = dynamic_cast<TimeStepController*>(Simulation::getCurrent()->getTimeStep());
+		if (tsc) {
+			tsc->setSubSteps(5);
+			tsc->setMaxIterations(1); // XPBD 经典设置
+		}
+
+		LOG_INFO << "Experiment2: Constraints rebuilt successfully.";
 	}
 
 	static void captureDataPoint()
@@ -518,11 +542,27 @@ namespace Exp2
 			if (!s_running || s_state == State::Settle || s_state == State::Finished || s_state == State::Idle) return;
 			if (s_pullIndices.empty()) return;
 			
-			// Apply constant acceleration in +X direction to pull region
-			const Real a = static_cast<Real>(2000.0);  // Fixed acceleration
+			// 降低追踪刚度，防止 XPBD 爆炸
+			const float stiffness = 800.0f; 
+			const Vector3r targetDir(1.0, 0.0, 0.0);
+			
 			for (unsigned int idx : s_pullIndices) {
 				if (idx >= pd.size() || pd.getMass(idx) == 0.0) continue;
-				pd.getAcceleration(idx)[0] += a;
+				
+				// 假设拉伸区域整体相对于 Settle 后的起始点平移
+				// 查找相对于 physicalIndices 的偏移
+				size_t physIdx = 0;
+				bool found = false;
+				for (size_t i = 0; i < s_physicalIndices.size(); ++i) {
+					if (s_physicalIndices[i] == idx) { physIdx = i; found = true; break; }
+				}
+				if (!found) continue;
+
+				Vector3r pStart = s_physicalInitPositions[physIdx];
+				Vector3r desiredPos = pStart + targetDir * s_currentDragDistance;
+				Vector3r currentPos = pd.getPosition(idx);
+				
+				pd.getAcceleration(idx) += stiffness * (desiredPos - currentPos);
 			}
 		};
 	}
