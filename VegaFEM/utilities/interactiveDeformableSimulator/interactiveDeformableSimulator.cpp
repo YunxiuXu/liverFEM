@@ -294,6 +294,9 @@ SparseMatrix * massMatrix = nullptr;
 SparseMatrix * LaplacianDampingMatrix = nullptr;
 
 int n;
+int numFixedDOFs = 0;
+int * fixedDOFs = nullptr;
+CorotationalLinearFEM * corotationalLinearFEM = nullptr;
 double * u = nullptr;
 double * uvel = nullptr;
 double * uaccel = nullptr;
@@ -391,6 +394,42 @@ struct Experiment4State
 
 Experiment4State experiment4;
 
+// Experiment 2: Volume Preservation (Incompressibility)
+struct Experiment2State
+{
+  bool active = false;
+  
+  // State machine: 0=idle, 1=waiting, 2=run_baseline, 3=run_incompressible
+  int state = 0;
+  int stageStep = 0;
+  int settleSteps = 60;
+  int dragSteps = 240;
+  int holdSteps = 120;
+  
+  double baselineNu = 0.28;
+  double incompressibleNu = 0.47;
+  double targetE = 1e6;
+  
+  double v0 = 0.0; // Initial volume
+  
+  // Data collection
+  std::string basePrefix;
+  std::ofstream volumeCsv;
+  
+  // Current run info
+  double currentNu = 0.28;
+  std::string currentRunName;
+  
+  // Target vertex and force (reuse exp1 target vertex logic)
+  int targetVertex = -1;
+  double pullRadius = 0.0;
+  double accelTarget = 2000.0; // Fixed large force to see volume change
+  double currentLoadScale = 0.0;
+  std::vector<double> massDiag;
+};
+
+Experiment2State experiment2;
+
 static std::string TimestampForFilename()
 {
   std::time_t t = std::time(nullptr);
@@ -444,6 +483,89 @@ static void Experiment4_SetStatus(const std::string & s)
   if (experiment4StatusStaticText != nullptr)
     experiment4StatusStaticText->set_text(s.c_str());
   printf("%s\n", s.c_str());
+}
+
+GLUI_StaticText * experiment2StatusStaticText;
+static void Experiment2_SetStatus(const std::string & s)
+{
+  if (experiment2StatusStaticText != nullptr)
+    experiment2StatusStaticText->set_text(s.c_str());
+  printf("%s\n", s.c_str());
+}
+
+static void RecreateSimulationObjects()
+{
+  printf("Recreating simulation objects for new material properties...\n");
+  
+  if (deformableObject == COROTLINFEM)
+  {
+    if (corotationalLinearFEM) delete corotationalLinearFEM;
+    if (corotationalLinearFEMStencilForceModel) delete corotationalLinearFEMStencilForceModel;
+    
+    corotationalLinearFEM = new CorotationalLinearFEM(volumetricMesh);
+    corotationalLinearFEMStencilForceModel = new CorotationalLinearFEMStencilForceModel(corotationalLinearFEM);
+    corotationalLinearFEMStencilForceModel->SetWarp(corotationalLinearFEM_warp);
+    stencilForceModel = corotationalLinearFEMStencilForceModel;
+  }
+  else if (deformableObject == INVERTIBLEFEM)
+  {
+    // For invertible FEM, we would need to recreate the material and the force model.
+    // This is more complex because isotropicMaterial is local to main.
+    // However, the liver model uses COROTLINFEM now.
+    // We add a warning if it's not handled.
+    printf("Warning: Material property update not fully implemented for INVERTIBLEFEM in RecreateSimulationObjects.\n");
+  }
+  
+  if (forceModelAssembler) delete forceModelAssembler;
+  forceModelAssembler = new ForceModelAssembler(stencilForceModel);
+  forceModel = forceModelAssembler;
+  
+  if (implicitNewmarkSparse) delete implicitNewmarkSparse;
+  
+  if (solver == IMPLICITNEWMARK)
+  {
+    implicitNewmarkSparse = new ImplicitNewmarkSparse(3*n, timeStep, massMatrix, forceModel, numFixedDOFs, fixedDOFs,
+       dampingMassCoef, dampingStiffnessCoef, maxIterations, epsilon, newmarkBeta, newmarkGamma, numSolverThreads);
+    integratorBaseSparse = implicitNewmarkSparse;
+  }
+  else if (solver == IMPLICITBACKWARDEULER)
+  {
+    implicitNewmarkSparse = new ImplicitBackwardEulerSparse(3*n, timeStep, massMatrix, forceModel, numFixedDOFs, fixedDOFs,
+       dampingMassCoef, dampingStiffnessCoef, maxIterations, epsilon, numSolverThreads);
+    integratorBaseSparse = implicitNewmarkSparse;
+  }
+  
+  integratorBase = integratorBaseSparse;
+  integratorBaseSparse->SetDampingMatrix(LaplacianDampingMatrix);
+  integratorBase->ResetToRest();
+  integratorBase->SetTimestep(timeStep / substepsPerTimeStep);
+}
+
+static double CalculateDeformedVolume(VolumetricMesh * mesh, const double * u)
+{
+  double totalVolume = 0.0;
+  int numElements = mesh->getNumElements();
+  int numElementVertices = mesh->getNumElementVertices();
+
+  if (numElementVertices != 4) // Only for tet meshes
+    return mesh->getVolume(); // Fallback for cubic meshes (not implemented here)
+
+  for (int el = 0; el < numElements; el++)
+  {
+    int v0_idx = mesh->getVertexIndex(el, 0);
+    int v1_idx = mesh->getVertexIndex(el, 1);
+    int v2_idx = mesh->getVertexIndex(el, 2);
+    int v3_idx = mesh->getVertexIndex(el, 3);
+
+    Vec3d p0 = mesh->getVertex(v0_idx) + Vec3d(u[3*v0_idx+0], u[3*v0_idx+1], u[3*v0_idx+2]);
+    Vec3d p1 = mesh->getVertex(v1_idx) + Vec3d(u[3*v1_idx+0], u[3*v1_idx+1], u[3*v1_idx+2]);
+    Vec3d p2 = mesh->getVertex(v2_idx) + Vec3d(u[3*v2_idx+0], u[3*v2_idx+1], u[3*v2_idx+2]);
+    Vec3d p3 = mesh->getVertex(v3_idx) + Vec3d(u[3*v3_idx+0], u[3*v3_idx+1], u[3*v3_idx+2]);
+
+    // Volume of tet = 1/6 * |(p1-p0) . ((p2-p0) x (p3-p0))|
+    totalVolume += fabs(dot(p1 - p0, cross(p2 - p0, p3 - p0))) / 6.0;
+  }
+  return totalVolume;
 }
 
 static void GetBoundingBox(const VolumetricMesh * mesh, Vec3d & bmin, Vec3d & bmax)
@@ -640,9 +762,11 @@ void callAllUICallBacks();
 void Sync_GLUI();
 void stopDeformations_buttonCallBack(int code);
 void experiment1_buttonCallBack(int code);
+void experiment2_buttonCallBack(int code);
 void experiment4_buttonCallBack(int code);
 static void Experiment1_OnTimestepCompleted();
 static void Experiment4_OnTimestepCompleted();
+static void Experiment2_OnTimestepCompleted();
 
 //font is, for example, GLUT_BITMAP_9_BY_15
 void print_bitmap_string(float x, float y, float z, void * font, char * s)
@@ -1011,6 +1135,55 @@ void idleFunction(void)
       }
     }
 
+    // Experiment 2: quasi-static pull for volume preservation test
+    if (experiment2.active && experiment2.targetVertex >= 0 && experiment2.targetVertex < n)
+    {
+      int currentStep = experiment2.stageStep;
+      double loadScale = 0.0;
+      if (currentStep >= experiment2.settleSteps && currentStep < experiment2.settleSteps + experiment2.dragSteps)
+      {
+        loadScale = (double)(currentStep - experiment2.settleSteps) / experiment2.dragSteps;
+      }
+      else if (currentStep >= experiment2.settleSteps + experiment2.dragSteps)
+      {
+        loadScale = 1.0;
+      }
+
+      if (loadScale > 0.0)
+      {
+        const Vec3d & targetPos0 = volumetricMesh->getVertex(experiment2.targetVertex);
+        const double * uq = integratorBase->Getq();
+        Vec3d targetPos(
+          targetPos0[0] + uq[3*experiment2.targetVertex+0],
+          targetPos0[1] + uq[3*experiment2.targetVertex+1],
+          targetPos0[2] + uq[3*experiment2.targetVertex+2]
+        );
+
+        const double accel = experiment2.accelTarget * loadScale;
+        const Vec3d forceDir(1.0, 0.0, 0.0); // X direction
+
+        for(int v=0; v<n; v++)
+        {
+          const Vec3d & p0 = volumetricMesh->getVertex(v);
+          Vec3d p(p0[0] + uq[3*v+0], p0[1] + uq[3*v+1], p0[2] + uq[3*v+2]);
+          double distLen = len(p - targetPos);
+          if (distLen <= experiment2.pullRadius)
+          {
+            double falloff = 1.0 - (distLen / experiment2.pullRadius);
+            double forceScale = falloff;
+            if (v == experiment2.targetVertex) forceScale *= 1.5;
+
+            const double my = (3*v+0 >= 0 && 3*v+0 < 3*n) ? experiment2.massDiag[3*v+0] : 0.0;
+            const double force = my * accel * forceScale;
+
+            f_ext[3*v+0] += force * forceDir[0];
+            f_ext[3*v+1] += force * forceDir[1];
+            f_ext[3*v+2] += force * forceDir[2];
+          }
+        }
+      }
+    }
+
     // set forces to the integrator
     integratorBaseSparse->SetExternalForces(f_ext);
 
@@ -1070,6 +1243,7 @@ void idleFunction(void)
     memcpy(u, integratorBase->Getq(), sizeof(double) * 3 * n);
     Experiment1_OnTimestepCompleted();
     Experiment4_OnTimestepCompleted();
+    Experiment2_OnTimestepCompleted();
 
     if (singleStepMode == 1)
       singleStepMode = 2;
@@ -1814,8 +1988,8 @@ void initSimulation()
   // --- END OF CUSTOM TETGEN RULE FIX ---
 
   // create 0-indexed fixed DOFs
-  int numFixedDOFs = 3 * numFixedVertices;
-  int * fixedDOFs = (int*) malloc (sizeof(int) * numFixedDOFs);
+  numFixedDOFs = 3 * numFixedVertices;
+  fixedDOFs = (int*) malloc (sizeof(int) * numFixedDOFs);
   for(int i=0; i<numFixedVertices; i++)
   {
     fixedDOFs[3*i+0] = 3*fixedVertices[i]-3;
@@ -1897,7 +2071,7 @@ void initSimulation()
   {
     printf("Force model: COROTLINFEM\n");
 
-    CorotationalLinearFEM * corotationalLinearFEM = new CorotationalLinearFEM(volumetricMesh);
+    corotationalLinearFEM = new CorotationalLinearFEM(volumetricMesh);
 
     corotationalLinearFEMStencilForceModel = new CorotationalLinearFEMStencilForceModel(corotationalLinearFEM);
     corotationalLinearFEMStencilForceModel->SetWarp(corotationalLinearFEM_warp);
@@ -2753,7 +2927,7 @@ void experiment1_buttonCallBack(int code)
   // Create output directory
   const std::string modelName = BasenameNoExt(std::string(volumetricMeshFilename));
   // Use absolute path as requested: /Users/yunxiuxu/Documents/tetfemcpp/out/experiment1
-  const std::string outDir = std::string("/Users/yunxiuxu/Documents/tetfemcpp/out/experiment1/") + TimestampForFilename();
+  const std::string outDir = std::string("/Users/yunxiuxu/Documents/tetfemcpp/out/experiment1/VegaFEM_") + TimestampForFilename();
   EnsureDir(outDir);
   experiment1.basePrefix = outDir + "/VegaFEM_" + modelName;
 
@@ -2930,7 +3104,7 @@ void experiment4_buttonCallBack(int code)
 
   // Create output directory
   const std::string modelName = BasenameNoExt(std::string(volumetricMeshFilename));
-  const std::string outDir = std::string("/Users/yunxiuxu/Documents/tetfemcpp/out/experiment4/") + TimestampForFilename();
+  const std::string outDir = std::string("/Users/yunxiuxu/Documents/tetfemcpp/out/experiment4/VegaFEM_") + TimestampForFilename();
   EnsureDir(outDir);
   experiment4.basePrefix = outDir + "/VegaFEM_" + modelName;
 
@@ -2969,6 +3143,158 @@ void experiment4_buttonCallBack(int code)
   printf("Note: Thread count is set at solver creation. Current: solver=%d, force=%d\n",
          numSolverThreads, numInternalForceThreads);
   printf("To test different thread counts, restart the simulator with different numSolverThreads in config.\n");
+}
+
+// Experiment 2: Volume Preservation
+static void Experiment2_StopAndRestore()
+{
+  if (!experiment2.active)
+    return;
+
+  experiment2.active = false;
+  experiment2.state = 0;
+  experiment2.stageStep = 0;
+
+  if (experiment2.volumeCsv.is_open())
+    experiment2.volumeCsv.close();
+
+  // Restore material parameters
+  Experiment1_RestoreMaterialParams();
+  
+  // Restore simulation state
+  staticSolver = experiment1.prevStaticSolver;
+  if (implicitNewmarkSparse != nullptr)
+    implicitNewmarkSparse->UseStaticSolver(staticSolver);
+}
+
+static void Experiment2_OnTimestepCompleted()
+{
+  if (!experiment2.active)
+    return;
+
+  const double * uq = integratorBase->Getq();
+  double currentVolume = CalculateDeformedVolume(volumetricMesh, uq);
+  double ratio = currentVolume / experiment2.v0;
+
+  // Record data
+  experiment2.volumeCsv << experiment2.currentRunName << "," << experiment2.stageStep << "," 
+                        << experiment2.currentNu << "," << currentVolume << "," << ratio << "\n";
+  
+  if (experiment2.stageStep % 30 == 0)
+    experiment2.volumeCsv.flush();
+
+  experiment2.stageStep++;
+
+  // State machine logic
+  if (experiment2.state == 1) // waiting -> setup baseline
+  {
+    experiment2.state = 2; // baseline
+    experiment2.stageStep = 0;
+    experiment2.currentNu = experiment2.baselineNu;
+    experiment2.currentRunName = "baseline";
+    
+    stopDeformations_buttonCallBack(0);
+    volumetricMesh->setSingleMaterial(experiment2.targetE, experiment2.baselineNu, volumetricMesh->getMaterial(0)->getDensity());
+    
+    // Reset state and force stiffness matrix recomputation
+    RecreateSimulationObjects();
+    
+    char msg[512];
+    std::snprintf(msg, sizeof(msg), "Experiment 2: running baseline (nu=%.2f)", experiment2.baselineNu);
+    Experiment2_SetStatus(msg);
+    return;
+  }
+
+  // Handle stage transitions
+  int totalSteps = experiment2.settleSteps + experiment2.dragSteps + experiment2.holdSteps;
+  if (experiment2.stageStep >= totalSteps)
+  {
+    if (experiment2.state == 2) // finished baseline -> setup incompressible
+    {
+      experiment2.state = 3; // incompressible
+      experiment2.stageStep = 0;
+      experiment2.currentNu = experiment2.incompressibleNu;
+      experiment2.currentRunName = "incompressible";
+      
+      stopDeformations_buttonCallBack(0);
+      volumetricMesh->setSingleMaterial(experiment2.targetE, experiment2.incompressibleNu, volumetricMesh->getMaterial(0)->getDensity());
+      
+      // Reset state and force stiffness matrix recomputation
+      RecreateSimulationObjects();
+      
+      char msg[512];
+      std::snprintf(msg, sizeof(msg), "Experiment 2: running incompressible (nu=%.2f)", experiment2.incompressibleNu);
+      Experiment2_SetStatus(msg);
+    }
+    else if (experiment2.state == 3) // finished incompressible -> done
+    {
+      Experiment2_StopAndRestore();
+      Experiment2_SetStatus("Experiment 2: done (files written)");
+    }
+  }
+}
+
+void experiment2_buttonCallBack(int code)
+{
+  (void)code;
+
+  if (volumetricMesh == nullptr || integratorBase == nullptr)
+  {
+    Experiment2_SetStatus("Experiment 2: unavailable (no volumetric mesh loaded)");
+    return;
+  }
+
+  if (experiment2.active)
+  {
+    Experiment2_StopAndRestore();
+    Experiment2_SetStatus("Experiment 2: idle");
+    return;
+  }
+
+  // Save state
+  experiment1.prevStaticSolver = staticSolver;
+  Experiment1_SaveMaterialParams();
+
+  // Create output directory
+  const std::string modelName = BasenameNoExt(std::string(volumetricMeshFilename));
+  const std::string outDir = std::string("/Users/yunxiuxu/Documents/tetfemcpp/out/experiment2/VegaFEM_") + TimestampForFilename();
+  EnsureDir(outDir);
+  experiment2.basePrefix = outDir + "/VegaFEM_" + modelName;
+
+  // Open output file
+  experiment2.volumeCsv.open((experiment2.basePrefix + "_volume.csv").c_str());
+  experiment2.volumeCsv << "runName,step,nu,volume,volume_ratio\n";
+
+  // Initial volume
+  const double * zero_u = (double*)calloc(3*n, sizeof(double));
+  experiment2.v0 = CalculateDeformedVolume(volumetricMesh, zero_u);
+  free((void*)zero_u);
+
+  // Write metadata
+  std::ofstream metadata((experiment2.basePrefix + "_metadata.txt").c_str());
+  metadata << "Experiment 2 Metadata\n";
+  metadata << "====================\n";
+  metadata << "Model: " << modelName << "\n";
+  metadata << "V0: " << experiment2.v0 << "\n";
+  metadata << "Baseline Nu: " << experiment2.baselineNu << "\n";
+  metadata << "Incompressible Nu: " << experiment2.incompressibleNu << "\n";
+  metadata << "E: " << experiment2.targetE << "\n";
+  metadata.close();
+
+  // Reuse target vertex from experiment 1 logic
+  std::vector<int> fixedVertices0Indexed;
+  for (int i = 0; i < numFixedVertices; i++) fixedVertices0Indexed.push_back(fixedVertices[i]);
+  experiment2.targetVertex = SelectTargetVertex(volumetricMesh, fixedVertices0Indexed);
+  const double diag = BBoxDiagonal(volumetricMesh);
+  experiment2.pullRadius = std::max(1e-9, 0.6 * diag);
+  experiment2.massDiag = ExtractDiagonal(massMatrix);
+
+  // Initialize state
+  experiment2.active = true;
+  experiment2.state = 1; // transition to baseline
+  experiment2.stageStep = 0;
+  
+  printf("Experiment 2: Starting volume preservation test\n");
 }
 
 void staticSolver_checkboxCallBack(int code)
@@ -3086,6 +3412,12 @@ void initGLUI()
   glui->add_button_to_panel(experiments_panel, "Experiment 4", 0, experiment4_buttonCallBack);
   experiment4StatusStaticText = glui->add_statictext_to_panel(experiments_panel, "Experiment 4: idle");
   glui->add_statictext_to_panel(experiments_panel, "Performance evaluation.");
+
+  glui->add_separator();
+
+  glui->add_button_to_panel(experiments_panel, "Experiment 2", 0, experiment2_buttonCallBack);
+  experiment2StatusStaticText = glui->add_statictext_to_panel(experiments_panel, "Experiment 2: idle");
+  glui->add_statictext_to_panel(experiments_panel, "Volume preservation test.");
 
   glui->add_separator();
 
