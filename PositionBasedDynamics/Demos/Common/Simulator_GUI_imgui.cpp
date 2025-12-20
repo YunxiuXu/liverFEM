@@ -12,6 +12,9 @@
 #ifdef ENABLE_EXP1
 #include "Demos/SceneLoaderDemo/Experiment1.h"
 #endif
+#ifdef ENABLE_EXP2
+#include "Demos/SceneLoaderDemo/Experiment2.h"
+#endif
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -361,6 +364,27 @@ void Simulator_GUI_imgui::createSimulationParameterGUI()
 		{
 			if (ImGui::Button("Stop exp1"))
 				Exp1::stopExperiment1();
+		}
+	}
+#endif
+
+#ifdef ENABLE_EXP2
+	// 实验2按钮（体积守恒测试）
+	if (ImGui::CollapsingHeader("实验2 (Experiment 2)", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::Text("Status: %s", Exp2::status().c_str());
+		ImGui::Text("Volume preservation test");
+		ImGui::Text("Baseline: nu=0.28, Incompressible: nu=0.49");
+
+		if (!Exp2::isRunning())
+		{
+			if (ImGui::Button("Start Exp2"))
+				Exp2::startExperiment2();
+		}
+		else
+		{
+			if (ImGui::Button("Stop Exp2"))
+				Exp2::stopExperiment2();
 		}
 	}
 #endif

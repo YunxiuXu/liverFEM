@@ -18,6 +18,7 @@
 #include "Simulation/Simulation.h"
 #include "Experiment1XPBD.h"
 #include "Experiment1.h"
+#include "Experiment2.h"
 #include <filesystem>
 #include <fstream>
 
@@ -54,6 +55,10 @@ namespace Exp1XPBD { extern void (*resetFunc)(); }
 namespace Exp1 { extern DemoBase *base; }
 namespace Exp1 { extern void (*resetFunc)(); }
 
+// Make accessible to Experiment2
+namespace Exp2 { extern DemoBase *base; }
+namespace Exp2 { extern void (*resetFunc)(); }
+
 
 // main 
 int main( int argc, char **argv )
@@ -77,6 +82,8 @@ int main( int argc, char **argv )
 	Exp1XPBD::resetFunc = reset;
 	Exp1::base = base;
 	Exp1::resetFunc = reset;
+	Exp2::base = base;
+	Exp2::resetFunc = reset;
 
 	SimulationModel *model = new SimulationModel();
 	model->init();
@@ -88,14 +95,16 @@ int main( int argc, char **argv )
 	buildModel();
 
 	// Hook experiment external acceleration into timestep controller
-	// Priority: Experiment1 > Experiment1XPBD
+	// Priority: Experiment1 > Experiment2 > Experiment1XPBD
 	TimeStepController *tsc = dynamic_cast<TimeStepController*>(Simulation::getCurrent()->getTimeStep());
 	if (tsc)
 	{
-		// Create a combined function that checks both experiments
+		// Create a combined function that checks all experiments
 		auto combinedFunc = [](ParticleData &pd) {
 			if (Exp1::isRunning())
 				Exp1::externalAccelFunc()(pd);
+			else if (Exp2::isRunning())
+				Exp2::externalAccelFunc()(pd);
 			else if (Exp1XPBD::isPulling())
 				Exp1XPBD::externalAccelFunc()(pd);
 		};
@@ -150,6 +159,7 @@ void reset()
 	TimeManager::getCurrent()->setTimeStepSize(h);
 	Exp1XPBD::init();
 	Exp1::init();
+	Exp2::init();
 }
 
 void timeStep ()
@@ -158,8 +168,9 @@ void timeStep ()
 	if ((pauseAt > 0.0) && (pauseAt < TimeManager::getCurrent()->getTime()))
 		base->setValue(DemoBase::PAUSE, true);
 
-	// Update experiment 1 state machine (even when paused, so it can progress)
+	// Update experiment state machines (even when paused, so they can progress)
 	Exp1::update();
+	Exp2::update();
 
 	if (base->getValue<bool>(DemoBase::PAUSE))
 		return;
