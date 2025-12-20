@@ -120,7 +120,7 @@ const std::vector<Vertex*>& Experiment2::forceVertices() const {
 
 int Experiment2::pbdIterationsThisFrame(int defaultIterations) const {
     if (!isActive()) return defaultIterations;
-    return std::max(1, config.pbdIterations);
+    return 10;
 }
 
 Vertex* Experiment2::pickDeterministicTarget() const {

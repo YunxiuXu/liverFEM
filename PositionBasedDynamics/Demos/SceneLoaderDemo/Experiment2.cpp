@@ -288,7 +288,7 @@ namespace Exp2
 		// 4. 重置子步数以保证稳定性 (参考计划书设置 Substeps=10)
 		TimeStepController *tsc = dynamic_cast<TimeStepController*>(Simulation::getCurrent()->getTimeStep());
 		if (tsc) {
-			tsc->setSubSteps(5);
+			tsc->setSubSteps(10);
 			tsc->setMaxIterations(1); // XPBD 经典设置
 		}
 
