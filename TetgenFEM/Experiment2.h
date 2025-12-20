@@ -17,7 +17,7 @@ public:
         int dragSteps = 240;
         int holdSteps = 240;
 
-        float poissonIncompressible = 0.49f;
+        float poissonIncompressible = 0.47f;
 
         float dragDistanceBboxScale = 0.35f;
         float dragDistanceMin = 0.30f;

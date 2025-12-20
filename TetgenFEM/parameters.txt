@@ -50,7 +50,7 @@ exp1_pbdIterationsReference=150
 exp1_resetAfterFinish=true
 
 # Experiment 2 (one-click) parameters (only used after pressing START EXP2)
-exp2_poissonIncompressible=0.49
+exp2_poissonIncompressible=0.47
 exp2_settleSteps=120
 exp2_dragSteps=240
 exp2_holdSteps=240

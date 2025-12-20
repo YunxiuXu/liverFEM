@@ -344,8 +344,8 @@ void Simulator_GUI_imgui::createSimulationParameterGUI()
 #endif
 
 #ifdef ENABLE_EXP1
-	// 实验1按钮（按照计划书的方法）
-	if (ImGui::CollapsingHeader("实验1 (Experiment 1)", ImGuiTreeNodeFlags_DefaultOpen))
+	// Experiment 1 button
+	if (ImGui::CollapsingHeader("Experiment 1", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::Text("Status: %s", Exp1::status().c_str());
 		static float pullAccel = Exp1::getPullAccel();
@@ -369,12 +369,12 @@ void Simulator_GUI_imgui::createSimulationParameterGUI()
 #endif
 
 #ifdef ENABLE_EXP2
-	// 实验2按钮（体积守恒测试）
-	if (ImGui::CollapsingHeader("实验2 (Experiment 2)", ImGuiTreeNodeFlags_DefaultOpen))
+	// Experiment 2 button (Volume preservation test)
+	if (ImGui::CollapsingHeader("Experiment 2", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::Text("Status: %s", Exp2::status().c_str());
 		ImGui::Text("Volume preservation test");
-		ImGui::Text("Baseline: nu=0.28, Incompressible: nu=0.49");
+		ImGui::Text("Baseline: nu=0.28, Incompressible: nu=0.47");
 
 		if (!Exp2::isRunning())
 		{

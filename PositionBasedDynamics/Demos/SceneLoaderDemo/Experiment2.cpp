@@ -253,8 +253,8 @@ namespace Exp2
 			}
 		}
 
-		// Compute drag distance from bbox
-		s_dragDistance = std::max(0.30f, std::min(0.90f, xRange * 0.35f));
+		// 强制统一拉伸位移为 0.5
+		s_dragDistance = 0.5f;
 
 		LOG_INFO << "Experiment2 Setup: Fixed=" << s_fixedIndices.size() << " Pull=" << s_pullIndices.size() 
 		         << " TargetIdx=" << s_targetVertexIndex << " DragDistance=" << s_dragDistance;
@@ -267,8 +267,8 @@ namespace Exp2
 
 		LOG_INFO << "Experiment2: Hard-resetting constraints with Poisson ratio " << poisson;
 		
-		// 1. 获取模型现有的参数 (Stiffness 等)
-		const Real stiffness = model->getValue<Real>(SimulationModel::SOLID_STIFFNESS);
+		// 1. 强制对齐杨氏模量为 1e6，保持变量控制
+		const Real stiffness = 1000000.0;
 		const int method = model->getValue<int>(SimulationModel::SOLID_SIMULATION_METHOD);
 		const Real volumeStiffness = model->getValue<Real>(SimulationModel::SOLID_VOLUME_STIFFNESS);
 		const bool normalizeStretch = model->getValue<bool>(SimulationModel::SOLID_NORMALIZE_STRETCH);
