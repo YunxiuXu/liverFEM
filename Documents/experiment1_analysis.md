@@ -63,8 +63,8 @@
 | 方法 | 平均耗时 (ms) | 帧率 (FPS) | 是否满足实时性 (60 FPS) |
 | :--- | :--- | :--- | :--- |
 | **Proposed Method** | ~12.0 | ~83.3 | **是** |
-| **XPBD (Fast)** | ~7.9 | ~126.6 | 是 |
-| **XPBD (Ref)** | ~59.2 | ~16.9 | **否** |
+| **XPBD (Fast)** | ~7.8 | ~128.2 | 是 |
+| **XPBD (Ref)** | ~58.8 | ~17.0 | **否** |
 
 ![性能对比图](../out/experiment1/performance_comparison.png)
 

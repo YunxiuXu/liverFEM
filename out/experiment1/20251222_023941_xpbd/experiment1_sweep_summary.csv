@@ -1,0 +1,4 @@
+pull_accel,pbd_fast_substeps,pbd_reference_substeps,target_disp_fast,target_disp_reference,target_disp_ratio_fast_over_ref,target_disp_rel_error,rmse,max_error,time_fast_ms,time_reference_ms,speedup_ref_over_fast
+800,5,50,1.22704,1.14343,1.07312,0.0731246,0.0521072,0.151263,6.86676,55.8689,8.13614
+1500,5,50,1.52088,1.42491,1.06735,0.0673485,0.0514223,0.158175,7.81683,56.864,7.27456
+2000,5,50,1.67862,1.57545,1.06549,0.0654885,0.0528822,0.154754,8.67965,63.6762,7.33626
