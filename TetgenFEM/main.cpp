@@ -825,7 +825,7 @@ int main(int argc, char** argv) {
 	// Display states
 	static bool showStressCloud = false;
 	static bool whiteBackground = false;
-	static float stressGain = 5.0f; // Added for interactive tuning (reduced to 2/3 of original 15.0)
+	static float stressGain = 4.0f; // Added for interactive tuning (reduced to 2/3 of original 15.0)
 
 	int frame = 1;
 	SimpleUI::Context ui;
@@ -1264,12 +1264,32 @@ int main(int argc, char** argv) {
 						Eigen::Matrix3f E = 0.5f * (F.transpose() * F - Eigen::Matrix3f::Identity());
 						float currentStress = E.norm(); 
 						
-						// Temporal Smoothing: alpha * current + (1-alpha) * last
-						tet->lastStress = 0.15f * currentStress + 0.85f * tet->lastStress;
+						// Stronger Temporal Smoothing: 0.05 * current + 0.95 * last
+						tet->lastStress = 0.05f * currentStress + 0.95f * tet->lastStress;
 
 						for (int i = 0; i < 4; ++i) {
 							tet->vertices[i]->lastStress += tet->lastStress;
 							tet->vertices[i]->connectedTets++;
+						}
+					}
+				}
+
+				// --- Added: Spatial Laplacian Smoothing for Vertices ---
+				// This step diffuses high stress concentrations (like at seams) to neighbors
+				for (int iter = 0; iter < 2; ++iter) { // 2 iterations of smoothing
+					for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+						Group& group = object.getGroup(groupIdx);
+						for (Tetrahedron* tet : group.tetrahedra) {
+							// Share stress along edges
+							for (int i = 0; i < 4; ++i) {
+								for (int j = i + 1; j < 4; ++j) {
+									float avg = (tet->vertices[i]->lastStress / std::max(1, tet->vertices[i]->connectedTets) + 
+												 tet->vertices[j]->lastStress / std::max(1, tet->vertices[j]->connectedTets)) * 0.5f;
+									// Blend a bit of the neighbor's average into current (soft diffusion)
+									tet->vertices[i]->lastStress = tet->vertices[i]->lastStress * 0.9f + (avg * tet->vertices[i]->connectedTets) * 0.1f;
+									tet->vertices[j]->lastStress = tet->vertices[j]->lastStress * 0.9f + (avg * tet->vertices[j]->connectedTets) * 0.1f;
+								}
+							}
 						}
 					}
 				}
