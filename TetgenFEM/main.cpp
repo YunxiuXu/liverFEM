@@ -825,6 +825,12 @@ int main(int argc, char** argv) {
 	// Display states
 	static bool showStressCloud = false;
 	static bool showExplodedView = false;
+	static bool showFiberFlow = false;
+	static bool showGhostLinks = false;
+	static int anisoDemoState = 0; // 0: Off, 1: Isotropic Demo, 2: Anisotropic Demo
+	static Vertex* anisoDemoVertex = nullptr;
+	static float anisoDemoForceMag = 2700.0f; 
+	static float anisoDemoRadius = 0.35f;    
 	static float explodedScale = 0.5f;
 	static bool whiteBackground = false;
 	static bool isPaused = false; // Pause physics simulation
@@ -997,8 +1003,50 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		// ------------------ Interaction Logic (Simplified)
-		std::unordered_map<int, Eigen::Vector3f> dragForces;
+		// ------------------ Interaction Logic (Optimized)
+		static std::vector<Eigen::Vector3f> dragForces;
+		if (dragForces.empty()) {
+			int maxV = 0;
+			for (auto* v : objectUniqueVertices) if (v->index > maxV) maxV = v->index;
+			dragForces.resize(maxV + 1, Eigen::Vector3f::Zero());
+		}
+		
+		// Reset forces efficiently
+		#pragma omp parallel for
+		for (int i = 0; i < (int)dragForces.size(); ++i) {
+			dragForces[i] = Eigen::Vector3f::Zero();
+		}
+
+		// --- NEW: Anisotropy Demo Auto-Force (Region-based with Pulse & Diagonal) ---
+		if (anisoDemoState > 0 && anisoDemoVertex != nullptr) {
+			float rSq = anisoDemoRadius * anisoDemoRadius;
+			Eigen::Vector3f centerPos(anisoDemoVertex->x, anisoDemoVertex->y, anisoDemoVertex->z);
+			
+			float pulse = 0.5f + 0.5f * std::sin(glfwGetTime() * 4.0f); 
+			
+			// Anisotropic mode uses 2x force for more visible deformation
+			float forceMultiplier = (anisoDemoState == 2) ? 2.0f : 1.0f;
+			float currentForce = anisoDemoForceMag * forceMultiplier;
+			
+			#pragma omp parallel for
+			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+				Group& group = object.getGroup(groupIdx);
+				for (auto& pair : group.verticesMap) {
+					Vertex* v = pair.second;
+					Eigen::Vector3f vPos(v->x, v->y, v->z);
+					float distSq = (vPos - centerPos).squaredNorm();
+					if (distSq < rSq) {
+						float weight = 1.0f - std::sqrt(distSq) / anisoDemoRadius;
+						// Pull Diagonally (X and Y) to show directional bias
+						#pragma omp atomic
+						dragForces[v->index].x() += currentForce * weight * pulse;
+						#pragma omp atomic
+						dragForces[v->index].y() += currentForce * weight * pulse;
+					}
+				}
+			}
+		}
+
 		// Experiment 1: deterministic constant load (independent of dragging).
 		if (experiment1.isActive()) {
 			experiment1.appendVertexForces(dragForces);
@@ -1098,7 +1146,10 @@ int main(int argc, char** argv) {
 				float currentFrameTotalForce = 0.0f;
 				const std::vector<Vertex*>& verticesForForces =
 					(experiment3.wantsDrag() ? experiment3.forceVertices() : objectUniqueVertices);
-				for (Vertex* vertex : verticesForForces) {
+
+				#pragma omp parallel for reduction(+:currentFrameTotalForce)
+				for (int i = 0; i < (int)verticesForForces.size(); ++i) {
+					Vertex* vertex = verticesForForces[i];
 					Eigen::Vector3f currentPos(vertex->x, vertex->y, vertex->z);
 					float dist = (currentPos - targetPos).norm();
 					if (dist <= influenceRadius) {
@@ -1111,15 +1162,14 @@ int main(int argc, char** argv) {
 						if (accelNorm > maxAccel) {
 							accel *= (maxAccel / accelNorm);
 						}
-						dragForces[vertex->index] += accel;
+						dragForces[vertex->index] = accel;
 						currentFrameTotalForce += accel.norm();
 					}
 				}
 
 				float targetForce = 0.0f;
-				auto it = dragForces.find(dragState.target->index);
-				if (it != dragForces.end()) {
-					targetForce = it->second.norm();
+				if (dragState.target->index < (int)dragForces.size()) {
+					targetForce = dragForces[dragState.target->index].norm();
 				}
 				if (experiment3.wantsDrag()) {
 					experiment3.onDragForces(currentFrameTotalForce, targetForce);
@@ -1266,7 +1316,8 @@ int main(int argc, char** argv) {
 		if (drawFaces) {
 			// Pre-calculate smooth vertex stress if needed
 			if (showStressCloud) {
-				// Reset vertex accumulators
+				// 1. Reset vertex accumulators (Parallelized)
+				#pragma omp parallel for
 				for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 					Group& group = object.getGroup(groupIdx);
 					for (auto& pair : group.verticesMap) {
@@ -1275,48 +1326,55 @@ int main(int argc, char** argv) {
 					}
 				}
 
-				// Accumulate stress from tetrahedra to vertices with temporal smoothing
+				// 2. Accumulate stress from tetrahedra (Parallelized)
+				#pragma omp parallel for
 				for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 					Group& group = object.getGroup(groupIdx);
 					for (Tetrahedron* tet : group.tetrahedra) {
-						Vertex* vertex0 = tet->vertices[0];
-						Vertex* vertex1 = tet->vertices[1];
-						Vertex* vertex2 = tet->vertices[2];
-						Vertex* vertex3 = tet->vertices[3];
+						Vertex* v0 = tet->vertices[0];
+						Vertex* v1 = tet->vertices[1];
+						Vertex* v2 = tet->vertices[2];
+						Vertex* v3 = tet->vertices[3];
 
 						Eigen::Matrix3f Ds;
-						Ds << vertex1->x - vertex0->x, vertex2->x - vertex0->x, vertex3->x - vertex0->x,
-							  vertex1->y - vertex0->y, vertex2->y - vertex0->y, vertex3->y - vertex0->y,
-							  vertex1->z - vertex0->z, vertex2->z - vertex0->z, vertex3->z - vertex0->z;
+						Ds << v1->x - v0->x, v2->x - v0->x, v3->x - v0->x,
+							  v1->y - v0->y, v2->y - v0->y, v3->y - v0->y,
+							  v1->z - v0->z, v2->z - v0->z, v3->z - v0->z;
 						
 						Eigen::Matrix3f F = Ds * tet->invDm;
 						Eigen::Matrix3f E = 0.5f * (F.transpose() * F - Eigen::Matrix3f::Identity());
 						float currentStress = E.norm(); 
 						
-						// Stronger Temporal Smoothing: 0.05 * current + 0.95 * last
 						tet->lastStress = 0.05f * currentStress + 0.95f * tet->lastStress;
 
 						for (int i = 0; i < 4; ++i) {
+							#pragma omp atomic
 							tet->vertices[i]->lastStress += tet->lastStress;
+							#pragma omp atomic
 							tet->vertices[i]->connectedTets++;
 						}
 					}
 				}
 
-				// --- Added: Spatial Laplacian Smoothing for Vertices ---
-				// This step diffuses high stress concentrations (like at seams) to neighbors
-				for (int iter = 0; iter < 2; ++iter) { // 2 iterations of smoothing
+				// 3. Spatial Laplacian Smoothing (Parallelized)
+				for (int iter = 0; iter < 2; ++iter) { 
+					#pragma omp parallel for
 					for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 						Group& group = object.getGroup(groupIdx);
 						for (Tetrahedron* tet : group.tetrahedra) {
-							// Share stress along edges
 							for (int i = 0; i < 4; ++i) {
 								for (int j = i + 1; j < 4; ++j) {
 									float avg = (tet->vertices[i]->lastStress / std::max(1, tet->vertices[i]->connectedTets) + 
 												 tet->vertices[j]->lastStress / std::max(1, tet->vertices[j]->connectedTets)) * 0.5f;
-									// Blend a bit of the neighbor's average into current (soft diffusion)
-									tet->vertices[i]->lastStress = tet->vertices[i]->lastStress * 0.9f + (avg * tet->vertices[i]->connectedTets) * 0.1f;
-									tet->vertices[j]->lastStress = tet->vertices[j]->lastStress * 0.9f + (avg * tet->vertices[j]->connectedTets) * 0.1f;
+									
+									// Atomic updates to ensure thread safety
+									float updateI = (avg * tet->vertices[i]->connectedTets - tet->vertices[i]->lastStress) * 0.1f;
+									float updateJ = (avg * tet->vertices[j]->connectedTets - tet->vertices[j]->lastStress) * 0.1f;
+									
+									#pragma omp atomic
+									tet->vertices[i]->lastStress += updateI;
+									#pragma omp atomic
+									tet->vertices[j]->lastStress += updateJ;
 								}
 							}
 						}
@@ -1325,6 +1383,11 @@ int main(int argc, char** argv) {
 			}
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			if (showFiberFlow) {
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
+
 			glBegin(GL_TRIANGLES);
 			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 				Group& group = object.getGroup(groupIdx);
@@ -1336,27 +1399,28 @@ int main(int argc, char** argv) {
 					Vertex* v[4] = { tet->vertices[0], tet->vertices[1], tet->vertices[2], tet->vertices[3] };
 
 					auto setVertexColor = [&](Vertex* vert) {
+						float alpha = showFiberFlow ? 0.4f : 1.0f;
 						if (showStressCloud) {
 							float avgStress = vert->connectedTets > 0 ? vert->lastStress / vert->connectedTets : 0.0f;
 							float v = std::min(1.0f, avgStress * stressGain); 
 							float r = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 3.0f)));
 							float g = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 2.0f)));
 							float b = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 1.0f)));
-							glColor3f(r, g, b);
+							glColor4f(r, g, b, alpha);
 						} else if (showExplodedView) {
 							float hue = (360.0f * groupIdx) / groupNum;
 							float saturation = 0.45f; 
 							float value = 0.95f;
 							float red, green, blue;
 							hsvToRgb(hue, saturation, value, red, green, blue);
-							glColor3f(red, green, blue);
+							glColor4f(red, green, blue, alpha);
 						} else {
 							float hue = (360.0f * groupIdx) / groupNum;
 							float saturation = 1.0f; 
 							float value = 1.0f;
 							float red, green, blue;
 							hsvToRgb(hue, saturation, value, red, green, blue);
-							glColor3f(red, green, blue);
+							glColor4f(red, green, blue, alpha);
 						}
 					};
 
@@ -1382,6 +1446,9 @@ int main(int argc, char** argv) {
 				}
 			}
 			glEnd();
+			if (showFiberFlow) {
+				glDisable(GL_BLEND);
+			}
 		}
 		// Draw edges
 		if (drawEdges) {
@@ -1391,8 +1458,9 @@ int main(int argc, char** argv) {
 			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 				Group& group = object.getGroup(groupIdx);
 				Eigen::Vector3f offset = Eigen::Vector3f::Zero();
-				if (showExplodedView) {
-					offset = (group.initCOM - globalInitCOM) * explodedScale;
+				if (showExplodedView || showGhostLinks) {
+					float currentExplodedScale = showExplodedView ? explodedScale : 0.15f; 
+					offset = (group.initCOM - globalInitCOM) * currentExplodedScale;
 				}
 				for (Tetrahedron* tet : group.tetrahedra) {
 					for (int edgeIdx = 0; edgeIdx < 6; ++edgeIdx) {
@@ -1412,8 +1480,8 @@ int main(int argc, char** argv) {
 							if (!isSurfaceEdge) continue; // Only show surface edges in stress mode
 						} else {
 							float hue = (360.0f * groupIdx) / groupNum;
-							float saturation = showExplodedView ? 0.45f : 1.0f;
-							float value = showExplodedView ? 0.8f : 1.0f;
+							float saturation = (showExplodedView || showGhostLinks) ? 0.45f : 1.0f;
+							float value = (showExplodedView || showGhostLinks) ? 0.8f : 1.0f;
 							hsvToRgb(hue, saturation, value, red, green, blue);
 
 							if (isSurfaceEdge == false) {
@@ -1436,22 +1504,119 @@ int main(int argc, char** argv) {
 			glEnd();
 		}
 
-		// Draw Ghost Vertices (Connections between exploded groups)
-		if (showExplodedView) {
+		// Draw Fiber Flow (Anisotropic Fiber Directions)
+		if (showFiberFlow) {
+			glDisable(GL_DEPTH_TEST); // Ensure lines are visible through the mesh
+			glLineWidth(2.0f);
+			glBegin(GL_LINES);
+			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+				Group& group = object.getGroup(groupIdx);
+				Eigen::Vector3f offset = Eigen::Vector3f::Zero();
+				if (showExplodedView || showGhostLinks) {
+					float currentExplodedScale = showExplodedView ? explodedScale : 0.15f;
+					offset = (group.initCOM - globalInitCOM) * currentExplodedScale;
+				}
+
+				// Fiber direction in world space.
+				// By default, E1 is the fiber direction and is aligned with the X-axis in the local frame.
+				// We rotate it by the group's current rotation matrix.
+				Eigen::Vector3f fiberDir = group.rotate_matrix * Eigen::Vector3f(1.0f, 0.0f, 0.0f);
+				float lineLen = 0.015f; // Short line segment half-length
+
+				for (Tetrahedron* tet : group.tetrahedra) {
+					// Calculate tet center
+					Eigen::Vector3f center(0, 0, 0);
+					for (int i = 0; i < 4; ++i) {
+						center += Eigen::Vector3f(tet->vertices[i]->x, tet->vertices[i]->y, tet->vertices[i]->z);
+					}
+					center /= 4.0f;
+					center += offset; // Apply exploded view offset if any
+
+					if (whiteBackground) glColor3f(0.2f, 0.5f, 0.2f); // Dark green on white
+					else glColor3f(0.5f, 1.0f, 0.5f); // Bright green on black
+
+					glVertex3f(center.x() - fiberDir.x() * lineLen, center.y() - fiberDir.y() * lineLen, center.z() - fiberDir.z() * lineLen);
+					glVertex3f(center.x() + fiberDir.x() * lineLen, center.y() + fiberDir.y() * lineLen, center.z() + fiberDir.z() * lineLen);
+				}
+			}
+			glEnd();
+			glEnable(GL_DEPTH_TEST);
+		}
+
+		// --- NEW: Draw Single External Force Arrow (at demo center) ---
+		if (anisoDemoState > 0 && anisoDemoVertex != nullptr) {
+			glDisable(GL_DEPTH_TEST); // 让箭头始终可见，不被遮挡
+			glLineWidth(4.0f);
+			glBegin(GL_LINES);
+			
+			// Calculate offset for exploded view
+			Eigen::Vector3f offset = Eigen::Vector3f::Zero();
+			if (showExplodedView || showGhostLinks) {
+				float currentExplodedScale = showExplodedView ? explodedScale : 0.15f;
+				// Find the group containing the demo vertex
+				for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+					Group& group = object.getGroup(groupIdx);
+					if (group.verticesMap.find(anisoDemoVertex->index) != group.verticesMap.end()) {
+						offset = (group.initCOM - globalInitCOM) * currentExplodedScale;
+						break;
+					}
+				}
+			}
+			
+			// Arrow start position (at demo vertex)
+			Eigen::Vector3f start(anisoDemoVertex->x + offset.x(), 
+			                      anisoDemoVertex->y + offset.y(), 
+			                      anisoDemoVertex->z + offset.z());
+			
+			// Calculate force direction (diagonal: X + Y)
+			float pulse = 0.5f + 0.5f * std::sin(glfwGetTime() * 4.0f);
+			Eigen::Vector3f forceDir(1.0f, 1.0f, 0.0f);
+			forceDir.normalize();
+			
+			// Anisotropic mode uses 2x force, so arrow should be 2x longer
+			float forceMultiplier = (anisoDemoState == 2) ? 2.0f : 1.0f;
+			
+			// Longer arrow tail (increased scale)
+			float fScale = 0.0003f; // 增加到原来的3倍
+			float arrowLength = anisoDemoForceMag * forceMultiplier * pulse * fScale;
+			Eigen::Vector3f end = start + forceDir * arrowLength;
+			
+			// Draw main arrow shaft (red)
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glVertex3f(start.x(), start.y(), start.z());
+			glVertex3f(end.x(), end.y(), end.z());
+			
+			// Draw arrowhead (V shape)
+			Eigen::Vector3f dir = forceDir;
+			Eigen::Vector3f side = dir.unitOrthogonal() * 0.03f; // Slightly larger arrowhead
+			Eigen::Vector3f headBase = end - dir * 0.06f;
+			
+			glVertex3f(end.x(), end.y(), end.z());
+			glVertex3f(headBase.x() + side.x(), headBase.y() + side.y(), headBase.z() + side.z());
+			glVertex3f(end.x(), end.y(), end.z());
+			glVertex3f(headBase.x() - side.x(), headBase.y() - side.y(), headBase.z() - side.z());
+			
+			glEnd();
+			glEnable(GL_DEPTH_TEST);
+		}
+
+		// Draw Ghost Vertices (Connections between sub-groups - The "Coupling" visualization)
+		if (showExplodedView || showGhostLinks) {
+			float currentExplodedScale = showExplodedView ? explodedScale : 0.15f;
 			glLineWidth(2.5f);
 			glBegin(GL_LINES);
-			// Yellowish color for connections
-			if (whiteBackground) glColor3f(0.8f, 0.7f, 0.0f);
-			else glColor3f(1.0f, 1.0f, 0.0f);
+			// Yellowish/Cyan color for connections to stand out
+			if (whiteBackground) glColor3f(0.0f, 0.5f, 0.7f); // Deep cyan on white
+			else glColor3f(0.0f, 1.0f, 1.0f); // Bright cyan on black
 
 			for (int i = 0; i < groupNum; ++i) {
 				Group& g1 = object.getGroup(i);
-				Eigen::Vector3f offset1 = (g1.initCOM - globalInitCOM) * explodedScale;
+				Eigen::Vector3f offset1 = (g1.initCOM - globalInitCOM) * currentExplodedScale;
 				for (int dir = 0; dir < 6; ++dir) {
 					int adjIdx = g1.adjacentGroupIDs[dir];
 					if (adjIdx != -1 && adjIdx > i) { // Draw each pair once
 						Group& g2 = object.getGroup(adjIdx);
-						Eigen::Vector3f offset2 = (g2.initCOM - globalInitCOM) * explodedScale;
+						Eigen::Vector3f offset2 = (g2.initCOM - globalInitCOM) * currentExplodedScale;
 						const auto& pairs = g1.commonVerticesInDirections[dir];
 						for (size_t k = 0; k < pairs.first.size(); ++k) {
 							Vertex* v1 = pairs.first[k];
@@ -1504,17 +1669,83 @@ int main(int argc, char** argv) {
 		const SimpleUI::Rect uiStressRect{ rightMargin, uiMargin + uiH + 8.0f, uiW, uiH };
 		if (ui.button(uiStressRect, showStressCloud ? "Show Groups" : "Show Stress")) {
 			showStressCloud = !showStressCloud;
+			if (showStressCloud) {
+				showFiberFlow = false;
+				showGhostLinks = false;
+				showExplodedView = false;
+			}
 		}
 
-		const SimpleUI::Rect uiExplodedRect{ rightMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiFiberRect{ rightMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiFiberRect, showFiberFlow ? "Hide Fiber" : "Show Fiber")) {
+			showFiberFlow = !showFiberFlow;
+			if (showFiberFlow) showStressCloud = false;
+		}
+
+		const SimpleUI::Rect uiGhostRect{ rightMargin, uiMargin + 3.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiGhostRect, showGhostLinks ? "Hide Coupling" : "Show Coupling")) {
+			showGhostLinks = !showGhostLinks;
+			if (showGhostLinks) showStressCloud = false;
+		}
+
+		const SimpleUI::Rect uiExplodedRect{ rightMargin, uiMargin + 4.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiExplodedRect, showExplodedView ? "Show Integrated" : "Exploded View")) {
 			showExplodedView = !showExplodedView;
 			if (showExplodedView) showStressCloud = false; 
 		}
 
-		const SimpleUI::Rect uiPauseRect{ rightMargin, uiMargin + 3.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiPauseRect{ rightMargin, uiMargin + 5.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiPauseRect, isPaused ? "Resume(P)" : "Pause(P)")) {
 			isPaused = !isPaused;
+		}
+
+		// --- NEW: Anisotropy Comparison Mode Button (3-State Cycle) ---
+		const SimpleUI::Rect uiAnisoModeRect{ rightMargin, uiMargin + 6.0f * (uiH + 8.0f), uiW, uiH };
+		const char* anisoLabel = "Demo: OFF";
+		if (anisoDemoState == 1) anisoLabel = "Demo: Isotropic";
+		else if (anisoDemoState == 2) anisoLabel = "Demo: Anisotropic";
+
+		if (ui.button(uiAnisoModeRect, anisoLabel)) {
+			anisoDemoState = (anisoDemoState + 1) % 3;
+
+			if (anisoDemoState > 0) {
+				// Initialize demo vertex if needed
+				float maxX = -1e10f;
+				for (int i = 0; i < object.groupNum; ++i) {
+					for (auto& kv : object.groups[i].verticesMap) {
+						Vertex* v = kv.second;
+						if (!v->isFixed && v->initx > maxX) {
+							maxX = v->initx;
+							anisoDemoVertex = v;
+						}
+					}
+				}
+
+				if (anisoDemoState == 1) { // Isotropic
+					youngs1 = 1000000.0f; 
+					youngs2 = 1000000.0f;
+					youngs3 = 1000000.0f;
+					showFiberFlow = false;
+				} else { // Anisotropic
+					youngs1 = 20000000.0f; 
+					youngs2 = 1000000.0f;
+					youngs3 = 1000000.0f;
+					showFiberFlow = true;
+				}
+			} else {
+				anisoDemoVertex = nullptr;
+				youngs1 = 1000000.0f; 
+				youngs2 = 1000000.0f;
+				youngs3 = 1000000.0f;
+				showFiberFlow = false;
+			}
+
+			// Update Physics
+			#pragma omp parallel for
+			for (int i = 0; i < object.groupNum; ++i) {
+				object.groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
+				object.groups[i].calLHS();
+			}
 		}
 
 		ui.endDraw2D();

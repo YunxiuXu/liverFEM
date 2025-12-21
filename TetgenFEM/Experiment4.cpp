@@ -315,7 +315,14 @@ static BenchRow benchObject(Object& object, const BuiltObject& built, int thread
     resetSimulationToInitial(object);
 
     Eigen::Vector3f externalForce = Eigen::Vector3f::Zero();
-    const std::unordered_map<int, Eigen::Vector3f>& noForces = Group::emptyVertexForce;
+    std::vector<Eigen::Vector3f> noForces;
+    int maxV = 0;
+    for (const auto& g : object.groups) {
+        for (const auto& pair : g.verticesMap) {
+            if (pair.second->index > maxV) maxV = pair.second->index;
+        }
+    }
+    noForces.resize(maxV + 1, Eigen::Vector3f::Zero());
     int frame = 1;
     for (int i = 0; i < std::max(0, warmupFrames); ++i) {
 #pragma omp parallel for

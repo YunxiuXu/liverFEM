@@ -38,7 +38,7 @@ public:
     void requestStart();
     void update();
     void onAfterPhysics();
-    void appendVertexForces(std::unordered_map<int, Eigen::Vector3f>& dragForces) const;
+    void appendVertexForces(std::vector<Eigen::Vector3f>& dragForces) const;
 
     bool isActive() const;
     bool wantsDrag() const;

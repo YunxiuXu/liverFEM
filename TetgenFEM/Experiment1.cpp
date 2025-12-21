@@ -102,7 +102,7 @@ int Experiment1::pbdIterationsThisFrame(int defaultIterations) const {
     return std::max(1, runs[static_cast<size_t>(idx)].pbdIterations);
 }
 
-void Experiment1::appendVertexForces(std::unordered_map<int, Eigen::Vector3f>& forcesOut) const {
+void Experiment1::appendVertexForces(std::vector<Eigen::Vector3f>& forcesOut) const {
     if (state != State::LoadRamp && state != State::HoldLoad) return;
     if (!selectedTarget) return;
     if (forceRegionVertices.empty()) return;
@@ -115,6 +115,7 @@ void Experiment1::appendVertexForces(std::unordered_map<int, Eigen::Vector3f>& f
     if (accelMag <= 0.0f) return;
 
     const float r = std::max(1e-6f, config.influenceRadius);
+    // Optimization: forcesOut is now a vector, ensuring fast indexing
     for (Vertex* v : forceRegionVertices) {
         if (!v) continue;
         if (v->isFixed) continue;
@@ -126,7 +127,9 @@ void Experiment1::appendVertexForces(std::unordered_map<int, Eigen::Vector3f>& f
         if (falloff <= 0.0f) continue;
         if (v->index == selectedTarget->index) falloff *= 1.5f;
 
-        forcesOut[v->index] += (accelMag * falloff) * dir;
+        if (v->index < (int)forcesOut.size()) {
+            forcesOut[v->index] += (accelMag * falloff) * dir;
+        }
     }
 }
 

@@ -38,7 +38,7 @@ public:
 
     Vertex* targetVertex() const;
     int pbdIterationsThisFrame(int defaultIterations) const;
-    void appendVertexForces(std::unordered_map<int, Eigen::Vector3f>& forcesOut) const;
+    void appendVertexForces(std::vector<Eigen::Vector3f>& forcesOut) const;
 
 private:
     Experiment1() = default;

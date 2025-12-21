@@ -4,7 +4,6 @@
 
 // Initialize debug flag (set to false by default, change to true for debugging)
 bool Group::debug_constraints = false;
-const std::unordered_map<int, Eigen::Vector3f> Group::emptyVertexForce = {};
 
 void Group::initialize() {
 	groupVelocity = Eigen::VectorXf::Zero(3 * verticesMap.size());
@@ -802,7 +801,7 @@ void Group::calPrimeVec2(int w) {
 //
 //}
 void Group::calPrimeVec(const Eigen::Vector3f& externalForce,
-	const std::unordered_map<int, Eigen::Vector3f>& vertexForces) {
+	const std::vector<Eigen::Vector3f>& vertexForces) {
 	primeVec = Eigen::VectorXf::Zero(3 * verticesVector.size());
 	static int frameCount = 0;
 	frameCount++;
@@ -810,29 +809,11 @@ void Group::calPrimeVec(const Eigen::Vector3f& externalForce,
 	if (!gravityApplied) {
 		for (int i = 0; i < 3 * verticesVector.size(); i += 3) {
 			gravity(i + 1) = Gravity;
-			/*float rotatedGravityX = -Gravity * sqrt(2) / 2;
-			float rotatedGravityY = -Gravity * sqrt(2) / 2;
-			gravity(i) = rotatedGravityX;
-			gravity(i + 1) = rotatedGravityY;*/
 		}
-		//for (auto& vertexPair : verticesVector) {
-		//	Vertex* vertex = vertexPair;
-		//	if (vertex->initx > -0.02 && vertex->initx < 0.02)
-		//	{
-		//		gravity(vertex->localIndex * 3 + 1) = -Gravity;
-		//		//gravity(vertex->localIndex * 3) = -Gravity;
-		//	}
-		//	//if (vertex->inity > 0.53)
-		//	//{
-		//	//	gravity(vertex->localIndex * 3 + 1) = +Gravity;
-		//	//	//gravity(vertex->localIndex * 3) = -Gravity;
-		//	//}
-		//}
-		gravityApplied = true; // 
-	} // 撤去力，将重力设为零
+		gravityApplied = true;
+	}
 	if (frameCount > 100000) {
-		gravity.setZero(); // 撤去力，将重力设为零
-
+		gravity.setZero();
 	}
 
 	// Combine base gravity with user-applied force for this frame.
@@ -843,12 +824,16 @@ void Group::calPrimeVec(const Eigen::Vector3f& externalForce,
 			totalForce.segment<3>(base) += externalForce;
 		}
 	}
+	
+	// Speed optimization: Use indexed vector instead of unordered_map lookup
 	if (!vertexForces.empty()) {
-		for (const auto& entry : vertexForces) {
-			auto it = verticesMap.find(entry.first);
-			if (it != verticesMap.end()) {
-				int base = 3 * it->second->localIndex;
-				totalForce.segment<3>(base) += entry.second;
+		for (const auto* vertex : verticesVector) {
+			if (vertex->index < static_cast<int>(vertexForces.size())) {
+				const Eigen::Vector3f& force = vertexForces[vertex->index];
+				if (force.squaredNorm() > 1e-12f) {
+					int base = 3 * vertex->localIndex;
+					totalForce.segment<3>(base) += force;
+				}
 			}
 		}
 	}
@@ -868,10 +853,7 @@ void Group::calPrimeVec(const Eigen::Vector3f& externalForce,
 		Eigen::Vector3f currentExfUpdate = exfUpdate.segment<3>(3 * localPi);
 		Eigen::Vector3f newPosition = Eigen::Vector3f(vertex->x, vertex->y, vertex->z) + currentVelocityUpdate + currentExfUpdate;
 		primeVec.segment<3>(3 * static_cast<Eigen::Index>(localPi)) = newPosition;
-
-
 	}
-
 }
 //
 

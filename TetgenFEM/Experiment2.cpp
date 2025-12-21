@@ -517,7 +517,7 @@ void Experiment2::saveData() const {
     std::cout << "[Experiment2] Saved " << data.size() << " samples to " << csvPath.string() << "\n";
 }
 
-void Experiment2::appendVertexForces(std::unordered_map<int, Eigen::Vector3f>& dragForces) const {
+void Experiment2::appendVertexForces(std::vector<Eigen::Vector3f>& dragForces) const {
     if (!object) return;
     if (state != State::Drag && state != State::Hold) return;
     if (pullStartPosByIndex.empty()) return;
@@ -526,11 +526,15 @@ void Experiment2::appendVertexForces(std::unordered_map<int, Eigen::Vector3f>& d
     const float stiffness = std::max(0.0f, config.pullStiffness);
     const float maxAccel = std::max(0.0f, config.pullMaxAccel);
 
-    for (int idx : pullIndices) {
+    // Parallelize the per-index force application if pullIndices is large
+    #pragma omp parallel for
+    for (int i = 0; i < (int)pullIndices.size(); ++i) {
+        int idx = pullIndices[i];
         auto itStart = pullStartPosByIndex.find(idx);
         if (itStart == pullStartPosByIndex.end()) continue;
         auto itV = verticesByIndex.find(idx);
         if (itV == verticesByIndex.end() || itV->second.empty()) continue;
+        
         Eigen::Vector3f cur = Eigen::Vector3f::Zero();
         int count = 0;
         bool anyFixed = false;
@@ -550,7 +554,11 @@ void Experiment2::appendVertexForces(std::unordered_map<int, Eigen::Vector3f>& d
         if (maxAccel > 0.0f && n > maxAccel) {
             accel *= (maxAccel / std::max(1e-12f, n));
         }
-        dragForces[idx] += accel;
+        
+        if (idx < (int)dragForces.size()) {
+            // Note: Since pullIndices are unique, this is thread-safe
+            dragForces[idx] += accel;
+        }
     }
 }
 
