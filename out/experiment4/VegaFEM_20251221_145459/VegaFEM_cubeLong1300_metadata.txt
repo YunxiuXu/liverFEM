@@ -1,0 +1,8 @@
+Experiment 4 Metadata
+====================
+Model: cubeLong1300
+Num Vertices: 430
+Num Elements: 1660
+Time Step: 0.01
+Warmup Steps: 60
+Measure Steps: 240

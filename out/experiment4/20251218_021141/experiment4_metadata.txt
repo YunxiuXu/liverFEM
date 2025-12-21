@@ -1,0 +1,14 @@
+timeStep=0.01
+youngs=1e+06
+poisson=0.28
+groupNumX=8
+groupNumY=6
+groupNumZ=6
+pbdIterations=10
+warmupFrames=60
+measureFrames=240
+maxProcs=12
+threads=1,10
+targets=5000,20000,50000
+stlFile=models/liver_HD_Low.stl
+tetgenArgsBase=pq20

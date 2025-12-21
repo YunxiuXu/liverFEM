@@ -1,0 +1,8 @@
+target_vertex_index=774
+target_vertex_init=(0.485932,0.516361,1.07122)
+pull_accels=800 1500 2000 
+pbd_substeps=5 50 
+pbd_iterations=1 (fixed)
+settleSteps=120
+loadRampSteps=240
+holdSteps=240

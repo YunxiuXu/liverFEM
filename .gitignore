@@ -8,7 +8,6 @@
 
 # CMake / local build folders
 /build/
-/out/
 /cmake-build-*/
 CMakeCache.txt
 CMakeFiles/

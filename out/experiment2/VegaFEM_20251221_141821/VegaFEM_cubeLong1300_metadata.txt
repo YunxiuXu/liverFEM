@@ -1,0 +1,7 @@
+Experiment 2 Metadata
+====================
+Model: cubeLong1300
+V0: 0.352043
+Baseline Nu: 0.28
+Incompressible Nu: 0.47
+E: 1e+06

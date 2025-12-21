@@ -1,0 +1,8 @@
+target_vertex_index=774
+target_vertex_init=(0.485932,0.516361,1.07122)
+poisson_original=0.28
+settleSteps=120
+dragSteps=240
+holdSteps=240
+dragDistance=0.5
+sequence=baseline:nu0.28;incompressible:nu0.47

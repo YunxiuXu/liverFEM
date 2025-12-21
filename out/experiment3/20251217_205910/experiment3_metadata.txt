@@ -1,0 +1,17 @@
+vertex_index=1328
+vertex_init=(0.441226,0.424951,1.28304)
+timeStep=0.01
+youngs=1e+06
+poisson=0.08
+poisson_original=0.28
+dragInfluenceRadius=0.6
+dragStiffness=2500
+dragMaxAccel=50000
+dragMaxDisplacement=1
+exOverEy=5
+overridePoisson=1
+poissonOverride=0.08
+dragDistance=0.371599
+settleSteps=120
+dragSteps=240
+sequence=iso:dragx;iso:dragy;ani:dragx:hardx;ani:dragy:hardx
