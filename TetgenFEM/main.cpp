@@ -822,6 +822,11 @@ int main(int argc, char** argv) {
 
 	DragState dragState;
 
+	// Display states
+	static bool showStressCloud = false;
+	static bool whiteBackground = false;
+	static float stressGain = 15.0f; // Added for interactive tuning
+
 	int frame = 1;
 	SimpleUI::Context ui;
 
@@ -1152,7 +1157,7 @@ int main(int argc, char** argv) {
 		}*/
 
 
-		const int defaultPbdIterations = 10;
+		static int defaultPbdIterations = 10;
 		int pbdIterations = defaultPbdIterations;
 		if (experiment1.isActive()) {
 			pbdIterations = experiment1.pbdIterationsThisFrame(defaultPbdIterations);
@@ -1161,6 +1166,13 @@ int main(int argc, char** argv) {
 		}
 		object.PBDLOOP(pbdIterations);
 		experiment2.onAfterPhysics();
+
+		// Update COM for all groups to ensure correct stress cloud visualization
+		if (showStressCloud) {
+			for (int i = 0; i < object.groupNum; ++i) {
+				object.groups[i].calCenterofMass();
+			}
+		}
 
 		static KeyLatch cLatch;
 		// Replaced SAVE button with Benchmark, so allow saving via Key C only or re-map
@@ -1180,6 +1192,10 @@ int main(int argc, char** argv) {
 		
 
 
+		// Handle stress gain tuning via keyboard
+		if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS) stressGain *= 1.02f; // '+' key
+		if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) stressGain *= 0.98f; // '-' key
+
 		// Render here
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
@@ -1198,22 +1214,24 @@ int main(int argc, char** argv) {
 
 
 		// Draw vertices
-	
-		glPointSize(5.0f);
+		if (!showStressCloud) { // Only draw vertices if not in stress mode
+			glPointSize(5.0f);
 
-		
-		glColor3f(1.0f, 1.0f, 1.0f);
-		glBegin(GL_POINTS);
-		for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
-			Group& group = object.getGroup(groupIdx);
-			std::vector<Vertex*> uniqueVertices = group.getUniqueVertices();
-			for (Vertex* vertex : uniqueVertices) {
-				glVertex3f(vertex->x, vertex->y, vertex->z);
-
-
+			if (whiteBackground) {
+				glColor3f(0.1f, 0.1f, 0.1f);
+			} else {
+				glColor3f(1.0f, 1.0f, 1.0f);
 			}
+			glBegin(GL_POINTS);
+			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+				Group& group = object.getGroup(groupIdx);
+				std::vector<Vertex*> uniqueVertices = group.getUniqueVertices();
+				for (Vertex* vertex : uniqueVertices) {
+					glVertex3f(vertex->x, vertex->y, vertex->z);
+				}
+			}
+			glEnd();
 		}
-		glEnd();
 
 		// (Removed old debug text rendering code.)
 		if (drawFaces) {
@@ -1227,17 +1245,38 @@ int main(int argc, char** argv) {
 					Vertex* vertex2 = tet->vertices[2];
 					Vertex* vertex3 = tet->vertices[3];
 
-					// 使用HSV转换为RGB创建每个组的唯一颜色
-					float hue = (360.0f * groupIdx) / groupNum;
-					float saturation = 1.0f;
-					float value = 1.0f;
+					if (showStressCloud) {
+						// Calculate physical Green Strain (invariant to rigid body motion)
+						Eigen::Matrix3f Ds;
+						Ds << vertex1->x - vertex0->x, vertex2->x - vertex0->x, vertex3->x - vertex0->x,
+							  vertex1->y - vertex0->y, vertex2->y - vertex0->y, vertex3->y - vertex0->y,
+							  vertex1->z - vertex0->z, vertex2->z - vertex0->z, vertex3->z - vertex0->z;
+						
+						Eigen::Matrix3f F = Ds * tet->invDm;
+						Eigen::Matrix3f E = 0.5f * (F.transpose() * F - Eigen::Matrix3f::Identity());
+						float stress = E.norm(); 
+						tet->lastStress = stress;
 
-					// 转换HSV为RGB
-					float red, green, blue;
-					hsvToRgb(hue, saturation, value, red, green, blue);
+						// Professional Jet Colormap (Blue -> Cyan -> Green -> Yellow -> Red)
+						float v = std::min(1.0f, stress * stressGain); 
+						float r = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 3.0f)));
+						float g = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 2.0f)));
+						float b = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 1.0f)));
+						
+						glColor3f(r, g, b);
+					} else {
+						// 使用HSV转换为RGB创建每个组的唯一颜色
+						float hue = (360.0f * groupIdx) / groupNum;
+						float saturation = 1.0f; // Full saturation for vibrant colors
+						float value = 1.0f;      // Full brightness
+
+						// 转换HSV为RGB
+						float red, green, blue;
+						hsvToRgb(hue, saturation, value, red, green, blue);
+						glColor3f(red, green, blue);
+					}
 
 					// 设置颜色并绘制四个三角形面
-					glColor3f(red, green, blue);
 					glVertex3f(vertex0->x, vertex0->y, vertex0->z);
 					glVertex3f(vertex1->x, vertex1->y, vertex1->z);
 					glVertex3f(vertex2->x, vertex2->y, vertex2->z);
@@ -1255,59 +1294,49 @@ int main(int argc, char** argv) {
 					glVertex3f(vertex3->x, vertex3->y, vertex3->z);
 				}
 			}
-
-
-		// 恢复线框模式
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
-
-
 			glEnd();
 		}
 		// Draw edges
 		if (drawEdges) {
-			glLineWidth(2.5f);  // 设置线宽为 3.0
+			glLineWidth(showStressCloud ? 1.0f : 2.5f);
 			glBegin(GL_LINES);
 
 			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
-				//float hhh;
 				Group& group = object.getGroup(groupIdx);
 				for (Tetrahedron* tet : group.tetrahedra) {
-					for (int edgeIdx = 0; edgeIdx < 6; ++edgeIdx) {  // Loop through each edge in the tetrahedron
+					for (int edgeIdx = 0; edgeIdx < 6; ++edgeIdx) {
 						Edge* edge = tet->edges[edgeIdx];
 						Vertex* vertex1 = edge->vertices[0];
 						Vertex* vertex2 = edge->vertices[1];
 						bool isSurfaceEdge = edge->isBoundary;
 
-						//Use HSV to RGB conversion to create a unique color for each group
-						float hue = (360.0f * groupIdx) / groupNum;  // Distribute hues evenly across the spectrum
-						//hhh = hue;
-						float saturation = 1.0f;  // Full saturation
-						float value = 1.0f;      // Full brightness
-
-						//Convert HSV to RGB
 						float red, green, blue;
-						hsvToRgb(hue, saturation, value, red, green, blue);
+						if (showStressCloud) {
+							// For stress cloud, draw edges in a neutral color or hide them
+							if (whiteBackground) {
+								red = green = blue = 0.8f; // Light gray on white
+							} else {
+								red = green = blue = 0.2f; // Dark gray on black
+							}
+							if (!isSurfaceEdge) continue; // Only show surface edges in stress mode
+						} else {
+							float hue = (360.0f * groupIdx) / groupNum;
+							float saturation = 1.0f;
+							float value = 1.0f;
+							hsvToRgb(hue, saturation, value, red, green, blue);
 
-						// If it's a boundary edge, you may want to adjust the color or keep as is
-						// For example, make the color brighter if it's a boundary edge
-						if (isSurfaceEdge == false) {
-							/*red = std::min(1.0f, red);
-							green = std::min(1.0f, green);
-							blue = std::min(1.0f, blue);*/
-							red = std::min(1.0f, red + 0.3f);
-							green = std::min(1.0f, green + 0.3f);
-							blue = std::min(1.0f, blue + 0.3f);
-							float darkenFactor = 0.75f; // 调整这个系数以控制颜色深浅
-							red *= darkenFactor;
-							green *= darkenFactor;
-							blue *= darkenFactor;
-
-							drawEdge(vertex1, vertex2, red, green, blue);
+							if (isSurfaceEdge == false) {
+								red = std::min(1.0f, red + 0.3f);
+								green = std::min(1.0f, green + 0.3f);
+								blue = std::min(1.0f, blue + 0.3f);
+								float darkenFactor = 0.75f;
+								red *= darkenFactor;
+								green *= darkenFactor;
+								blue *= darkenFactor;
+							}
 						}
 
-						
+						drawEdge(vertex1, vertex2, red, green, blue);
 					}
 				}
 			}
@@ -1321,6 +1350,7 @@ int main(int argc, char** argv) {
 
 		// ------------------ UI overlay (draw last)
 		ui.beginDraw2D();
+		// Left side buttons
 		// ui.drawPanelBackground(uiPanelRect); // removed
 		const bool canStartExp3 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive();
 		if (ui.button(uiRunRect, experiment3.buttonLabel(), canStartExp3)) {
@@ -1341,7 +1371,27 @@ int main(int argc, char** argv) {
 		if (ui.button(uiExp4Rect, experiment4.buttonLabel(), canStartExp4)) {
 			experiment4.requestStart();
 		}
+
+		// Right side buttons
+		const float rightMargin = ui.state().windowWidth - uiW - uiMargin;
+		const SimpleUI::Rect uiBgColorRect{ rightMargin, uiMargin, uiW, uiH };
+		if (ui.button(uiBgColorRect, whiteBackground ? "Dark Background" : "White Background")) {
+			whiteBackground = !whiteBackground;
+		}
+
+		const SimpleUI::Rect uiStressRect{ rightMargin, uiMargin + uiH + 8.0f, uiW, uiH };
+		if (ui.button(uiStressRect, showStressCloud ? "Show Groups" : "Show Stress")) {
+			showStressCloud = !showStressCloud;
+		}
+
 		ui.endDraw2D();
+
+		// Update background color
+		if (whiteBackground) {
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		} else {
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		}
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);

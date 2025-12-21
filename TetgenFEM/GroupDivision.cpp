@@ -1,4 +1,4 @@
-﻿#include "GroupDivision.h"
+#include "GroupDivision.h"
 #include "params.h"
 
 

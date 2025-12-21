@@ -45,21 +45,31 @@ unsigned int glyphSegments(char c) {
 	case '9': return SegTop | SegUpperRight | SegLowerRight | SegBottom | SegUpperLeft | SegMiddle;
 
 	case 'A': return SegTop | SegUpperLeft | SegUpperRight | SegLowerLeft | SegLowerRight | SegMiddle;
+	case 'B': return SegTop | SegUpperRight | SegLowerRight | SegBottom | SegLowerLeft | SegUpperLeft | SegMiddle;
 	case 'C': return SegTop | SegUpperLeft | SegLowerLeft | SegBottom;
 	case 'D': return SegTop | SegUpperRight | SegLowerRight | SegBottom | SegUpperLeft | SegLowerLeft;
 	case 'E': return SegTop | SegUpperLeft | SegLowerLeft | SegBottom | SegMiddle;
 	case 'F': return SegTop | SegUpperLeft | SegLowerLeft | SegMiddle;
+	case 'G': return SegTop | SegUpperLeft | SegLowerLeft | SegBottom | SegLowerRight | SegMiddle;
+	case 'H': return SegUpperLeft | SegLowerLeft | SegUpperRight | SegLowerRight | SegMiddle;
 	case 'I': return SegTop | SegBottom | SegCenter;
+	case 'J': return SegUpperRight | SegLowerRight | SegBottom | SegLowerLeft;
+	case 'K': return SegUpperLeft | SegLowerLeft | SegMiddle | SegDiagBLTR | SegDiagTLBR;
 	case 'L': return SegUpperLeft | SegLowerLeft | SegBottom;
+	case 'M': return SegUpperLeft | SegLowerLeft | SegUpperRight | SegLowerRight | SegTop | SegCenter;
+	case 'N': return SegUpperLeft | SegLowerLeft | SegUpperRight | SegLowerRight | SegDiagTLBR;
 	case 'O': return SegTop | SegUpperRight | SegLowerRight | SegBottom | SegLowerLeft | SegUpperLeft;
 	case 'P': return SegTop | SegUpperLeft | SegUpperRight | SegMiddle | SegLowerLeft;
+	case 'Q': return SegTop | SegUpperLeft | SegUpperRight | SegLowerLeft | SegLowerRight | SegBottom | SegDiagTLBR;
 	case 'R': return SegTop | SegUpperLeft | SegUpperRight | SegMiddle | SegLowerLeft | SegDiagTLBR;
 	case 'S': return SegTop | SegUpperLeft | SegMiddle | SegLowerRight | SegBottom;
 	case 'T': return SegTop | SegCenter;
 	case 'U': return SegUpperLeft | SegLowerLeft | SegBottom | SegUpperRight | SegLowerRight;
-	case 'V': return SegDiagTLBR | SegDiagBLTR;
+	case 'V': return SegUpperLeft | SegLowerLeft | SegDiagBLTR;
+	case 'W': return SegUpperLeft | SegLowerLeft | SegUpperRight | SegLowerRight | SegBottom | SegCenter;
 	case 'X': return SegDiagTLBR | SegDiagBLTR;
 	case 'Y': return SegDiagTLBR | SegDiagBLTR | SegCenter;
+	case 'Z': return SegTop | SegDiagBLTR | SegBottom;
 	case '-': return SegMiddle;
 	case '>': return SegDiagTLBR; // crude arrow
 	case '<': return SegDiagBLTR; // crude arrow
@@ -94,7 +104,7 @@ void drawSegments(unsigned int mask, float x, float y, float size, float lineWid
 
 float approximateTextWidth(const std::string& text, float sizePx) {
 	// Each glyph occupies (sizePx + spacing).
-	const float spacing = sizePx * 0.35f;
+	const float spacing = sizePx * 0.5f; // Increased spacing for better readability
 	return static_cast<float>(text.size()) * (sizePx + spacing);
 }
 
@@ -203,11 +213,11 @@ void Context::drawLabel(const Rect& rect, const std::string& label, float sizePx
 
 	glColor4f(1.0f, 1.0f, 1.0f, 0.92f);
 	float penX = x;
-	const float spacing = size * 0.35f;
+	const float spacing = size * 0.5f; // Match the updated approximateTextWidth
 	for (char c : label) {
 		unsigned int segs = glyphSegments(static_cast<char>(std::toupper(static_cast<unsigned char>(c))));
 		if (segs != 0) {
-			drawSegments(segs, penX, y, size, std::max(1.0f, size * 0.12f));
+			drawSegments(segs, penX, y, size, std::max(1.0f, size * 0.08f)); // Slightly thinner lines
 		}
 		penX += size + spacing;
 	}

@@ -76,6 +76,17 @@ Eigen::MatrixXf Tetrahedron::createElementKAni(float E1, float E2, float E3, flo
 		x3, y3, z3, 1,
 		x4, y4, z4, 1;
 
+	// Pre-calculate inverse shape matrix for stress visualization
+	Eigen::Matrix3f restDm;
+	restDm << vertices[1]->initx - vertices[0]->initx, vertices[2]->initx - vertices[0]->initx, vertices[3]->initx - vertices[0]->initx,
+		  vertices[1]->inity - vertices[0]->inity, vertices[2]->inity - vertices[0]->inity, vertices[3]->inity - vertices[0]->inity,
+		  vertices[1]->initz - vertices[0]->initz, vertices[2]->initz - vertices[0]->initz, vertices[3]->initz - vertices[0]->initz;
+	if (std::abs(restDm.determinant()) > 1e-12f) {
+		invDm = restDm.inverse();
+	} else {
+		invDm = Eigen::Matrix3f::Identity();
+	}
+
 	// ?嶼巐柺懱揑懱?
 	float V = std::abs(A.determinant() / 6);
 
@@ -211,7 +222,17 @@ Eigen::MatrixXf Tetrahedron::createElementK(float E, float nu, const Eigen::Vect
 		x3, y3, z3, 1,
 		x4, y4, z4, 1;
 
-	
+	// Pre-calculate inverse shape matrix for stress visualization
+	Eigen::Matrix3f restDm;
+	restDm << vertices[1]->initx - vertices[0]->initx, vertices[2]->initx - vertices[0]->initx, vertices[3]->initx - vertices[0]->initx,
+		  vertices[1]->inity - vertices[0]->inity, vertices[2]->inity - vertices[0]->inity, vertices[3]->inity - vertices[0]->inity,
+		  vertices[1]->initz - vertices[0]->initz, vertices[2]->initz - vertices[0]->initz, vertices[3]->initz - vertices[0]->initz;
+	if (std::abs(restDm.determinant()) > 1e-12f) {
+		invDm = restDm.inverse();
+	} else {
+		invDm = Eigen::Matrix3f::Identity();
+	}
+
 	float V = std::abs(A.determinant() / 6);
 
 	
@@ -302,7 +323,17 @@ Eigen::MatrixXf Tetrahedron::createElementKFEM(float E, float nu) {
 		x3, y3, z3, 1,
 		x4, y4, z4, 1;
 
-	
+	// Pre-calculate inverse shape matrix for stress visualization
+	Eigen::Matrix3f restDm;
+	restDm << vertices[1]->initx - vertices[0]->initx, vertices[2]->initx - vertices[0]->initx, vertices[3]->initx - vertices[0]->initx,
+		  vertices[1]->inity - vertices[0]->inity, vertices[2]->inity - vertices[0]->inity, vertices[3]->inity - vertices[0]->inity,
+		  vertices[1]->initz - vertices[0]->initz, vertices[2]->initz - vertices[0]->initz, vertices[3]->initz - vertices[0]->initz;
+	if (std::abs(restDm.determinant()) > 1e-12f) {
+		invDm = restDm.inverse();
+	} else {
+		invDm = Eigen::Matrix3f::Identity();
+	}
+
 	float V = std::abs(A.determinant() / 6);
 
 	

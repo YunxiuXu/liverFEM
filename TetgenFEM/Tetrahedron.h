@@ -25,6 +25,8 @@ public:
 	Edge* edges[6];  // Each tetrahedron has six edges
 	float massTetra;
 	float volumeTetra;
+	float lastStress = 0.0f;
+	Eigen::Matrix3f invDm; // Inverse of rest shape matrix for strain calculation
 	Eigen::MatrixXf elementK;
 	Eigen::MatrixXf elementKFEM;
 
