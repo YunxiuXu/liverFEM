@@ -827,6 +827,7 @@ int main(int argc, char** argv) {
 	static bool showExplodedView = false;
 	static bool showFiberFlow = false;
 	static bool showGhostLinks = false;
+	static bool showVolumePreservation = false; // Volume preservation visualization mode
 	static int anisoDemoState = 0; // 0: Off, 1: Isotropic Demo, 2: Anisotropic Demo
 	static Vertex* anisoDemoVertex = nullptr;
 	static float anisoDemoForceMag = 2700.0f; 
@@ -835,6 +836,11 @@ int main(int argc, char** argv) {
 	static bool whiteBackground = false;
 	static bool isPaused = false; // Pause physics simulation
 	static float stressGain = 4.0f; // Added for interactive tuning (reduced to 2/3 of original 15.0)
+	
+	// Volume preservation state
+	static float planeConstraintY = 0.0f; // Y coordinate of the constraint plane
+	static float initialVolume = 0.0f; // Store initial volume when mode is activated
+	static std::vector<Eigen::Vector3f> initialPositions; // Store initial positions for comparison
 
 	int frame = 1;
 	SimpleUI::Context ui;
@@ -1222,12 +1228,41 @@ int main(int argc, char** argv) {
 			}
 			object.PBDLOOP(pbdIterations);
 			experiment2.onAfterPhysics();
+			
+			// Apply plane constraint for volume preservation visualization
+			if (showVolumePreservation) {
+				// Find vertices that penetrate the plane and project them back
+				for (int i = 0; i < object.groupNum; ++i) {
+					Group& group = object.groups[i];
+					for (const auto& vertexPair : group.verticesMap) {
+						Vertex* vertex = vertexPair.second;
+						if (!vertex->isFixed && vertex->y > planeConstraintY) {
+							// Project vertex to the plane
+							vertex->y = planeConstraintY;
+							// Also zero out velocity in Y direction to prevent bouncing
+							vertex->vely = 0.0f;
+						}
+					}
+				}
+			}
 		}
 
 		// Update COM for all groups to ensure correct stress cloud visualization
 		if (showStressCloud) {
 			for (int i = 0; i < object.groupNum; ++i) {
 				object.groups[i].calCenterofMass();
+			}
+		}
+		
+		// Calculate current volume for volume preservation visualization
+		static float currentVolume = 0.0f;
+		if (showVolumePreservation) {
+			currentVolume = 0.0f;
+			for (int i = 0; i < object.groupNum; ++i) {
+				Group& group = object.groups[i];
+				for (Tetrahedron* tet : group.tetrahedra) {
+					currentVolume += tet->calVolumeTetra();
+				}
 			}
 		}
 
@@ -1278,8 +1313,10 @@ int main(int argc, char** argv) {
 		
 		drawAxis(0.3f);
 		//std::cout << getRotationAngleZ(object.groups[0].rotate_matrix) << std::endl;;
-		// Enable wireframe mode
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		// Enable wireframe mode (unless in volume preservation mode which needs filled faces)
+		if (!showVolumePreservation) {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
@@ -1288,8 +1325,29 @@ int main(int argc, char** argv) {
 		glMultMatrixf(mat.data());
 
 
-		// Draw vertices
-		if (!showStressCloud) { // Only draw vertices if not in stress mode
+		// Draw constraint plane for volume preservation mode
+		if (showVolumePreservation && planeConstraintY > 0.0f) {
+			glDisable(GL_DEPTH_TEST);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glBegin(GL_QUADS);
+			// Draw a semi-transparent plane
+			if (whiteBackground) {
+				glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
+			} else {
+				glColor4f(0.8f, 0.8f, 0.8f, 0.5f);
+			}
+			// Draw a large plane (extend beyond liver bounds)
+			float planeSize = 2.0f;
+			glVertex3f(-planeSize, planeConstraintY, -planeSize);
+			glVertex3f(planeSize, planeConstraintY, -planeSize);
+			glVertex3f(planeSize, planeConstraintY, planeSize);
+			glVertex3f(-planeSize, planeConstraintY, planeSize);
+			glEnd();
+			glEnable(GL_DEPTH_TEST);
+		}
+		
+		// Draw vertices (skip in stress/volume preservation modes for cleaner visualization)
+		if (!showStressCloud && !showVolumePreservation) {
 			glPointSize(5.0f);
 
 			if (whiteBackground) {
@@ -1315,7 +1373,13 @@ int main(int argc, char** argv) {
 		// (Removed old debug text rendering code.)
 		if (drawFaces) {
 			// Pre-calculate smooth vertex stress if needed
-			if (showStressCloud) {
+			if (showVolumePreservation) {
+				// Use filled mode for volume preservation visualization
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				// Enable blending for semi-transparent initial outline
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			} else if (showStressCloud) {
 				// 1. Reset vertex accumulators (Parallelized)
 				#pragma omp parallel for
 				for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
@@ -1400,7 +1464,15 @@ int main(int argc, char** argv) {
 
 					auto setVertexColor = [&](Vertex* vert) {
 						float alpha = showFiberFlow ? 0.4f : 1.0f;
-						if (showStressCloud) {
+						if (showVolumePreservation) {
+							// Color code based on volume preservation: green = good, red = volume loss
+							float volumeRatio = (initialVolume > 1e-6f) ? (currentVolume / initialVolume) : 1.0f;
+							// Map volume ratio to color: 1.0 = green, < 0.95 = red
+							float r = std::max(0.0f, std::min(1.0f, 2.0f * (1.0f - volumeRatio)));
+							float g = std::max(0.0f, std::min(1.0f, 2.0f * (volumeRatio - 0.5f)));
+							float b = 0.2f;
+							glColor4f(r, g, b, alpha);
+						} else if (showStressCloud) {
 							float avgStress = vert->connectedTets > 0 ? vert->lastStress / vert->connectedTets : 0.0f;
 							float v = std::min(1.0f, avgStress * stressGain); 
 							float r = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 3.0f)));
@@ -1446,9 +1518,61 @@ int main(int argc, char** argv) {
 				}
 			}
 			glEnd();
+			
+			// Draw initial outline for volume preservation comparison (wireframe of initial shape)
+			if (showVolumePreservation && !initialPositions.empty()) {
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glLineWidth(1.5f);
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				if (whiteBackground) {
+					glColor4f(0.3f, 0.3f, 0.3f, 0.4f); // Dark gray outline on white
+				} else {
+					glColor4f(0.7f, 0.7f, 0.7f, 0.4f); // Light gray outline on black
+				}
+				glBegin(GL_TRIANGLES);
+				int posIdx = 0;
+				for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+					Group& group = object.getGroup(groupIdx);
+					for (Tetrahedron* tet : group.tetrahedra) {
+						// Draw wireframe using initial positions (initx, inity, initz)
+						Vertex* v[4] = {tet->vertices[0], tet->vertices[1], tet->vertices[2], tet->vertices[3]};
+						
+						// Face 1: vertices 0, 1, 2
+						glVertex3f(v[0]->initx, v[0]->inity, v[0]->initz);
+						glVertex3f(v[1]->initx, v[1]->inity, v[1]->initz);
+						glVertex3f(v[2]->initx, v[2]->inity, v[2]->initz);
+						
+						// Face 2: vertices 0, 1, 3
+						glVertex3f(v[0]->initx, v[0]->inity, v[0]->initz);
+						glVertex3f(v[1]->initx, v[1]->inity, v[1]->initz);
+						glVertex3f(v[3]->initx, v[3]->inity, v[3]->initz);
+						
+						// Face 3: vertices 0, 2, 3
+						glVertex3f(v[0]->initx, v[0]->inity, v[0]->initz);
+						glVertex3f(v[2]->initx, v[2]->inity, v[2]->initz);
+						glVertex3f(v[3]->initx, v[3]->inity, v[3]->initz);
+						
+						// Face 4: vertices 1, 2, 3
+						glVertex3f(v[1]->initx, v[1]->inity, v[1]->initz);
+						glVertex3f(v[2]->initx, v[2]->inity, v[2]->initz);
+						glVertex3f(v[3]->initx, v[3]->inity, v[3]->initz);
+					}
+				}
+				glEnd();
+				glDisable(GL_BLEND);
+				// Restore filled mode for main rendering (edges will be drawn separately)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
+			
 			if (showFiberFlow) {
 				glDisable(GL_BLEND);
 			}
+		}
+		
+		// Restore wireframe mode after volume preservation rendering (if not in volume mode)
+		if (!showVolumePreservation) {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
 		// Draw edges
 		if (drawEdges) {
@@ -1691,16 +1815,59 @@ int main(int argc, char** argv) {
 		const SimpleUI::Rect uiExplodedRect{ rightMargin, uiMargin + 4.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiExplodedRect, showExplodedView ? "Show Integrated" : "Exploded View")) {
 			showExplodedView = !showExplodedView;
-			if (showExplodedView) showStressCloud = false; 
+			if (showExplodedView) {
+				showStressCloud = false;
+				showVolumePreservation = false;
+			}
 		}
 
-		const SimpleUI::Rect uiPauseRect{ rightMargin, uiMargin + 5.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiVolumePreservationRect{ rightMargin, uiMargin + 5.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiVolumePreservationRect, showVolumePreservation ? "Hide Volume Test" : "Volume Test")) {
+			showVolumePreservation = !showVolumePreservation;
+			if (showVolumePreservation) {
+				// Disable other visualization modes
+				showStressCloud = false;
+				showExplodedView = false;
+				showFiberFlow = false;
+				showGhostLinks = false;
+				
+				// Calculate initial volume and store initial positions
+				initialVolume = 0.0f;
+				initialPositions.clear();
+				for (int i = 0; i < object.groupNum; ++i) {
+					Group& group = object.groups[i];
+					for (Tetrahedron* tet : group.tetrahedra) {
+						initialVolume += tet->calVolumeTetra();
+					}
+					for (const auto& vertexPair : group.verticesMap) {
+						Vertex* vertex = vertexPair.second;
+						initialPositions.push_back(Eigen::Vector3f(vertex->initx, vertex->inity, vertex->initz));
+					}
+				}
+				
+				// Find the top of the liver (max Y) and set plane constraint slightly below it
+				float maxY = -std::numeric_limits<float>::max();
+				for (const auto* v : objectUniqueVertices) {
+					maxY = std::max(maxY, v->inity);
+				}
+				// Set plane at 80% of the height (to create visible compression)
+				planeConstraintY = maxY * 0.8f;
+				
+				std::cout << "[Volume Preservation] Mode activated. Initial volume: " << initialVolume 
+				          << ", Plane constraint Y: " << planeConstraintY << std::endl;
+			} else {
+				// Reset plane constraint when deactivated
+				planeConstraintY = 0.0f;
+			}
+		}
+
+		const SimpleUI::Rect uiPauseRect{ rightMargin, uiMargin + 6.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiPauseRect, isPaused ? "Resume(P)" : "Pause(P)")) {
 			isPaused = !isPaused;
 		}
 
 		// --- NEW: Anisotropy Comparison Mode Button (3-State Cycle) ---
-		const SimpleUI::Rect uiAnisoModeRect{ rightMargin, uiMargin + 6.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiAnisoModeRect{ rightMargin, uiMargin + 7.0f * (uiH + 8.0f), uiW, uiH };
 		const char* anisoLabel = "Demo: OFF";
 		if (anisoDemoState == 1) anisoLabel = "Demo: Isotropic";
 		else if (anisoDemoState == 2) anisoLabel = "Demo: Anisotropic";
