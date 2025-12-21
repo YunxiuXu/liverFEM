@@ -488,15 +488,36 @@ void Object::PBDLOOP(int looptime) {
 		g.updateVelocity();
 		g.updatePosition();
 		g.prevFbind = g.Fbind;
-		/*g.groupVolume = 0.0f;
-		for (auto& tet : g.tetrahedra) {
-			float tetMass = tet->calMassTetra(1000);
-			g.groupVolume += tet->volumeTetra;
-		}*/
-		/*float bodyVolume = 0.0f;
-		bodyVolume += g.groupVolume;
-		std::cout << bodyVolume << std::endl;*/
-		//g.calRInvLocalPos();
+	}
+
+	// 方案 1：硬平均同步策略 (Visual Hack)
+	// 在所有 PBD 迭代和位置更新完成后，强制同步相邻组的界面顶点位置
+	// 这能 100% 消除因数值误差导致的接缝裂开
+	for (int i = 0; i < groupNum; ++i) {
+		for (int direction = 0; direction < 6; ++direction) {
+			int adjacentGroupIdx = groups[i].adjacentGroupIDs[direction];
+			// 只处理索引比自己大的邻居，避免重复计算
+			if (adjacentGroupIdx != -1 && adjacentGroupIdx > i) {
+				const auto& commonVerticesPair = groups[i].commonVerticesInDirections[direction];
+				const auto& vList1 = commonVerticesPair.first;
+				const auto& vList2 = commonVerticesPair.second;
+
+				for (size_t k = 0; k < vList1.size(); ++k) {
+					Vertex* v1 = vList1[k];
+					Vertex* v2 = vList2[k];
+					
+					// 计算两个物理相同顶点的平均位置
+					float avgX = (v1->x + v2->x) * 0.5f;
+					float avgY = (v1->y + v2->y) * 0.5f;
+					float avgZ = (v1->z + v2->z) * 0.5f;
+
+					// 强制设为一致
+					v1->x = v2->x = avgX;
+					v1->y = v2->y = avgY;
+					v1->z = v2->z = avgZ;
+				}
+			}
+		}
 	}
 
 	//calDistance(commonPoints);

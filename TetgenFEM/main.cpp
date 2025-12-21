@@ -825,7 +825,7 @@ int main(int argc, char** argv) {
 	// Display states
 	static bool showStressCloud = false;
 	static bool whiteBackground = false;
-	static float stressGain = 15.0f; // Added for interactive tuning
+	static float stressGain = 5.0f; // Added for interactive tuning (reduced to 2/3 of original 15.0)
 
 	int frame = 1;
 	SimpleUI::Context ui;
@@ -1235,18 +1235,26 @@ int main(int argc, char** argv) {
 
 		// (Removed old debug text rendering code.)
 		if (drawFaces) {
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glBegin(GL_TRIANGLES);
-			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
-				Group& group = object.getGroup(groupIdx);
-				for (Tetrahedron* tet : group.tetrahedra) {
-					Vertex* vertex0 = tet->vertices[0];
-					Vertex* vertex1 = tet->vertices[1];
-					Vertex* vertex2 = tet->vertices[2];
-					Vertex* vertex3 = tet->vertices[3];
+			// Pre-calculate smooth vertex stress if needed
+			if (showStressCloud) {
+				// Reset vertex accumulators
+				for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+					Group& group = object.getGroup(groupIdx);
+					for (auto& pair : group.verticesMap) {
+						pair.second->lastStress = 0.0f;
+						pair.second->connectedTets = 0;
+					}
+				}
 
-					if (showStressCloud) {
-						// Calculate physical Green Strain (invariant to rigid body motion)
+				// Accumulate stress from tetrahedra to vertices with temporal smoothing
+				for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+					Group& group = object.getGroup(groupIdx);
+					for (Tetrahedron* tet : group.tetrahedra) {
+						Vertex* vertex0 = tet->vertices[0];
+						Vertex* vertex1 = tet->vertices[1];
+						Vertex* vertex2 = tet->vertices[2];
+						Vertex* vertex3 = tet->vertices[3];
+
 						Eigen::Matrix3f Ds;
 						Ds << vertex1->x - vertex0->x, vertex2->x - vertex0->x, vertex3->x - vertex0->x,
 							  vertex1->y - vertex0->y, vertex2->y - vertex0->y, vertex3->y - vertex0->y,
@@ -1254,44 +1262,63 @@ int main(int argc, char** argv) {
 						
 						Eigen::Matrix3f F = Ds * tet->invDm;
 						Eigen::Matrix3f E = 0.5f * (F.transpose() * F - Eigen::Matrix3f::Identity());
-						float stress = E.norm(); 
-						tet->lastStress = stress;
-
-						// Professional Jet Colormap (Blue -> Cyan -> Green -> Yellow -> Red)
-						float v = std::min(1.0f, stress * stressGain); 
-						float r = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 3.0f)));
-						float g = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 2.0f)));
-						float b = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 1.0f)));
+						float currentStress = E.norm(); 
 						
-						glColor3f(r, g, b);
-					} else {
-						// 使用HSV转换为RGB创建每个组的唯一颜色
-						float hue = (360.0f * groupIdx) / groupNum;
-						float saturation = 1.0f; // Full saturation for vibrant colors
-						float value = 1.0f;      // Full brightness
+						// Temporal Smoothing: alpha * current + (1-alpha) * last
+						tet->lastStress = 0.15f * currentStress + 0.85f * tet->lastStress;
 
-						// 转换HSV为RGB
-						float red, green, blue;
-						hsvToRgb(hue, saturation, value, red, green, blue);
-						glColor3f(red, green, blue);
+						for (int i = 0; i < 4; ++i) {
+							tet->vertices[i]->lastStress += tet->lastStress;
+							tet->vertices[i]->connectedTets++;
+						}
 					}
+				}
+			}
 
-					// 设置颜色并绘制四个三角形面
-					glVertex3f(vertex0->x, vertex0->y, vertex0->z);
-					glVertex3f(vertex1->x, vertex1->y, vertex1->z);
-					glVertex3f(vertex2->x, vertex2->y, vertex2->z);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glBegin(GL_TRIANGLES);
+			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+				Group& group = object.getGroup(groupIdx);
+				for (Tetrahedron* tet : group.tetrahedra) {
+					Vertex* v[4] = { tet->vertices[0], tet->vertices[1], tet->vertices[2], tet->vertices[3] };
 
-					glVertex3f(vertex0->x, vertex0->y, vertex0->z);
-					glVertex3f(vertex1->x, vertex1->y, vertex1->z);
-					glVertex3f(vertex3->x, vertex3->y, vertex3->z);
+					auto setVertexColor = [&](Vertex* vert) {
+						if (showStressCloud) {
+							float avgStress = vert->connectedTets > 0 ? vert->lastStress / vert->connectedTets : 0.0f;
+							float v = std::min(1.0f, avgStress * stressGain); 
+							float r = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 3.0f)));
+							float g = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 2.0f)));
+							float b = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 1.0f)));
+							glColor3f(r, g, b);
+						} else {
+							float hue = (360.0f * groupIdx) / groupNum;
+							float saturation = 1.0f; 
+							float value = 1.0f;
+							float red, green, blue;
+							hsvToRgb(hue, saturation, value, red, green, blue);
+							glColor3f(red, green, blue);
+						}
+					};
 
-					glVertex3f(vertex0->x, vertex0->y, vertex0->z);
-					glVertex3f(vertex2->x, vertex2->y, vertex2->z);
-					glVertex3f(vertex3->x, vertex3->y, vertex3->z);
+					// Face 1
+					setVertexColor(v[0]); glVertex3f(v[0]->x, v[0]->y, v[0]->z);
+					setVertexColor(v[1]); glVertex3f(v[1]->x, v[1]->y, v[1]->z);
+					setVertexColor(v[2]); glVertex3f(v[2]->x, v[2]->y, v[2]->z);
 
-					glVertex3f(vertex1->x, vertex1->y, vertex1->z);
-					glVertex3f(vertex2->x, vertex2->y, vertex2->z);
-					glVertex3f(vertex3->x, vertex3->y, vertex3->z);
+					// Face 2
+					setVertexColor(v[0]); glVertex3f(v[0]->x, v[0]->y, v[0]->z);
+					setVertexColor(v[1]); glVertex3f(v[1]->x, v[1]->y, v[1]->z);
+					setVertexColor(v[3]); glVertex3f(v[3]->x, v[3]->y, v[3]->z);
+
+					// Face 3
+					setVertexColor(v[0]); glVertex3f(v[0]->x, v[0]->y, v[0]->z);
+					setVertexColor(v[2]); glVertex3f(v[2]->x, v[2]->y, v[2]->z);
+					setVertexColor(v[3]); glVertex3f(v[3]->x, v[3]->y, v[3]->z);
+
+					// Face 4
+					setVertexColor(v[1]); glVertex3f(v[1]->x, v[1]->y, v[1]->z);
+					setVertexColor(v[2]); glVertex3f(v[2]->x, v[2]->y, v[2]->z);
+					setVertexColor(v[3]); glVertex3f(v[3]->x, v[3]->y, v[3]->z);
 				}
 			}
 			glEnd();
