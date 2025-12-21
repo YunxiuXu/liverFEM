@@ -86,7 +86,7 @@ TetGenFEM 采用**运行时动态生成网格**的策略：
 
 ![Comparison FPS](../out/experiment4/comparison_fps.png)
 
-*   **TetGenFEM (红色)**: 性能曲线平滑。在 35k 规模下仍能保持约 **20 FPS**，在 20k 以下规模则轻松突破 **200 FPS**。
+*   **TetGenFEM (红色)**: 性能曲线平滑。在 35k 规模下仍能保持约 **20 FPS**，在 ~8k 规模下达到 **220 FPS**。
 *   **VegaFEM (绿色)**: 性能随网格规模增加呈指数级下降。在 62k 规模下仅有 **1.15 FPS**，处于不可交互状态。
 *   **XPBD Reference (蓝色实线)**: 在高精度要求下，性能始终低于 TetGenFEM。
 

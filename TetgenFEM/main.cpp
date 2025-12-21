@@ -825,6 +825,7 @@ int main(int argc, char** argv) {
 	// Display states
 	static bool showStressCloud = false;
 	static bool whiteBackground = false;
+	static bool isPaused = false; // Pause physics simulation
 	static float stressGain = 4.0f; // Added for interactive tuning (reduced to 2/3 of original 15.0)
 
 	int frame = 1;
@@ -908,13 +909,13 @@ int main(int argc, char** argv) {
 		};
 		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
 
-		// Press 'P' to export current (possibly deformed) tet mesh to .node/.ele for XPBD/PBD.
+		// Press 'E' to export current (possibly deformed) tet mesh to .node/.ele for XPBD/PBD.
 		static KeyLatch exportLatch;
-		if (exportLatch.consume(window, GLFW_KEY_P)) {
+		if (exportLatch.consume(window, GLFW_KEY_E)) {
 			try {
 				const std::string exportDir = exportDirOverride.empty() ? "out/tetgenfem_exports" : exportDirOverride;
 				const auto paths = exportTetgenNodeEleSnapshot(object, objectUniqueVertices, exportDir, "latest");
-				std::cout << "[TetgenFEM] Exported current TetGen mesh (P)\n"
+				std::cout << "[TetgenFEM] Exported current TetGen mesh (E)\n"
 						  << "  " << paths.nodePathAbs << "\n"
 						  << "  " << paths.elePathAbs << "\n";
 			}
@@ -1077,7 +1078,7 @@ int main(int argc, char** argv) {
 				}
 			}
 
-			if (processPhysics && dragState.active) {
+			if (processPhysics && dragState.active && !isPaused) {
 				const float influenceRadius = dragInfluenceRadius;
 				const float stiffness = dragStiffness;
 				const float maxAccel = dragMaxAccel;
@@ -1134,38 +1135,42 @@ int main(int argc, char** argv) {
 
 		static bool drawFaces = true;
 		static bool drawEdges = true;
+		
+		// Physics update only when not paused
+		if (!isPaused) {
 #pragma omp parallel for
-		for (int i = 0; i < groupNum; i++) {
-			//object.groups[i].calGroupKFEM(youngs, poisson);
-			object.groups[i].calPrimeVec(inputForce, dragForces);
-			//object.groups[i].calPrimeVecS(topVertexLocalIndices, bottomVertexLocalIndices);
-			//object.groups[i].calPrimeVec2(wKey);
-			//object.groups[i].calPrimeVec(wKey);
-			//object.groups[i].calPrimeVecT(wKey);
-			/*object.groups[i].calLHSFEM();
-			object.groups[i].calRHSFEM();
-			object.groups[i].calDeltaXFEM();
-			object.groups[i].calculateCurrentPositionsFEM();
-			object.groups[i].updateVelocityFEM();
-			object.groups[i].updatePositionFEM();*/
+			for (int i = 0; i < groupNum; i++) {
+				//object.groups[i].calGroupKFEM(youngs, poisson);
+				object.groups[i].calPrimeVec(inputForce, dragForces);
+				//object.groups[i].calPrimeVecS(topVertexLocalIndices, bottomVertexLocalIndices);
+				//object.groups[i].calPrimeVec2(wKey);
+				//object.groups[i].calPrimeVec(wKey);
+				//object.groups[i].calPrimeVecT(wKey);
+				/*object.groups[i].calLHSFEM();
+				object.groups[i].calRHSFEM();
+				object.groups[i].calDeltaXFEM();
+				object.groups[i].calculateCurrentPositionsFEM();
+				object.groups[i].updateVelocityFEM();
+				object.groups[i].updatePositionFEM();*/
 
-			object.groups[i].calRotationMatrix(frame);
+				object.groups[i].calRotationMatrix(frame);
 
+			}
+			/*for (int i = 0; i < groupNum; i++) {
+				std::cout << "Group" << i << "Prime vector is" << std::endl << object.groups[i].primeVec;
+			}*/
+
+
+			static int defaultPbdIterations = 10;
+			int pbdIterations = defaultPbdIterations;
+			if (experiment1.isActive()) {
+				pbdIterations = experiment1.pbdIterationsThisFrame(defaultPbdIterations);
+			} else if (experiment2.isActive()) {
+				pbdIterations = experiment2.pbdIterationsThisFrame(defaultPbdIterations);
+			}
+			object.PBDLOOP(pbdIterations);
+			experiment2.onAfterPhysics();
 		}
-		/*for (int i = 0; i < groupNum; i++) {
-			std::cout << "Group" << i << "Prime vector is" << std::endl << object.groups[i].primeVec;
-		}*/
-
-
-		static int defaultPbdIterations = 10;
-		int pbdIterations = defaultPbdIterations;
-		if (experiment1.isActive()) {
-			pbdIterations = experiment1.pbdIterationsThisFrame(defaultPbdIterations);
-		} else if (experiment2.isActive()) {
-			pbdIterations = experiment2.pbdIterationsThisFrame(defaultPbdIterations);
-		}
-		object.PBDLOOP(pbdIterations);
-		experiment2.onAfterPhysics();
 
 		// Update COM for all groups to ensure correct stress cloud visualization
 		if (showStressCloud) {
@@ -1195,6 +1200,12 @@ int main(int argc, char** argv) {
 		// Handle stress gain tuning via keyboard
 		if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS) stressGain *= 1.02f; // '+' key
 		if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) stressGain *= 0.98f; // '-' key
+
+		// Handle pause/resume via keyboard (P key)
+		static KeyLatch pauseLatch;
+		if (pauseLatch.consume(window, GLFW_KEY_P)) {
+			isPaused = !isPaused;
+		}
 
 		// Render here
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1429,6 +1440,11 @@ int main(int argc, char** argv) {
 		const SimpleUI::Rect uiStressRect{ rightMargin, uiMargin + uiH + 8.0f, uiW, uiH };
 		if (ui.button(uiStressRect, showStressCloud ? "Show Groups" : "Show Stress")) {
 			showStressCloud = !showStressCloud;
+		}
+
+		const SimpleUI::Rect uiPauseRect{ rightMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiPauseRect, isPaused ? "Resume(P)" : "Pause(P)")) {
+			isPaused = !isPaused;
 		}
 
 		ui.endDraw2D();
