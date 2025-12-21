@@ -1,0 +1,12 @@
+experiment=Experiment4_Performance
+warmup_steps=50
+measure_steps=100
+total_runs=6
+timestamp=20251221_152419
+sequence=
+  0: Liver_Low threads=1 scene=PositionBasedDynamics/data/scenes/Liver_Low_XPBD.json
+  1: Liver_Low threads=10 scene=PositionBasedDynamics/data/scenes/Liver_Low_XPBD.json
+  2: Liver_Mid threads=1 scene=PositionBasedDynamics/data/scenes/Liver_Mid_XPBD.json
+  3: Liver_Mid threads=10 scene=PositionBasedDynamics/data/scenes/Liver_Mid_XPBD.json
+  4: Liver_High threads=1 scene=PositionBasedDynamics/data/scenes/Liver_High_XPBD.json
+  5: Liver_High threads=10 scene=PositionBasedDynamics/data/scenes/Liver_High_XPBD.json

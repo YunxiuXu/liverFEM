@@ -38,5 +38,17 @@
       "testMesh": 1
     }
   ],
-  "RigidBodies": []
+  "RigidBodies": [],
+  "BallJoints": [],
+  "BallOnLineJoints": [],
+  "DamperJoints": [],
+  "DistanceJoints": [],
+  "HingeJoints": [],
+  "UniversalJoints": [],
+  "SliderJoints": [],
+  "TargetAngleMotorHingeJoints": [],
+  "TargetVelocityMotorHingeJoints": [],
+  "TargetPositionMotorSliderJoints": [],
+  "TargetVelocityMotorSliderJoints": [],
+  "RigidBodyParticleBallJoints": []
 }
