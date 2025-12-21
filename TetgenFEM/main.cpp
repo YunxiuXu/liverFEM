@@ -824,6 +824,8 @@ int main(int argc, char** argv) {
 
 	// Display states
 	static bool showStressCloud = false;
+	static bool showExplodedView = false;
+	static float explodedScale = 0.5f;
 	static bool whiteBackground = false;
 	static bool isPaused = false; // Pause physics simulation
 	static float stressGain = 4.0f; // Added for interactive tuning (reduced to 2/3 of original 15.0)
@@ -1210,6 +1212,18 @@ int main(int argc, char** argv) {
 		// Render here
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
+
+		static Eigen::Vector3f globalInitCOM = Eigen::Vector3f::Zero();
+		static bool comCalculated = false;
+		if (!comCalculated && object.groupNum > 0) {
+			float totalMass = 0.0f;
+			for (int i = 0; i < object.groupNum; ++i) {
+				globalInitCOM += object.getGroup(i).initCOM * object.getGroup(i).groupMass;
+				totalMass += object.getGroup(i).groupMass;
+			}
+			if (totalMass > 0) globalInitCOM /= totalMass;
+			comCalculated = true;
+		}
 		//drawAxis1(0.3f, object.groups[0].rotate_matrix);
 		
 		drawAxis(0.3f);
@@ -1236,9 +1250,13 @@ int main(int argc, char** argv) {
 			glBegin(GL_POINTS);
 			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 				Group& group = object.getGroup(groupIdx);
+				Eigen::Vector3f offset = Eigen::Vector3f::Zero();
+				if (showExplodedView) {
+					offset = (group.initCOM - globalInitCOM) * explodedScale;
+				}
 				std::vector<Vertex*> uniqueVertices = group.getUniqueVertices();
 				for (Vertex* vertex : uniqueVertices) {
-					glVertex3f(vertex->x, vertex->y, vertex->z);
+					glVertex3f(vertex->x + offset.x(), vertex->y + offset.y(), vertex->z + offset.z());
 				}
 			}
 			glEnd();
@@ -1310,6 +1328,10 @@ int main(int argc, char** argv) {
 			glBegin(GL_TRIANGLES);
 			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 				Group& group = object.getGroup(groupIdx);
+				Eigen::Vector3f offset = Eigen::Vector3f::Zero();
+				if (showExplodedView) {
+					offset = (group.initCOM - globalInitCOM) * explodedScale;
+				}
 				for (Tetrahedron* tet : group.tetrahedra) {
 					Vertex* v[4] = { tet->vertices[0], tet->vertices[1], tet->vertices[2], tet->vertices[3] };
 
@@ -1321,6 +1343,13 @@ int main(int argc, char** argv) {
 							float g = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 2.0f)));
 							float b = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 1.0f)));
 							glColor3f(r, g, b);
+						} else if (showExplodedView) {
+							float hue = (360.0f * groupIdx) / groupNum;
+							float saturation = 0.45f; 
+							float value = 0.95f;
+							float red, green, blue;
+							hsvToRgb(hue, saturation, value, red, green, blue);
+							glColor3f(red, green, blue);
 						} else {
 							float hue = (360.0f * groupIdx) / groupNum;
 							float saturation = 1.0f; 
@@ -1332,24 +1361,24 @@ int main(int argc, char** argv) {
 					};
 
 					// Face 1
-					setVertexColor(v[0]); glVertex3f(v[0]->x, v[0]->y, v[0]->z);
-					setVertexColor(v[1]); glVertex3f(v[1]->x, v[1]->y, v[1]->z);
-					setVertexColor(v[2]); glVertex3f(v[2]->x, v[2]->y, v[2]->z);
+					setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
+					setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
+					setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
 
 					// Face 2
-					setVertexColor(v[0]); glVertex3f(v[0]->x, v[0]->y, v[0]->z);
-					setVertexColor(v[1]); glVertex3f(v[1]->x, v[1]->y, v[1]->z);
-					setVertexColor(v[3]); glVertex3f(v[3]->x, v[3]->y, v[3]->z);
+					setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
+					setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
+					setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
 
 					// Face 3
-					setVertexColor(v[0]); glVertex3f(v[0]->x, v[0]->y, v[0]->z);
-					setVertexColor(v[2]); glVertex3f(v[2]->x, v[2]->y, v[2]->z);
-					setVertexColor(v[3]); glVertex3f(v[3]->x, v[3]->y, v[3]->z);
+					setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
+					setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
+					setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
 
 					// Face 4
-					setVertexColor(v[1]); glVertex3f(v[1]->x, v[1]->y, v[1]->z);
-					setVertexColor(v[2]); glVertex3f(v[2]->x, v[2]->y, v[2]->z);
-					setVertexColor(v[3]); glVertex3f(v[3]->x, v[3]->y, v[3]->z);
+					setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
+					setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
+					setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
 				}
 			}
 			glEnd();
@@ -1361,6 +1390,10 @@ int main(int argc, char** argv) {
 
 			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
 				Group& group = object.getGroup(groupIdx);
+				Eigen::Vector3f offset = Eigen::Vector3f::Zero();
+				if (showExplodedView) {
+					offset = (group.initCOM - globalInitCOM) * explodedScale;
+				}
 				for (Tetrahedron* tet : group.tetrahedra) {
 					for (int edgeIdx = 0; edgeIdx < 6; ++edgeIdx) {
 						Edge* edge = tet->edges[edgeIdx];
@@ -1379,8 +1412,8 @@ int main(int argc, char** argv) {
 							if (!isSurfaceEdge) continue; // Only show surface edges in stress mode
 						} else {
 							float hue = (360.0f * groupIdx) / groupNum;
-							float saturation = 1.0f;
-							float value = 1.0f;
+							float saturation = showExplodedView ? 0.45f : 1.0f;
+							float value = showExplodedView ? 0.8f : 1.0f;
 							hsvToRgb(hue, saturation, value, red, green, blue);
 
 							if (isSurfaceEdge == false) {
@@ -1394,7 +1427,38 @@ int main(int argc, char** argv) {
 							}
 						}
 
-						drawEdge(vertex1, vertex2, red, green, blue);
+						glColor3f(red, green, blue);
+						glVertex3f(vertex1->x + offset.x(), vertex1->y + offset.y(), vertex1->z + offset.z());
+						glVertex3f(vertex2->x + offset.x(), vertex2->y + offset.y(), vertex2->z + offset.z());
+					}
+				}
+			}
+			glEnd();
+		}
+
+		// Draw Ghost Vertices (Connections between exploded groups)
+		if (showExplodedView) {
+			glLineWidth(2.5f);
+			glBegin(GL_LINES);
+			// Yellowish color for connections
+			if (whiteBackground) glColor3f(0.8f, 0.7f, 0.0f);
+			else glColor3f(1.0f, 1.0f, 0.0f);
+
+			for (int i = 0; i < groupNum; ++i) {
+				Group& g1 = object.getGroup(i);
+				Eigen::Vector3f offset1 = (g1.initCOM - globalInitCOM) * explodedScale;
+				for (int dir = 0; dir < 6; ++dir) {
+					int adjIdx = g1.adjacentGroupIDs[dir];
+					if (adjIdx != -1 && adjIdx > i) { // Draw each pair once
+						Group& g2 = object.getGroup(adjIdx);
+						Eigen::Vector3f offset2 = (g2.initCOM - globalInitCOM) * explodedScale;
+						const auto& pairs = g1.commonVerticesInDirections[dir];
+						for (size_t k = 0; k < pairs.first.size(); ++k) {
+							Vertex* v1 = pairs.first[k];
+							Vertex* v2 = pairs.second[k];
+							glVertex3f(v1->x + offset1.x(), v1->y + offset1.y(), v1->z + offset1.z());
+							glVertex3f(v2->x + offset2.x(), v2->y + offset2.y(), v2->z + offset2.z());
+						}
 					}
 				}
 			}
@@ -1442,7 +1506,13 @@ int main(int argc, char** argv) {
 			showStressCloud = !showStressCloud;
 		}
 
-		const SimpleUI::Rect uiPauseRect{ rightMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiExplodedRect{ rightMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiExplodedRect, showExplodedView ? "Show Integrated" : "Exploded View")) {
+			showExplodedView = !showExplodedView;
+			if (showExplodedView) showStressCloud = false; 
+		}
+
+		const SimpleUI::Rect uiPauseRect{ rightMargin, uiMargin + 3.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiPauseRect, isPaused ? "Resume(P)" : "Pause(P)")) {
 			isPaused = !isPaused;
 		}
