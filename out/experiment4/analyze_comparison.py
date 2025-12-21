@@ -82,58 +82,50 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
     # Create Estimated Reference XPBD (50 substeps instead of 5)
     xpbd_ref_points = [(p[0], p[1] / 10.0) for p in xpbd_points]
 
-    # Plotting Log Scale
-    plt.figure(figsize=(10, 6))
-    
-    # TetGenFEM
+    # Prepare data
     x_tet = [p[0] for p in tet_points]
     y_tet = [p[1] for p in tet_points]
-    plt.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
-
-    # XPBD Fast
     x_xpbd = [p[0] for p in xpbd_points]
     y_xpbd = [p[1] for p in xpbd_points]
-    plt.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
-
-    # XPBD Reference
     x_xpbd_ref = [p[0] for p in xpbd_ref_points]
     y_xpbd_ref = [p[1] for p in xpbd_ref_points]
-    plt.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
-
-    # VegaFEM Line
     if vega_points:
         x_v = [p[0] for p in vega_points]
         y_v = [p[1] for p in vega_points]
-        plt.plot(x_v, y_v, 'g-d', linewidth=2, markersize=8, label='VegaFEM (Implicit BE, Ground Truth)')
 
-    plt.xlabel('Number of Tetrahedra')
-    plt.ylabel('FPS (Log Scale)')
-    plt.yscale('log')
-    plt.title('Performance Comparison: TetGenFEM vs XPBD vs VegaFEM')
-    plt.grid(True, which="both", ls="-", alpha=0.3)
-    plt.legend()
+    # Create figure with two subplots side by side
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
     
-    output_file = os.path.join(output_dir, 'comparison_fps_log.png')
-    plt.savefig(output_file)
-    print(f"Saved comparison plot to {output_file}")
-    
-    # Linear Scale version
-    plt.figure(figsize=(10, 6))
-    plt.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
-    plt.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
-    plt.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
+    # Left subplot: Log scale
+    ax1.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
+    ax1.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
+    ax1.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
     if vega_points:
-        plt.plot(x_v, y_v, 'g-d', linewidth=2, label='VegaFEM (Implicit BE, Ground Truth)')
+        ax1.plot(x_v, y_v, 'g-d', linewidth=2, markersize=8, label='VegaFEM (Implicit BE, Ground Truth)')
+    ax1.set_xlabel('Number of Tetrahedra')
+    ax1.set_ylabel('FPS (Log Scale)')
+    ax1.set_yscale('log')
+    ax1.set_title('Performance Comparison (Log Scale)')
+    ax1.grid(True, which="both", ls="-", alpha=0.3)
+    ax1.legend()
     
-    plt.xlabel('Number of Tetrahedra')
-    plt.ylabel('FPS')
-    plt.title('Performance Comparison: TetGenFEM vs XPBD vs VegaFEM (Linear Scale)')
-    plt.grid(True, which="both", ls="-", alpha=0.3)
-    plt.legend()
+    # Right subplot: Linear scale
+    ax2.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
+    ax2.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
+    ax2.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
+    if vega_points:
+        ax2.plot(x_v, y_v, 'g-d', linewidth=2, markersize=8, label='VegaFEM (Implicit BE, Ground Truth)')
+    ax2.set_xlabel('Number of Tetrahedra')
+    ax2.set_ylabel('FPS (Linear Scale)')
+    ax2.set_title('Performance Comparison (Linear Scale)')
+    ax2.grid(True, which="both", ls="-", alpha=0.3)
+    ax2.legend()
     
-    output_file_lin = os.path.join(output_dir, 'comparison_fps_linear.png')
-    plt.savefig(output_file_lin)
-    print(f"Saved comparison plot to {output_file_lin}")
+    plt.tight_layout()
+    output_file = os.path.join(output_dir, 'comparison_fps.png')
+    plt.savefig(output_file)
+    plt.close()
+    print(f"Saved comparison plot to {output_file}")
 
     # Bar Chart for ~20k Tets case
     target = 20000
@@ -170,11 +162,34 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    tetfem_csv = os.path.join(base_dir, "20251218_021141", "experiment4_performance.csv")
-    xpbd_csv = os.path.join(base_dir, "20251221_152330_xpbd", "experiment4_performance.csv")
-    vega_base_dir = base_dir # out/experiment4 root
     
+    # Automatically find the latest TetGenFEM and XPBD results
+    def find_latest_csv(pattern):
+        folders = sorted(glob.glob(os.path.join(base_dir, pattern)))
+        # Filter out VegaFEM folders
+        folders = [f for f in folders if "VegaFEM" not in os.path.basename(f)]
+        if not folders: return None
+        csv_path = os.path.join(folders[-1], "experiment4_performance.csv")
+        return csv_path if os.path.exists(csv_path) else None
+
+    # xpbd is usually named like 20251221_152330_xpbd
+    xpbd_csv = find_latest_csv("*_xpbd")
+    # tetfem is usually just the timestamp
+    all_timestamp_folders = sorted(glob.glob(os.path.join(base_dir, "202*")))
+    tetfem_folders = [f for f in all_timestamp_folders if "_xpbd" not in os.path.basename(f) and "VegaFEM" not in os.path.basename(f)]
+    tetfem_csv = os.path.join(tetfem_folders[-1], "experiment4_performance.csv") if tetfem_folders else None
+
+    if not tetfem_csv:
+        # Fallback to the known good one if no new ones found
+        tetfem_csv = os.path.join(base_dir, "20251218_021141", "experiment4_performance.csv")
+    
+    if not xpbd_csv:
+        xpbd_csv = os.path.join(base_dir, "20251221_152330_xpbd", "experiment4_performance.csv")
+
+    vega_base_dir = base_dir # out/experiment4 root
     output_dir = base_dir
     
+    print(f"Using TetGenFEM: {tetfem_csv}")
+    print(f"Using XPBD: {xpbd_csv}")
     print("Generating comparison analysis with multiple VegaFEM points...")
     analyze_comparison(tetfem_csv, xpbd_csv, vega_base_dir, output_dir)

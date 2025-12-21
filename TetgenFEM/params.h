@@ -37,8 +37,8 @@ extern bool exp2ResetAfterFinish;
 
 // Experiment 4 (one-click) configuration (performance benchmarking).
 extern int exp4WarmupFrames, exp4MeasureFrames, exp4PbdIterations;
-extern int exp4TargetTets1, exp4TargetTets2, exp4TargetTets3;
-extern float exp4MaxVolumeStart, exp4MaxVolume1, exp4MaxVolume2, exp4MaxVolume3;
+extern int exp4TargetTets1, exp4TargetTets2, exp4TargetTets3, exp4TargetTets4, exp4TargetTets5;
+extern float exp4MaxVolumeStart, exp4MaxVolume1, exp4MaxVolume2, exp4MaxVolume3, exp4MaxVolume4, exp4MaxVolume5;
 extern int exp4TuneIters;
 extern int exp4Thread1, exp4Thread2, exp4Thread3;
 // If set, relative asset filenames (e.g. stlFile/nodeFile/eleFile) are resolved under this directory.

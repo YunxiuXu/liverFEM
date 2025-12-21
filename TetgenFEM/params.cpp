@@ -52,13 +52,17 @@ bool exp2ResetAfterFinish = true;
 int exp4WarmupFrames = 60;
 int exp4MeasureFrames = 240;
 int exp4PbdIterations = 10;
-int exp4TargetTets1 = 5000;
-int exp4TargetTets2 = 20000;
-int exp4TargetTets3 = 50000;
+int exp4TargetTets1 = 1000;
+int exp4TargetTets2 = 10000;
+int exp4TargetTets3 = 20000;
+int exp4TargetTets4 = 40000;
+int exp4TargetTets5 = 65000;
 float exp4MaxVolumeStart = 0.0f;
 float exp4MaxVolume1 = 0.0f;
 float exp4MaxVolume2 = 0.0f;
 float exp4MaxVolume3 = 0.0f;
+float exp4MaxVolume4 = 0.0f;
+float exp4MaxVolume5 = 0.0f;
 int exp4TuneIters = 3;
 int exp4Thread1 = 1;
 int exp4Thread2 = 4;
@@ -139,7 +143,9 @@ void loadParams(const std::string& filename) {
 	        {"exp4_maxVolumeStart", &exp4MaxVolumeStart},
 	        {"exp4_maxVolume1", &exp4MaxVolume1},
 	        {"exp4_maxVolume2", &exp4MaxVolume2},
-	        {"exp4_maxVolume3", &exp4MaxVolume3}
+	        {"exp4_maxVolume3", &exp4MaxVolume3},
+	        {"exp4_maxVolume4", &exp4MaxVolume4},
+	        {"exp4_maxVolume5", &exp4MaxVolume5}
 	    };
 
     std::unordered_map<std::string, int*> intParams = {
@@ -162,6 +168,8 @@ void loadParams(const std::string& filename) {
         {"exp4_targetTets1", &exp4TargetTets1},
         {"exp4_targetTets2", &exp4TargetTets2},
         {"exp4_targetTets3", &exp4TargetTets3},
+        {"exp4_targetTets4", &exp4TargetTets4},
+        {"exp4_targetTets5", &exp4TargetTets5},
         {"exp4_tuneIters", &exp4TuneIters},
         {"exp4_thread1", &exp4Thread1},
         {"exp4_thread2", &exp4Thread2},

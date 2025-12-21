@@ -427,10 +427,12 @@ void Experiment4::runBenchmarks() {
         { exp4TargetTets1, exp4MaxVolume1 },
         { exp4TargetTets2, exp4MaxVolume2 },
         { exp4TargetTets3, exp4MaxVolume3 },
+        { exp4TargetTets4, exp4MaxVolume4 },
+        { exp4TargetTets5, exp4MaxVolume5 },
     };
     targets.erase(std::remove_if(targets.begin(), targets.end(), [](const TargetSpec& s) { return s.target <= 0; }), targets.end());
     if (targets.empty()) {
-        targets = { { 5000, 0.0f }, { 20000, 0.0f }, { 50000, 0.0f } };
+        targets = { { 1000, 0.0f }, { 10000, 0.0f }, { 20000, 0.0f }, { 40000, 0.0f }, { 65000, 0.0f } };
     }
 
     const std::string stlPath = stlFile;
