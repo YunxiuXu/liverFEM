@@ -1,0 +1,31 @@
+{
+  "Name": "Liver_target20000_XPBD",
+  "Simulation": {
+    "timeStepSize": 0.01,
+    "numberOfStepsPerRenderUpdate": 1,
+    "subSteps": 5,
+    "maxIterations": 1,
+    "maxIterationsV": 5,
+    "velocityUpdateMethod": 0,
+    "contactTolerance": 0.0,
+    "solidSimulationMethod": 3,
+    "solid_stiffness": 1.0,
+    "solid_volumeStiffness": 1.0,
+    "solid_poissonRatio": 0.28,
+    "solid_normalizeStretch": 0,
+    "solid_normalizeShear": 0,
+    "contactStiffnessRigidBody": 1.0,
+    "contactStiffnessParticleRigidBody": 100.0,
+    "gravitation": [0, 0, 0]
+  },
+  "TetModels": [
+    {
+      "id": 0,
+      "nodeFile": "../../../TetgenFEM/models/liver_target20000.node",
+      "eleFile": "../../../TetgenFEM/models/liver_target20000.ele",
+      "translation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "testMesh": 1
+    }
+  ]
+}
