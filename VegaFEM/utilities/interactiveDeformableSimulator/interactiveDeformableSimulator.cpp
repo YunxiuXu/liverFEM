@@ -3066,6 +3066,11 @@ static void Experiment4_OnTimestepCompleted()
         // All done
         Experiment4_StopAndRestore();
         Experiment4_SetStatus("Experiment 4: done (files written)");
+        if (getenv("VEGAFEM_AUTO_EXP4"))
+        {
+          printf("Experiment 4: auto-exit triggered.\n");
+          exit(0);
+        }
         return;
       }
 
@@ -3488,6 +3493,13 @@ int main(int argc, char* argv[])
   initGraphics(windowWidth, windowHeight); // more OpenGL initialization calls
   initGLUI(); // init the UI
   initSimulation(); // init the simulation
+
+  if (getenv("VEGAFEM_AUTO_EXP4"))
+  {
+    printf("VEGAFEM_AUTO_EXP4 is set. Starting Experiment 4 automatically.\n");
+    experiment4_buttonCallBack(0);
+  }
+
   glutMainLoop(); // you have reached the point of no return..
 
   return 0;

@@ -1,0 +1,8 @@
+Experiment 4 Metadata
+====================
+Model: liver_target20000
+Num Vertices: 4098
+Num Elements: 18245
+Time Step: 0.01
+Warmup Steps: 60
+Measure Steps: 300

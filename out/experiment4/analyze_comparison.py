@@ -2,7 +2,7 @@ import csv
 import matplotlib.pyplot as plt
 import os
 import sys
-import numpy as np
+import glob
 
 def read_csv_data(csv_path):
     data = []
@@ -28,10 +28,31 @@ def read_csv_data(csv_path):
         return None
     return data
 
-def analyze_comparison(tetfem_path, xpbd_path, vega_path, output_dir):
+def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
     tet_data = read_csv_data(tetfem_path)
     xpbd_data = read_csv_data(xpbd_path)
-    vega_data = read_csv_data(vega_path) # Just for reading, might not plot directly due to mesh diff
+    
+    # Collect all VegaFEM data from all folders
+    vega_points = []
+    vega_csv_files = glob.glob(os.path.join(vega_base_dir, "VegaFEM_*", "*_performance.csv"))
+    
+    for v_csv in vega_csv_files:
+        v_data = read_csv_data(v_csv)
+        if v_data:
+            for d in v_data:
+                # To avoid duplicate points from the same mesh, we can average or just add all
+                # Each file usually has 1 and 10 threads, but we saw VegaFEM doesn't change much.
+                # Let's take the multi-threaded one (if it exists) or just any.
+                if int(d.get('numThreads', d.get('threads', 0))) >= 1:
+                    vega_points.append((d['numElements'], d['avgFPS']))
+    
+    # Sort and remove duplicates (take max FPS for same element count)
+    vega_dict = {}
+    for num_ele, fps in vega_points:
+        if num_ele not in vega_dict or fps > vega_dict[num_ele]:
+            vega_dict[num_ele] = fps
+    
+    vega_points = sorted(vega_dict.items())
 
     if not tet_data or not xpbd_data:
         print("Missing data for comparison.")
@@ -45,26 +66,23 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_path, output_dir):
     tet_points.sort(key=lambda x: x[0])
 
     # Process XPBD Data
-    # XPBD data has threads 1 and 10, but performance is similar. Let's pick 10 threads.
     xpbd_points = []
     for d in xpbd_data:
-        # Check if 'threads' column exists, otherwise assume single config
         t = int(d.get('threads', 1))
         if t == 10:
             xpbd_points.append((d['tet_count'], d['fps']))
     xpbd_points.sort(key=lambda x: x[0])
 
-    # If XPBD points are empty (maybe only 1 thread in file?), try 1 thread
     if not xpbd_points:
         for d in xpbd_data:
             if int(d.get('threads', 1)) == 1:
                 xpbd_points.append((d['tet_count'], d['fps']))
         xpbd_points.sort(key=lambda x: x[0])
 
-    # Create Estimated Reference XPBD (50 substeps instead of 5) -> 1/10th speed
+    # Create Estimated Reference XPBD (50 substeps instead of 5)
     xpbd_ref_points = [(p[0], p[1] / 10.0) for p in xpbd_points]
 
-    # Plotting
+    # Plotting Log Scale
     plt.figure(figsize=(10, 6))
     
     # TetGenFEM
@@ -82,17 +100,16 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_path, output_dir):
     y_xpbd_ref = [p[1] for p in xpbd_ref_points]
     plt.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
 
-    # VegaFEM Point (Reference only)
-    if vega_data:
-        # Assuming only one row for now
-        v_tets = vega_data[0]['numElements']
-        v_fps = vega_data[0]['avgFPS']
-        plt.plot(v_tets, v_fps, 'g*', markersize=12, label='VegaFEM (Cube 1.6k, Baseline)')
+    # VegaFEM Line
+    if vega_points:
+        x_v = [p[0] for p in vega_points]
+        y_v = [p[1] for p in vega_points]
+        plt.plot(x_v, y_v, 'g-d', linewidth=2, markersize=8, label='VegaFEM (Implicit BE, Ground Truth)')
 
     plt.xlabel('Number of Tetrahedra')
     plt.ylabel('FPS (Log Scale)')
-    plt.yscale('log') # Log scale is better for wide FPS ranges
-    plt.title('Performance Comparison: TetGenFEM vs XPBD')
+    plt.yscale('log')
+    plt.title('Performance Comparison: TetGenFEM vs XPBD vs VegaFEM')
     plt.grid(True, which="both", ls="-", alpha=0.3)
     plt.legend()
     
@@ -105,10 +122,12 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_path, output_dir):
     plt.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
     plt.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
     plt.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
+    if vega_points:
+        plt.plot(x_v, y_v, 'g-d', linewidth=2, label='VegaFEM (Implicit BE, Ground Truth)')
     
     plt.xlabel('Number of Tetrahedra')
     plt.ylabel('FPS')
-    plt.title('Performance Comparison: TetGenFEM vs XPBD (Linear Scale)')
+    plt.title('Performance Comparison: TetGenFEM vs XPBD vs VegaFEM (Linear Scale)')
     plt.grid(True, which="both", ls="-", alpha=0.3)
     plt.legend()
     
@@ -117,33 +136,33 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_path, output_dir):
     print(f"Saved comparison plot to {output_file_lin}")
 
     # Bar Chart for ~20k Tets case
-    # Find closest to 20000
     target = 20000
-    
-    # Get TetFEM 20k value
     tet_20k = min(tet_points, key=lambda x: abs(x[0] - target))
-    
-    # Get XPBD 20k value
-    xpbd_20k = min(xpbd_points, key=lambda x: abs(x[0] - target))
     xpbd_ref_20k = min(xpbd_ref_points, key=lambda x: abs(x[0] - target))
     
-    labels = ['XPBD Ref\n(High Acc.)', 'TetGenFEM\n(Ours)', 'XPBD Fast\n(Low Acc.)']
-    values = [xpbd_ref_20k[1], tet_20k[1], xpbd_20k[1]]
-    colors = ['blue', 'red', 'lightblue']
+    # Find closest VegaFEM to 20k
+    if vega_points:
+        vega_20k = min(vega_points, key=lambda x: abs(x[0] - target))
+        labels = ['VegaFEM\n(GT)', 'XPBD Ref\n(High Acc.)', 'TetGenFEM\n(Ours)']
+        values = [vega_20k[1], xpbd_ref_20k[1], tet_20k[1]]
+        colors = ['green', 'blue', 'red']
+    else:
+        labels = ['XPBD Ref\n(High Acc.)', 'TetGenFEM\n(Ours)']
+        values = [xpbd_ref_20k[1], tet_20k[1]]
+        colors = ['blue', 'red']
     
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 6))
     bars = plt.bar(labels, values, color=colors)
     
-    # Add value labels
     for bar in bars:
         height = bar.get_height()
         plt.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height:.1f} FPS',
+                f'{height:.2f} FPS',
                 ha='center', va='bottom')
                 
     plt.ylabel('FPS')
-    plt.title(f'Performance at ~20k Tetrahedra')
-    plt.ylim(0, max(values) * 1.2)
+    plt.title(f'Performance at ~20k Tetrahedra (Liver Mid)')
+    plt.ylim(0, max(values) * 1.3)
     
     output_file_bar = os.path.join(output_dir, 'comparison_bar_20k.png')
     plt.savefig(output_file_bar)
@@ -151,13 +170,11 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_path, output_dir):
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Hardcoded paths based on exploration
     tetfem_csv = os.path.join(base_dir, "20251218_021141", "experiment4_performance.csv")
     xpbd_csv = os.path.join(base_dir, "20251221_152330_xpbd", "experiment4_performance.csv")
-    vega_csv = os.path.join(base_dir, "VegaFEM_20251221_145459", "VegaFEM_cubeLong1300_performance.csv")
+    vega_base_dir = base_dir # out/experiment4 root
     
-    output_dir = base_dir # Save in out/experiment4 root
+    output_dir = base_dir
     
-    print("Generating comparison analysis...")
-    analyze_comparison(tetfem_csv, xpbd_csv, vega_csv, output_dir)
+    print("Generating comparison analysis with multiple VegaFEM points...")
+    analyze_comparison(tetfem_csv, xpbd_csv, vega_base_dir, output_dir)
