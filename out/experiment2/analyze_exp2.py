@@ -4,9 +4,9 @@ import os
 
 # Paths
 base_path = "/Users/yunxiuxu/Documents/tetfemcpp/out/experiment2"
-prop_path = os.path.join(base_path, "20251221_020606/experiment2_volume.csv")
-xpbd_path = os.path.join(base_path, "20251221_020500_xpbd/experiment2_volume.csv")
-vega_path = os.path.join(base_path, "VegaFEM_20251221_141821/VegaFEM_cubeLong1300_volume.csv")
+prop_path = os.path.join(base_path, "20251222_231846/experiment2_volume.csv")
+xpbd_path = os.path.join(base_path, "20251222_233724_xpbd/experiment2_volume.csv")
+vega_path = os.path.join(base_path, "VegaFEM_20251223_003235/VegaFEM_liver_HD_Low_volume.csv")
 
 # Load data
 prop_df = pd.read_csv(prop_path)
@@ -100,63 +100,60 @@ styles = {
     'VegaFEM (GT)': {'color': 'black', 'linestyle': ':'}
 }
 
-# Process each Poisson ratio
-# Proposed & XPBD: 0.28 (baseline), 0.47 (incompressible)
-# VegaFEM: 0.28 (baseline), 0.47 (incompressible)
+# --- Plot 1: Volume Preservation Comparison ---
+# We show Proposed (0.49) vs XPBD (0.49) vs VegaFEM (0.49)
 
-for nu, label in [(0.28, 'Baseline ($\\nu=0.28$)'), (0.47, 'Incompressible ($\\nu=0.47$)')]:
-    # Proposed
-    p_data = prop_df[prop_df['poisson'] == nu]
-    plt.plot(p_data['total_time'], p_data['volume_ratio'], label=f'Proposed ({label})', 
-             color=styles['Proposed Method']['color'], 
-             alpha=1.0 if nu == 0.47 else 0.5,
-             linewidth=2 if nu == 0.47 else 1)
-    
-    # XPBD
-    x_data = xpbd_df[xpbd_df['poisson'] == nu]
-    plt.plot(x_data['total_time'], x_data['volume_ratio'], label=f'XPBD ({label})', 
-             color=styles['XPBD']['color'], 
-             linestyle='--' if nu == 0.47 else ':',
-             alpha=1.0 if nu == 0.47 else 0.5)
+# 1. Proposed Method (Incompressible)
+p_data = prop_df[(prop_df['poisson'] == 0.49)]
+if not p_data.empty:
+    plt.plot(p_data['total_time'], p_data['volume_ratio'], label='Proposed Method (nu=0.49)', 
+             color=styles['Proposed Method']['color'], linewidth=2)
 
-    # VegaFEM (now extended to 480 steps)
-    v_data = vega_df[vega_df['nu'] == nu]
-    # Align Vega steps to time (assuming 0.01s per step)
-    v_time = v_data['step'] * 0.01
-    plt.plot(v_time, v_data['volume_ratio'], label=f'VegaFEM ({label})', 
-             color=styles['VegaFEM (GT)']['color'], 
-             linestyle='-.',
-             alpha=1.0 if nu == 0.47 else 0.5)
+# 2. XPBD (Incompressible)
+x_data = xpbd_df[xpbd_df['poisson'] == 0.49]
+if not x_data.empty:
+    plt.plot(x_data['total_time'], x_data['volume_ratio'], label='XPBD (nu=0.49)', 
+             color=styles['XPBD']['color'], linestyle='--')
 
-plt.axhline(y=1.0, color='gray', linestyle='-', alpha=0.3)
+# 3. VegaFEM (Incompressible - Reference for high poisson)
+v_incomp = vega_df[vega_df['nu'] == 0.49]
+if not v_incomp.empty:
+    v_time = v_incomp['step'] * 0.01
+    plt.plot(v_time, v_incomp['volume_ratio'], label='VegaFEM (nu=0.49)', 
+             color=styles['VegaFEM (GT)']['color'], linestyle='-.')
+
+plt.axhline(y=1.0, color='red', linestyle='-', alpha=0.3, label='Ideal Volume (V/V0=1.0)')
 plt.xlabel('Simulation Time (s)')
-
 plt.ylabel('Volume Ratio ($V/V_0$)')
-plt.title('Volume Preservation Comparison: Proposed Method vs XPBD vs VegaFEM')
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.title('Volume Preservation Comparison under Large Deformation (nu=0.49)')
+plt.legend(loc='best')
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.tight_layout()
 plt.savefig(os.path.join(base_path, 'volume_preservation_comparison.png'))
 
 # --- Plot 2: Detailed Incompressible Comparison ---
 plt.figure(figsize=(10, 6))
-nu = 0.47
-label = 'Incompressible ($\\nu=0.47$)'
+nu_vega = 0.47
+nu_prop = 0.49
+nu_xpbd = 0.49
 
-v_data = vega_df[vega_df['nu'] == nu]
-v_time = v_data['step'] * 0.01
-plt.plot(v_time, v_data['volume_ratio'], label='VegaFEM (GT)', color='black', linestyle=':')
+v_data = vega_df[vega_df['nu'] == nu_vega]
+if not v_data.empty:
+    v_time = v_data['step'] * 0.01
+    plt.plot(v_time, v_data['volume_ratio'], label='VegaFEM (GT)', color='black', linestyle=':')
 
-p_data = prop_df[prop_df['poisson'] == nu]
-plt.plot(p_data['total_time'], p_data['volume_ratio'], label='Proposed Method', color='blue', linewidth=2)
+p_data = prop_df[(prop_df['poisson'] == nu_prop) & (prop_df['run_name'] == 'incompressible')]
+if not p_data.empty:
+    plt.plot(p_data['total_time'], p_data['volume_ratio'], label='Proposed Method', color='blue', linewidth=2)
 
-x_data = xpbd_df[xpbd_df['poisson'] == nu]
-plt.plot(x_data['total_time'], x_data['volume_ratio'], label='XPBD', color='orange', linestyle='--')
+x_data = xpbd_df[xpbd_df['poisson'] == nu_xpbd]
+if not x_data.empty:
+    plt.plot(x_data['total_time'], x_data['volume_ratio'], label='XPBD', color='orange', linestyle='--')
 
 plt.axhline(y=1.0, color='gray', linestyle='-', alpha=0.3)
 plt.xlabel('Simulation Time (s)')
 plt.ylabel('Volume Ratio ($V/V_0$)')
-plt.title(f'Volume Preservation under Large Deformation ({label})')
+plt.title('Volume Preservation under Large Deformation (Incompressible)')
 plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.savefig(os.path.join(base_path, 'volume_incompressible_detail.png'))
@@ -165,8 +162,15 @@ print("Experiment 2 plots generated successfully.")
 
 # Calculate statistics for the report
 stats = []
-for method_name, df, nu_col in [('Proposed', prop_df, 'poisson'), ('XPBD', xpbd_df, 'poisson'), ('VegaFEM', vega_df, 'nu')]:
-    for nu in [0.28, 0.47]:
+# Method mappings for stats
+method_info = [
+    ('Proposed', prop_df, 'poisson', [0.49]),
+    ('XPBD', xpbd_df, 'poisson', [0.49]),
+    ('VegaFEM', vega_df, 'nu', [0.49])
+]
+
+for method_name, df, nu_col, nus in method_info:
+    for nu in nus:
         d = df[df[nu_col] == nu]
         if not d.empty:
             max_dev = (d['volume_ratio'] - 1.0).abs().max() * 100

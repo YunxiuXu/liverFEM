@@ -5,9 +5,9 @@ import os
 
 # Paths
 base_path = "/Users/yunxiuxu/Documents/tetfemcpp/out/experiment1"
-ours_path = os.path.join(base_path, "20251218_002006/experiment1_sweep_summary.csv")
-xpbd_path = os.path.join(base_path, "20251220_032312_xpbd/experiment1_sweep_summary.csv")
-vega_path = os.path.join(base_path, "VegaFEM_20251221_010234/VegaFEM_liver_HD_Low_sweep_summary.csv")
+ours_path = os.path.join(base_path, "20251222_230920/experiment1_sweep_summary.csv")
+xpbd_path = os.path.join(base_path, "20251222_232755_xpbd/experiment1_sweep_summary.csv")
+vega_path = os.path.join(base_path, "VegaFEM_20251223_002626/VegaFEM_liver_HD_Low_sweep_summary.csv")
 
 # Load data
 ours_df = pd.read_csv(ours_path)
@@ -18,7 +18,7 @@ vega_df = pd.read_csv(vega_path)
 vega_ref = vega_df[vega_df['runType'] == 'reference'].copy()
 
 # Sync data by accel
-accels = [800, 1500, 2000]
+accels = [16, 30, 40]
 
 # Prepare summary data
 summary = []

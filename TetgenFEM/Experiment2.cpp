@@ -74,10 +74,8 @@ void Experiment2::init(Object* obj, const std::vector<Vertex*>& physical) {
         }
     }
 
-    // Default sequence: baseline nu (from parameters) + incompressible nu.
-    // Baseline nu will be filled on start from current poisson.
+    // Default sequence: only incompressible nu.
     sequence = {
-        { "baseline", poisson },
         { "incompressible", config.poissonIncompressible },
     };
 }

@@ -406,8 +406,8 @@ struct Experiment2State
   int dragSteps = 240;
   int holdSteps = 120;
   
-  double baselineNu = 0.28;
-  double incompressibleNu = 0.47;
+  double baselineNu = 0.49;
+  double incompressibleNu = 0.49;
   double targetE = 1e6;
   
   double v0 = 0.0; // Initial volume
@@ -3214,24 +3214,7 @@ static void Experiment2_OnTimestepCompleted()
   int totalSteps = experiment2.settleSteps + experiment2.dragSteps + experiment2.holdSteps;
   if (experiment2.stageStep >= totalSteps)
   {
-    if (experiment2.state == 2) // finished baseline -> setup incompressible
-    {
-      experiment2.state = 3; // incompressible
-      experiment2.stageStep = 0;
-      experiment2.currentNu = experiment2.incompressibleNu;
-      experiment2.currentRunName = "incompressible";
-      
-      stopDeformations_buttonCallBack(0);
-      volumetricMesh->setSingleMaterial(experiment2.targetE, experiment2.incompressibleNu, volumetricMesh->getMaterial(0)->getDensity());
-      
-      // Reset state and force stiffness matrix recomputation
-      RecreateSimulationObjects();
-      
-      char msg[512];
-      std::snprintf(msg, sizeof(msg), "Experiment 2: running incompressible (nu=%.2f)", experiment2.incompressibleNu);
-      Experiment2_SetStatus(msg);
-    }
-    else if (experiment2.state == 3) // finished incompressible -> done
+    if (experiment2.state == 2 || experiment2.state == 3) // finished run -> done
     {
       Experiment2_StopAndRestore();
       Experiment2_SetStatus("Experiment 2: done (files written)");

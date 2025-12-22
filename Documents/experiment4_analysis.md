@@ -13,10 +13,10 @@
 ## 2. 数据来源
 
 本分析整合了以下实验数据：
-1.  **TetGenFEM (Ours)**: 目录 `20251221_170553`。采用 10 线程并行。
-2.  **XPBD (Competitor)**: 目录 `20251221_152330_xpbd`。
+1.  **TetGenFEM (Ours)**: 目录 `20251222_232030`。采用 10 线程并行。
+2.  **XPBD (Competitor)**: 目录 `20251223_002305_xpbd`。
     *   **XPBD Ref**: 估算 50 子步模式下的性能。
-3.  **VegaFEM (Standard)**: 目录 `VegaFEM_*`。包含了 5k 至 62k 规模的实测数据。
+3.  **VegaFEM (Standard)**: 目录 `VegaFEM_20251223_003823`。包含了不同规模的实测数据。
 
 ## 2.1 实验方法 (Methodology)
 
