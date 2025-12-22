@@ -23,8 +23,8 @@
 		"cloth_yxPoissonRatio": 0.3,
 		"cloth_normalizeStretch": 0,
 		"cloth_normalizeShear": 0, 
-		"solid_stiffness": 1.0,
-		"solid_poissonRatio": 0.2,
+		"solid_stiffness": 7000.0,
+		"solid_poissonRatio": 0.49,
 		"solid_normalizeStretch": 0,
 		"solid_normalizeShear": 0
 	},	

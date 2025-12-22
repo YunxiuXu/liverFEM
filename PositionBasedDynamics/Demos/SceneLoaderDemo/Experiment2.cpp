@@ -78,7 +78,7 @@ namespace Exp2
 
 		static std::vector<RunSpec> s_sequence = {
 			{ "baseline", 0.28f },
-			{ "incompressible", 0.47f }
+			{ "incompressible", 0.49f }
 		};
 		static int s_currentRunIndex = 0;
 		static std::vector<DataPoint> s_data;
@@ -267,8 +267,8 @@ namespace Exp2
 
 		LOG_INFO << "Experiment2: Hard-resetting constraints with Poisson ratio " << poisson;
 		
-		// 1. 强制对齐杨氏模量为 1e6，保持变量控制
-		const Real stiffness = 1000000.0;
+		// 1. 强制对齐杨氏模量为 7000.0，保持变量控制
+		const Real stiffness = 7000.0;
 		const int method = model->getValue<int>(SimulationModel::SOLID_SIMULATION_METHOD);
 		const Real volumeStiffness = model->getValue<Real>(SimulationModel::SOLID_VOLUME_STIFFNESS);
 		const bool normalizeStretch = model->getValue<bool>(SimulationModel::SOLID_NORMALIZE_STRETCH);
@@ -543,7 +543,7 @@ namespace Exp2
 			if (s_pullIndices.empty()) return;
 			
 			// 降低追踪刚度，防止 XPBD 爆炸
-			const float stiffness = 800.0f; 
+			const float stiffness = 50.0f; 
 			const Vector3r targetDir(1.0, 0.0, 0.0);
 			
 			for (unsigned int idx : s_pullIndices) {

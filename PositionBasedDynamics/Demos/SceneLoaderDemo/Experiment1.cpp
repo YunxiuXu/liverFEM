@@ -71,7 +71,7 @@ namespace Exp1
 		
 		// Sweep state: sweep both substeps and accels
 		// XPBD 的正确对比方式：固定迭代次数为1，对比子步数（subSteps）
-		static std::vector<float> s_sweepAccels = { 800.0f, 1500.0f, 2000.0f };
+		static std::vector<float> s_sweepAccels = { 16.0f, 30.0f, 40.0f };
 		static std::vector<unsigned int> s_sweepSubsteps = { 5, 50 }; // Fast (real-time) then Reference (converged)
 		static int s_currentAccelIdx = 0;
 		static int s_currentSubstepIdx = 0;

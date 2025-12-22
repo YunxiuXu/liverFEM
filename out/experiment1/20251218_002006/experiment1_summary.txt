@@ -1,2 +1,0 @@
-rmse_fast_vs_reference=0.0778383
-max_error_fast_vs_reference=0.144392

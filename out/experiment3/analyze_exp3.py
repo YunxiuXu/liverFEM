@@ -66,3 +66,5 @@ if not stiff_df.empty:
     print(f"Stiffness Ratio (Iso X / Iso Y): {iso_x / iso_y:.2f}")
     print(f"Fiber Reinforcement Factor (Ani X / Iso X): {ani_x / iso_x:.2f}")
 
+
+

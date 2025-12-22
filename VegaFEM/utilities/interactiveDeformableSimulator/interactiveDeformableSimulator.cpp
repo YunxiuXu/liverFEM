@@ -423,7 +423,7 @@ struct Experiment2State
   // Target vertex and force (reuse exp1 target vertex logic)
   int targetVertex = -1;
   double pullRadius = 0.0;
-  double accelTarget = 2000.0; // Fixed large force to see volume change
+  double accelTarget = 40.0; // Fixed large force to see volume change
   double currentLoadScale = 0.0;
   std::vector<double> massDiag;
 };

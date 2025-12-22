@@ -50,9 +50,9 @@ void Experiment3::init(Object* obj, const std::vector<Vertex*>& vertices) {
         // Baseline: isotropic (to show geometry/boundary effects for each drag direction)
         { RunSpec::Material::Isotropic, 0, 0 }, // drag X
         { RunSpec::Material::Isotropic, 1, 0 }, // drag Y
-        // Experiment 3 (paper): fixed anisotropy Ex > Ey, compare hard-axis vs soft-axis pulling
-        { RunSpec::Material::Anisotropic, 0, 0 }, // hard axis X, drag X
-        { RunSpec::Material::Anisotropic, 1, 0 }, // hard axis X, drag Y
+        // Experiment 3: anisotropy Ey > Ex (y方向硬，x方向软), compare hard-axis vs soft-axis pulling
+        { RunSpec::Material::Anisotropic, 0, 1 }, // hard axis Y, drag X (x方向好拉)
+        { RunSpec::Material::Anisotropic, 1, 1 }, // hard axis Y, drag Y (y方向不好拉)
     };
 }
 
