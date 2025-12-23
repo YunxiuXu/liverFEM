@@ -2,7 +2,7 @@ experiment=Experiment4_Performance
 warmup_steps=50
 measure_steps=100
 total_runs=6
-timestamp=20251223_002359
+timestamp=20251223_015119
 sequence=
   0: Liver_Low threads=1 scene=PositionBasedDynamics/data/scenes/Liver_Low_XPBD.json
   1: Liver_Low threads=10 scene=PositionBasedDynamics/data/scenes/Liver_Low_XPBD.json

@@ -5,9 +5,9 @@ import os
 
 # Paths
 base_path = "/Users/yunxiuxu/Documents/tetfemcpp/out/experiment1"
-ours_path = os.path.join(base_path, "20251222_230920/experiment1_sweep_summary.csv")
-xpbd_path = os.path.join(base_path, "20251222_232755_xpbd/experiment1_sweep_summary.csv")
-vega_path = os.path.join(base_path, "VegaFEM_20251223_002626/VegaFEM_liver_HD_Low_sweep_summary.csv")
+ours_path = os.path.join(base_path, "20251223_011343/experiment1_sweep_summary.csv")
+xpbd_path = os.path.join(base_path, "20251223_013930_xpbd/experiment1_sweep_summary.csv")
+vega_path = os.path.join(base_path, "VegaFEM_20251223_133641/VegaFEM_liver_HD_Low_sweep_summary.csv")
 
 # Load data
 ours_df = pd.read_csv(ours_path)

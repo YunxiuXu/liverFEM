@@ -4,9 +4,9 @@ import os
 
 # Paths
 base_path = "/Users/yunxiuxu/Documents/tetfemcpp/out/experiment2"
-prop_path = os.path.join(base_path, "20251222_231846/experiment2_volume.csv")
-xpbd_path = os.path.join(base_path, "20251222_233724_xpbd/experiment2_volume.csv")
-vega_path = os.path.join(base_path, "VegaFEM_20251223_003235/VegaFEM_liver_HD_Low_volume.csv")
+prop_path = os.path.join(base_path, "20251223_012834/experiment2_volume.csv")
+xpbd_path = os.path.join(base_path, "20251223_014628_xpbd/experiment2_volume.csv")
+vega_path = os.path.join(base_path, "VegaFEM_20251223_144012/VegaFEM_liver_HD_Low_volume.csv")
 
 # Load data
 prop_df = pd.read_csv(prop_path)
@@ -17,18 +17,13 @@ vega_df = pd.read_csv(vega_path)
 def extend_vega_to_480(df):
     """Extend VegaFEM data from 420 steps to 480 steps by padding with last value."""
     extended_rows = []
-    for nu in [0.28, 0.47]:
+    # Now VegaFEM only has one runName 'incompressible' with nu=0.49
+    for nu in [0.49]:
         nu_data = df[df['nu'] == nu].copy()
         if len(nu_data) == 0:
             continue
         
-        # Get the last non-empty runName for this nu
-        nu_data_clean = nu_data[nu_data['runName'].notna() & (nu_data['runName'] != '')]
-        if len(nu_data_clean) == 0:
-            run_name = 'baseline' if nu == 0.28 else 'incompressible'
-        else:
-            run_name = nu_data_clean.iloc[-1]['runName']
-        
+        run_name = 'incompressible'
         last_row = nu_data.iloc[-1]
         last_volume = last_row['volume']
         last_ratio = last_row['volume_ratio']
@@ -130,33 +125,6 @@ plt.legend(loc='best')
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.tight_layout()
 plt.savefig(os.path.join(base_path, 'volume_preservation_comparison.png'))
-
-# --- Plot 2: Detailed Incompressible Comparison ---
-plt.figure(figsize=(10, 6))
-nu_vega = 0.47
-nu_prop = 0.49
-nu_xpbd = 0.49
-
-v_data = vega_df[vega_df['nu'] == nu_vega]
-if not v_data.empty:
-    v_time = v_data['step'] * 0.01
-    plt.plot(v_time, v_data['volume_ratio'], label='VegaFEM (GT)', color='black', linestyle=':')
-
-p_data = prop_df[(prop_df['poisson'] == nu_prop) & (prop_df['run_name'] == 'incompressible')]
-if not p_data.empty:
-    plt.plot(p_data['total_time'], p_data['volume_ratio'], label='Proposed Method', color='blue', linewidth=2)
-
-x_data = xpbd_df[xpbd_df['poisson'] == nu_xpbd]
-if not x_data.empty:
-    plt.plot(x_data['total_time'], x_data['volume_ratio'], label='XPBD', color='orange', linestyle='--')
-
-plt.axhline(y=1.0, color='gray', linestyle='-', alpha=0.3)
-plt.xlabel('Simulation Time (s)')
-plt.ylabel('Volume Ratio ($V/V_0$)')
-plt.title('Volume Preservation under Large Deformation (Incompressible)')
-plt.legend()
-plt.grid(True, linestyle='--', alpha=0.7)
-plt.savefig(os.path.join(base_path, 'volume_incompressible_detail.png'))
 
 print("Experiment 2 plots generated successfully.")
 

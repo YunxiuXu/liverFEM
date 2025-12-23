@@ -1,0 +1,7 @@
+mesh_name,threads,tet_count,avg_step_time_ms,fps
+Liver_Low,1,1048,0.211,4737.00
+Liver_Low,10,1048,0.210,4759.49
+Liver_Mid,1,20061,6.561,152.42
+Liver_Mid,10,20061,6.624,150.98
+Liver_High,1,62897,31.521,31.72
+Liver_High,10,62897,34.208,29.23

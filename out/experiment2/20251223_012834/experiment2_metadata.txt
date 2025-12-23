@@ -19,4 +19,4 @@ settleSteps=120
 dragSteps=240
 holdSteps=240
 pbdIterations=60
-sequence=baseline:nu0.49;incompressible:nu0.49
+sequence=incompressible:nu0.49

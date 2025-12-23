@@ -406,9 +406,9 @@ struct Experiment2State
   int dragSteps = 240;
   int holdSteps = 120;
   
-  double baselineNu = 0.49;
-  double incompressibleNu = 0.49;
-  double targetE = 1e6;
+  double baselineNu = 0.28;
+  double incompressibleNu = 0.47;
+  double targetE = 7000.0;
   
   double v0 = 0.0; // Initial volume
   
@@ -426,6 +426,12 @@ struct Experiment2State
   double accelTarget = 40.0; // Fixed large force to see volume change
   double currentLoadScale = 0.0;
   std::vector<double> massDiag;
+
+  // Displacement control
+  std::vector<int> pullIndices;
+  std::vector<Vec3d> pullStartPos;
+  double dragDistance = 0.0;
+  double pullStiffness = 3500.0; 
 };
 
 Experiment2State experiment2;
@@ -2331,6 +2337,15 @@ void initConfigurations()
   configFile.addOptionOptional("exp1_isotropicE", &exp1_isotropicE, exp1_isotropicE);
   configFile.addOptionOptional("exp1_isotropicNu", &exp1_isotropicNu, exp1_isotropicNu);
 
+  // Experiment 2 (optional)
+  configFile.addOptionOptional("exp2_settleSteps", &experiment2.settleSteps, experiment2.settleSteps);
+  configFile.addOptionOptional("exp2_dragSteps", &experiment2.dragSteps, experiment2.dragSteps);
+  configFile.addOptionOptional("exp2_holdSteps", &experiment2.holdSteps, experiment2.holdSteps);
+  configFile.addOptionOptional("exp2_baselineNu", &experiment2.baselineNu, experiment2.baselineNu);
+  configFile.addOptionOptional("exp2_incompressibleNu", &experiment2.incompressibleNu, experiment2.incompressibleNu);
+  configFile.addOptionOptional("exp2_targetE", &experiment2.targetE, experiment2.targetE);
+  configFile.addOptionOptional("exp2_accelTarget", &experiment2.accelTarget, experiment2.accelTarget);
+
   // parse the configuration file
   if (configFile.parseOptions((char*)configFilename.c_str()) != 0)
   {
@@ -3090,6 +3105,25 @@ void experiment4_buttonCallBack(int code)
 {
   (void)code;
 
+  // 如果是用户手动点击（不是自动触发模式），则启动全量批处理脚本并退出当前实例
+  if (!getenv("VEGAFEM_AUTO_EXP4"))
+  {
+    printf("User clicked Experiment 4. Launching full batch sequence...\n");
+    // 启动外部脚本，该脚本会依次跑 1k, 20k, 62k 网格
+    // 我们直接在后台运行，这样不阻塞当前输出
+    int ret = system("/Users/yunxiuxu/Documents/tetfemcpp/run_vegafem_exp4_batch.sh &");
+    if (ret == 0)
+    {
+      printf("Batch launcher started. Closing current instance.\n");
+      exit(0);
+    }
+    else
+    {
+      printf("Error: Failed to launch batch script.\n");
+    }
+    return;
+  }
+
   if (volumetricMesh == nullptr || integratorBase == nullptr)
   {
     Experiment4_SetStatus("Experiment 4: unavailable (no volumetric mesh loaded)");
@@ -3170,6 +3204,12 @@ static void Experiment2_StopAndRestore()
   staticSolver = experiment1.prevStaticSolver;
   if (implicitNewmarkSparse != nullptr)
     implicitNewmarkSparse->UseStaticSolver(staticSolver);
+
+  if (getenv("VEGAFEM_AUTO_EXP2"))
+  {
+    printf("Experiment 2 (Auto) finished. Exiting.\n");
+    exit(0);
+  }
 }
 
 static void Experiment2_OnTimestepCompleted()
@@ -3180,10 +3220,17 @@ static void Experiment2_OnTimestepCompleted()
   const double * uq = integratorBase->Getq();
   double currentVolume = CalculateDeformedVolume(volumetricMesh, uq);
   double ratio = currentVolume / experiment2.v0;
+  
+  // Track max displacement of target vertex
+  double currentDisp = 0.0;
+  if (experiment2.targetVertex >= 0) {
+    Vec3d u(uq[3*experiment2.targetVertex+0], uq[3*experiment2.targetVertex+1], uq[3*experiment2.targetVertex+2]);
+    currentDisp = len(u);
+  }
 
   // Record data
   experiment2.volumeCsv << experiment2.currentRunName << "," << experiment2.stageStep << "," 
-                        << experiment2.currentNu << "," << currentVolume << "," << ratio << "\n";
+                        << experiment2.currentNu << "," << currentVolume << "," << ratio << "," << currentDisp << "\n";
   
   if (experiment2.stageStep % 30 == 0)
     experiment2.volumeCsv.flush();
@@ -3191,21 +3238,21 @@ static void Experiment2_OnTimestepCompleted()
   experiment2.stageStep++;
 
   // State machine logic
-  if (experiment2.state == 1) // waiting -> setup baseline
+  if (experiment2.state == 1) // waiting -> setup run
   {
-    experiment2.state = 2; // baseline
+    experiment2.state = 3; // incompressible/target
     experiment2.stageStep = 0;
-    experiment2.currentNu = experiment2.baselineNu;
-    experiment2.currentRunName = "baseline";
+    experiment2.currentNu = experiment2.incompressibleNu;
+    experiment2.currentRunName = "incompressible";
     
     stopDeformations_buttonCallBack(0);
-    volumetricMesh->setSingleMaterial(experiment2.targetE, experiment2.baselineNu, volumetricMesh->getMaterial(0)->getDensity());
+    volumetricMesh->setSingleMaterial(experiment2.targetE, experiment2.incompressibleNu, volumetricMesh->getMaterial(0)->getDensity());
     
     // Reset state and force stiffness matrix recomputation
     RecreateSimulationObjects();
     
     char msg[512];
-    std::snprintf(msg, sizeof(msg), "Experiment 2: running baseline (nu=%.2f)", experiment2.baselineNu);
+    std::snprintf(msg, sizeof(msg), "Experiment 2: running (nu=%.2f)", experiment2.incompressibleNu);
     Experiment2_SetStatus(msg);
     return;
   }
@@ -3214,7 +3261,7 @@ static void Experiment2_OnTimestepCompleted()
   int totalSteps = experiment2.settleSteps + experiment2.dragSteps + experiment2.holdSteps;
   if (experiment2.stageStep >= totalSteps)
   {
-    if (experiment2.state == 2 || experiment2.state == 3) // finished run -> done
+    if (experiment2.state == 3) // finished incompressible -> done
     {
       Experiment2_StopAndRestore();
       Experiment2_SetStatus("Experiment 2: done (files written)");
@@ -3251,7 +3298,7 @@ void experiment2_buttonCallBack(int code)
 
   // Open output file
   experiment2.volumeCsv.open((experiment2.basePrefix + "_volume.csv").c_str());
-  experiment2.volumeCsv << "runName,step,nu,volume,volume_ratio\n";
+  experiment2.volumeCsv << "runName,step,nu,volume,volume_ratio,displacement\n";
 
   // Initial volume
   const double * zero_u = (double*)calloc(3*n, sizeof(double));
@@ -3276,6 +3323,23 @@ void experiment2_buttonCallBack(int code)
   const double diag = BBoxDiagonal(volumetricMesh);
   experiment2.pullRadius = std::max(1e-9, 0.6 * diag);
   experiment2.massDiag = ExtractDiagonal(massMatrix);
+
+  // Setup displacement control
+  experiment2.dragDistance = diag * 0.35; // Match TetgenFEM scale
+  experiment2.pullIndices.clear();
+  experiment2.pullStartPos.clear();
+  const Vec3d & targetPos0 = volumetricMesh->getVertex(experiment2.targetVertex);
+  
+  for(int v=0; v<n; v++)
+  {
+    Vec3d p0 = volumetricMesh->getVertex(v);
+    if (len(p0 - targetPos0) <= experiment2.pullRadius)
+    {
+      experiment2.pullIndices.push_back(v);
+      experiment2.pullStartPos.push_back(p0);
+    }
+  }
+  printf("Experiment 2: Pulling %d vertices with max distance %.4f\n", (int)experiment2.pullIndices.size(), experiment2.dragDistance);
 
   // Initialize state
   experiment2.active = true;
@@ -3481,6 +3545,12 @@ int main(int argc, char* argv[])
   {
     printf("VEGAFEM_AUTO_EXP4 is set. Starting Experiment 4 automatically.\n");
     experiment4_buttonCallBack(0);
+  }
+
+  if (getenv("VEGAFEM_AUTO_EXP2"))
+  {
+    printf("VEGAFEM_AUTO_EXP2 is set. Starting Experiment 2 automatically.\n");
+    experiment2_buttonCallBack(0);
   }
 
   glutMainLoop(); // you have reached the point of no return..
