@@ -162,9 +162,10 @@ Eigen::MatrixXf Tetrahedron::createElementKAni(float E1, float E2, float E3, flo
 	const float nu32 = nu23 * (E3 / E2);
 
 	const float inv2pnu = 1.0f / (2.0f * (1.0f + nu));
-	const float G12 = std::max(std::min(E1, E2) * inv2pnu, eps); // xy
-	const float G23 = std::max(std::min(E2, E3) * inv2pnu, eps); // yz
-	const float G31 = std::max(std::min(E3, E1) * inv2pnu, eps); // zx
+	// Use geometric mean for shear modulus to allow stiffening in both directions
+	const float G12 = std::max(std::sqrt(E1 * E2) * inv2pnu, eps); // xy
+	const float G23 = std::max(std::sqrt(E2 * E3) * inv2pnu, eps); // yz
+	const float G31 = std::max(std::sqrt(E3 * E1) * inv2pnu, eps); // zx
 
 	Eigen::Matrix<float, 6, 6> S = Eigen::Matrix<float, 6, 6>::Zero();
 	S(0, 0) = 1.0f / E1;

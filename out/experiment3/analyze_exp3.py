@@ -5,7 +5,7 @@ import os
 
 # Paths
 base_path = "/Users/yunxiuxu/Documents/tetfemcpp/out/experiment3"
-data_path = os.path.join(base_path, "20251223_013022/experiment3_force_displacement.csv")
+data_path = os.path.join(base_path, "20251223_150458/experiment3_force_displacement.csv")
 
 # Load data
 df = pd.read_csv(data_path)

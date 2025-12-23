@@ -983,6 +983,24 @@ int main(int argc, char** argv) {
 			}
 		}
 
+		// Handle auto-start Experiment 3
+		static bool exp3AutoStarted = false;
+		static bool exp3AutoFinished = false;
+		if (!exp3AutoStarted) {
+			const char* env = std::getenv("TETGENFEM_AUTO_EXP3");
+			if (env) {
+				std::cout << "[TetgenFEM] Auto-starting Experiment 3...\n";
+				experiment3.requestStart();
+				exp3AutoStarted = true;
+			}
+		} else if (!exp3AutoFinished) {
+			if (!experiment3.isActive()) {
+				std::cout << "[TetgenFEM] Auto-Experiment 3 Finished. Exiting.\n";
+				exp3AutoFinished = true;
+				exit(0);
+			}
+		}
+
 		// State Machine
 		if (experimentState == 1) {
 			beginAutoTest(0); // Start X Axis Test

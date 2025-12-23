@@ -204,7 +204,7 @@ $$\text{Total Deformation} = \text{Rigid Rotation} \, \mathbf{R} + \text{Small S
 
 #### 2.1.1 表面网格获取
 输入为肝脏的三角面片网格（STL/OBJ 格式），可通过以下途径获得：
-- **通用模板**：基于健康成人的统计形状模型（Statistical Shape Model）。
+- **通用模板**：基于健康成人的统计形状模型（Statistical Shape Model）。本研究所用的肝脏模型来自 NIH 3D 参考器官库（3DPX-021007）[NIH 3D 2024]，该模型基于可见人体项目（Visible Human Project）的男性数据集构建。
 - **患者特异性模型**：从 CT/MRI 影像经分割（Segmentation）和表面重建得到。
 
 #### 2.1.2 体积剖分策略
