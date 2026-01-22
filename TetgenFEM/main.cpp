@@ -24,6 +24,7 @@
 #include "Object.h"
 #include "Vertex.h"
 #include "Edge.h"
+#include "AgentSphereContact.h"
 #include "Experiment3.h"
 #include "Experiment1.h"
 #include "Experiment2.h"
@@ -72,6 +73,32 @@ struct KeyLatch {
 		return false;
 	}
 };
+
+static std::string formatSignedInt(float v)
+{
+	const long long iv = static_cast<long long>(std::llround(static_cast<double>(v)));
+	return std::to_string(iv);
+}
+
+static void drawWireSphereCircles(const Eigen::Vector3f& center, float radius, int segments)
+{
+	const int seg = std::max(8, segments);
+	const float r = std::max(0.0f, radius);
+	auto drawCircle = [&](const Eigen::Vector3f& a, const Eigen::Vector3f& b) {
+		glBegin(GL_LINE_LOOP);
+		for (int i = 0; i < seg; ++i) {
+			const float t = (2.0f * PI) * (static_cast<float>(i) / static_cast<float>(seg));
+			const float ct = std::cos(t);
+			const float st = std::sin(t);
+			const Eigen::Vector3f p = center + r * (ct * a + st * b);
+			glVertex3f(p.x(), p.y(), p.z());
+		}
+		glEnd();
+	};
+	drawCircle(Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY());
+	drawCircle(Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitZ());
+	drawCircle(Eigen::Vector3f::UnitY(), Eigen::Vector3f::UnitZ());
+}
 } // namespace
 
 void saveForceData(const std::string& filename) {
@@ -788,6 +815,57 @@ int main(int argc, char** argv) {
 		return a->index < b->index;
 		});//index from min to max
 
+	// ------------------ Agent sphere ("finger") setup
+	Eigen::Vector3f bboxMin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+	Eigen::Vector3f bboxMax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+	for (const auto* v : objectUniqueVertices) {
+		bboxMin.x() = std::min(bboxMin.x(), v->initx);
+		bboxMin.y() = std::min(bboxMin.y(), v->inity);
+		bboxMin.z() = std::min(bboxMin.z(), v->initz);
+		bboxMax.x() = std::max(bboxMax.x(), v->initx);
+		bboxMax.y() = std::max(bboxMax.y(), v->inity);
+		bboxMax.z() = std::max(bboxMax.z(), v->initz);
+	}
+	const Eigen::Vector3f bboxCenter = 0.5f * (bboxMin + bboxMax);
+	const float bboxDiag = (bboxMax - bboxMin).norm();
+
+	AgentSphere agentSphere;
+	agentSphere.enabled = agentEnabled;
+	agentSphere.radius = std::max(1e-6f, agentRadiusBboxScale * bboxDiag);
+	agentSphere.contactStiffness = agentContactStiffness;
+	agentSphere.contactDamping = agentContactDamping;
+	agentSphere.position = Eigen::Vector3f(bboxCenter.x(), bboxMax.y() + agentSphere.radius * 1.5f, bboxCenter.z());
+	Eigen::Vector3f agentHomePosition = agentSphere.position;
+	Eigen::Vector3f agentPrevPosition = agentSphere.position;
+	Eigen::Vector3f agentLastReactionForceN = Eigen::Vector3f::Zero();
+	int agentLastContactCount = 0;
+
+	// Choose contact vertices: surface vertices (TetGen trifaces) if available, otherwise all unique vertices.
+	std::vector<Vertex*> agentContactVertices;
+	agentContactVertices.reserve(objectUniqueVertices.size());
+	{
+		int maxIndex = 0;
+		for (const auto* v : objectUniqueVertices) maxIndex = std::max(maxIndex, v->index);
+		const int indexOffset = out.firstnumber;
+		if (agentUseSurfaceVertices && out.numberoftrifaces > 0 && out.trifacelist && maxIndex >= 0) {
+			std::vector<char> isSurface(static_cast<size_t>(maxIndex + 1), 0);
+			for (int i = 0; i < out.numberoftrifaces * 3; ++i) {
+				const int idx = out.trifacelist[i] - indexOffset;
+				if (idx >= 0 && idx <= maxIndex) isSurface[static_cast<size_t>(idx)] = 1;
+			}
+			for (auto* v : objectUniqueVertices) {
+				if (v->index >= 0 && v->index <= maxIndex && isSurface[static_cast<size_t>(v->index)]) {
+					agentContactVertices.push_back(v);
+				}
+			}
+			if (agentContactVertices.empty()) {
+				agentContactVertices = objectUniqueVertices;
+			}
+		} else {
+			agentContactVertices = objectUniqueVertices;
+		}
+	}
+
 	// [REMOVED] The previous custom export logic was causing "key not found" errors 
 	// because of vertex pointer mismatches after deduplication.
 	// We now use TetGen's native save functions immediately after meshing (see above).
@@ -907,6 +985,46 @@ int main(int argc, char** argv) {
 		const float uiW = 200.0f;
 		const float uiH = 50.0f;
 		const SimpleUI::Rect uiRunRect{ uiMargin, uiMargin, uiW, uiH };
+
+		// ------------------ Agent sphere controls
+		static KeyLatch agentToggleLatch;
+		static KeyLatch agentHomeLatch;
+		static KeyLatch agentPrintLatch;
+
+		if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
+			agentSphere.enabled = !agentSphere.enabled;
+			std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
+			          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
+			          << "  Home: T | Print force: G\n";
+		}
+		if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
+			agentSphere.position = agentHomePosition;
+			agentPrevPosition = agentHomePosition;
+		}
+
+		// Continuous movement while key is held.
+		{
+			const bool shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+			                   glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+			const float speed = agentMoveSpeedBboxPerSec * bboxDiag * (shift ? 4.0f : 1.0f);
+			Eigen::Vector3f delta = Eigen::Vector3f::Zero();
+			if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) delta.x() -= speed * timeStep;
+			if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) delta.x() += speed * timeStep;
+			if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) delta.y() += speed * timeStep;
+			if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) delta.y() -= speed * timeStep;
+			if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) delta.z() -= speed * timeStep;
+			if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) delta.z() += speed * timeStep;
+			agentSphere.position += delta;
+			agentSphere.velocity = (agentSphere.position - agentPrevPosition) / std::max(1e-8f, timeStep);
+			agentPrevPosition = agentSphere.position;
+		}
+		if (agentPrintLatch.consume(window, GLFW_KEY_G)) {
+			std::cout << "[AgentSphere] pos=("
+			          << agentSphere.position.x() << ", " << agentSphere.position.y() << ", " << agentSphere.position.z() << ")"
+			          << " forceN=("
+			          << agentLastReactionForceN.x() << ", " << agentLastReactionForceN.y() << ", " << agentLastReactionForceN.z() << ")"
+			          << " contacts=" << agentLastContactCount << "\n";
+		}
 
 		// UI button triggers deterministic Experiment 3 (one-click).
 
@@ -1206,6 +1324,35 @@ int main(int argc, char** argv) {
 			}
 		}
 
+		// Apply agent contact after any drag/experiment force contributions.
+		if (agentSphere.enabled) {
+			const AgentContactResult contact = applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
+			agentLastReactionForceN = contact.reactionForceN;
+			agentLastContactCount = contact.contactVertexCount;
+
+			if (agentWriteLiveFile) {
+				static int liveFrame = 0;
+				++liveFrame;
+				if (liveFrame % std::max(1, agentLiveFileIntervalFrames) == 0) {
+					try {
+						std::filesystem::create_directories("out");
+						std::ofstream f("out/agent_force_live.txt", std::ios::out | std::ios::trunc);
+						if (f.is_open()) {
+							f << "time " << glfwGetTime() << "\n";
+							f << "pos " << agentSphere.position.x() << " " << agentSphere.position.y() << " " << agentSphere.position.z() << "\n";
+							f << "forceN " << agentLastReactionForceN.x() << " " << agentLastReactionForceN.y() << " " << agentLastReactionForceN.z() << "\n";
+							f << "contacts " << agentLastContactCount << "\n";
+						}
+					} catch (...) {
+						// ignore live file errors
+					}
+				}
+			}
+		} else {
+			agentLastReactionForceN.setZero();
+			agentLastContactCount = 0;
+		}
+
 		Eigen::Vector3f inputForce = Eigen::Vector3f::Zero(); // Placeholder for removed manual input
 
 
@@ -1342,6 +1489,13 @@ int main(int argc, char** argv) {
 		mat.block<3, 3>(0, 0) = rotation.toRotationMatrix();
 		glMultMatrixf(mat.data());
 
+		// Draw agent sphere ("finger") proxy.
+		if (agentSphere.enabled) {
+			glLineWidth(2.0f);
+			if (whiteBackground) glColor3f(0.8f, 0.2f, 0.2f);
+			else glColor3f(1.0f, 0.4f, 0.2f);
+			drawWireSphereCircles(agentSphere.position, agentSphere.radius, 36);
+		}
 
 		// Draw constraint plane for volume preservation mode
 		if (showVolumePreservation && planeConstraintY > 0.0f) {
@@ -1930,6 +2084,27 @@ int main(int argc, char** argv) {
 			for (int i = 0; i < object.groupNum; ++i) {
 				object.groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
 				object.groups[i].calLHS();
+			}
+		}
+
+		// Agent status label (digits/letters only for the tiny segment font).
+		{
+			const float sizePx = 10.0f;
+			const float labelW = 420.0f;
+			const float labelH = 28.0f;
+			const float x = uiMargin;
+			const float y = ui.state().windowHeight - uiMargin - labelH;
+			const SimpleUI::Rect agentLabelRect{ x, y, labelW, labelH };
+
+			if (agentSphere.enabled) {
+				const std::string label =
+					"AGENT ON  FX " + formatSignedInt(agentLastReactionForceN.x()) +
+					" FY " + formatSignedInt(agentLastReactionForceN.y()) +
+					" FZ " + formatSignedInt(agentLastReactionForceN.z()) +
+					" CNT " + std::to_string(agentLastContactCount);
+				ui.drawLabel(agentLabelRect, label, sizePx);
+			} else {
+				ui.drawLabel(agentLabelRect, "AGENT OFF  PRESS H", sizePx);
 			}
 		}
 

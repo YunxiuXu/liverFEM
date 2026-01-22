@@ -25,6 +25,17 @@ dragStiffness=750.0
 dragMaxAccel=15000.0
 dragMaxDisplacement=1.0
 
+# Agent sphere ("finger") contact
+# Toggle at runtime with key 'H' (see console output). These are defaults on startup.
+agent_enabled=false
+agent_useSurfaceVertices=true
+agent_radiusBboxScale=0.03
+agent_contactStiffness=8000
+agent_contactDamping=50
+agent_moveSpeedBboxPerSec=0.25
+agent_writeLiveFile=false
+agent_liveFileIntervalFrames=2
+
 # Experiment 3 (one-click) parameters (only used after pressing START EXP3)
 exp3_exOverEy=20
 exp3_overridePoisson=true

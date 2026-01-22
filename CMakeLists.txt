@@ -51,6 +51,7 @@ set(SOURCES
     TetgenFEM/Tetrahedron.cpp
     TetgenFEM/VisualOpenGL.cpp
     TetgenFEM/SimpleUI.cpp
+    TetgenFEM/AgentSphereContact.cpp
     TetgenFEM/ReadSTL.cpp
     TetgenFEM/params.cpp
     TetgenFEM/Experiment3.cpp

@@ -15,6 +15,14 @@ float dragInfluenceRadius = 0.6f;
 float dragStiffness = 2500.0f;
 float dragMaxAccel = 50000.0f;
 float dragMaxDisplacement = 1.0f;
+bool agentEnabled = false;
+bool agentUseSurfaceVertices = true;
+float agentRadiusBboxScale = 0.03f;
+float agentContactStiffness = 8000.0f;
+float agentContactDamping = 50.0f;
+float agentMoveSpeedBboxPerSec = 0.25f;
+bool agentWriteLiveFile = false;
+int agentLiveFileIntervalFrames = 2;
 int exp3SettleSteps = 120;
 int exp3DragSteps = 240;
 float exp3ExOverEy = 5.0f;
@@ -119,6 +127,10 @@ void loadParams(const std::string& filename) {
 	        {"dragStiffness", &dragStiffness},
 	        {"dragMaxAccel", &dragMaxAccel},
 	        {"dragMaxDisplacement", &dragMaxDisplacement},
+	        {"agent_radiusBboxScale", &agentRadiusBboxScale},
+	        {"agent_contactStiffness", &agentContactStiffness},
+	        {"agent_contactDamping", &agentContactDamping},
+	        {"agent_moveSpeedBboxPerSec", &agentMoveSpeedBboxPerSec},
 	        {"exp3_exOverEy", &exp3ExOverEy},
 	        {"exp3_poissonOverride", &exp3PoissonOverride},
 	        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
@@ -150,6 +162,7 @@ void loadParams(const std::string& filename) {
 
     std::unordered_map<std::string, int*> intParams = {
         {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
+        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
         {"exp3_settleSteps", &exp3SettleSteps},
         {"exp3_dragSteps", &exp3DragSteps},
         {"exp1_settleSteps", &exp1SettleSteps},
@@ -185,6 +198,9 @@ void loadParams(const std::string& filename) {
     std::unordered_map<std::string, bool*> boolParams = {
         {"useDirectLoading", &useDirectLoading},
         {"autoSaveMesh", &autoSaveMesh},
+        {"agent_enabled", &agentEnabled},
+        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
+        {"agent_writeLiveFile", &agentWriteLiveFile},
         {"exp3_overridePoisson", &exp3OverridePoisson},
         {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
         {"exp1_resetAfterFinish", &exp1ResetAfterFinish},

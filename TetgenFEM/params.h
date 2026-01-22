@@ -10,6 +10,16 @@ extern int groupNum, groupNumX, groupNumY, groupNumZ;
 extern const float PI;
 extern float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
 extern float dragInfluenceRadius, dragStiffness, dragMaxAccel, dragMaxDisplacement;
+
+// Agent sphere (finger proxy) contact parameters.
+extern bool agentEnabled;
+extern bool agentUseSurfaceVertices;
+extern float agentRadiusBboxScale;
+extern float agentContactStiffness;
+extern float agentContactDamping;
+extern float agentMoveSpeedBboxPerSec;
+extern bool agentWriteLiveFile;
+extern int agentLiveFileIntervalFrames;
 // Experiment 3 (one-click) configuration (used only when EXP3 is started).
 extern int exp3SettleSteps, exp3DragSteps;
 extern float exp3ExOverEy;
