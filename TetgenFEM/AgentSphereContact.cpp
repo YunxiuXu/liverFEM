@@ -22,9 +22,11 @@ AgentContactResult applyAgentSphereContact(
 	const float c = std::max(0.0f, agent.contactDamping);
 
 	float fx = 0.0f, fy = 0.0f, fz = 0.0f;
+	float nx = 0.0f, ny = 0.0f, nz = 0.0f;
+	float maxPenetration = 0.0f;
 	int contacts = 0;
 
-#pragma omp parallel for reduction(+:fx,fy,fz,contacts)
+#pragma omp parallel for reduction(+:fx,fy,fz,nx,ny,nz,contacts) reduction(max:maxPenetration)
 	for (int i = 0; i < static_cast<int>(contactVertices.size()); ++i) {
 		Vertex* v = contactVertices[i];
 		if (!v || v->isFixed) continue;
@@ -38,6 +40,7 @@ AgentContactResult applyAgentSphereContact(
 		const float dist = std::sqrt(dist2);
 		const float penetration = r - dist;
 		if (penetration <= 0.0f) continue;
+		maxPenetration = std::max(maxPenetration, penetration);
 
 		const Eigen::Vector3f n = d / dist; // from agent center to vertex
 
@@ -56,9 +59,20 @@ AgentContactResult applyAgentSphereContact(
 		fx -= fOnVertex.x();
 		fy -= fOnVertex.y();
 		fz -= fOnVertex.z();
+
+		// Track average normal direction (weighted by penetration).
+		nx += n.x() * penetration;
+		ny += n.y() * penetration;
+		nz += n.z() * penetration;
 	}
 
 	result.reactionForceN = Eigen::Vector3f(fx, fy, fz);
 	result.contactVertexCount = contacts;
+	result.maxPenetration = maxPenetration;
+	{
+		const Eigen::Vector3f sumN(nx, ny, nz);
+		const float nlen = sumN.norm();
+		if (nlen > 1e-12f) result.avgNormal = sumN / nlen;
+	}
 	return result;
 }

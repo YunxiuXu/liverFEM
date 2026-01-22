@@ -835,10 +835,30 @@ int main(int argc, char** argv) {
 	agentSphere.contactStiffness = agentContactStiffness;
 	agentSphere.contactDamping = agentContactDamping;
 	agentSphere.position = Eigen::Vector3f(bboxCenter.x(), bboxMax.y() + agentSphere.radius * 1.5f, bboxCenter.z());
-	Eigen::Vector3f agentHomePosition = agentSphere.position;
-	Eigen::Vector3f agentPrevPosition = agentSphere.position;
-	Eigen::Vector3f agentLastReactionForceN = Eigen::Vector3f::Zero();
+
+	Eigen::Vector3f agentDevicePosition = agentSphere.position;
+	Eigen::Vector3f agentDevicePrevPosition = agentDevicePosition;
+	Eigen::Vector3f agentDeviceVelocity = Eigen::Vector3f::Zero();
+
+	Eigen::Vector3f agentProxyPosition = agentSphere.position;
+	Eigen::Vector3f agentProxyVelocity = Eigen::Vector3f::Zero();
+
+	Eigen::Vector3f agentHomePosition = agentDevicePosition;
+
+	Eigen::Vector3f agentLastDeviceForceN = Eigen::Vector3f::Zero();   // what you'd send to a haptic device
+	Eigen::Vector3f agentLastContactForceN = Eigen::Vector3f::Zero();  // reaction on proxy from tissue
+	Eigen::Vector3f agentLastCouplingForceN = Eigen::Vector3f::Zero(); // device<->proxy spring force (on proxy)
 	int agentLastContactCount = 0;
+
+	float objectMassKg = 0.0f;
+	for (const auto* v : objectUniqueVertices) {
+		objectMassKg += std::max(0.0f, v->vertexMass);
+	}
+	const float agentProxyMassKg = std::max(1e-6f, std::abs(agentProxyMassFracOfObject) * std::max(1e-6f, objectMassKg));
+	const float invBboxDiag = 1.0f / std::max(1e-6f, bboxDiag);
+	const float agentVcKLen = std::max(0.0f, agentVcStiffnessNPerBbox) * invBboxDiag;     // N per unit length
+	const float agentVcCLen = std::max(0.0f, agentVcDampingNsPerBbox) * invBboxDiag;      // N*s per unit length
+	const float agentProxyCorr = std::clamp(agentProxyPositionCorrection, 0.0f, 1.0f);
 
 	// Choose contact vertices: surface vertices (TetGen trifaces) if available, otherwise all unique vertices.
 	std::vector<Vertex*> agentContactVertices;
@@ -990,16 +1010,25 @@ int main(int argc, char** argv) {
 		static KeyLatch agentToggleLatch;
 		static KeyLatch agentHomeLatch;
 		static KeyLatch agentPrintLatch;
+		static KeyLatch agentVcLatch;
 
 		if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
 			agentSphere.enabled = !agentSphere.enabled;
 			std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
 			          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-			          << "  Home: T | Print force: G\n";
+			          << "  VirtualCoupling: V | Home: T | Print force: G\n";
+		}
+		static bool agentUseVC = agentVirtualCoupling;
+		if (agentVcLatch.consume(window, GLFW_KEY_V)) {
+			agentUseVC = !agentUseVC;
+			std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
 		}
 		if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
-			agentSphere.position = agentHomePosition;
-			agentPrevPosition = agentHomePosition;
+			agentDevicePosition = agentHomePosition;
+			agentDevicePrevPosition = agentHomePosition;
+			agentDeviceVelocity.setZero();
+			agentProxyPosition = agentHomePosition;
+			agentProxyVelocity.setZero();
 		}
 
 		// Continuous movement while key is held.
@@ -1014,15 +1043,16 @@ int main(int argc, char** argv) {
 			if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) delta.y() -= speed * timeStep;
 			if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) delta.z() -= speed * timeStep;
 			if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) delta.z() += speed * timeStep;
-			agentSphere.position += delta;
-			agentSphere.velocity = (agentSphere.position - agentPrevPosition) / std::max(1e-8f, timeStep);
-			agentPrevPosition = agentSphere.position;
+			agentDevicePosition += delta;
+			agentDeviceVelocity = (agentDevicePosition - agentDevicePrevPosition) / std::max(1e-8f, timeStep);
+			agentDevicePrevPosition = agentDevicePosition;
 		}
 		if (agentPrintLatch.consume(window, GLFW_KEY_G)) {
-			std::cout << "[AgentSphere] pos=("
-			          << agentSphere.position.x() << ", " << agentSphere.position.y() << ", " << agentSphere.position.z() << ")"
-			          << " forceN=("
-			          << agentLastReactionForceN.x() << ", " << agentLastReactionForceN.y() << ", " << agentLastReactionForceN.z() << ")"
+			std::cout << "[AgentSphere] vc=" << (agentUseVC ? "1" : "0")
+			          << " devicePos=(" << agentDevicePosition.x() << ", " << agentDevicePosition.y() << ", " << agentDevicePosition.z() << ")"
+			          << " proxyPos=(" << agentProxyPosition.x() << ", " << agentProxyPosition.y() << ", " << agentProxyPosition.z() << ")"
+			          << " deviceForceN=(" << agentLastDeviceForceN.x() << ", " << agentLastDeviceForceN.y() << ", " << agentLastDeviceForceN.z() << ")"
+			          << " contactForceN=(" << agentLastContactForceN.x() << ", " << agentLastContactForceN.y() << ", " << agentLastContactForceN.z() << ")"
 			          << " contacts=" << agentLastContactCount << "\n";
 		}
 
@@ -1326,9 +1356,41 @@ int main(int argc, char** argv) {
 
 		// Apply agent contact after any drag/experiment force contributions.
 		if (agentSphere.enabled) {
-			const AgentContactResult contact = applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
-			agentLastReactionForceN = contact.reactionForceN;
-			agentLastContactCount = contact.contactVertexCount;
+			if (agentUseVC) {
+				// Virtual coupling: device controls a target (agentDevicePosition), proxy interacts with tissue.
+				const Eigen::Vector3f couplingForceN =
+					agentVcKLen * (agentDevicePosition - agentProxyPosition) +
+					agentVcCLen * (agentDeviceVelocity - agentProxyVelocity);
+
+				agentSphere.position = agentProxyPosition;
+				agentSphere.velocity = agentProxyVelocity;
+				const AgentContactResult contact = applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
+
+				// Optional small position correction (reduces visible penetration without cranking stiffness too high).
+				if (contact.contactVertexCount > 0 && contact.maxPenetration > 0.0f && contact.avgNormal.squaredNorm() > 0.0f) {
+					agentProxyPosition -= contact.avgNormal * (contact.maxPenetration * agentProxyCorr);
+				}
+
+				const Eigen::Vector3f proxyAcc = (couplingForceN + contact.reactionForceN) / agentProxyMassKg;
+				agentProxyVelocity += proxyAcc * timeStep;
+				agentProxyPosition += agentProxyVelocity * timeStep;
+
+				agentLastCouplingForceN = couplingForceN;
+				agentLastContactForceN = contact.reactionForceN;
+				agentLastDeviceForceN = -couplingForceN;
+				agentLastContactCount = contact.contactVertexCount;
+			} else {
+				// Direct: the sphere is kinematic and contact force is reported directly.
+				agentSphere.position = agentDevicePosition;
+				agentSphere.velocity = agentDeviceVelocity;
+				const AgentContactResult contact = applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
+				agentLastCouplingForceN.setZero();
+				agentLastContactForceN = contact.reactionForceN;
+				agentLastDeviceForceN = contact.reactionForceN;
+				agentLastContactCount = contact.contactVertexCount;
+				agentProxyPosition = agentDevicePosition;
+				agentProxyVelocity = agentDeviceVelocity;
+			}
 
 			if (agentWriteLiveFile) {
 				static int liveFrame = 0;
@@ -1339,8 +1401,11 @@ int main(int argc, char** argv) {
 						std::ofstream f("out/agent_force_live.txt", std::ios::out | std::ios::trunc);
 						if (f.is_open()) {
 							f << "time " << glfwGetTime() << "\n";
-							f << "pos " << agentSphere.position.x() << " " << agentSphere.position.y() << " " << agentSphere.position.z() << "\n";
-							f << "forceN " << agentLastReactionForceN.x() << " " << agentLastReactionForceN.y() << " " << agentLastReactionForceN.z() << "\n";
+							f << "vc " << (agentUseVC ? 1 : 0) << "\n";
+							f << "devicePos " << agentDevicePosition.x() << " " << agentDevicePosition.y() << " " << agentDevicePosition.z() << "\n";
+							f << "proxyPos " << agentProxyPosition.x() << " " << agentProxyPosition.y() << " " << agentProxyPosition.z() << "\n";
+							f << "deviceForceN " << agentLastDeviceForceN.x() << " " << agentLastDeviceForceN.y() << " " << agentLastDeviceForceN.z() << "\n";
+							f << "contactForceN " << agentLastContactForceN.x() << " " << agentLastContactForceN.y() << " " << agentLastContactForceN.z() << "\n";
 							f << "contacts " << agentLastContactCount << "\n";
 						}
 					} catch (...) {
@@ -1349,7 +1414,9 @@ int main(int argc, char** argv) {
 				}
 			}
 		} else {
-			agentLastReactionForceN.setZero();
+			agentLastDeviceForceN.setZero();
+			agentLastContactForceN.setZero();
+			agentLastCouplingForceN.setZero();
 			agentLastContactCount = 0;
 		}
 
@@ -1489,12 +1556,18 @@ int main(int argc, char** argv) {
 		mat.block<3, 3>(0, 0) = rotation.toRotationMatrix();
 		glMultMatrixf(mat.data());
 
-		// Draw agent sphere ("finger") proxy.
+		// Draw agent sphere ("finger") device/proxy.
 		if (agentSphere.enabled) {
 			glLineWidth(2.0f);
+			// Device target (gray)
+			if (whiteBackground) glColor3f(0.2f, 0.2f, 0.2f);
+			else glColor3f(0.7f, 0.7f, 0.7f);
+			drawWireSphereCircles(agentDevicePosition, agentSphere.radius, 36);
+
+			// Proxy (orange/red)
 			if (whiteBackground) glColor3f(0.8f, 0.2f, 0.2f);
 			else glColor3f(1.0f, 0.4f, 0.2f);
-			drawWireSphereCircles(agentSphere.position, agentSphere.radius, 36);
+			drawWireSphereCircles(agentProxyPosition, agentSphere.radius, 36);
 		}
 
 		// Draw constraint plane for volume preservation mode
@@ -2098,9 +2171,10 @@ int main(int argc, char** argv) {
 
 			if (agentSphere.enabled) {
 				const std::string label =
-					"AGENT ON  FX " + formatSignedInt(agentLastReactionForceN.x()) +
-					" FY " + formatSignedInt(agentLastReactionForceN.y()) +
-					" FZ " + formatSignedInt(agentLastReactionForceN.z()) +
+					"AGENT ON VC " + std::string(agentUseVC ? "1" : "0") +
+					" FX " + formatSignedInt(agentLastDeviceForceN.x()) +
+					" FY " + formatSignedInt(agentLastDeviceForceN.y()) +
+					" FZ " + formatSignedInt(agentLastDeviceForceN.z()) +
 					" CNT " + std::to_string(agentLastContactCount);
 				ui.drawLabel(agentLabelRect, label, sizePx);
 			} else {

@@ -29,10 +29,15 @@ dragMaxDisplacement=1.0
 # Toggle at runtime with key 'H' (see console output). These are defaults on startup.
 agent_enabled=false
 agent_useSurfaceVertices=true
+agent_virtualCoupling=true
 agent_radiusBboxScale=0.03
-agent_contactStiffness=8000
-agent_contactDamping=50
+agent_contactStiffness=40000
+agent_contactDamping=200
 agent_moveSpeedBboxPerSec=0.25
+agent_proxyMassFracOfObject=0.01
+agent_vcStiffnessNPerBbox=250
+agent_vcDampingNsPerBbox=20
+agent_proxyPositionCorrection=0.5
 agent_writeLiveFile=false
 agent_liveFileIntervalFrames=2
 

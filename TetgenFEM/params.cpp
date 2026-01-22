@@ -17,10 +17,15 @@ float dragMaxAccel = 50000.0f;
 float dragMaxDisplacement = 1.0f;
 bool agentEnabled = false;
 bool agentUseSurfaceVertices = true;
+bool agentVirtualCoupling = true;
 float agentRadiusBboxScale = 0.03f;
-float agentContactStiffness = 8000.0f;
-float agentContactDamping = 50.0f;
+float agentContactStiffness = 40000.0f;
+float agentContactDamping = 200.0f;
 float agentMoveSpeedBboxPerSec = 0.25f;
+float agentProxyMassFracOfObject = 0.01f;
+float agentVcStiffnessNPerBbox = 250.0f;
+float agentVcDampingNsPerBbox = 20.0f;
+float agentProxyPositionCorrection = 0.50f;
 bool agentWriteLiveFile = false;
 int agentLiveFileIntervalFrames = 2;
 int exp3SettleSteps = 120;
@@ -131,6 +136,10 @@ void loadParams(const std::string& filename) {
 	        {"agent_contactStiffness", &agentContactStiffness},
 	        {"agent_contactDamping", &agentContactDamping},
 	        {"agent_moveSpeedBboxPerSec", &agentMoveSpeedBboxPerSec},
+	        {"agent_proxyMassFracOfObject", &agentProxyMassFracOfObject},
+	        {"agent_vcStiffnessNPerBbox", &agentVcStiffnessNPerBbox},
+	        {"agent_vcDampingNsPerBbox", &agentVcDampingNsPerBbox},
+	        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
 	        {"exp3_exOverEy", &exp3ExOverEy},
 	        {"exp3_poissonOverride", &exp3PoissonOverride},
 	        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
@@ -200,6 +209,7 @@ void loadParams(const std::string& filename) {
         {"autoSaveMesh", &autoSaveMesh},
         {"agent_enabled", &agentEnabled},
         {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
+        {"agent_virtualCoupling", &agentVirtualCoupling},
         {"agent_writeLiveFile", &agentWriteLiveFile},
         {"exp3_overridePoisson", &exp3OverridePoisson},
         {"exp3_resetAfterFinish", &exp3ResetAfterFinish},

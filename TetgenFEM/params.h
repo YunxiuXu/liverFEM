@@ -14,10 +14,15 @@ extern float dragInfluenceRadius, dragStiffness, dragMaxAccel, dragMaxDisplaceme
 // Agent sphere (finger proxy) contact parameters.
 extern bool agentEnabled;
 extern bool agentUseSurfaceVertices;
+extern bool agentVirtualCoupling;
 extern float agentRadiusBboxScale;
 extern float agentContactStiffness;
 extern float agentContactDamping;
 extern float agentMoveSpeedBboxPerSec;
+extern float agentProxyMassFracOfObject;
+extern float agentVcStiffnessNPerBbox;
+extern float agentVcDampingNsPerBbox;
+extern float agentProxyPositionCorrection;
 extern bool agentWriteLiveFile;
 extern int agentLiveFileIntervalFrames;
 // Experiment 3 (one-click) configuration (used only when EXP3 is started).

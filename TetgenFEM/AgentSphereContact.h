@@ -19,6 +19,8 @@ struct AgentSphere {
 struct AgentContactResult {
 	Eigen::Vector3f reactionForceN = Eigen::Vector3f::Zero(); // force on the agent (Newton)
 	int contactVertexCount = 0;
+	float maxPenetration = 0.0f;
+	Eigen::Vector3f avgNormal = Eigen::Vector3f::Zero();
 };
 
 // Applies penalty-based sphere contact to vertices. Writes per-vertex accelerations into `vertexAccels`
@@ -28,4 +30,3 @@ AgentContactResult applyAgentSphereContact(
 	const std::vector<Vertex*>& contactVertices,
 	float timeStep,
 	std::vector<Eigen::Vector3f>& vertexAccels);
-
