@@ -84,12 +84,8 @@ cd "${ROOT_DIR}/TetgenFEM"
 
 # 运行程序
 if [ -f "${BUILD_DIR}/TetgenFEM" ]; then
-    echo "正在运行仿真程序 (自动触发 Experiment 3)..."
-    TETGENFEM_AUTO_EXP3=1 "${BUILD_DIR}/TetgenFEM"
-    
-    echo ""
-    echo "正在运行数据分析..."
-    python3 "${ROOT_DIR}/out/experiment3/analyze_exp3.py"
+    echo "正在运行仿真程序..."
+    "${BUILD_DIR}/TetgenFEM"
 else
     echo "错误: 未找到可执行文件 ${BUILD_DIR}/TetgenFEM"
     exit 1
