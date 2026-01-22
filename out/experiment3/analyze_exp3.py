@@ -5,7 +5,15 @@ import os
 
 # Paths
 base_path = "/Users/yunxiuxu/Documents/tetfemcpp/out/experiment3"
-data_path = os.path.join(base_path, "20251223_150458/experiment3_force_displacement.csv")
+
+# Find latest timestamped directory
+subdirs = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d)) and d.startswith("2025")]
+if not subdirs:
+    print("Error: No data directories found.")
+    exit(1)
+latest_dir = sorted(subdirs)[-1]
+data_path = os.path.join(base_path, latest_dir, "experiment3_force_displacement.csv")
+print(f"Analyzing data from: {latest_dir}")
 
 # Load data
 df = pd.read_csv(data_path)

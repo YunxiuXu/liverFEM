@@ -244,8 +244,9 @@ void Group::calGroupK(float E, float nu) {
 
 	// Iterate over each tetrahedron to assemble the global stiffness matrix
 	for (auto& tetra : tetrahedra) {
-		// Get the local stiffness matrix for the current tetrahedron
-		Eigen::MatrixXf localK = tetra->createElementK(E, nu, initCOM);
+		// Use the anisotropic path even for isotropic case to ensure consistent numerical behavior
+		// across all experiment runs.
+		Eigen::MatrixXf localK = tetra->createElementKAni(E, E, E, nu, initCOM);
 
 		// Determine where to add the local stiffness matrix in the global stiffness matrix
 		for (int i = 0; i < 4; ++i) { // Each tetrahedron has 4 vertices

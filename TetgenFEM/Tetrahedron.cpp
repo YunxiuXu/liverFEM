@@ -138,15 +138,9 @@ Eigen::MatrixXf Tetrahedron::createElementKAni(float E1, float E2, float E3, flo
 	B /= (6 * V);
 
 	// Orthotropic linear elasticity in global (x,y,z).
-	//
-	// Previous implementation used geometric-mean coupling terms (sqrt(Ei*Ej)) for both
-	// normal coupling and shear, which makes a test "drag along X vs Y" not isolate
-	// Ex/Ey well (increasing Ex also boosts multiple shear modes). That can invalidate
-	// the paper statement "Ex > Ey => stiffer along X".
-	//
-	// Here we build a symmetric compliance matrix S (Voigt order: xx,yy,zz,xy,yz,zx),
+	// We build a symmetric compliance matrix S (Voigt order: xx,yy,zz,xy,yz,zx),
 	// enforce reciprocity via nu21=nu12*E2/E1 etc, choose shear moduli based on the
-	// softer axis (min(Ei,Ej)), then invert to get stiffness D.
+	// arithmetic mean (more stable for stiffening), then invert to get stiffness D.
 	const float eps = 1e-12f;
 	E1 = std::max(E1, eps);
 	E2 = std::max(E2, eps);
@@ -154,18 +148,30 @@ Eigen::MatrixXf Tetrahedron::createElementKAni(float E1, float E2, float E3, flo
 	nu = std::min(0.49f, std::max(0.0f, nu));
 	nu = clampNuForStableCompliance(E1, E2, E3, nu);
 
-	const float nu12 = nu;
-	const float nu13 = nu;
-	const float nu23 = nu;
-	const float nu21 = nu12 * (E2 / E1);
-	const float nu31 = nu13 * (E3 / E1);
-	const float nu32 = nu23 * (E3 / E2);
+	// Stable Orthotropic reciprocity:
+	// nu_ij: pulling in i, contraction in j.
+	// Standard reciprocity: nu_ij / Ei = nu_ji / Ej.
+	// We set the baseline Poisson's ratio 'nu' for pulling the stiffer axis.
+	float nu12, nu21, nu13, nu31, nu23, nu32;
+	auto computeStableNu = [&](float Ei, float Ej, float nu_base, float& nij, float& nji) {
+		if (Ei > Ej) { // i is stiffer
+			nij = nu_base;
+			nji = nu_base * (Ej / Ei);
+		}
+		else { // j is stiffer
+			nji = nu_base;
+			nij = nu_base * (Ei / Ej);
+		}
+	};
+	computeStableNu(E1, E2, nu, nu12, nu21);
+	computeStableNu(E1, E3, nu, nu13, nu31);
+	computeStableNu(E2, E3, nu, nu23, nu32);
 
 	const float inv2pnu = 1.0f / (2.0f * (1.0f + nu));
-	// Use geometric mean for shear modulus to allow stiffening in both directions
-	const float G12 = std::max(std::sqrt(E1 * E2) * inv2pnu, eps); // xy
-	const float G23 = std::max(std::sqrt(E2 * E3) * inv2pnu, eps); // yz
-	const float G31 = std::max(std::sqrt(E3 * E1) * inv2pnu, eps); // zx
+	// Use arithmetic mean for shear modulus to allow strong stiffening in both directions
+	const float G12 = std::max(0.5f * (E1 + E2) * inv2pnu, eps); // xy
+	const float G23 = std::max(0.5f * (E2 + E3) * inv2pnu, eps); // yz
+	const float G31 = std::max(0.5f * (E3 + E1) * inv2pnu, eps); // zx
 
 	Eigen::Matrix<float, 6, 6> S = Eigen::Matrix<float, 6, 6>::Zero();
 	S(0, 0) = 1.0f / E1;
@@ -173,12 +179,9 @@ Eigen::MatrixXf Tetrahedron::createElementKAni(float E1, float E2, float E3, flo
 	S(2, 2) = 1.0f / E3;
 
 	// Symmetric normal coupling (nu12/E1 == nu21/E2, etc).
-	S(0, 1) = -nu12 / E1;
-	S(1, 0) = -nu21 / E2;
-	S(0, 2) = -nu13 / E1;
-	S(2, 0) = -nu31 / E3;
-	S(1, 2) = -nu23 / E2;
-	S(2, 1) = -nu32 / E3;
+	S(0, 1) = S(1, 0) = -nu12 / E1;
+	S(0, 2) = S(2, 0) = -nu13 / E1;
+	S(1, 2) = S(2, 1) = -nu23 / E2;
 
 	S(3, 3) = 1.0f / G12;
 	S(4, 4) = 1.0f / G23;

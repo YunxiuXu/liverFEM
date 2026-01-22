@@ -216,6 +216,10 @@ void Experiment3::applyMaterial(const RunSpec& spec) {
         else youngs3 = hardE;
     }
 
+    std::cout << "[Experiment3] Run " << runIndex << ": material=" 
+              << (spec.material == RunSpec::Material::Isotropic ? "iso" : "ani")
+              << ", E=(" << youngs1 << "," << youngs2 << "," << youngs3 << "), nu=" << poisson << "\n";
+
 #pragma omp parallel for
     for (int i = 0; i < object->groupNum; ++i) {
         if (spec.material == RunSpec::Material::Isotropic) {

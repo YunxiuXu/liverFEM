@@ -1,7 +1,7 @@
-youngs=7000
-youngs1=7000
-youngs2=7000
-youngs3=7000
+youngs=1000
+youngs1=1000
+youngs2=1000
+youngs3=1000
 poisson=0.49
 density=1000
 groupNumX=8
@@ -26,7 +26,7 @@ dragMaxAccel=15000.0
 dragMaxDisplacement=1.0
 
 # Experiment 3 (one-click) parameters (only used after pressing START EXP3)
-exp3_exOverEy=5
+exp3_exOverEy=20
 exp3_overridePoisson=true
 exp3_poissonOverride=0.08
 exp3_settleSteps=120
