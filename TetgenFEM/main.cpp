@@ -1108,7 +1108,9 @@ int main(int argc, char** argv) {
 			agentSphere.enabled = !agentSphere.enabled;
 			std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
 			          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-			          << "  VirtualCoupling: V | Home: T | Print force: G\n";
+			          << "  VirtualCoupling: V | Home: T | Print force: G\n"
+			          << "  Contact: triangles=" << agentContactTriangles.size()
+			          << " vertices=" << agentContactVertices.size() << "\n";
 		}
 		static bool agentUseVC = agentVirtualCoupling;
 		if (agentVcLatch.consume(window, GLFW_KEY_V)) {
@@ -1140,12 +1142,27 @@ int main(int argc, char** argv) {
 			agentDevicePrevPosition = agentDevicePosition;
 		}
 		if (agentPrintLatch.consume(window, GLFW_KEY_G)) {
+			float proxySurfDist = -1.0f;
+			float proxySurfSN = 0.0f;
+			float proxyPen = 0.0f;
+			if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+				const AgentSurfaceQueryResult q = queryAgentSurface(agentProxyPosition, agentContactTriangles);
+				if (q.found && q.outwardNormal.squaredNorm() > 0.0f) {
+					proxySurfDist = q.distanceToSurface;
+					proxySurfSN = q.outwardNormal.dot(agentProxyPosition - q.closestPoint);
+					proxyPen = std::max(0.0f, agentSphere.radius - q.distanceToSurface);
+				}
+			}
 			std::cout << "[AgentSphere] vc=" << (agentUseVC ? "1" : "0")
 			          << " devicePos=(" << agentDevicePosition.x() << ", " << agentDevicePosition.y() << ", " << agentDevicePosition.z() << ")"
 			          << " proxyPos=(" << agentProxyPosition.x() << ", " << agentProxyPosition.y() << ", " << agentProxyPosition.z() << ")"
 			          << " deviceForceN=(" << agentLastDeviceForceN.x() << ", " << agentLastDeviceForceN.y() << ", " << agentLastDeviceForceN.z() << ")"
 			          << " contactForceN=(" << agentLastContactForceN.x() << ", " << agentLastContactForceN.y() << ", " << agentLastContactForceN.z() << ")"
-			          << " contacts=" << agentLastContactCount << "\n";
+			          << " contacts=" << agentLastContactCount
+			          << " proxySurfDist=" << proxySurfDist
+			          << " proxySurfSN=" << proxySurfSN
+			          << " proxyPen=" << proxyPen
+			          << "\n";
 		}
 
 		// UI button triggers deterministic Experiment 3 (one-click).
@@ -1450,74 +1467,239 @@ int main(int argc, char** argv) {
 		if (agentSphere.enabled) {
 			if (agentUseVC) {
 			// Virtual coupling: device controls a target (agentDevicePosition), proxy interacts with tissue.
-			const Eigen::Vector3f couplingForceN =
-				agentVcKLen * (agentDevicePosition - agentProxyPosition) +
-				agentVcCLen * (agentDeviceVelocity - agentProxyVelocity);
+			// We use substeps to avoid "tunneling" and to get accurate proxy dynamics,
+			// but we DON'T accumulate forces to the object in the substep loop.
+			// Instead, we only apply contact force ONCE at the end based on final proxy state.
+			const bool useTriangleContact = agentUseSurfaceTriangles && !agentContactTriangles.empty();
+			const float deviceStep = agentDeviceVelocity.norm() * timeStep;
+			const float maxStep = std::max(1e-6f, 0.25f * agentSphere.radius);
+			const int substepsFromSpeed = static_cast<int>(std::ceil(deviceStep / maxStep));
+			const int substeps = std::max(1, std::max(agentVcSubsteps, substepsFromSpeed));
+			const float dtSub = timeStep / static_cast<float>(substeps);
 
+			AgentContactResult lastContact{};
+			Eigen::Vector3f lastCouplingForceN = Eigen::Vector3f::Zero();
+
+			const float maxPenFrac = std::clamp(agentMaxPenetrationFrac, 0.0f, 0.95f);
+			const float allowedPen = maxPenFrac * agentSphere.radius;
+			const float projMargin = 1e-4f * bboxDiag;
+
+			// Substep loop for proxy dynamics - DO NOT apply forces to object here
+			for (int si = 0; si < substeps; ++si) {
+				const Eigen::Vector3f couplingForceN =
+					agentVcKLen * (agentDevicePosition - agentProxyPosition) +
+					agentVcCLen * (agentDeviceVelocity - agentProxyVelocity);
+
+				agentSphere.position = agentProxyPosition;
+				agentSphere.velocity = agentProxyVelocity;
+
+				// Use a temporary force buffer - don't touch dragForces in the substep loop!
+				std::vector<Eigen::Vector3f> tempForces(dragForces.size(), Eigen::Vector3f::Zero());
+				const AgentContactResult contact = useTriangleContact
+					? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, dtSub, tempForces, 1.0f)
+					: applyAgentSphereContact(agentSphere, agentContactVertices, dtSub, tempForces, 1.0f);
+
+				// Keep penetration bounded (prevents "falling through" when stiffness/step is insufficient).
+				// Note: contact.avgNormal points from proxy center to surface point (inward when outside),
+				// so subtracting it moves the proxy outward.
+				if (contact.contactVertexCount > 0 && contact.maxPenetration > 0.0f && contact.avgNormal.squaredNorm() > 0.0f) {
+					const float overPen = std::max(0.0f, contact.maxPenetration - allowedPen);
+					const float corr = std::clamp(agentProxyCorr, 0.0f, 1.0f);
+					agentProxyPosition -= contact.avgNormal * (overPen * std::max(0.25f, corr) + projMargin);
+
+					// Remove inward velocity component so we don't immediately re-penetrate.
+					const float vnIn = agentProxyVelocity.dot(contact.avgNormal);
+					if (vnIn > 0.0f) agentProxyVelocity -= contact.avgNormal * vnIn;
+				}
+
+				const Eigen::Vector3f proxyAcc = (couplingForceN + contact.reactionForceN) / agentProxyMassKg;
+				agentProxyVelocity += proxyAcc * dtSub;
+				agentProxyPosition += agentProxyVelocity * dtSub;
+
+				// Recovery / constraint: keep proxy from ending up fully inside the closed surface.
+				// If contact reports 0, it might still be inside (sphere completely contained => no boundary intersection),
+				// so we clamp the proxy to a "shell" near the surface by projecting along the closest outward normal.
+				if (useTriangleContact && contact.contactVertexCount == 0) {
+					const AgentSurfaceQueryResult q = queryAgentSurface(agentProxyPosition, agentContactTriangles);
+					if (q.found && q.outwardNormal.squaredNorm() > 0.0f) {
+						const float sN = q.outwardNormal.dot(agentProxyPosition - q.closestPoint);
+						const float targetSN = std::max(0.0f, agentSphere.radius - allowedPen);
+						if (sN < targetSN) {
+							agentProxyPosition += q.outwardNormal * ((targetSN - sN) + projMargin);
+							const float vn = agentProxyVelocity.dot(q.outwardNormal);
+							if (vn < 0.0f) agentProxyVelocity -= q.outwardNormal * vn;
+						}
+					}
+				}
+
+				lastCouplingForceN = couplingForceN;
+				lastContact = contact;
+			}
+
+			// NOW apply contact force to object ONCE based on final proxy state
+			// Use DISTRIBUTED force application like drag - affects all vertices within influence radius
 			agentSphere.position = agentProxyPosition;
 			agentSphere.velocity = agentProxyVelocity;
-			const bool useTriangleContact = agentUseSurfaceTriangles && !agentContactTriangles.empty();
-			const AgentContactResult contact = useTriangleContact
-				? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, timeStep, dragForces)
-				: applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
-
-			// Optional small position correction (reduces visible penetration without cranking stiffness too high).
-			if (contact.contactVertexCount > 0 && contact.maxPenetration > 0.0f && contact.avgNormal.squaredNorm() > 0.0f) {
-				agentProxyPosition -= contact.avgNormal * (contact.maxPenetration * agentProxyCorr);
+			
+			// Query the closest surface point to determine penetration
+			const AgentSurfaceQueryResult surfQ = queryAgentSurface(agentProxyPosition, agentContactTriangles);
+			
+			AgentContactResult finalContact{};
+			if (surfQ.found) {
+				const float penetration = agentSphere.radius - surfQ.distanceToSurface;
+				if (penetration > 0.0f) {
+					// Contact detected! Apply distributed force to all vertices within influence radius
+					const Eigen::Vector3f contactPoint = surfQ.closestPoint;
+					const Eigen::Vector3f contactNormal = surfQ.outwardNormal; // points outward from surface
+					const float influenceRadius = agentSphere.radius * agentInfluenceRadiusFrac;
+					
+					const float k = agentSphere.contactStiffness;
+					const float c = agentSphere.contactDamping;
+					
+					// Base acceleration magnitude from penetration
+					float baseAccelMag = k * penetration;
+					
+					// Apply to all vertices within influence radius (like drag does)
+					int contactCount = 0;
+					Eigen::Vector3f totalReactionForce = Eigen::Vector3f::Zero();
+					
+					#pragma omp parallel for reduction(+:contactCount) 
+					for (int i = 0; i < static_cast<int>(objectUniqueVertices.size()); ++i) {
+						Vertex* v = objectUniqueVertices[i];
+						if (!v || v->isFixed) continue;
+						if (v->index < 0 || v->index >= static_cast<int>(dragForces.size())) continue;
+						
+						const Eigen::Vector3f vpos(v->x, v->y, v->z);
+						const float distToContact = (vpos - contactPoint).norm();
+						
+						if (distToContact <= influenceRadius) {
+							// Smooth falloff: 1 at contact point, 0 at edge of influence
+							const float t = distToContact / influenceRadius;
+							const float falloff = (1.0f - t) * (1.0f - t); // quadratic falloff for smoother feel
+							
+							// Direction: push vertex away from sphere center (outward from contact)
+							Eigen::Vector3f pushDir = (vpos - agentProxyPosition);
+							const float pushDist = pushDir.norm();
+							if (pushDist > 1e-6f) {
+								pushDir /= pushDist;
+							} else {
+								pushDir = contactNormal;
+							}
+							
+							// Damping based on relative velocity
+							const Eigen::Vector3f vtxVel(v->velx, v->vely, v->velz);
+							const float relVn = (vtxVel - agentProxyVelocity).dot(pushDir);
+							const float dampMag = -c * std::min(0.0f, relVn);
+							
+							const float accelMag = (baseAccelMag + dampMag) * falloff;
+							const Eigen::Vector3f accel = pushDir * accelMag;
+							
+							// Atomic add to dragForces
+							#pragma omp atomic
+							dragForces[v->index].x() += accel.x();
+							#pragma omp atomic
+							dragForces[v->index].y() += accel.y();
+							#pragma omp atomic
+							dragForces[v->index].z() += accel.z();
+							
+							++contactCount;
+							
+							// Accumulate reaction force (for haptic feedback)
+							const Eigen::Vector3f fOnVertex = accel * v->vertexMass;
+							#pragma omp atomic
+							totalReactionForce.x() -= fOnVertex.x();
+							#pragma omp atomic
+							totalReactionForce.y() -= fOnVertex.y();
+							#pragma omp atomic
+							totalReactionForce.z() -= fOnVertex.z();
+						}
+					}
+					
+					finalContact.contactVertexCount = contactCount;
+					finalContact.maxPenetration = penetration;
+					finalContact.avgNormal = contactNormal;
+					finalContact.reactionForceN = totalReactionForce;
+				}
 			}
 
-			const Eigen::Vector3f proxyAcc = (couplingForceN + contact.reactionForceN) / agentProxyMassKg;
-			agentProxyVelocity += proxyAcc * timeStep;
-			agentProxyPosition += agentProxyVelocity * timeStep;
-
-			// Recovery: if the proxy tunnels to the interior side of the closest boundary face,
-			// project it back to the outside half-space to prevent falling into the object.
-			//
-			// Note: in concave regions it is possible to still have some contacts while being locally "inside"
-			// with respect to the closest face, so we run this check periodically (throttled) rather than
-			// only when contactVertexCount==0.
-			if (useTriangleContact) {
-				static bool cachedQValid = false;
-				static int cachedQFrame = -1;
-				static Eigen::Vector3f cachedQPos = Eigen::Vector3f::Zero();
-				static AgentSurfaceQueryResult cachedQ{};
-
-				const float moveThresh = 0.25f * agentSphere.radius;
-				const float moveThresh2 = moveThresh * moveThresh;
-				const bool needQuery =
-					!cachedQValid ||
-					(frame - cachedQFrame) >= 4 ||
-					(agentProxyPosition - cachedQPos).squaredNorm() > moveThresh2 ||
-					contact.contactVertexCount == 0;
-
-				if (needQuery) {
-					cachedQ = queryAgentSurface(agentProxyPosition, agentContactTriangles);
-					cachedQPos = agentProxyPosition;
-					cachedQFrame = frame;
-					cachedQValid = true;
-				}
-
-				if (cachedQValid && cachedQ.found && cachedQ.outwardNormal.squaredNorm() > 0.0f &&
-				    cachedQ.signedPlaneDistance < 0.0f) {
-					const float pushOut = (-cachedQ.signedPlaneDistance) + 1e-4f * bboxDiag;
-					agentProxyPosition += cachedQ.outwardNormal * pushOut;
-					const float vn = agentProxyVelocity.dot(cachedQ.outwardNormal);
-					if (vn < 0.0f) agentProxyVelocity -= cachedQ.outwardNormal * vn;
-				}
-			}
-
-			agentLastCouplingForceN = couplingForceN;
-			agentLastContactForceN = contact.reactionForceN;
-			agentLastDeviceForceN = -couplingForceN;
-			agentLastContactCount = contact.contactVertexCount;
+			agentLastCouplingForceN = lastCouplingForceN;
+			agentLastContactForceN = finalContact.reactionForceN;
+			agentLastDeviceForceN = -lastCouplingForceN;
+			agentLastContactCount = finalContact.contactVertexCount;
 		} else {
 			// Direct: the sphere is kinematic and contact force is reported directly.
+			// Use DISTRIBUTED force application like VC mode
 			agentSphere.position = agentDevicePosition;
 			agentSphere.velocity = agentDeviceVelocity;
 			const bool useTriangleContact = agentUseSurfaceTriangles && !agentContactTriangles.empty();
-			const AgentContactResult contact = useTriangleContact
-				? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, timeStep, dragForces)
-				: applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
+			
+			AgentContactResult contact{};
+			if (useTriangleContact) {
+				const AgentSurfaceQueryResult surfQ = queryAgentSurface(agentDevicePosition, agentContactTriangles);
+				if (surfQ.found) {
+					const float penetration = agentSphere.radius - surfQ.distanceToSurface;
+					if (penetration > 0.0f) {
+						const Eigen::Vector3f contactPoint = surfQ.closestPoint;
+						const Eigen::Vector3f contactNormal = surfQ.outwardNormal;
+						const float influenceRadius = agentSphere.radius * agentInfluenceRadiusFrac;
+						const float k = agentSphere.contactStiffness;
+						const float c = agentSphere.contactDamping;
+						float baseAccelMag = k * penetration;
+						
+						int contactCount = 0;
+						Eigen::Vector3f totalReactionForce = Eigen::Vector3f::Zero();
+						
+						#pragma omp parallel for reduction(+:contactCount)
+						for (int i = 0; i < static_cast<int>(objectUniqueVertices.size()); ++i) {
+							Vertex* v = objectUniqueVertices[i];
+							if (!v || v->isFixed) continue;
+							if (v->index < 0 || v->index >= static_cast<int>(dragForces.size())) continue;
+							
+							const Eigen::Vector3f vpos(v->x, v->y, v->z);
+							const float distToContact = (vpos - contactPoint).norm();
+							
+							if (distToContact <= influenceRadius) {
+								const float t = distToContact / influenceRadius;
+								const float falloff = (1.0f - t) * (1.0f - t);
+								
+								Eigen::Vector3f pushDir = (vpos - agentDevicePosition);
+								const float pushDist = pushDir.norm();
+								if (pushDist > 1e-6f) pushDir /= pushDist;
+								else pushDir = contactNormal;
+								
+								const Eigen::Vector3f vtxVel(v->velx, v->vely, v->velz);
+								const float relVn = (vtxVel - agentDeviceVelocity).dot(pushDir);
+								const float dampMag = -c * std::min(0.0f, relVn);
+								
+								const float accelMag = (baseAccelMag + dampMag) * falloff;
+								const Eigen::Vector3f accel = pushDir * accelMag;
+								
+								#pragma omp atomic
+								dragForces[v->index].x() += accel.x();
+								#pragma omp atomic
+								dragForces[v->index].y() += accel.y();
+								#pragma omp atomic
+								dragForces[v->index].z() += accel.z();
+								
+								++contactCount;
+								
+								const Eigen::Vector3f fOnVertex = accel * v->vertexMass;
+								#pragma omp atomic
+								totalReactionForce.x() -= fOnVertex.x();
+								#pragma omp atomic
+								totalReactionForce.y() -= fOnVertex.y();
+								#pragma omp atomic
+								totalReactionForce.z() -= fOnVertex.z();
+							}
+						}
+						contact.contactVertexCount = contactCount;
+						contact.maxPenetration = penetration;
+						contact.avgNormal = contactNormal;
+						contact.reactionForceN = totalReactionForce;
+					}
+				}
+			}
+			
 			agentLastCouplingForceN.setZero();
 			agentLastContactForceN = contact.reactionForceN;
 			agentLastDeviceForceN = contact.reactionForceN;

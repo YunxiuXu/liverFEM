@@ -26,7 +26,10 @@ float agentMoveSpeedBboxPerSec = 0.25f;
 float agentProxyMassFracOfObject = 0.01f;
 float agentVcStiffnessNPerBbox = 250.0f;
 float agentVcDampingNsPerBbox = 20.0f;
+int agentVcSubsteps = 6;
+float agentMaxPenetrationFrac = 0.30f;
 float agentProxyPositionCorrection = 0.50f;
+float agentInfluenceRadiusFrac = 3.0f;
 bool agentWriteLiveFile = false;
 int agentLiveFileIntervalFrames = 2;
 int exp3SettleSteps = 120;
@@ -140,7 +143,9 @@ void loadParams(const std::string& filename) {
 	        {"agent_proxyMassFracOfObject", &agentProxyMassFracOfObject},
 	        {"agent_vcStiffnessNPerBbox", &agentVcStiffnessNPerBbox},
 	        {"agent_vcDampingNsPerBbox", &agentVcDampingNsPerBbox},
+	        {"agent_maxPenetrationFrac", &agentMaxPenetrationFrac},
 	        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
+	        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
 	        {"exp3_exOverEy", &exp3ExOverEy},
 	        {"exp3_poissonOverride", &exp3PoissonOverride},
 	        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
@@ -170,13 +175,14 @@ void loadParams(const std::string& filename) {
 	        {"exp4_maxVolume5", &exp4MaxVolume5}
 	    };
 
-    std::unordered_map<std::string, int*> intParams = {
-        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
-        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
-        {"exp3_settleSteps", &exp3SettleSteps},
-        {"exp3_dragSteps", &exp3DragSteps},
-        {"exp1_settleSteps", &exp1SettleSteps},
-        {"exp1_dragSteps", &exp1DragSteps},
+	    std::unordered_map<std::string, int*> intParams = {
+	        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
+	        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
+	        {"agent_vcSubsteps", &agentVcSubsteps},
+	        {"exp3_settleSteps", &exp3SettleSteps},
+	        {"exp3_dragSteps", &exp3DragSteps},
+	        {"exp1_settleSteps", &exp1SettleSteps},
+	        {"exp1_dragSteps", &exp1DragSteps},
         {"exp1_holdSteps", &exp1HoldSteps},
         {"exp1_pbdIterationsFast", &exp1PbdIterationsFast},
         {"exp1_pbdIterationsReference", &exp1PbdIterationsReference},

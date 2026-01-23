@@ -22,6 +22,10 @@ struct AgentSphere {
 	// Contact is applied as an acceleration (same units as Gravity/dragForces in this codebase).
 	float contactStiffness = 8000.0f; // 1/s^2
 	float contactDamping = 50.0f;     // 1/s
+	
+	// Influence radius: forces spread to vertices within this radius (as fraction of sphere radius)
+	// This creates soft, distributed deformation instead of hard point contact
+	float influenceRadiusFrac = 3.0f; // multiply by radius to get actual influence radius
 };
 
 struct AgentContactResult {
@@ -37,7 +41,8 @@ AgentContactResult applyAgentSphereContact(
 	const AgentSphere& agent,
 	const std::vector<Vertex*>& contactVertices,
 	float timeStep,
-	std::vector<Eigen::Vector3f>& vertexAccels);
+	std::vector<Eigen::Vector3f>& vertexAccels,
+	float forceWeight = 1.0f);
 
 // Triangle-based contact against a surface mesh (recommended). Writes per-vertex accelerations into `vertexAccels`
 // (accumulated via +=). Returns total reaction force on the agent.
@@ -45,7 +50,8 @@ AgentContactResult applyAgentSphereTriangleContact(
 	const AgentSphere& agent,
 	const std::vector<AgentTriangle>& contactTriangles,
 	float timeStep,
-	std::vector<Eigen::Vector3f>& vertexAccels);
+	std::vector<Eigen::Vector3f>& vertexAccels,
+	float forceWeight = 1.0f);
 
 struct AgentSurfaceQueryResult {
 	bool found = false;

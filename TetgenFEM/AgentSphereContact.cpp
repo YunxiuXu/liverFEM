@@ -79,14 +79,22 @@ bool outwardNormalForTriangle(
 	const Eigen::Vector3f& c,
 	Eigen::Vector3f* outwardUnitOut)
 {
-	Eigen::Vector3f n = (b - a).cross(c - a);
-	const float n2 = n.squaredNorm();
+	const Eigen::Vector3f nRaw = (b - a).cross(c - a);
+	const float n2 = nRaw.squaredNorm();
 	if (n2 <= 1e-24f) return false;
 
+	// If we have an interior reference (opp vertex of the boundary face), orient the normal so that it
+	// points away from the interior half-space. Do this without relying on the input winding.
+	Eigen::Vector3f n = nRaw;
 	if (tri.opp) {
 		const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
-		// If normal points towards the interior (opposite vertex), flip so it points outward.
-		if (n.dot(opp - a) > 0.0f) n = -n;
+		const float sOpp = nRaw.dot(opp - a);
+		// If opp lies on the + side of nRaw, then outward is -nRaw; if opp lies on the - side, outward is +nRaw.
+		// If sOpp is nearly zero (degenerate), keep the raw normal.
+		if (std::abs(sOpp) > 1e-18f) {
+			if (sOpp > 0.0f) n = -nRaw;
+			else n = nRaw;
+		}
 	}
 	*outwardUnitOut = n.normalized();
 	return true;
@@ -97,7 +105,8 @@ AgentContactResult applyAgentSphereContact(
 	const AgentSphere& agent,
 	const std::vector<Vertex*>& contactVertices,
 	float timeStep,
-	std::vector<Eigen::Vector3f>& vertexAccels)
+	std::vector<Eigen::Vector3f>& vertexAccels,
+	float forceWeight)
 {
 	AgentContactResult result{};
 	if (!agent.enabled || contactVertices.empty() || vertexAccels.empty()) {
@@ -136,13 +145,17 @@ AgentContactResult applyAgentSphereContact(
 		const float relVn = (vtxVel - agent.velocity).dot(n);
 		const float dampMag = -c * std::min(0.0f, relVn); // only resist inward motion
 
-		const float accelMag = k * penetration + dampMag;
-		const Eigen::Vector3f accel = n * accelMag;
+		// Add smooth extra stiffness for deep penetration to prevent tunneling
+		const float penRatio = penetration / std::max(1e-6f, r);
+		// Start extra penalty later (50%) and grow slower to allow softer deep press
+		const float extraStiffness = (penRatio > 0.50f) ? (k * (penRatio - 0.50f) * 2.0f) : 0.0f;
+		const float accelMag = k * penetration + dampMag + extraStiffness * penetration;
+		const Eigen::Vector3f accel = n * (accelMag * forceWeight);
 
 		vertexAccels[v->index] += accel;
 		++contacts;
 
-		const Eigen::Vector3f fOnVertex = accel * v->vertexMass;
+		const Eigen::Vector3f fOnVertex = n * accelMag * v->vertexMass;
 		// Reaction force on agent is opposite.
 		fx -= fOnVertex.x();
 		fy -= fOnVertex.y();
@@ -169,7 +182,8 @@ AgentContactResult applyAgentSphereTriangleContact(
 	const AgentSphere& agent,
 	const std::vector<AgentTriangle>& contactTriangles,
 	float timeStep,
-	std::vector<Eigen::Vector3f>& vertexAccels)
+	std::vector<Eigen::Vector3f>& vertexAccels,
+	float forceWeight)
 {
 	AgentContactResult result{};
 	if (!agent.enabled || contactTriangles.empty() || vertexAccels.empty()) {
@@ -195,12 +209,20 @@ AgentContactResult applyAgentSphereTriangleContact(
 		const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
 		const Eigen::Vector3f cpos(tri.c->x, tri.c->y, tri.c->z);
 
+		// Robust one-sided gating: skip faces for which the agent center is on the same side of the
+		// triangle plane as the interior reference (opp). This avoids depending on face winding.
 		Eigen::Vector3f outwardN = Eigen::Vector3f::Zero();
 		if (!outwardNormalForTriangle(tri, a, b, cpos, &outwardN)) continue;
-		// One-sided contact: only apply penalty when agent center is on the outside of the boundary face.
-		// This prevents "trapping" the sphere if it ever tunnels to the inside.
-		const float signedPlaneDist = outwardN.dot(agent.position - a);
-		if (signedPlaneDist < 0.0f) continue;
+		if (tri.opp) {
+			const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
+			const Eigen::Vector3f nRaw = (b - a).cross(cpos - a);
+			const float sOpp = nRaw.dot(opp - a);
+			const float sP = nRaw.dot(agent.position - a);
+			if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) {
+				// Agent is in the interior half-space of this boundary face.
+				continue;
+			}
+		}
 
 		Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
 		const Eigen::Vector3f q = closestPointOnTriangle(agent.position, a, b, cpos, &bary);
@@ -224,8 +246,12 @@ AgentContactResult applyAgentSphereTriangleContact(
 		const float relVn = (vq - agent.velocity).dot(n);
 		const float dampMag = -c * std::min(0.0f, relVn); // only resist inward motion
 
-		const float accelMag = k * penetration + dampMag;
-		const Eigen::Vector3f accel = n * accelMag;
+		// Add smooth extra stiffness for deep penetration to prevent tunneling
+		const float penRatio = penetration / std::max(1e-6f, r);
+		// Start extra penalty later (50%) and grow slower to allow softer deep press
+		const float extraStiffness = (penRatio > 0.50f) ? (k * (penRatio - 0.50f) * 2.0f) : 0.0f;
+		const float accelMag = k * penetration + dampMag + extraStiffness * penetration;
+		const Eigen::Vector3f accel = n * (accelMag * forceWeight);
 
 		float w0 = bary.x();
 		float w1 = bary.y();
@@ -258,7 +284,7 @@ AgentContactResult applyAgentSphereTriangleContact(
 #pragma omp atomic
 			vertexAccels[v->index].z() += delta.z();
 
-			const Eigen::Vector3f fOnVertex = delta * v->vertexMass;
+			const Eigen::Vector3f fOnVertex = delta / forceWeight * v->vertexMass; // reaction force uses full magnitude
 			fx -= fOnVertex.x();
 			fy -= fOnVertex.y();
 			fz -= fOnVertex.z();

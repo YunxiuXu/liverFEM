@@ -23,7 +23,10 @@ extern float agentMoveSpeedBboxPerSec;
 extern float agentProxyMassFracOfObject;
 extern float agentVcStiffnessNPerBbox;
 extern float agentVcDampingNsPerBbox;
+extern int agentVcSubsteps;
+extern float agentMaxPenetrationFrac;
 extern float agentProxyPositionCorrection;
+extern float agentInfluenceRadiusFrac;
 extern bool agentWriteLiveFile;
 extern int agentLiveFileIntervalFrames;
 // Experiment 3 (one-click) configuration (used only when EXP3 is started).
