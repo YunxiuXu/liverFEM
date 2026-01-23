@@ -867,7 +867,6 @@ int main(int argc, char** argv) {
 	{
 		int maxIndex = 0;
 		for (const auto* v : objectUniqueVertices) maxIndex = std::max(maxIndex, v->index);
-		const int indexOffset = out.firstnumber;
 
 		// Build an index->Vertex* lookup for triangle contact.
 		std::vector<Vertex*> indexToVertex;
@@ -880,23 +879,87 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		// Prefer triangle-based contact (more robust than vertex-only, avoids tunneling between vertices).
-		if (agentUseSurfaceTriangles && out.numberoftrifaces > 0 && out.trifacelist && maxIndex >= 0 && !indexToVertex.empty()) {
-			agentContactTriangles.reserve(static_cast<size_t>(out.numberoftrifaces));
-			for (int f = 0; f < out.numberoftrifaces; ++f) {
-				const int i0 = out.trifacelist[3 * f + 0] - indexOffset;
-				const int i1 = out.trifacelist[3 * f + 1] - indexOffset;
-				const int i2 = out.trifacelist[3 * f + 2] - indexOffset;
-				if (i0 < 0 || i0 > maxIndex || i1 < 0 || i1 > maxIndex || i2 < 0 || i2 > maxIndex) continue;
-				Vertex* a = indexToVertex[static_cast<size_t>(i0)];
-				Vertex* b = indexToVertex[static_cast<size_t>(i1)];
-				Vertex* c = indexToVertex[static_cast<size_t>(i2)];
-				if (!a || !b || !c) continue;
-				agentContactTriangles.push_back(AgentTriangle{a, b, c});
+		// Prefer triangle-based contact using boundary faces extracted from the tet mesh.
+		// This works in both STL meshing and direct-loading mode and deforms with the object.
+		if (agentUseSurfaceTriangles && maxIndex >= 0 && !indexToVertex.empty()) {
+			struct FaceKey {
+				int i0, i1, i2;
+				bool operator==(const FaceKey& o) const { return i0 == o.i0 && i1 == o.i1 && i2 == o.i2; }
+			};
+			struct FaceKeyHash {
+				size_t operator()(const FaceKey& k) const noexcept {
+					const auto h0 = std::hash<int>{}(k.i0);
+					const auto h1 = std::hash<int>{}(k.i1);
+					const auto h2 = std::hash<int>{}(k.i2);
+					size_t h = h0;
+					h ^= (h1 + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
+					h ^= (h2 + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
+					return h;
+				}
+			};
+			struct FaceRec {
+				int count = 0;
+				int a = -1, b = -1, c = -1;   // face vertex indices (ordered)
+				int opp = -1;                 // opposite vertex index (interior)
+			};
+
+			auto makeKey = [](int a, int b, int c) -> FaceKey {
+				if (a > b) std::swap(a, b);
+				if (b > c) std::swap(b, c);
+				if (a > b) std::swap(a, b);
+				return FaceKey{a, b, c};
+			};
+
+			size_t tetCount = 0;
+			for (int gi = 0; gi < object.groupNum; ++gi) tetCount += object.groups[gi].tetrahedra.size();
+			std::unordered_map<FaceKey, FaceRec, FaceKeyHash> faces;
+			faces.reserve(std::max<size_t>(16, tetCount * 4));
+
+			auto addFace = [&](int ia, int ib, int ic, int iopp) {
+				const FaceKey key = makeKey(ia, ib, ic);
+				auto it = faces.find(key);
+				if (it == faces.end()) {
+					FaceRec rec;
+					rec.count = 1;
+					rec.a = ia; rec.b = ib; rec.c = ic;
+					rec.opp = iopp;
+					faces.emplace(key, rec);
+				} else {
+					it->second.count += 1;
+				}
+			};
+
+			for (int gi = 0; gi < object.groupNum; ++gi) {
+				Group& g = object.groups[gi];
+				for (Tetrahedron* t : g.tetrahedra) {
+					if (!t) continue;
+					int idx[4] = {-1, -1, -1, -1};
+					for (int k = 0; k < 4; ++k) idx[k] = (t->vertices[k] ? t->vertices[k]->index : -1);
+					if (idx[0] < 0 || idx[1] < 0 || idx[2] < 0 || idx[3] < 0) continue;
+					addFace(idx[1], idx[2], idx[3], idx[0]);
+					addFace(idx[0], idx[2], idx[3], idx[1]);
+					addFace(idx[0], idx[1], idx[3], idx[2]);
+					addFace(idx[0], idx[1], idx[2], idx[3]);
+				}
+			}
+
+			agentContactTriangles.reserve(faces.size());
+			for (const auto& kv : faces) {
+				const FaceRec& rec = kv.second;
+				if (rec.count != 1) continue; // interior face
+				if (rec.a < 0 || rec.b < 0 || rec.c < 0 || rec.opp < 0) continue;
+				if (rec.a > maxIndex || rec.b > maxIndex || rec.c > maxIndex || rec.opp > maxIndex) continue;
+				Vertex* va = indexToVertex[static_cast<size_t>(rec.a)];
+				Vertex* vb = indexToVertex[static_cast<size_t>(rec.b)];
+				Vertex* vc = indexToVertex[static_cast<size_t>(rec.c)];
+				Vertex* vopp = indexToVertex[static_cast<size_t>(rec.opp)];
+				if (!va || !vb || !vc || !vopp) continue;
+				agentContactTriangles.push_back(AgentTriangle{va, vb, vc, vopp});
 			}
 		}
 
 		if (agentUseSurfaceVertices && out.numberoftrifaces > 0 && out.trifacelist && maxIndex >= 0) {
+			const int indexOffset = out.firstnumber;
 			std::vector<char> isSurface(static_cast<size_t>(maxIndex + 1), 0);
 			for (int i = 0; i < out.numberoftrifaces * 3; ++i) {
 				const int idx = out.trifacelist[i] - indexOffset;
@@ -1040,28 +1103,17 @@ int main(int argc, char** argv) {
 		static KeyLatch agentHomeLatch;
 		static KeyLatch agentPrintLatch;
 		static KeyLatch agentVcLatch;
-		static KeyLatch agentContactModeLatch;
 
 		if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
 			agentSphere.enabled = !agentSphere.enabled;
 			std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
 			          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-			          << "  VirtualCoupling: V | ContactMode: B | Home: T | Print force: G\n";
+			          << "  VirtualCoupling: V | Home: T | Print force: G\n";
 		}
 		static bool agentUseVC = agentVirtualCoupling;
-		static bool agentUseTriangles = agentUseSurfaceTriangles;
 		if (agentVcLatch.consume(window, GLFW_KEY_V)) {
 			agentUseVC = !agentUseVC;
 			std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
-		}
-		if (agentContactModeLatch.consume(window, GLFW_KEY_B)) {
-			if (agentContactTriangles.empty()) {
-				agentUseTriangles = false;
-				std::cout << "[AgentSphere] Triangle contact not available (no surface trifaces); using vertex contact.\n";
-			} else {
-				agentUseTriangles = !agentUseTriangles;
-				std::cout << "[AgentSphere] ContactMode " << (agentUseTriangles ? "TRIANGLES" : "VERTICES") << "\n";
-			}
 		}
 		if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
 			agentDevicePosition = agentHomePosition;
@@ -1397,44 +1449,82 @@ int main(int argc, char** argv) {
 		// Apply agent contact after any drag/experiment force contributions.
 		if (agentSphere.enabled) {
 			if (agentUseVC) {
-				// Virtual coupling: device controls a target (agentDevicePosition), proxy interacts with tissue.
-				const Eigen::Vector3f couplingForceN =
-					agentVcKLen * (agentDevicePosition - agentProxyPosition) +
-					agentVcCLen * (agentDeviceVelocity - agentProxyVelocity);
+			// Virtual coupling: device controls a target (agentDevicePosition), proxy interacts with tissue.
+			const Eigen::Vector3f couplingForceN =
+				agentVcKLen * (agentDevicePosition - agentProxyPosition) +
+				agentVcCLen * (agentDeviceVelocity - agentProxyVelocity);
 
-				agentSphere.position = agentProxyPosition;
-				agentSphere.velocity = agentProxyVelocity;
-				const AgentContactResult contact = (agentUseTriangles && !agentContactTriangles.empty())
-					? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, timeStep, dragForces)
-					: applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
+			agentSphere.position = agentProxyPosition;
+			agentSphere.velocity = agentProxyVelocity;
+			const bool useTriangleContact = agentUseSurfaceTriangles && !agentContactTriangles.empty();
+			const AgentContactResult contact = useTriangleContact
+				? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, timeStep, dragForces)
+				: applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
 
-				// Optional small position correction (reduces visible penetration without cranking stiffness too high).
-				if (contact.contactVertexCount > 0 && contact.maxPenetration > 0.0f && contact.avgNormal.squaredNorm() > 0.0f) {
-					agentProxyPosition -= contact.avgNormal * (contact.maxPenetration * agentProxyCorr);
+			// Optional small position correction (reduces visible penetration without cranking stiffness too high).
+			if (contact.contactVertexCount > 0 && contact.maxPenetration > 0.0f && contact.avgNormal.squaredNorm() > 0.0f) {
+				agentProxyPosition -= contact.avgNormal * (contact.maxPenetration * agentProxyCorr);
+			}
+
+			const Eigen::Vector3f proxyAcc = (couplingForceN + contact.reactionForceN) / agentProxyMassKg;
+			agentProxyVelocity += proxyAcc * timeStep;
+			agentProxyPosition += agentProxyVelocity * timeStep;
+
+			// Recovery: if the proxy tunnels to the interior side of the closest boundary face,
+			// project it back to the outside half-space to prevent falling into the object.
+			//
+			// Note: in concave regions it is possible to still have some contacts while being locally "inside"
+			// with respect to the closest face, so we run this check periodically (throttled) rather than
+			// only when contactVertexCount==0.
+			if (useTriangleContact) {
+				static bool cachedQValid = false;
+				static int cachedQFrame = -1;
+				static Eigen::Vector3f cachedQPos = Eigen::Vector3f::Zero();
+				static AgentSurfaceQueryResult cachedQ{};
+
+				const float moveThresh = 0.25f * agentSphere.radius;
+				const float moveThresh2 = moveThresh * moveThresh;
+				const bool needQuery =
+					!cachedQValid ||
+					(frame - cachedQFrame) >= 4 ||
+					(agentProxyPosition - cachedQPos).squaredNorm() > moveThresh2 ||
+					contact.contactVertexCount == 0;
+
+				if (needQuery) {
+					cachedQ = queryAgentSurface(agentProxyPosition, agentContactTriangles);
+					cachedQPos = agentProxyPosition;
+					cachedQFrame = frame;
+					cachedQValid = true;
 				}
 
-				const Eigen::Vector3f proxyAcc = (couplingForceN + contact.reactionForceN) / agentProxyMassKg;
-				agentProxyVelocity += proxyAcc * timeStep;
-				agentProxyPosition += agentProxyVelocity * timeStep;
-
-				agentLastCouplingForceN = couplingForceN;
-				agentLastContactForceN = contact.reactionForceN;
-				agentLastDeviceForceN = -couplingForceN;
-				agentLastContactCount = contact.contactVertexCount;
-			} else {
-				// Direct: the sphere is kinematic and contact force is reported directly.
-				agentSphere.position = agentDevicePosition;
-				agentSphere.velocity = agentDeviceVelocity;
-				const AgentContactResult contact = (agentUseTriangles && !agentContactTriangles.empty())
-					? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, timeStep, dragForces)
-					: applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
-				agentLastCouplingForceN.setZero();
-				agentLastContactForceN = contact.reactionForceN;
-				agentLastDeviceForceN = contact.reactionForceN;
-				agentLastContactCount = contact.contactVertexCount;
-				agentProxyPosition = agentDevicePosition;
-				agentProxyVelocity = agentDeviceVelocity;
+				if (cachedQValid && cachedQ.found && cachedQ.outwardNormal.squaredNorm() > 0.0f &&
+				    cachedQ.signedPlaneDistance < 0.0f) {
+					const float pushOut = (-cachedQ.signedPlaneDistance) + 1e-4f * bboxDiag;
+					agentProxyPosition += cachedQ.outwardNormal * pushOut;
+					const float vn = agentProxyVelocity.dot(cachedQ.outwardNormal);
+					if (vn < 0.0f) agentProxyVelocity -= cachedQ.outwardNormal * vn;
+				}
 			}
+
+			agentLastCouplingForceN = couplingForceN;
+			agentLastContactForceN = contact.reactionForceN;
+			agentLastDeviceForceN = -couplingForceN;
+			agentLastContactCount = contact.contactVertexCount;
+		} else {
+			// Direct: the sphere is kinematic and contact force is reported directly.
+			agentSphere.position = agentDevicePosition;
+			agentSphere.velocity = agentDeviceVelocity;
+			const bool useTriangleContact = agentUseSurfaceTriangles && !agentContactTriangles.empty();
+			const AgentContactResult contact = useTriangleContact
+				? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, timeStep, dragForces)
+				: applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
+			agentLastCouplingForceN.setZero();
+			agentLastContactForceN = contact.reactionForceN;
+			agentLastDeviceForceN = contact.reactionForceN;
+			agentLastContactCount = contact.contactVertexCount;
+			agentProxyPosition = agentDevicePosition;
+			agentProxyVelocity = agentDeviceVelocity;
+		}
 
 			if (agentWriteLiveFile) {
 				static int liveFrame = 0;

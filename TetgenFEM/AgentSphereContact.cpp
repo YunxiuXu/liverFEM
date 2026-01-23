@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include <Eigen/Geometry>
+
 #include "Vertex.h"
 
 namespace {
@@ -68,6 +70,26 @@ Eigen::Vector3f closestPointOnTriangle(
 	const float w = vc * denom;
 	if (baryOut) *baryOut = Eigen::Vector3f(1.0f - v - w, v, w);
 	return a + ab * v + ac * w;
+}
+
+bool outwardNormalForTriangle(
+	const AgentTriangle& tri,
+	const Eigen::Vector3f& a,
+	const Eigen::Vector3f& b,
+	const Eigen::Vector3f& c,
+	Eigen::Vector3f* outwardUnitOut)
+{
+	Eigen::Vector3f n = (b - a).cross(c - a);
+	const float n2 = n.squaredNorm();
+	if (n2 <= 1e-24f) return false;
+
+	if (tri.opp) {
+		const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
+		// If normal points towards the interior (opposite vertex), flip so it points outward.
+		if (n.dot(opp - a) > 0.0f) n = -n;
+	}
+	*outwardUnitOut = n.normalized();
+	return true;
 }
 } // namespace
 
@@ -173,6 +195,13 @@ AgentContactResult applyAgentSphereTriangleContact(
 		const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
 		const Eigen::Vector3f cpos(tri.c->x, tri.c->y, tri.c->z);
 
+		Eigen::Vector3f outwardN = Eigen::Vector3f::Zero();
+		if (!outwardNormalForTriangle(tri, a, b, cpos, &outwardN)) continue;
+		// One-sided contact: only apply penalty when agent center is on the outside of the boundary face.
+		// This prevents "trapping" the sphere if it ever tunnels to the inside.
+		const float signedPlaneDist = outwardN.dot(agent.position - a);
+		if (signedPlaneDist < 0.0f) continue;
+
 		Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
 		const Eigen::Vector3f q = closestPointOnTriangle(agent.position, a, b, cpos, &bary);
 
@@ -255,4 +284,45 @@ AgentContactResult applyAgentSphereTriangleContact(
 		if (nlen > 1e-12f) result.avgNormal = sumN / nlen;
 	}
 	return result;
+}
+
+AgentSurfaceQueryResult queryAgentSurface(
+	const Eigen::Vector3f& p,
+	const std::vector<AgentTriangle>& contactTriangles)
+{
+	AgentSurfaceQueryResult out{};
+	if (contactTriangles.empty()) return out;
+
+	float bestDist2 = std::numeric_limits<float>::infinity();
+	Eigen::Vector3f bestQ = Eigen::Vector3f::Zero();
+	Eigen::Vector3f bestOutwardN = Eigen::Vector3f::Zero();
+	float bestSignedPlaneDist = 0.0f;
+
+	for (const auto& tri : contactTriangles) {
+		if (!tri.a || !tri.b || !tri.c) continue;
+		const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+		const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+		const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+
+		Eigen::Vector3f outwardN = Eigen::Vector3f::Zero();
+		if (!outwardNormalForTriangle(tri, a, b, c, &outwardN)) continue;
+
+		Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
+		const Eigen::Vector3f q = closestPointOnTriangle(p, a, b, c, &bary);
+		const float d2 = (q - p).squaredNorm();
+		if (d2 < bestDist2) {
+			bestDist2 = d2;
+			bestQ = q;
+			bestOutwardN = outwardN;
+			bestSignedPlaneDist = outwardN.dot(p - a);
+		}
+	}
+
+	if (!std::isfinite(bestDist2)) return out;
+	out.found = true;
+	out.closestPoint = bestQ;
+	out.outwardNormal = bestOutwardN;
+	out.signedPlaneDistance = bestSignedPlaneDist;
+	out.distanceToSurface = std::sqrt(std::max(0.0f, bestDist2));
+	return out;
 }

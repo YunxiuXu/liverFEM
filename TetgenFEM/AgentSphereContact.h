@@ -9,6 +9,8 @@ struct AgentTriangle {
 	Vertex* a = nullptr;
 	Vertex* b = nullptr;
 	Vertex* c = nullptr;
+	// If provided, this vertex is on the interior side of the boundary face, used to orient an outward normal.
+	Vertex* opp = nullptr;
 };
 
 struct AgentSphere {
@@ -44,3 +46,16 @@ AgentContactResult applyAgentSphereTriangleContact(
 	const std::vector<AgentTriangle>& contactTriangles,
 	float timeStep,
 	std::vector<Eigen::Vector3f>& vertexAccels);
+
+struct AgentSurfaceQueryResult {
+	bool found = false;
+	Eigen::Vector3f closestPoint = Eigen::Vector3f::Zero();
+	Eigen::Vector3f outwardNormal = Eigen::Vector3f::Zero(); // unit-length if found
+	float signedPlaneDistance = 0.0f; // along outwardNormal, positive means outside w.r.t. closest face plane
+	float distanceToSurface = 0.0f;   // |p-closestPoint|
+};
+
+// Finds closest point on the (deforming) surface triangle mesh and an outward normal estimate (if opp is set).
+AgentSurfaceQueryResult queryAgentSurface(
+	const Eigen::Vector3f& p,
+	const std::vector<AgentTriangle>& contactTriangles);
