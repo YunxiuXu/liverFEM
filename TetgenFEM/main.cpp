@@ -862,11 +862,40 @@ int main(int argc, char** argv) {
 
 	// Choose contact vertices: surface vertices (TetGen trifaces) if available, otherwise all unique vertices.
 	std::vector<Vertex*> agentContactVertices;
+	std::vector<AgentTriangle> agentContactTriangles;
 	agentContactVertices.reserve(objectUniqueVertices.size());
 	{
 		int maxIndex = 0;
 		for (const auto* v : objectUniqueVertices) maxIndex = std::max(maxIndex, v->index);
 		const int indexOffset = out.firstnumber;
+
+		// Build an index->Vertex* lookup for triangle contact.
+		std::vector<Vertex*> indexToVertex;
+		if (maxIndex >= 0) {
+			indexToVertex.assign(static_cast<size_t>(maxIndex + 1), nullptr);
+			for (auto* v : objectUniqueVertices) {
+				if (v && v->index >= 0 && v->index <= maxIndex) {
+					indexToVertex[static_cast<size_t>(v->index)] = v;
+				}
+			}
+		}
+
+		// Prefer triangle-based contact (more robust than vertex-only, avoids tunneling between vertices).
+		if (agentUseSurfaceTriangles && out.numberoftrifaces > 0 && out.trifacelist && maxIndex >= 0 && !indexToVertex.empty()) {
+			agentContactTriangles.reserve(static_cast<size_t>(out.numberoftrifaces));
+			for (int f = 0; f < out.numberoftrifaces; ++f) {
+				const int i0 = out.trifacelist[3 * f + 0] - indexOffset;
+				const int i1 = out.trifacelist[3 * f + 1] - indexOffset;
+				const int i2 = out.trifacelist[3 * f + 2] - indexOffset;
+				if (i0 < 0 || i0 > maxIndex || i1 < 0 || i1 > maxIndex || i2 < 0 || i2 > maxIndex) continue;
+				Vertex* a = indexToVertex[static_cast<size_t>(i0)];
+				Vertex* b = indexToVertex[static_cast<size_t>(i1)];
+				Vertex* c = indexToVertex[static_cast<size_t>(i2)];
+				if (!a || !b || !c) continue;
+				agentContactTriangles.push_back(AgentTriangle{a, b, c});
+			}
+		}
+
 		if (agentUseSurfaceVertices && out.numberoftrifaces > 0 && out.trifacelist && maxIndex >= 0) {
 			std::vector<char> isSurface(static_cast<size_t>(maxIndex + 1), 0);
 			for (int i = 0; i < out.numberoftrifaces * 3; ++i) {
@@ -1011,17 +1040,28 @@ int main(int argc, char** argv) {
 		static KeyLatch agentHomeLatch;
 		static KeyLatch agentPrintLatch;
 		static KeyLatch agentVcLatch;
+		static KeyLatch agentContactModeLatch;
 
 		if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
 			agentSphere.enabled = !agentSphere.enabled;
 			std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
 			          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-			          << "  VirtualCoupling: V | Home: T | Print force: G\n";
+			          << "  VirtualCoupling: V | ContactMode: B | Home: T | Print force: G\n";
 		}
 		static bool agentUseVC = agentVirtualCoupling;
+		static bool agentUseTriangles = agentUseSurfaceTriangles;
 		if (agentVcLatch.consume(window, GLFW_KEY_V)) {
 			agentUseVC = !agentUseVC;
 			std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
+		}
+		if (agentContactModeLatch.consume(window, GLFW_KEY_B)) {
+			if (agentContactTriangles.empty()) {
+				agentUseTriangles = false;
+				std::cout << "[AgentSphere] Triangle contact not available (no surface trifaces); using vertex contact.\n";
+			} else {
+				agentUseTriangles = !agentUseTriangles;
+				std::cout << "[AgentSphere] ContactMode " << (agentUseTriangles ? "TRIANGLES" : "VERTICES") << "\n";
+			}
 		}
 		if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
 			agentDevicePosition = agentHomePosition;
@@ -1364,7 +1404,9 @@ int main(int argc, char** argv) {
 
 				agentSphere.position = agentProxyPosition;
 				agentSphere.velocity = agentProxyVelocity;
-				const AgentContactResult contact = applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
+				const AgentContactResult contact = (agentUseTriangles && !agentContactTriangles.empty())
+					? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, timeStep, dragForces)
+					: applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
 
 				// Optional small position correction (reduces visible penetration without cranking stiffness too high).
 				if (contact.contactVertexCount > 0 && contact.maxPenetration > 0.0f && contact.avgNormal.squaredNorm() > 0.0f) {
@@ -1383,7 +1425,9 @@ int main(int argc, char** argv) {
 				// Direct: the sphere is kinematic and contact force is reported directly.
 				agentSphere.position = agentDevicePosition;
 				agentSphere.velocity = agentDeviceVelocity;
-				const AgentContactResult contact = applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
+				const AgentContactResult contact = (agentUseTriangles && !agentContactTriangles.empty())
+					? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, timeStep, dragForces)
+					: applyAgentSphereContact(agentSphere, agentContactVertices, timeStep, dragForces);
 				agentLastCouplingForceN.setZero();
 				agentLastContactForceN = contact.reactionForceN;
 				agentLastDeviceForceN = contact.reactionForceN;

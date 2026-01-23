@@ -17,6 +17,7 @@ float dragMaxAccel = 50000.0f;
 float dragMaxDisplacement = 1.0f;
 bool agentEnabled = false;
 bool agentUseSurfaceVertices = true;
+bool agentUseSurfaceTriangles = true;
 bool agentVirtualCoupling = true;
 float agentRadiusBboxScale = 0.03f;
 float agentContactStiffness = 40000.0f;
@@ -209,6 +210,7 @@ void loadParams(const std::string& filename) {
         {"autoSaveMesh", &autoSaveMesh},
         {"agent_enabled", &agentEnabled},
         {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
+        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
         {"agent_virtualCoupling", &agentVirtualCoupling},
         {"agent_writeLiveFile", &agentWriteLiveFile},
         {"exp3_overridePoisson", &exp3OverridePoisson},

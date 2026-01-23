@@ -29,6 +29,7 @@ dragMaxDisplacement=1.0
 # Toggle at runtime with key 'H' (see console output). These are defaults on startup.
 agent_enabled=false
 agent_useSurfaceVertices=true
+agent_useSurfaceTriangles=true
 agent_virtualCoupling=true
 agent_radiusBboxScale=0.03
 agent_contactStiffness=40000

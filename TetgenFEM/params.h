@@ -14,6 +14,7 @@ extern float dragInfluenceRadius, dragStiffness, dragMaxAccel, dragMaxDisplaceme
 // Agent sphere (finger proxy) contact parameters.
 extern bool agentEnabled;
 extern bool agentUseSurfaceVertices;
+extern bool agentUseSurfaceTriangles;
 extern bool agentVirtualCoupling;
 extern float agentRadiusBboxScale;
 extern float agentContactStiffness;

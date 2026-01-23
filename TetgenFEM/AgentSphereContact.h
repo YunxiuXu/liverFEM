@@ -5,6 +5,12 @@
 
 class Vertex;
 
+struct AgentTriangle {
+	Vertex* a = nullptr;
+	Vertex* b = nullptr;
+	Vertex* c = nullptr;
+};
+
 struct AgentSphere {
 	bool enabled = false;
 	Eigen::Vector3f position = Eigen::Vector3f::Zero();
@@ -28,5 +34,13 @@ struct AgentContactResult {
 AgentContactResult applyAgentSphereContact(
 	const AgentSphere& agent,
 	const std::vector<Vertex*>& contactVertices,
+	float timeStep,
+	std::vector<Eigen::Vector3f>& vertexAccels);
+
+// Triangle-based contact against a surface mesh (recommended). Writes per-vertex accelerations into `vertexAccels`
+// (accumulated via +=). Returns total reaction force on the agent.
+AgentContactResult applyAgentSphereTriangleContact(
+	const AgentSphere& agent,
+	const std::vector<AgentTriangle>& contactTriangles,
 	float timeStep,
 	std::vector<Eigen::Vector3f>& vertexAccels);
