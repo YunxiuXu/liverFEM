@@ -1,6 +1,7 @@
 
 //#define EIGEN_USE_MKL_ALL
 #include <iostream>
+#include <array>
 #include <vector>
 #include <algorithm>
 #include <cstring>  // for std::strcpy
@@ -100,6 +101,43 @@ static std::string formatSignedInt(float v)
 		drawCircle(Eigen::Vector3f::UnitY(), Eigen::Vector3f::UnitZ());
 	}
 
+	struct AgentPhysKey {
+		long long x = 0;
+		long long y = 0;
+		long long z = 0;
+		bool operator==(const AgentPhysKey& o) const noexcept { return x == o.x && y == o.y && z == o.z; }
+		bool operator<(const AgentPhysKey& o) const noexcept
+		{
+			if (x != o.x) return x < o.x;
+			if (y != o.y) return y < o.y;
+			return z < o.z;
+		}
+	};
+
+	struct AgentPhysKeyHash {
+		size_t operator()(const AgentPhysKey& k) const noexcept
+		{
+			const size_t h0 = std::hash<long long>{}(k.x);
+			const size_t h1 = std::hash<long long>{}(k.y);
+			const size_t h2 = std::hash<long long>{}(k.z);
+			size_t h = h0;
+			h ^= (h1 + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
+			h ^= (h2 + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
+			return h;
+		}
+	};
+
+	static AgentPhysKey makePhysKey(const Vertex* v)
+	{
+		// Quantize init position to group-duplicate vertices into a single "physical" vertex id.
+		// This is required because Object::updateIndices() assigns unique indices per group, so index-based
+		// surface extraction would incorrectly include internal group interfaces.
+		constexpr double kQuant = 1000000.0; // 1e-6 resolution
+		const auto q = [](float x) -> long long { return static_cast<long long>(std::llround(static_cast<double>(x) * kQuant)); };
+		if (!v) return AgentPhysKey{};
+		return AgentPhysKey{q(v->initx), q(v->inity), q(v->initz)};
+	}
+
 	static Eigen::Vector3f closestPointOnTriangle(
 		const Eigen::Vector3f& p,
 		const Eigen::Vector3f& a,
@@ -175,10 +213,11 @@ static std::string formatSignedInt(float v)
 		float tangentialDamp,
 		int iterations,
 		const std::vector<AgentTriangle>& contactTriangles,
-		const std::vector<std::vector<Vertex*>>& verticesByIndex)
+		const std::vector<std::array<int, 3>>& contactTrianglePhysIds,
+		const std::vector<std::vector<Vertex*>>& verticesByPhysId)
 	{
 		AgentContactResult out{};
-		if (contactTriangles.empty() || verticesByIndex.empty()) return out;
+		if (contactTriangles.empty() || contactTriangles.size() != contactTrianglePhysIds.size() || verticesByPhysId.empty()) return out;
 
 		const float r = std::max(1e-6f, sphereRadius);
 		const float allowedPen = std::clamp(allowedPenetration, 0.0f, 0.95f * r);
@@ -196,10 +235,10 @@ static std::string formatSignedInt(float v)
 		float maxPen = 0.0f;
 		int movedVertexCount = 0;
 
-		auto applyDeltaToIndex = [&](int idx, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
+		auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
 			if (dp.squaredNorm() <= 1e-24f) return;
-			if (idx < 0 || idx >= static_cast<int>(verticesByIndex.size())) return;
-			const auto& list = verticesByIndex[static_cast<size_t>(idx)];
+			if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
+			const auto& list = verticesByPhysId[static_cast<size_t>(id)];
 			for (Vertex* v : list) {
 				if (!v || v->isFixed) continue;
 
@@ -228,7 +267,9 @@ static std::string formatSignedInt(float v)
 
 		for (int it = 0; it < iters; ++it) {
 			bool any = false;
-			for (const auto& tri : contactTriangles) {
+			for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
+				const auto& tri = contactTriangles[ti];
+				const auto& ids = contactTrianglePhysIds[ti];
 				if (!tri.a || !tri.b || !tri.c) continue;
 
 				const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
@@ -260,9 +301,9 @@ static std::string formatSignedInt(float v)
 				if (denom <= 1e-18f) continue;
 
 				const Eigen::Vector3f deltaQ = n * (pen * corr);
-				applyDeltaToIndex(tri.a->index, deltaQ * (w0 * invMa / denom), n);
-				applyDeltaToIndex(tri.b->index, deltaQ * (w1 * invMb / denom), n);
-				applyDeltaToIndex(tri.c->index, deltaQ * (w2 * invMc / denom), n);
+				applyDeltaToPhysId(ids[0], deltaQ * (w0 * invMa / denom), n);
+				applyDeltaToPhysId(ids[1], deltaQ * (w1 * invMb / denom), n);
+				applyDeltaToPhysId(ids[2], deltaQ * (w2 * invMc / denom), n);
 				any = true;
 			}
 			if (!any) break;
@@ -287,11 +328,11 @@ static std::string formatSignedInt(float v)
 		float positionCorrection,
 		float tangentialDamp,
 		int iterations,
-		const std::vector<Vertex*>& contactVertices,
-		const std::vector<std::vector<Vertex*>>& verticesByIndex)
+		const std::vector<int>& contactVertexPhysIds,
+		const std::vector<std::vector<Vertex*>>& verticesByPhysId)
 	{
 		AgentContactResult out{};
-		if (contactVertices.empty() || verticesByIndex.empty()) return out;
+		if (contactVertexPhysIds.empty() || verticesByPhysId.empty()) return out;
 
 		const float r = std::max(1e-6f, sphereRadius);
 		const float allowedPen = std::clamp(allowedPenetration, 0.0f, 0.95f * r);
@@ -309,10 +350,10 @@ static std::string formatSignedInt(float v)
 		float maxPen = 0.0f;
 		int movedVertexCount = 0;
 
-		auto applyDeltaToIndex = [&](int idx, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
+		auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
 			if (dp.squaredNorm() <= 1e-24f) return;
-			if (idx < 0 || idx >= static_cast<int>(verticesByIndex.size())) return;
-			const auto& list = verticesByIndex[static_cast<size_t>(idx)];
+			if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
+			const auto& list = verticesByPhysId[static_cast<size_t>(id)];
 			for (Vertex* v : list) {
 				if (!v || v->isFixed) continue;
 
@@ -341,10 +382,12 @@ static std::string formatSignedInt(float v)
 
 		for (int it = 0; it < iters; ++it) {
 			bool any = false;
-			for (Vertex* vRef : contactVertices) {
+			for (int id : contactVertexPhysIds) {
+				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) continue;
+				const auto& list = verticesByPhysId[static_cast<size_t>(id)];
+				if (list.empty()) continue;
+				Vertex* vRef = list.front();
 				if (!vRef) continue;
-				const int idx = vRef->index;
-				if (idx < 0 || idx >= static_cast<int>(verticesByIndex.size())) continue;
 
 				const Eigen::Vector3f p(vRef->x, vRef->y, vRef->z);
 				Eigen::Vector3f d = p - sphereCenter;
@@ -360,7 +403,7 @@ static std::string formatSignedInt(float v)
 				sumN += n * pen;
 
 				const Eigen::Vector3f dp = n * (pen * corr);
-				applyDeltaToIndex(idx, dp, n);
+				applyDeltaToPhysId(id, dp, n);
 				any = true;
 			}
 			if (!any) break;
@@ -1131,37 +1174,58 @@ int main(int argc, char** argv) {
 	}
 	const float agentProxyMassKg = std::max(1e-6f, std::abs(agentProxyMassFracOfObject) * std::max(1e-6f, objectMassKg));
 	const float invBboxDiag = 1.0f / std::max(1e-6f, bboxDiag);
-	const float agentVcKLen = std::max(0.0f, agentVcStiffnessNPerBbox) * invBboxDiag;     // N per unit length
-	const float agentVcCLen = std::max(0.0f, agentVcDampingNsPerBbox) * invBboxDiag;      // N*s per unit length
+		const float agentVcKLen = std::max(0.0f, agentVcStiffnessNPerBbox) * invBboxDiag;     // N per unit length
+		const float agentVcCLen = std::max(0.0f, agentVcDampingNsPerBbox) * invBboxDiag;      // N*s per unit length
 
-		// Choose contact vertices: surface vertices (TetGen trifaces) if available, otherwise all unique vertices.
+		// Choose contact vertices/triangles on the OUTER surface.
+		//
+		// Important: Object::updateIndices() duplicates vertices across groups (unique indices per group),
+		// so index-based face counting would incorrectly classify internal group interfaces as "surface".
+		// We therefore build a "physical vertex id" by quantized init position and do surface extraction
+		// in that space.
 		std::vector<Vertex*> agentContactVertices;
 		std::vector<AgentTriangle> agentContactTriangles;
+		std::vector<std::array<int, 3>> agentContactTrianglePhysIds;
+		std::vector<int> agentContactVertexPhysIds;
+		std::vector<std::vector<Vertex*>> agentVerticesByPhysId;
 		agentContactVertices.reserve(objectUniqueVertices.size());
-		int agentMaxVertexIndex = 0;
-		{
-			for (const auto* v : objectUniqueVertices) agentMaxVertexIndex = std::max(agentMaxVertexIndex, v->index);
+		agentContactTrianglePhysIds.reserve(objectUniqueVertices.size());
+		agentContactVertexPhysIds.reserve(objectUniqueVertices.size());
 
-			// Build an index->Vertex* lookup for triangle contact.
-			std::vector<Vertex*> indexToVertex;
-			if (agentMaxVertexIndex >= 0) {
-				indexToVertex.assign(static_cast<size_t>(agentMaxVertexIndex + 1), nullptr);
-				for (auto* v : objectUniqueVertices) {
-					if (v && v->index >= 0 && v->index <= agentMaxVertexIndex) {
-						indexToVertex[static_cast<size_t>(v->index)] = v;
-					}
-				}
+		// Build physical id map from unique (deduped) init positions.
+		std::unordered_map<AgentPhysKey, int, AgentPhysKeyHash> physKeyToId;
+		physKeyToId.reserve(objectUniqueVertices.size() * 2);
+		std::vector<Vertex*> physRep;
+		physRep.reserve(objectUniqueVertices.size());
+		for (Vertex* v : objectUniqueVertices) {
+			if (!v) continue;
+			const int id = static_cast<int>(physRep.size());
+			physKeyToId.emplace(makePhysKey(v), id);
+			physRep.push_back(v);
+		}
+
+		// Build physId -> all vertex copies (across groups).
+		agentVerticesByPhysId.assign(physRep.size(), {});
+		for (int gi = 0; gi < object.groupNum; ++gi) {
+			Group& g = object.groups[gi];
+			for (const auto& vertexPair : g.verticesMap) {
+				Vertex* v = vertexPair.second;
+				if (!v) continue;
+				const auto it = physKeyToId.find(makePhysKey(v));
+				if (it == physKeyToId.end()) continue;
+				agentVerticesByPhysId[static_cast<size_t>(it->second)].push_back(v);
 			}
+		}
 
-			// Prefer triangle-based contact using boundary faces extracted from the tet mesh.
-			// This works in both STL meshing and direct-loading mode and deforms with the object.
-			if (agentUseSurfaceTriangles && agentMaxVertexIndex >= 0 && !indexToVertex.empty()) {
-				struct FaceKey {
-					int i0, i1, i2;
-					bool operator==(const FaceKey& o) const { return i0 == o.i0 && i1 == o.i1 && i2 == o.i2; }
-				};
+		// Extract outer boundary triangles by counting faces in physId space.
+		if (agentUseSurfaceTriangles && !physRep.empty()) {
+			struct FaceKey {
+				int i0 = -1, i1 = -1, i2 = -1;
+				bool operator==(const FaceKey& o) const noexcept { return i0 == o.i0 && i1 == o.i1 && i2 == o.i2; }
+			};
 			struct FaceKeyHash {
-				size_t operator()(const FaceKey& k) const noexcept {
+				size_t operator()(const FaceKey& k) const noexcept
+				{
 					const auto h0 = std::hash<int>{}(k.i0);
 					const auto h1 = std::hash<int>{}(k.i1);
 					const auto h2 = std::hash<int>{}(k.i2);
@@ -1173,8 +1237,11 @@ int main(int argc, char** argv) {
 			};
 			struct FaceRec {
 				int count = 0;
-				int a = -1, b = -1, c = -1;   // face vertex indices (ordered)
-				int opp = -1;                 // opposite vertex index (interior)
+				Vertex* a = nullptr;
+				Vertex* b = nullptr;
+				Vertex* c = nullptr;
+				Vertex* opp = nullptr;
+				std::array<int, 3> ids{ {-1, -1, -1} };
 			};
 
 			auto makeKey = [](int a, int b, int c) -> FaceKey {
@@ -1189,14 +1256,27 @@ int main(int argc, char** argv) {
 			std::unordered_map<FaceKey, FaceRec, FaceKeyHash> faces;
 			faces.reserve(std::max<size_t>(16, tetCount * 4));
 
-			auto addFace = [&](int ia, int ib, int ic, int iopp) {
+			auto physIdOf = [&](Vertex* v) -> int {
+				if (!v) return -1;
+				const auto it = physKeyToId.find(makePhysKey(v));
+				return (it == physKeyToId.end()) ? -1 : it->second;
+			};
+
+			auto addFace = [&](Vertex* a, Vertex* b, Vertex* c, Vertex* opp) {
+				const int ia = physIdOf(a);
+				const int ib = physIdOf(b);
+				const int ic = physIdOf(c);
+				if (ia < 0 || ib < 0 || ic < 0) return;
 				const FaceKey key = makeKey(ia, ib, ic);
 				auto it = faces.find(key);
 				if (it == faces.end()) {
 					FaceRec rec;
 					rec.count = 1;
-					rec.a = ia; rec.b = ib; rec.c = ic;
-					rec.opp = iopp;
+					rec.a = a;
+					rec.b = b;
+					rec.c = c;
+					rec.opp = opp;
+					rec.ids = {ia, ib, ic};
 					faces.emplace(key, rec);
 				} else {
 					it->second.count += 1;
@@ -1207,63 +1287,54 @@ int main(int argc, char** argv) {
 				Group& g = object.groups[gi];
 				for (Tetrahedron* t : g.tetrahedra) {
 					if (!t) continue;
-					int idx[4] = {-1, -1, -1, -1};
-					for (int k = 0; k < 4; ++k) idx[k] = (t->vertices[k] ? t->vertices[k]->index : -1);
-					if (idx[0] < 0 || idx[1] < 0 || idx[2] < 0 || idx[3] < 0) continue;
-					addFace(idx[1], idx[2], idx[3], idx[0]);
-					addFace(idx[0], idx[2], idx[3], idx[1]);
-					addFace(idx[0], idx[1], idx[3], idx[2]);
-					addFace(idx[0], idx[1], idx[2], idx[3]);
+					Vertex* v0 = t->vertices[0];
+					Vertex* v1 = t->vertices[1];
+					Vertex* v2 = t->vertices[2];
+					Vertex* v3 = t->vertices[3];
+					if (!v0 || !v1 || !v2 || !v3) continue;
+					addFace(v1, v2, v3, v0);
+					addFace(v0, v2, v3, v1);
+					addFace(v0, v1, v3, v2);
+					addFace(v0, v1, v2, v3);
 				}
 			}
 
+			std::vector<char> isSurfacePhys(physRep.size(), 0);
 			agentContactTriangles.reserve(faces.size());
+			agentContactTrianglePhysIds.reserve(faces.size());
 			for (const auto& kv : faces) {
 				const FaceRec& rec = kv.second;
-				if (rec.count != 1) continue; // interior face
-				if (rec.a < 0 || rec.b < 0 || rec.c < 0 || rec.opp < 0) continue;
-				if (rec.a > agentMaxVertexIndex || rec.b > agentMaxVertexIndex || rec.c > agentMaxVertexIndex || rec.opp > agentMaxVertexIndex) continue;
-				Vertex* va = indexToVertex[static_cast<size_t>(rec.a)];
-				Vertex* vb = indexToVertex[static_cast<size_t>(rec.b)];
-				Vertex* vc = indexToVertex[static_cast<size_t>(rec.c)];
-				Vertex* vopp = indexToVertex[static_cast<size_t>(rec.opp)];
-				if (!va || !vb || !vc || !vopp) continue;
-				agentContactTriangles.push_back(AgentTriangle{va, vb, vc, vopp});
-			}
-		}
-
-			if (agentUseSurfaceVertices && out.numberoftrifaces > 0 && out.trifacelist && agentMaxVertexIndex >= 0) {
-				const int indexOffset = out.firstnumber;
-				std::vector<char> isSurface(static_cast<size_t>(agentMaxVertexIndex + 1), 0);
-				for (int i = 0; i < out.numberoftrifaces * 3; ++i) {
-					const int idx = out.trifacelist[i] - indexOffset;
-					if (idx >= 0 && idx <= agentMaxVertexIndex) isSurface[static_cast<size_t>(idx)] = 1;
-				}
-				for (auto* v : objectUniqueVertices) {
-					if (v->index >= 0 && v->index <= agentMaxVertexIndex && isSurface[static_cast<size_t>(v->index)]) {
-						agentContactVertices.push_back(v);
+				if (rec.count != 1) continue; // interior face (shared by two tets in phys space)
+				if (!rec.a || !rec.b || !rec.c) continue;
+				agentContactTriangles.push_back(AgentTriangle{rec.a, rec.b, rec.c, rec.opp});
+				agentContactTrianglePhysIds.push_back(rec.ids);
+				for (int k = 0; k < 3; ++k) {
+					const int id = rec.ids[k];
+					if (id >= 0 && id < static_cast<int>(isSurfacePhys.size())) {
+						isSurfacePhys[static_cast<size_t>(id)] = 1;
 					}
 				}
-			if (agentContactVertices.empty()) {
-				agentContactVertices = objectUniqueVertices;
 			}
-			} else {
-				agentContactVertices = objectUniqueVertices;
+
+			if (agentUseSurfaceVertices) {
+				for (int id = 0; id < static_cast<int>(isSurfacePhys.size()); ++id) {
+					if (!isSurfacePhys[static_cast<size_t>(id)]) continue;
+					if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+					Vertex* rep = physRep[static_cast<size_t>(id)];
+					if (!rep) continue;
+					agentContactVertices.push_back(rep);
+					agentContactVertexPhysIds.push_back(id);
+				}
 			}
 		}
 
-		// Build global index -> all vertex copies (for group-duplicated seam vertices).
-		std::vector<std::vector<Vertex*>> agentVerticesByIndex;
-		if (agentMaxVertexIndex >= 0) {
-			agentVerticesByIndex.assign(static_cast<size_t>(agentMaxVertexIndex + 1), {});
-			for (int gi = 0; gi < object.groupNum; ++gi) {
-				Group& g = object.groups[gi];
-				for (const auto& vertexPair : g.verticesMap) {
-					Vertex* v = vertexPair.second;
-					if (!v) continue;
-					if (v->index < 0 || v->index > agentMaxVertexIndex) continue;
-					agentVerticesByIndex[static_cast<size_t>(v->index)].push_back(v);
-				}
+		// Fallback: if we couldn't build a clean surface vertex set, use all physical vertices.
+		if (agentContactVertices.empty()) {
+			agentContactVertices = objectUniqueVertices;
+			agentContactVertexPhysIds.clear();
+			agentContactVertexPhysIds.reserve(physRep.size());
+			for (int id = 0; id < static_cast<int>(physRep.size()); ++id) {
+				agentContactVertexPhysIds.push_back(id);
 			}
 		}
 
@@ -1574,12 +1645,17 @@ int main(int argc, char** argv) {
 		}
 
 		// ------------------ Interaction Logic (Optimized)
-		static std::vector<Eigen::Vector3f> dragForces;
-		if (dragForces.empty()) {
-			int maxV = 0;
-			for (auto* v : objectUniqueVertices) if (v->index > maxV) maxV = v->index;
-			dragForces.resize(maxV + 1, Eigen::Vector3f::Zero());
-		}
+			static std::vector<Eigen::Vector3f> dragForces;
+			if (dragForces.empty()) {
+				int maxV = 0;
+				for (int gi = 0; gi < object.groupNum; ++gi) {
+					for (const auto& pair : object.groups[gi].verticesMap) {
+						Vertex* v = pair.second;
+						if (v && v->index > maxV) maxV = v->index;
+					}
+				}
+				dragForces.resize(maxV + 1, Eigen::Vector3f::Zero());
+			}
 		
 		// Reset forces efficiently
 		#pragma omp parallel for
@@ -1876,34 +1952,35 @@ int main(int argc, char** argv) {
 						const float tangentialDamp = std::clamp(agentCollisionTangentialDamp, 0.0f, 1.0f);
 						const int iters = std::clamp(agentCollisionIterations, 1, 64);
 
-						AgentContactResult contact{};
-						if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
-							contact = solveAgentSphereTriangleCollisionConstraint(
-								sphereCenter,
-								sphereVel,
-								r,
-								allowedPen,
-								eps,
-								timeStep,
-								corr,
-								tangentialDamp,
-								iters,
-								agentContactTriangles,
-								agentVerticesByIndex);
-						} else if (!agentContactVertices.empty()) {
-							contact = solveAgentSphereVertexCollisionConstraint(
-								sphereCenter,
-								sphereVel,
-								r,
-								allowedPen,
-								eps,
-								timeStep,
-								corr,
-								tangentialDamp,
-								iters,
-								agentContactVertices,
-								agentVerticesByIndex);
-						}
+							AgentContactResult contact{};
+							if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+								contact = solveAgentSphereTriangleCollisionConstraint(
+									sphereCenter,
+									sphereVel,
+									r,
+									allowedPen,
+									eps,
+									timeStep,
+									corr,
+									tangentialDamp,
+									iters,
+									agentContactTriangles,
+									agentContactTrianglePhysIds,
+									agentVerticesByPhysId);
+							} else if (!agentContactVertexPhysIds.empty()) {
+								contact = solveAgentSphereVertexCollisionConstraint(
+									sphereCenter,
+									sphereVel,
+									r,
+									allowedPen,
+									eps,
+									timeStep,
+									corr,
+									tangentialDamp,
+									iters,
+									agentContactVertexPhysIds,
+									agentVerticesByPhysId);
+							}
 
 						agentLastContactForceN = contact.reactionForceN;
 						agentLastContactCount = contact.contactVertexCount;

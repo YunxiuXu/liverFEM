@@ -39,12 +39,12 @@ agent_proxyMassFracOfObject=0.005
 agent_vcStiffnessNPerBbox=800
 agent_vcDampingNsPerBbox=50
 agent_vcSubsteps=12
-agent_collisionIterations=10
+agent_collisionIterations=30
 agent_vcMaxDistanceRadiusFrac=4.0
 agent_maxPenetrationFrac=0.0
-agent_proxyPositionCorrection=0.80
+agent_proxyPositionCorrection=1.0
 agent_influenceRadiusFrac=3.0
-agent_collisionTangentialDamp=0.05
+agent_collisionTangentialDamp=0.6
 agent_writeLiveFile=false
 agent_liveFileIntervalFrames=2
 
