@@ -25,6 +25,7 @@ extern float agentVcStiffnessNPerBbox;
 extern float agentVcDampingNsPerBbox;
 extern float agentVcMaxDistanceRadiusFrac;
 extern int agentVcSubsteps;
+extern int agentCollisionIterations;
 extern float agentMaxPenetrationFrac;
 extern float agentProxyPositionCorrection;
 extern float agentInfluenceRadiusFrac;

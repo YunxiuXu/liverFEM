@@ -15,24 +15,25 @@ float dragInfluenceRadius = 0.6f;
 float dragStiffness = 2500.0f;
 float dragMaxAccel = 50000.0f;
 float dragMaxDisplacement = 1.0f;
-bool agentEnabled = false;
-bool agentUseSurfaceVertices = true;
-bool agentUseSurfaceTriangles = true;
-bool agentVirtualCoupling = true;
-float agentRadiusBboxScale = 0.03f;
-float agentContactStiffness = 40000.0f;
-float agentContactDamping = 200.0f;
-float agentMoveSpeedBboxPerSec = 0.25f;
-float agentProxyMassFracOfObject = 0.01f;
+	bool agentEnabled = false;
+	bool agentUseSurfaceVertices = true;
+	bool agentUseSurfaceTriangles = true;
+	bool agentVirtualCoupling = false;
+	float agentRadiusBboxScale = 0.03f;
+	float agentContactStiffness = 40000.0f;
+	float agentContactDamping = 200.0f;
+	float agentMoveSpeedBboxPerSec = 0.25f;
+	float agentProxyMassFracOfObject = 0.01f;
 float agentVcStiffnessNPerBbox = 250.0f;
-float agentVcDampingNsPerBbox = 20.0f;
-float agentVcMaxDistanceRadiusFrac = 4.0f;
-int agentVcSubsteps = 6;
-float agentMaxPenetrationFrac = 0.0f;
-float agentProxyPositionCorrection = 0.50f;
-float agentInfluenceRadiusFrac = 3.0f;
-float agentCollisionTangentialDamp = 0.05f;
-bool agentWriteLiveFile = false;
+	float agentVcDampingNsPerBbox = 20.0f;
+	float agentVcMaxDistanceRadiusFrac = 4.0f;
+	int agentVcSubsteps = 6;
+	int agentCollisionIterations = 10;
+	float agentMaxPenetrationFrac = 0.0f;
+	float agentProxyPositionCorrection = 0.50f;
+	float agentInfluenceRadiusFrac = 3.0f;
+	float agentCollisionTangentialDamp = 0.05f;
+	bool agentWriteLiveFile = false;
 int agentLiveFileIntervalFrames = 2;
 int exp3SettleSteps = 120;
 int exp3DragSteps = 240;
@@ -179,15 +180,16 @@ void loadParams(const std::string& filename) {
 	        {"exp4_maxVolume5", &exp4MaxVolume5}
 	    };
 
-	    std::unordered_map<std::string, int*> intParams = {
-	        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
-	        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
-	        {"agent_vcSubsteps", &agentVcSubsteps},
-	        {"exp3_settleSteps", &exp3SettleSteps},
-	        {"exp3_dragSteps", &exp3DragSteps},
-	        {"exp1_settleSteps", &exp1SettleSteps},
-	        {"exp1_dragSteps", &exp1DragSteps},
-        {"exp1_holdSteps", &exp1HoldSteps},
+		    std::unordered_map<std::string, int*> intParams = {
+		        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
+		        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
+		        {"agent_vcSubsteps", &agentVcSubsteps},
+		        {"agent_collisionIterations", &agentCollisionIterations},
+		        {"exp3_settleSteps", &exp3SettleSteps},
+		        {"exp3_dragSteps", &exp3DragSteps},
+		        {"exp1_settleSteps", &exp1SettleSteps},
+		        {"exp1_dragSteps", &exp1DragSteps},
+	        {"exp1_holdSteps", &exp1HoldSteps},
         {"exp1_pbdIterationsFast", &exp1PbdIterationsFast},
         {"exp1_pbdIterationsReference", &exp1PbdIterationsReference},
         {"exp2_settleSteps", &exp2SettleSteps},
