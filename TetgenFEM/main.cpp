@@ -1541,86 +1541,111 @@ int main(int argc, char** argv) {
 			agentSphere.position = agentProxyPosition;
 			agentSphere.velocity = agentProxyVelocity;
 			
-			// Query the closest surface point to determine penetration
-			const AgentSurfaceQueryResult surfQ = queryAgentSurface(agentProxyPosition, agentContactTriangles);
+				// Query the closest surface point to determine penetration.
+				// Note: Using only penetration here makes "hard press" feel weak in Virtual Coupling mode because
+				// the proxy is intentionally kept near/outside the surface (penetration ~ 0). We therefore also
+				// transfer the device<->proxy coupling force (normal component) to the tissue as a distributed load.
+				const AgentSurfaceQueryResult surfQ = queryAgentSurface(agentProxyPosition, agentContactTriangles);
 			
-			AgentContactResult finalContact{};
-			if (surfQ.found) {
-				const float penetration = agentSphere.radius - surfQ.distanceToSurface;
-				if (penetration > 0.0f) {
-					// Contact detected! Apply distributed force to all vertices within influence radius
+				AgentContactResult finalContact{};
+				if (surfQ.found) {
 					const Eigen::Vector3f contactPoint = surfQ.closestPoint;
-					const Eigen::Vector3f contactNormal = surfQ.outwardNormal; // points outward from surface
+
+					// Use a stable contact direction: from agent center to the closest surface point.
+					// This is less jittery than per-vertex radial directions (especially on side contact).
+					Eigen::Vector3f contactDir = (contactPoint - agentProxyPosition);
+					const float contactDirLen = contactDir.norm();
+					if (contactDirLen > 1e-6f) {
+						contactDir /= contactDirLen;
+					} else if (surfQ.outwardNormal.squaredNorm() > 0.0f) {
+						// outwardNormal points out of the surface; contactDir should point toward the surface.
+						contactDir = -surfQ.outwardNormal;
+					} else {
+						contactDir = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+					}
+
+					// Penetration-based penalty term (kept for robustness).
+					const float penetration = agentSphere.radius - surfQ.distanceToSurface;
+
 					const float influenceRadius = agentSphere.radius * agentInfluenceRadiusFrac;
-					
 					const float k = agentSphere.contactStiffness;
 					const float c = agentSphere.contactDamping;
-					
-					// Base acceleration magnitude from penetration
-					float baseAccelMag = k * penetration;
-					
-					// Apply to all vertices within influence radius (like drag does)
-					int contactCount = 0;
-					Eigen::Vector3f totalReactionForce = Eigen::Vector3f::Zero();
-					
-					#pragma omp parallel for reduction(+:contactCount) 
+
+					// Transfer the (compressive) coupling force to tissue even if penetration ~ 0.
+					// lastCouplingForceN is the spring-damper force applied to the proxy (Newton).
+					const float couplingNormalForceN = std::max(0.0f, lastCouplingForceN.dot(contactDir));
+
+					// Compute a mass-weighted normalization so that sum(force) ~= couplingNormalForceN.
+					float weightedMassSum = 0.0f;
+					#pragma omp parallel for reduction(+:weightedMassSum)
 					for (int i = 0; i < static_cast<int>(objectUniqueVertices.size()); ++i) {
 						Vertex* v = objectUniqueVertices[i];
 						if (!v || v->isFixed) continue;
 						if (v->index < 0 || v->index >= static_cast<int>(dragForces.size())) continue;
-						
 						const Eigen::Vector3f vpos(v->x, v->y, v->z);
 						const float distToContact = (vpos - contactPoint).norm();
-						
-						if (distToContact <= influenceRadius) {
-							// Smooth falloff: 1 at contact point, 0 at edge of influence
-							const float t = distToContact / influenceRadius;
-							const float falloff = (1.0f - t) * (1.0f - t); // quadratic falloff for smoother feel
-							
-							// Direction: push vertex away from sphere center (outward from contact)
-							Eigen::Vector3f pushDir = (vpos - agentProxyPosition);
-							const float pushDist = pushDir.norm();
-							if (pushDist > 1e-6f) {
-								pushDir /= pushDist;
-							} else {
-								pushDir = contactNormal;
-							}
-							
-							// Damping based on relative velocity
-							const Eigen::Vector3f vtxVel(v->velx, v->vely, v->velz);
-							const float relVn = (vtxVel - agentProxyVelocity).dot(pushDir);
-							const float dampMag = -c * std::min(0.0f, relVn);
-							
-							const float accelMag = (baseAccelMag + dampMag) * falloff;
-							const Eigen::Vector3f accel = pushDir * accelMag;
-							
-							// Atomic add to dragForces
-							#pragma omp atomic
-							dragForces[v->index].x() += accel.x();
-							#pragma omp atomic
-							dragForces[v->index].y() += accel.y();
-							#pragma omp atomic
-							dragForces[v->index].z() += accel.z();
-							
-							++contactCount;
-							
-							// Accumulate reaction force (for haptic feedback)
-							const Eigen::Vector3f fOnVertex = accel * v->vertexMass;
-							#pragma omp atomic
-							totalReactionForce.x() -= fOnVertex.x();
-							#pragma omp atomic
-							totalReactionForce.y() -= fOnVertex.y();
-							#pragma omp atomic
-							totalReactionForce.z() -= fOnVertex.z();
-						}
+						if (distToContact > influenceRadius) continue;
+						const float t = distToContact / std::max(1e-6f, influenceRadius);
+						const float falloff = (1.0f - t) * (1.0f - t);
+						weightedMassSum += std::max(0.0f, v->vertexMass) * falloff;
 					}
-					
+					const float invWeightedMassSum = (weightedMassSum > 1e-12f) ? (1.0f / weightedMassSum) : 0.0f;
+
+					int contactCount = 0;
+					Eigen::Vector3f totalReactionForce = Eigen::Vector3f::Zero();
+
+					#pragma omp parallel for reduction(+:contactCount)
+					for (int i = 0; i < static_cast<int>(objectUniqueVertices.size()); ++i) {
+						Vertex* v = objectUniqueVertices[i];
+						if (!v || v->isFixed) continue;
+						if (v->index < 0 || v->index >= static_cast<int>(dragForces.size())) continue;
+
+						const Eigen::Vector3f vpos(v->x, v->y, v->z);
+						const float distToContact = (vpos - contactPoint).norm();
+						if (distToContact > influenceRadius) continue;
+
+						const float t = distToContact / std::max(1e-6f, influenceRadius);
+						const float falloff = (1.0f - t) * (1.0f - t);
+
+						// Damping based on relative velocity along the contact direction (unilateral).
+						const Eigen::Vector3f vtxVel(v->velx, v->vely, v->velz);
+						const float relVn = (vtxVel - agentProxyVelocity).dot(contactDir);
+						const float dampAccel = -c * std::min(0.0f, relVn);
+
+						// Coupling force -> acceleration (distributed by mass and falloff).
+						const float couplingAccel = couplingNormalForceN * invWeightedMassSum * falloff;
+
+						// Penalty acceleration (only active when penetrating).
+						const float penAccel = (penetration > 0.0f ? (k * penetration) : 0.0f) * falloff;
+
+						const float accelMag = couplingAccel + penAccel + dampAccel * falloff;
+						if (accelMag <= 0.0f) continue;
+
+						const Eigen::Vector3f accel = contactDir * accelMag;
+
+						#pragma omp atomic
+						dragForces[v->index].x() += accel.x();
+						#pragma omp atomic
+						dragForces[v->index].y() += accel.y();
+						#pragma omp atomic
+						dragForces[v->index].z() += accel.z();
+
+						++contactCount;
+
+						const Eigen::Vector3f fOnVertex = accel * v->vertexMass;
+						#pragma omp atomic
+						totalReactionForce.x() -= fOnVertex.x();
+						#pragma omp atomic
+						totalReactionForce.y() -= fOnVertex.y();
+						#pragma omp atomic
+						totalReactionForce.z() -= fOnVertex.z();
+					}
+
 					finalContact.contactVertexCount = contactCount;
-					finalContact.maxPenetration = penetration;
-					finalContact.avgNormal = contactNormal;
+					finalContact.maxPenetration = std::max(0.0f, penetration);
+					finalContact.avgNormal = contactDir; // from proxy center to closest surface point
 					finalContact.reactionForceN = totalReactionForce;
 				}
-			}
 
 			agentLastCouplingForceN = lastCouplingForceN;
 			agentLastContactForceN = finalContact.reactionForceN;
