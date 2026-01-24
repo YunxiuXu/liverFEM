@@ -26,10 +26,12 @@ float agentMoveSpeedBboxPerSec = 0.25f;
 float agentProxyMassFracOfObject = 0.01f;
 float agentVcStiffnessNPerBbox = 250.0f;
 float agentVcDampingNsPerBbox = 20.0f;
+float agentVcMaxDistanceRadiusFrac = 4.0f;
 int agentVcSubsteps = 6;
-float agentMaxPenetrationFrac = 0.30f;
+float agentMaxPenetrationFrac = 0.0f;
 float agentProxyPositionCorrection = 0.50f;
 float agentInfluenceRadiusFrac = 3.0f;
+float agentCollisionTangentialDamp = 0.05f;
 bool agentWriteLiveFile = false;
 int agentLiveFileIntervalFrames = 2;
 int exp3SettleSteps = 120;
@@ -143,9 +145,11 @@ void loadParams(const std::string& filename) {
 	        {"agent_proxyMassFracOfObject", &agentProxyMassFracOfObject},
 	        {"agent_vcStiffnessNPerBbox", &agentVcStiffnessNPerBbox},
 	        {"agent_vcDampingNsPerBbox", &agentVcDampingNsPerBbox},
+	        {"agent_vcMaxDistanceRadiusFrac", &agentVcMaxDistanceRadiusFrac},
 	        {"agent_maxPenetrationFrac", &agentMaxPenetrationFrac},
 	        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
 	        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
+	        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
 	        {"exp3_exOverEy", &exp3ExOverEy},
 	        {"exp3_poissonOverride", &exp3PoissonOverride},
 	        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},

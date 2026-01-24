@@ -1314,6 +1314,9 @@ void Group::updateVelocity() {
 		if (vertex->isFixed) {
 			// Fixed vertices: set velocity to zero
 			groupVelocity.segment<3>(3 * localIndex) = Eigen::Vector3f::Zero();
+			vertex->velx = 0.0f;
+			vertex->vely = 0.0f;
+			vertex->velz = 0.0f;
 		} else {
 			previousPos.x() = vertex->x;
 			previousPos.y() = vertex->y;
@@ -1333,6 +1336,9 @@ void Group::updateVelocity() {
 			}
 			
 			groupVelocity.segment<3>(3 * localIndex) = velocity;
+			vertex->velx = velocity.x();
+			vertex->vely = velocity.y();
+			vertex->velz = velocity.z();
 
 			//Kinematics += 0.5 * vertex->vertexMass * velocity.norm();
 		}

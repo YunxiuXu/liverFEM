@@ -858,7 +858,6 @@ int main(int argc, char** argv) {
 	const float invBboxDiag = 1.0f / std::max(1e-6f, bboxDiag);
 	const float agentVcKLen = std::max(0.0f, agentVcStiffnessNPerBbox) * invBboxDiag;     // N per unit length
 	const float agentVcCLen = std::max(0.0f, agentVcDampingNsPerBbox) * invBboxDiag;      // N*s per unit length
-	const float agentProxyCorr = std::clamp(agentProxyPositionCorrection, 0.0f, 1.0f);
 
 	// Choose contact vertices: surface vertices (TetGen trifaces) if available, otherwise all unique vertices.
 	std::vector<Vertex*> agentContactVertices;
@@ -1469,72 +1468,55 @@ int main(int argc, char** argv) {
 			// Virtual coupling: device controls a target (agentDevicePosition), proxy interacts with tissue.
 			// We use substeps to avoid "tunneling" and to get accurate proxy dynamics,
 			// but we DON'T accumulate forces to the object in the substep loop.
-			// Instead, we only apply contact force ONCE at the end based on final proxy state.
-			const bool useTriangleContact = agentUseSurfaceTriangles && !agentContactTriangles.empty();
-			const float deviceStep = agentDeviceVelocity.norm() * timeStep;
-			const float maxStep = std::max(1e-6f, 0.25f * agentSphere.radius);
-			const int substepsFromSpeed = static_cast<int>(std::ceil(deviceStep / maxStep));
-			const int substeps = std::max(1, std::max(agentVcSubsteps, substepsFromSpeed));
-			const float dtSub = timeStep / static_cast<float>(substeps);
+				// Instead, we only apply contact force ONCE at the end based on final proxy state.
+				const bool useTriangleContact = agentUseSurfaceTriangles && !agentContactTriangles.empty();
+				const float deviceStep = agentDeviceVelocity.norm() * timeStep;
+				const float maxStep = std::max(1e-6f, 0.25f * agentSphere.radius);
+				const int substepsFromSpeed = static_cast<int>(std::ceil(deviceStep / maxStep));
+				const float deviceGap = (agentDevicePosition - agentProxyPosition).norm();
+				const int substepsFromGap = static_cast<int>(std::ceil(deviceGap / maxStep));
+				const int baseSubsteps = std::max(agentVcSubsteps, std::max(substepsFromSpeed, substepsFromGap));
+				const int substeps = std::clamp(baseSubsteps, 1, 64);
+				const float dtSub = timeStep / static_cast<float>(substeps);
 
-			AgentContactResult lastContact{};
-			Eigen::Vector3f lastCouplingForceN = Eigen::Vector3f::Zero();
+				Eigen::Vector3f lastCouplingForceN = Eigen::Vector3f::Zero();
 
-			const float maxPenFrac = std::clamp(agentMaxPenetrationFrac, 0.0f, 0.95f);
-			const float allowedPen = maxPenFrac * agentSphere.radius;
-			const float projMargin = 1e-4f * bboxDiag;
+				const float maxPenFrac = std::clamp(agentMaxPenetrationFrac, 0.0f, 0.95f);
+				const float allowedPen = maxPenFrac * agentSphere.radius;
+				const float projMargin = 1e-4f * bboxDiag;
+				const float maxVcDist = std::max(0.0f, agentVcMaxDistanceRadiusFrac) * agentSphere.radius;
+				const float targetSN = std::max(0.0f, agentSphere.radius - allowedPen);
 
-			// Substep loop for proxy dynamics - DO NOT apply forces to object here
-			for (int si = 0; si < substeps; ++si) {
-				const Eigen::Vector3f couplingForceN =
-					agentVcKLen * (agentDevicePosition - agentProxyPosition) +
-					agentVcCLen * (agentDeviceVelocity - agentProxyVelocity);
+				// Substep loop for proxy dynamics - DO NOT apply forces to object here
+				for (int si = 0; si < substeps; ++si) {
+					Eigen::Vector3f disp = (agentDevicePosition - agentProxyPosition);
+					const float dispLen = disp.norm();
+					if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
+						disp *= (maxVcDist / dispLen);
+					}
+					const Eigen::Vector3f couplingForceN =
+						agentVcKLen * disp +
+						agentVcCLen * (agentDeviceVelocity - agentProxyVelocity);
 
-				agentSphere.position = agentProxyPosition;
-				agentSphere.velocity = agentProxyVelocity;
+					const Eigen::Vector3f proxyAcc = couplingForceN / agentProxyMassKg;
+					agentProxyVelocity += proxyAcc * dtSub;
+					agentProxyPosition += agentProxyVelocity * dtSub;
 
-				// Use a temporary force buffer - don't touch dragForces in the substep loop!
-				std::vector<Eigen::Vector3f> tempForces(dragForces.size(), Eigen::Vector3f::Zero());
-				const AgentContactResult contact = useTriangleContact
-					? applyAgentSphereTriangleContact(agentSphere, agentContactTriangles, dtSub, tempForces, 1.0f)
-					: applyAgentSphereContact(agentSphere, agentContactVertices, dtSub, tempForces, 1.0f);
-
-				// Keep penetration bounded (prevents "falling through" when stiffness/step is insufficient).
-				// Note: contact.avgNormal points from proxy center to surface point (inward when outside),
-				// so subtracting it moves the proxy outward.
-				if (contact.contactVertexCount > 0 && contact.maxPenetration > 0.0f && contact.avgNormal.squaredNorm() > 0.0f) {
-					const float overPen = std::max(0.0f, contact.maxPenetration - allowedPen);
-					const float corr = std::clamp(agentProxyCorr, 0.0f, 1.0f);
-					agentProxyPosition -= contact.avgNormal * (overPen * std::max(0.25f, corr) + projMargin);
-
-					// Remove inward velocity component so we don't immediately re-penetrate.
-					const float vnIn = agentProxyVelocity.dot(contact.avgNormal);
-					if (vnIn > 0.0f) agentProxyVelocity -= contact.avgNormal * vnIn;
-				}
-
-				const Eigen::Vector3f proxyAcc = (couplingForceN + contact.reactionForceN) / agentProxyMassKg;
-				agentProxyVelocity += proxyAcc * dtSub;
-				agentProxyPosition += agentProxyVelocity * dtSub;
-
-				// Recovery / constraint: keep proxy from ending up fully inside the closed surface.
-				// If contact reports 0, it might still be inside (sphere completely contained => no boundary intersection),
-				// so we clamp the proxy to a "shell" near the surface by projecting along the closest outward normal.
-				if (useTriangleContact && contact.contactVertexCount == 0) {
-					const AgentSurfaceQueryResult q = queryAgentSurface(agentProxyPosition, agentContactTriangles);
-					if (q.found && q.outwardNormal.squaredNorm() > 0.0f) {
-						const float sN = q.outwardNormal.dot(agentProxyPosition - q.closestPoint);
-						const float targetSN = std::max(0.0f, agentSphere.radius - allowedPen);
-						if (sN < targetSN) {
-							agentProxyPosition += q.outwardNormal * ((targetSN - sN) + projMargin);
-							const float vn = agentProxyVelocity.dot(q.outwardNormal);
-							if (vn < 0.0f) agentProxyVelocity -= q.outwardNormal * vn;
+					// Constraint: keep proxy on/outside the surface shell.
+					if (useTriangleContact) {
+						const AgentSurfaceQueryResult q = queryAgentSurface(agentProxyPosition, agentContactTriangles);
+						if (q.found && q.outwardNormal.squaredNorm() > 0.0f) {
+							const float sN = q.outwardNormal.dot(agentProxyPosition - q.closestPoint);
+							if (sN < targetSN) {
+								agentProxyPosition += q.outwardNormal * ((targetSN - sN) + projMargin);
+								const float vn = agentProxyVelocity.dot(q.outwardNormal);
+								if (vn < 0.0f) agentProxyVelocity -= q.outwardNormal * vn;
 						}
 					}
 				}
 
-				lastCouplingForceN = couplingForceN;
-				lastContact = contact;
-			}
+					lastCouplingForceN = couplingForceN;
+				}
 
 			// NOW apply contact force to object ONCE based on final proxy state
 			// Use DISTRIBUTED force application like drag - affects all vertices within influence radius
@@ -1551,17 +1533,16 @@ int main(int argc, char** argv) {
 				if (surfQ.found) {
 					const Eigen::Vector3f contactPoint = surfQ.closestPoint;
 
-					// Use a stable contact direction: from agent center to the closest surface point.
-					// This is less jittery than per-vertex radial directions (especially on side contact).
-					Eigen::Vector3f contactDir = (contactPoint - agentProxyPosition);
-					const float contactDirLen = contactDir.norm();
-					if (contactDirLen > 1e-6f) {
-						contactDir /= contactDirLen;
-					} else if (surfQ.outwardNormal.squaredNorm() > 0.0f) {
-						// outwardNormal points out of the surface; contactDir should point toward the surface.
+					// Use a stable contact direction: opposite of the outward surface normal.
+					// This is typically smoother than point-to-point directions on a triangulated mesh.
+					Eigen::Vector3f contactDir = Eigen::Vector3f::Zero();
+					if (surfQ.outwardNormal.squaredNorm() > 0.0f) {
 						contactDir = -surfQ.outwardNormal;
 					} else {
-						contactDir = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+						contactDir = (contactPoint - agentProxyPosition);
+						const float contactDirLen = contactDir.norm();
+						if (contactDirLen > 1e-6f) contactDir /= contactDirLen;
+						else contactDir = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
 					}
 
 					// Penetration-based penalty term (kept for robustness).
@@ -1834,6 +1815,90 @@ int main(int argc, char** argv) {
 							// Also zero out velocity in Y direction to prevent bouncing
 							vertex->vely = 0.0f;
 						}
+					}
+				}
+			}
+
+			// Hard non-penetration against the agent sphere (prevents the tissue from "ghosting" through).
+			// This is a positional constraint applied after the PBD solve, similar to the plane constraint above.
+			if (agentSphere.enabled) {
+				const bool useVC = agentUseVC;
+				const Eigen::Vector3f sphereCenter = useVC ? agentProxyPosition : agentDevicePosition;
+				const Eigen::Vector3f sphereVel = useVC ? agentProxyVelocity : agentDeviceVelocity;
+				const float r = std::max(1e-6f, agentSphere.radius);
+				const float eps = 1e-4f * bboxDiag;
+				const float rShell = r + eps;
+				const float r2Shell = rShell * rShell;
+				const float invDt = 1.0f / std::max(1e-8f, timeStep);
+				const float tangentialDamp = std::clamp(agentCollisionTangentialDamp, 0.0f, 1.0f);
+
+#pragma omp parallel for
+				for (int gi = 0; gi < object.groupNum; ++gi) {
+					Group& group = object.groups[gi];
+					for (const auto& vertexPair : group.verticesMap) {
+						Vertex* v = vertexPair.second;
+						if (!v || v->isFixed) continue;
+
+						const Eigen::Vector3f p(v->x, v->y, v->z);
+						Eigen::Vector3f d = p - sphereCenter;
+						const float dist2 = d.squaredNorm();
+						if (dist2 >= r2Shell) continue;
+
+						const float dist = std::sqrt(std::max(dist2, 1e-18f));
+						const Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+						const Eigen::Vector3f newP = sphereCenter + n * rShell;
+						const Eigen::Vector3f deltaP = newP - p;
+
+						v->x = newP.x();
+						v->y = newP.y();
+						v->z = newP.z();
+
+						const int li = v->localIndex;
+							if (li >= 0 && (3 * li + 2) < group.groupVelocity.size()) {
+								Eigen::Vector3f gv = group.groupVelocity.segment<3>(3 * li);
+								gv += deltaP * invDt;
+
+								Eigen::Vector3f relV = gv - sphereVel;
+								const float vn = relV.dot(n);
+								if (vn < 0.0f) relV -= n * vn;
+								relV -= (relV - n * relV.dot(n)) * tangentialDamp;
+								gv = sphereVel + relV;
+
+							group.groupVelocity.segment<3>(3 * li) = gv;
+							v->velx = gv.x();
+							v->vely = gv.y();
+							v->velz = gv.z();
+							} else {
+								Eigen::Vector3f vv(v->velx, v->vely, v->velz);
+								vv += deltaP * invDt;
+
+								Eigen::Vector3f relV = vv - sphereVel;
+								const float vn = relV.dot(n);
+								if (vn < 0.0f) relV -= n * vn;
+								relV -= (relV - n * relV.dot(n)) * tangentialDamp;
+								vv = sphereVel + relV;
+
+							v->velx = vv.x();
+							v->vely = vv.y();
+							v->velz = vv.z();
+						}
+					}
+				}
+
+				// Also keep the proxy outside after the object has advanced (prevents "being swallowed" by deformation).
+				if (useVC && agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+					const float maxPenFrac = std::clamp(agentMaxPenetrationFrac, 0.0f, 0.95f);
+					const float allowedPen = maxPenFrac * r;
+					const float targetSN = std::max(0.0f, r - allowedPen);
+					const float projMargin = 1e-4f * bboxDiag;
+					for (int it = 0; it < 6; ++it) {
+						const AgentSurfaceQueryResult q = queryAgentSurface(agentProxyPosition, agentContactTriangles);
+						if (!q.found || q.outwardNormal.squaredNorm() <= 0.0f) break;
+						const float sN = q.outwardNormal.dot(agentProxyPosition - q.closestPoint);
+						if (sN >= targetSN) break;
+						agentProxyPosition += q.outwardNormal * ((targetSN - sN) + projMargin);
+						const float vn = agentProxyVelocity.dot(q.outwardNormal);
+						if (vn < 0.0f) agentProxyVelocity -= q.outwardNormal * vn;
 					}
 				}
 			}
