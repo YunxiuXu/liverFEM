@@ -41,7 +41,7 @@ agent_vcDampingNsPerBbox=50
 agent_vcSubsteps=12
 agent_maxPenetrationFrac=0.25
 agent_proxyPositionCorrection=0.80
-agent_influenceRadiusFrac=4.0
+agent_influenceRadiusFrac=3.0
 agent_writeLiveFile=false
 agent_liveFileIntervalFrames=2
 
