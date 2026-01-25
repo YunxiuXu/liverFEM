@@ -138,12 +138,12 @@ static std::string formatSignedInt(float v)
 		return AgentPhysKey{q(v->initx), q(v->inity), q(v->initz)};
 	}
 
-	static Eigen::Vector3f closestPointOnTriangle(
-		const Eigen::Vector3f& p,
-		const Eigen::Vector3f& a,
-		const Eigen::Vector3f& b,
-		const Eigen::Vector3f& c,
-		Eigen::Vector3f* baryOut)
+static Eigen::Vector3f closestPointOnTriangle(
+	const Eigen::Vector3f& p,
+	const Eigen::Vector3f& a,
+	const Eigen::Vector3f& b,
+	const Eigen::Vector3f& c,
+	Eigen::Vector3f* baryOut)
 	{
 		// Real-Time Collision Detection (Christer Ericson), closest point on triangle.
 		const Eigen::Vector3f ab = b - a;
@@ -199,13 +199,65 @@ static std::string formatSignedInt(float v)
 		const float v = vb * denom;
 		const float w = vc * denom;
 		if (baryOut) *baryOut = Eigen::Vector3f(1.0f - v - w, v, w);
-		return a + ab * v + ac * w;
-	}
+	return a + ab * v + ac * w;
+}
 
-	struct ForceGraphHistory {
-		static constexpr int kCapacity = 240;
-		std::array<Eigen::Vector4f, kCapacity> samples{};
-		int head = 0;     // next write position
+static bool rayIntersectsTriangle(
+	const Eigen::Vector3f& rayOrigin,
+	const Eigen::Vector3f& rayDir,
+	const Eigen::Vector3f& v0,
+	const Eigen::Vector3f& v1,
+	const Eigen::Vector3f& v2,
+	float* tOut)
+{
+	// Möller–Trumbore ray/triangle intersection (two-sided).
+	const Eigen::Vector3f e1 = v1 - v0;
+	const Eigen::Vector3f e2 = v2 - v0;
+	const Eigen::Vector3f pvec = rayDir.cross(e2);
+	const float det = e1.dot(pvec);
+	if (std::abs(det) < 1e-9f) return false;
+	const float invDet = 1.0f / det;
+
+	const Eigen::Vector3f tvec = rayOrigin - v0;
+	const float u = tvec.dot(pvec) * invDet;
+	if (u < 0.0f || u > 1.0f) return false;
+
+	const Eigen::Vector3f qvec = tvec.cross(e1);
+	const float v = rayDir.dot(qvec) * invDet;
+	if (v < 0.0f || (u + v) > 1.0f) return false;
+
+	const float t = e2.dot(qvec) * invDet;
+	if (t <= 1e-6f) return false;
+	if (tOut) *tOut = t;
+	return true;
+}
+
+static bool isPointInsideSurfaceRayCast(
+	const Eigen::Vector3f& p,
+	const std::vector<AgentTriangle>& tris,
+	float eps)
+{
+	if (tris.empty()) return false;
+	const Eigen::Vector3f dir = Eigen::Vector3f(1.0f, 0.2345f, 0.3456f).normalized();
+	const Eigen::Vector3f origin = p + dir * std::max(1e-9f, eps);
+	int hits = 0;
+	for (const auto& tri : tris) {
+		if (!tri.a || !tri.b || !tri.c) continue;
+		const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+		const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+		const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+		float t = 0.0f;
+		if (rayIntersectsTriangle(origin, dir, a, b, c, &t)) {
+			++hits;
+		}
+	}
+	return (hits % 2) == 1;
+}
+
+struct ForceGraphHistory {
+	static constexpr int kCapacity = 240;
+	std::array<Eigen::Vector4f, kCapacity> samples{};
+	int head = 0;     // next write position
 		bool filled = false;
 
 		void push(const Eigen::Vector4f& s) {
@@ -1991,6 +2043,30 @@ int main(int argc, char** argv) {
 					// Filled after the collision constraint solve.
 					agentLastDeviceForceN.setZero();
 				}
+
+				// Prevent tunneling: if the proxy CENTER goes inside the closed surface, project it back to just
+				// outside the closest surface point. This avoids the "center fully inside => dist>r =>
+				// collision constraints stop firing => 穿透/穿模" failure mode without affecting near-surface motion.
+				if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+					const float r = std::max(1e-6f, agentSphere.radius);
+					const float slop = std::max(1e-4f * bboxDiag, 0.02f * r);
+					const float rayEps = 1e-5f * bboxDiag;
+					Eigen::Vector3f p = agentProxyPosition;
+
+					if (isPointInsideSurfaceRayCast(p, agentContactTriangles, rayEps)) {
+						const AgentSurfaceQueryResult q = queryAgentSurface(p, agentContactTriangles);
+						if (q.found && q.outwardNormal.squaredNorm() > 1e-12f) {
+							p = q.closestPoint + q.outwardNormal * slop;
+
+							Eigen::Vector3f v = agentProxyVelocity;
+							const float vn = v.dot(q.outwardNormal);
+							if (vn < 0.0f) v -= q.outwardNormal * vn;
+
+							agentProxyPosition = p;
+							agentProxyVelocity = v;
+						}
+					}
+				}
 			} else {
 				agentLastDeviceForceN.setZero();
 				agentLastContactForceN.setZero();
@@ -2060,8 +2136,9 @@ int main(int argc, char** argv) {
 					// Use surface TRIANGLES (not all vertices) to avoid non-physical "fat contact" and jitter.
 					if (agentSphere.enabled) {
 						const bool useVC = agentUseVC;
-						const Eigen::Vector3f sphereCenter = useVC ? agentProxyPosition : agentDevicePosition;
-						const Eigen::Vector3f sphereVel = useVC ? agentProxyVelocity : agentDeviceVelocity;
+						// Always collide against the proxy (it may be clamped to avoid tunneling).
+						const Eigen::Vector3f sphereCenter = agentProxyPosition;
+						const Eigen::Vector3f sphereVel = agentProxyVelocity;
 						const float r = std::max(1e-6f, agentSphere.radius);
 						const float maxPenFrac = std::clamp(agentMaxPenetrationFrac, 0.0f, 0.95f);
 						const float allowedPen = maxPenFrac * r;
