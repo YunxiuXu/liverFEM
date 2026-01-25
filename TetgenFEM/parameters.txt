@@ -65,7 +65,7 @@ leap_gain=1.0
 leap_smoothingTime=0.03
 leap_flipX=false
 leap_flipY=false
-leap_flipZ=true
+leap_flipZ=false
 
 # Experiment 3 (one-click) parameters (only used after pressing START EXP3)
 exp3_exOverEy=20

@@ -115,7 +115,7 @@ tetgenArgs=pq2a0.0005   # TetGen 参数
 - `leap_worldMargin`：bbox 映射/夹取的额外边界比例（避免手指“满世界飞”）
 - `leap_gain`：整体映射倍率（感觉活动范围太小就调大）
 - `leap_smoothingTime`：指数平滑时间常数（秒，抑制抖动）
-- `leap_flipX/Y/Z`：轴向翻转（默认 `flipZ=true` 适配常见 OpenGL 视角）
+- `leap_flipX/Y/Z`：轴向翻转（如果 Z 方向反了，把 `leap_flipZ` 设为 `true`）
 
 ## 常见问题
 
