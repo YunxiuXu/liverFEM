@@ -202,6 +202,29 @@ static std::string formatSignedInt(float v)
 		return a + ab * v + ac * w;
 	}
 
+	struct ForceGraphHistory {
+		static constexpr int kCapacity = 240;
+		std::array<Eigen::Vector4f, kCapacity> samples{};
+		int head = 0;     // next write position
+		bool filled = false;
+
+		void push(const Eigen::Vector4f& s) {
+			samples[static_cast<size_t>(head)] = s;
+			head = (head + 1) % kCapacity;
+			if (head == 0) filled = true;
+		}
+
+		int size() const { return filled ? kCapacity : head; }
+
+		Eigen::Vector4f at(int i) const {
+			const int n = size();
+			if (n <= 0) return Eigen::Vector4f::Zero();
+			const int idx = filled ? ((head + i) % kCapacity) : i;
+			if (idx < 0 || idx >= kCapacity) return Eigen::Vector4f::Zero();
+			return samples[static_cast<size_t>(idx)];
+		}
+	};
+
 	static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
 		const Eigen::Vector3f& sphereCenter,
 		const Eigen::Vector3f& sphereVel,
@@ -2554,13 +2577,21 @@ int main(int argc, char** argv) {
 		
 		//saveOBJ("43224.obj", object.groups);
 
-		glPopMatrix();
+			glPopMatrix();
 
-		// ------------------ UI overlay (draw last)
-		ui.beginDraw2D();
-		// Left side buttons
-		// ui.drawPanelBackground(uiPanelRect); // removed
-		const bool canStartExp3 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive();
+			// ------------------ UI overlay (draw last)
+			// Record force history (use force on the object = -reaction on the agent).
+			static ForceGraphHistory agentForceHistory;
+			static float agentForceGraphScaleN = 1.0f;
+			if (agentSphere.enabled && !isPaused) {
+				const Eigen::Vector3f objForceN = -agentLastContactForceN;
+				agentForceHistory.push(Eigen::Vector4f(objForceN.x(), objForceN.y(), objForceN.z(), objForceN.norm()));
+			}
+
+			ui.beginDraw2D();
+			// Left side buttons
+			// ui.drawPanelBackground(uiPanelRect); // removed
+			const bool canStartExp3 = !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive();
 		if (ui.button(uiRunRect, experiment3.buttonLabel(), canStartExp3)) {
 			experiment3.requestStart();
 		}
@@ -2710,12 +2741,112 @@ int main(int argc, char** argv) {
 				object.groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
 				object.groups[i].calLHS();
 			}
-		}
+			}
 
-		// Agent status label (digits/letters only for the tiny segment font).
-		{
-			const float sizePx = 10.0f;
-			const float labelW = 420.0f;
+			// Agent force mini graph (bottom-left, above the status label).
+			if (agentSphere.enabled) {
+				const float labelH = 28.0f;
+				const float graphW = 420.0f;
+				const float graphH = 120.0f;
+				const float graphX = uiMargin;
+				const float graphY = ui.state().windowHeight - uiMargin - labelH - 8.0f - graphH;
+
+				// Panel background in framebuffer coordinates.
+				const float sx = ui.state().scaleX;
+				const float sy = ui.state().scaleY;
+				const float x = graphX * sx;
+				const float y = graphY * sy;
+				const float w = graphW * sx;
+				const float h = graphH * sy;
+
+				glColor4f(0.05f, 0.05f, 0.06f, 0.72f);
+				glBegin(GL_QUADS);
+				glVertex2f(x, y);
+				glVertex2f(x + w, y);
+				glVertex2f(x + w, y + h);
+				glVertex2f(x, y + h);
+				glEnd();
+
+				glColor4f(1.0f, 1.0f, 1.0f, 0.18f);
+				glBegin(GL_LINE_LOOP);
+				glVertex2f(x, y);
+				glVertex2f(x + w, y);
+				glVertex2f(x + w, y + h);
+				glVertex2f(x, y + h);
+				glEnd();
+
+				const float padWin = 10.0f;
+				const float legendHWin = 16.0f;
+				const float padX = padWin * sx;
+				const float padY = padWin * sy;
+				const float legendH = legendHWin * sy;
+
+				const float plotX = x + padX;
+				const float plotY = y + padY + legendH;
+				const float plotW = std::max(1.0f, w - 2.0f * padX);
+				const float plotH = std::max(1.0f, h - 2.0f * padY - legendH);
+				const float yMid = plotY + plotH * 0.5f;
+
+				// Auto-scale (slow decay).
+				float maxAbs = 1e-3f;
+				const int n = agentForceHistory.size();
+				for (int i = 0; i < n; ++i) {
+					const Eigen::Vector4f s = agentForceHistory.at(i);
+					maxAbs = std::max(maxAbs, std::abs(s.x()));
+					maxAbs = std::max(maxAbs, std::abs(s.y()));
+					maxAbs = std::max(maxAbs, std::abs(s.z()));
+					maxAbs = std::max(maxAbs, s.w());
+				}
+				const float targetScale = std::max(1e-3f, maxAbs * 1.10f);
+				if (targetScale > agentForceGraphScaleN) agentForceGraphScaleN = targetScale;
+				else agentForceGraphScaleN = std::max(targetScale, agentForceGraphScaleN * 0.985f);
+
+				// Zero line.
+				glColor4f(1.0f, 1.0f, 1.0f, 0.18f);
+				glBegin(GL_LINES);
+				glVertex2f(plotX, yMid);
+				glVertex2f(plotX + plotW, yMid);
+				glEnd();
+
+				auto mapY = [&](float v) -> float {
+					const float a = (plotH * 0.48f) / std::max(1e-6f, agentForceGraphScaleN);
+					return yMid - v * a;
+				};
+
+				auto drawSeries = [&](int comp, float r, float g, float b, float a) {
+					if (n <= 0) return;
+					glColor4f(r, g, b, a);
+					glLineWidth(2.0f);
+					glBegin(GL_LINE_STRIP);
+					for (int i = 0; i < n; ++i) {
+						const float t = (n > 1) ? (static_cast<float>(i) / static_cast<float>(n - 1)) : 0.0f;
+						const float px = plotX + t * plotW;
+						const float v = agentForceHistory.at(i)[comp];
+						glVertex2f(px, mapY(v));
+					}
+					glEnd();
+				};
+
+				// Colors: X=red, Y=green, Z=blue, |F|=yellow.
+				drawSeries(0, 0.85f, 0.25f, 0.25f, 0.95f);
+				drawSeries(1, 0.25f, 0.85f, 0.25f, 0.95f);
+				drawSeries(2, 0.30f, 0.55f, 0.95f, 0.95f);
+				drawSeries(3, 0.95f, 0.85f, 0.20f, 0.95f);
+
+				// Title/scale label (segment font supports digits + letters only).
+				{
+					const SimpleUI::Rect graphLabelRect{ graphX + 8.0f, graphY + 2.0f, graphW - 16.0f, legendHWin };
+					const std::string label =
+						"OBJ FORCE N  SCALE " + formatSignedInt(agentForceGraphScaleN) +
+						"  FX FY FZ MAG";
+					ui.drawLabel(graphLabelRect, label, 9.0f);
+				}
+			}
+
+			// Agent status label (digits/letters only for the tiny segment font).
+			{
+				const float sizePx = 10.0f;
+				const float labelW = 420.0f;
 			const float labelH = 28.0f;
 			const float x = uiMargin;
 			const float y = ui.state().windowHeight - uiMargin - labelH;
