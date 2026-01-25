@@ -63,6 +63,29 @@ set(SOURCES
 # 创建可执行文件
 add_executable(TetgenFEM ${SOURCES})
 
+# Optional: Ultraleap LeapC SDK (repo-local: ./Ultraleap)
+set(ULTRALEAP_DIR "${PROJECT_SOURCE_DIR}/Ultraleap")
+set(ULTRALEAP_LEAPC_LIB "")
+if(EXISTS "${ULTRALEAP_DIR}/libLeapC.6.dylib")
+    set(ULTRALEAP_LEAPC_LIB "${ULTRALEAP_DIR}/libLeapC.6.dylib")
+elseif(EXISTS "${ULTRALEAP_DIR}/libLeapC.dylib")
+    set(ULTRALEAP_LEAPC_LIB "${ULTRALEAP_DIR}/libLeapC.dylib")
+endif()
+
+if(APPLE AND EXISTS "${ULTRALEAP_DIR}/LeapC.h" AND ULTRALEAP_LEAPC_LIB)
+    target_compile_definitions(TetgenFEM PRIVATE TETFEM_HAVE_LEAPC=1)
+    target_include_directories(TetgenFEM PRIVATE "${ULTRALEAP_DIR}")
+    target_link_libraries(TetgenFEM PRIVATE "${ULTRALEAP_LEAPC_LIB}")
+    # Ensure @rpath/libLeapC.6.dylib resolves at runtime (LeapC dylib install_name uses .6).
+    target_link_options(TetgenFEM PRIVATE "-Wl,-rpath,@executable_path")
+    add_custom_command(TARGET TetgenFEM POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${ULTRALEAP_LEAPC_LIB}"
+                "$<TARGET_FILE_DIR:TetgenFEM>/libLeapC.6.dylib")
+else()
+    target_compile_definitions(TetgenFEM PRIVATE TETFEM_HAVE_LEAPC=0)
+endif()
+
 # 链接库
 if(APPLE)
     # 优先使用 Homebrew LLVM 的 libc++/unwind

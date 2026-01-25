@@ -40,6 +40,17 @@ float agentVcStiffnessNPerBbox = 250.0f;
 	float wallMarginBboxScale = 0.05f;
 	float wallRestitution = 0.0f;
 	float wallTangentialDamp = 0.2f;
+
+	bool leapEnabled = false;
+	float leapWorkspaceXmm = 260.0f;
+	float leapWorkspaceYmm = 260.0f;
+	float leapWorkspaceZmm = 260.0f;
+	float leapWorldMargin = 0.25f;
+	float leapGain = 1.0f;
+	float leapSmoothingTime = 0.03f;
+	bool leapFlipX = false;
+	bool leapFlipY = false;
+	bool leapFlipZ = true;
 	int exp3SettleSteps = 120;
 	int exp3DragSteps = 240;
 	float exp3ExOverEy = 5.0f;
@@ -134,10 +145,10 @@ void loadParams(const std::string& filename) {
         return;
     }
 
-		    std::unordered_map<std::string, float*> floatParams = {
-	        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
-	        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
-	        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
+			    std::unordered_map<std::string, float*> floatParams = {
+		        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
+		        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
+		        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
 	        {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
 	        {"constraintHardness", &constraintHardness},
 	        {"dragInfluenceRadius", &dragInfluenceRadius},
@@ -156,12 +167,18 @@ void loadParams(const std::string& filename) {
 	        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
 		        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
 		        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
-		        {"wall_marginBboxScale", &wallMarginBboxScale},
-		        {"wall_restitution", &wallRestitution},
-		        {"wall_tangentialDamp", &wallTangentialDamp},
-		        {"exp3_exOverEy", &exp3ExOverEy},
-		        {"exp3_poissonOverride", &exp3PoissonOverride},
-		        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
+			        {"wall_marginBboxScale", &wallMarginBboxScale},
+			        {"wall_restitution", &wallRestitution},
+			        {"wall_tangentialDamp", &wallTangentialDamp},
+			        {"leap_workspaceXmm", &leapWorkspaceXmm},
+			        {"leap_workspaceYmm", &leapWorkspaceYmm},
+			        {"leap_workspaceZmm", &leapWorkspaceZmm},
+			        {"leap_worldMargin", &leapWorldMargin},
+			        {"leap_gain", &leapGain},
+			        {"leap_smoothingTime", &leapSmoothingTime},
+			        {"exp3_exOverEy", &exp3ExOverEy},
+			        {"exp3_poissonOverride", &exp3PoissonOverride},
+			        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
 		        {"exp3_dragDistanceMin", &exp3DragDistanceMin},
 	        {"exp3_dragDistanceMax", &exp3DragDistanceMax}
 	        ,
@@ -225,18 +242,22 @@ void loadParams(const std::string& filename) {
         {"nodeFile", &nodeFile}, {"eleFile", &eleFile}
     };
     
-	    std::unordered_map<std::string, bool*> boolParams = {
-	        {"useDirectLoading", &useDirectLoading},
-	        {"autoSaveMesh", &autoSaveMesh},
-	        {"agent_enabled", &agentEnabled},
+		    std::unordered_map<std::string, bool*> boolParams = {
+		        {"useDirectLoading", &useDirectLoading},
+		        {"autoSaveMesh", &autoSaveMesh},
+		        {"agent_enabled", &agentEnabled},
 	        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
 	        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
 	        {"agent_virtualCoupling", &agentVirtualCoupling},
-	        {"agent_writeLiveFile", &agentWriteLiveFile},
-	        {"wall_enabled", &wallEnabled},
-	        {"exp3_overridePoisson", &exp3OverridePoisson},
-	        {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
-	        {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
+		        {"agent_writeLiveFile", &agentWriteLiveFile},
+		        {"wall_enabled", &wallEnabled},
+		        {"leap_enabled", &leapEnabled},
+		        {"leap_flipX", &leapFlipX},
+		        {"leap_flipY", &leapFlipY},
+		        {"leap_flipZ", &leapFlipZ},
+		        {"exp3_overridePoisson", &exp3OverridePoisson},
+		        {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
+		        {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
 	        {"exp2_resetAfterFinish", &exp2ResetAfterFinish}
 	    };
 

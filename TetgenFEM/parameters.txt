@@ -55,6 +55,18 @@ wall_marginBboxScale=0.05
 wall_restitution=0.0
 wall_tangentialDamp=0.2
 
+# Ultraleap Leap Motion (LeapC) right-index fingertip -> agent sphere device mapping
+leap_enabled=false
+leap_workspaceXmm=260
+leap_workspaceYmm=260
+leap_workspaceZmm=260
+leap_worldMargin=0.25
+leap_gain=1.0
+leap_smoothingTime=0.03
+leap_flipX=false
+leap_flipY=false
+leap_flipZ=true
+
 # Experiment 3 (one-click) parameters (only used after pressing START EXP3)
 exp3_exOverEy=20
 exp3_overridePoisson=true

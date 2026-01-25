@@ -97,6 +97,26 @@ tetgenArgs=pq2a0.0005   # TetGen 参数
 - **W/S/A/D 键**: 可能用于特殊操作（取决于代码实现）
 - **C 键**: 保存当前顶点坐标到文件
 
+## Ultraleap / Leap Motion 输入（右手食指指尖）
+
+项目支持使用 Ultraleap Gemini (v5.x) 的 LeapC 接口，把 **右手食指指尖** 映射到仿真里的 agent sphere（proxy/device）。
+
+1. 确保 `Ultraleap/LeapC.h` 和 `Ultraleap/libLeapC.dylib` 存在（本仓库已包含）。
+2. macOS 可能需要在“系统设置 → 隐私与安全性”中给你的终端或 App 授予 **输入监控 (Input Monitoring)** 权限，然后重启程序。
+3. 运行程序后：
+   - 按 **H** 打开/关闭 agent sphere，并在控制台打印快捷键说明
+   - 按 **B** 开关 Leap 输入
+   - 按 **R** 重新居中（用当前指尖位置作为零点）
+   - 按 **[** / **]** 调整映射灵敏度（gain）
+
+映射相关参数在 `TetgenFEM/parameters.txt`：
+- `leap_enabled`：启动时是否默认开启 Leap
+- `leap_workspaceXmm/Ymm/Zmm`：Leap 的工作空间尺寸（mm，用于把指尖位移映射到模型 bbox）
+- `leap_worldMargin`：bbox 映射/夹取的额外边界比例（避免手指“满世界飞”）
+- `leap_gain`：整体映射倍率（感觉活动范围太小就调大）
+- `leap_smoothingTime`：指数平滑时间常数（秒，抑制抖动）
+- `leap_flipX/Y/Z`：轴向翻转（默认 `flipZ=true` 适配常见 OpenGL 视角）
+
 ## 常见问题
 
 ### 编译时找不到 OpenGL

@@ -39,6 +39,17 @@ extern bool wallEnabled;
 extern float wallMarginBboxScale;
 extern float wallRestitution;
 extern float wallTangentialDamp;
+
+// Ultraleap Leap Motion (LeapC) input.
+extern bool leapEnabled;
+extern float leapWorkspaceXmm, leapWorkspaceYmm, leapWorkspaceZmm;
+// Expands the bbox range used for mapping/clamping (fraction of bbox extents).
+extern float leapWorldMargin;
+// Extra multiplier on world mapping scale (1.0 = default).
+extern float leapGain;
+// Exponential smoothing time constant in seconds (0 disables).
+extern float leapSmoothingTime;
+extern bool leapFlipX, leapFlipY, leapFlipZ;
 // Experiment 3 (one-click) configuration (used only when EXP3 is started).
 extern int exp3SettleSteps, exp3DragSteps;
 extern float exp3ExOverEy;

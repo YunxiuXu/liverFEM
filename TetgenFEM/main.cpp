@@ -31,6 +31,10 @@
 #include "Experiment2.h"
 #include "Experiment4.h"
 
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+#include "LeapC.h"
+#endif
+
 
 
 //C:/Users/xu_yu/Desktop/tmp/arial.ttf
@@ -74,6 +78,103 @@ struct KeyLatch {
 		return false;
 	}
 };
+
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+class LeapCTracker {
+public:
+	~LeapCTracker() { shutdown(); }
+
+	bool init()
+	{
+		if (connection_) return true;
+		eLeapRS r = LeapCreateConnection(nullptr, &connection_);
+		if (r != eLeapRS_Success || !connection_) {
+			std::cerr << "[LeapC] LeapCreateConnection failed (" << static_cast<int>(r) << ")\n";
+			connection_ = nullptr;
+			return false;
+		}
+		r = LeapOpenConnection(connection_);
+		if (r != eLeapRS_Success) {
+			std::cerr << "[LeapC] LeapOpenConnection failed (" << static_cast<int>(r) << ")\n";
+			shutdown();
+			return false;
+		}
+		return true;
+	}
+
+	void shutdown()
+	{
+		if (!connection_) return;
+		LeapCloseConnection(connection_);
+		LeapDestroyConnection(connection_);
+		connection_ = nullptr;
+		connected_ = false;
+		hasTip_ = false;
+		tipTimeSec_ = -1.0;
+	}
+
+	void poll(double nowSec)
+	{
+		if (!connection_) return;
+		LEAP_CONNECTION_MESSAGE msg;
+		for (;;) {
+			const eLeapRS r = LeapPollConnection(connection_, 0, &msg);
+			if (r != eLeapRS_Success) break;
+
+			switch (msg.type) {
+			case eLeapEventType_Connection:
+				connected_ = true;
+				break;
+			case eLeapEventType_ConnectionLost:
+				connected_ = false;
+				break;
+			case eLeapEventType_DeviceLost:
+				// keep connection but mark stale
+				break;
+			case eLeapEventType_Tracking:
+				onTracking(msg.tracking_event, nowSec);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	bool isConnected() const { return connected_; }
+
+	bool getRightIndexTipMm(Eigen::Vector3f* outTipMm, double* outTimeSec) const
+	{
+		if (!hasTip_) return false;
+		if (outTipMm) *outTipMm = tipMm_;
+		if (outTimeSec) *outTimeSec = tipTimeSec_;
+		return true;
+	}
+
+private:
+	void onTracking(const LEAP_TRACKING_EVENT* evt, double nowSec)
+	{
+		if (!evt) return;
+		for (uint32_t i = 0; i < evt->nHands; ++i) {
+			const LEAP_HAND* hand = &evt->pHands[i];
+			if (!hand) continue;
+			if (hand->type != eLeapHandType_Right) continue;
+
+			// digits[0]=thumb, [1]=index, [2]=middle, [3]=ring, [4]=pinky
+			const LEAP_VECTOR tip = hand->digits[1].distal.next_joint; // mm
+			tipMm_ = Eigen::Vector3f(tip.x, tip.y, tip.z);
+			tipTimeSec_ = nowSec;
+			hasTip_ = true;
+			return;
+		}
+	}
+
+	LEAP_CONNECTION connection_ = nullptr;
+	bool connected_ = false;
+	bool hasTip_ = false;
+	Eigen::Vector3f tipMm_ = Eigen::Vector3f::Zero();
+	double tipTimeSec_ = -1.0;
+};
+#endif
 
 static std::string formatSignedInt(float v)
 {
@@ -1333,15 +1434,29 @@ int main(int argc, char** argv) {
 
 	Eigen::Vector3f agentHomePosition = agentDevicePosition;
 
-	Eigen::Vector3f agentLastDeviceForceN = Eigen::Vector3f::Zero();   // what you'd send to a haptic device
-	Eigen::Vector3f agentLastContactForceN = Eigen::Vector3f::Zero();  // reaction on proxy from tissue
-	Eigen::Vector3f agentLastCouplingForceN = Eigen::Vector3f::Zero(); // device<->proxy spring force (on proxy)
-	int agentLastContactCount = 0;
+		Eigen::Vector3f agentLastDeviceForceN = Eigen::Vector3f::Zero();   // what you'd send to a haptic device
+		Eigen::Vector3f agentLastContactForceN = Eigen::Vector3f::Zero();  // reaction on proxy from tissue
+		Eigen::Vector3f agentLastCouplingForceN = Eigen::Vector3f::Zero(); // device<->proxy spring force (on proxy)
+		int agentLastContactCount = 0;
 
-	float objectMassKg = 0.0f;
-	for (const auto* v : objectUniqueVertices) {
-		objectMassKg += std::max(0.0f, v->vertexMass);
-	}
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+		LeapCTracker leapTracker;
+		bool leapUseInput = leapEnabled;
+		bool leapMappingCalibrated = false;
+		Eigen::Vector3f leapCenterMm = Eigen::Vector3f::Zero();
+		Eigen::Vector3f leapAnchorWorld = agentDevicePosition;
+		Eigen::Vector3f leapLatestTipMm = Eigen::Vector3f::Zero();
+		double leapLatestTipTimeSec = -1.0;
+		if (leapUseInput && !leapTracker.init()) {
+			std::cerr << "[LeapC] init failed; disabling Leap input.\n";
+			leapUseInput = false;
+		}
+#endif
+
+		float objectMassKg = 0.0f;
+		for (const auto* v : objectUniqueVertices) {
+			objectMassKg += std::max(0.0f, v->vertexMass);
+		}
 	const float agentProxyMassKg = std::max(1e-6f, std::abs(agentProxyMassFracOfObject) * std::max(1e-6f, objectMassKg));
 	const float invBboxDiag = 1.0f / std::max(1e-6f, bboxDiag);
 		const float agentVcKLen = std::max(0.0f, agentVcStiffnessNPerBbox) * invBboxDiag;     // N per unit length
@@ -1581,16 +1696,29 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	while (!glfwWindowShouldClose(window)) {
-		ui.beginFrame(window);
-		experiment3.update();
-		experiment1.update();
-		experiment2.update();
-		experiment4.update();
+		while (!glfwWindowShouldClose(window)) {
+			ui.beginFrame(window);
+			experiment3.update();
+			experiment1.update();
+			experiment2.update();
+			experiment4.update();
 
-		auto beginForceRecording = [&]() {
-			isRecordingForce = true;
-			recordedForces.clear();
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+			const double nowSec = glfwGetTime();
+			if (leapUseInput) {
+				leapTracker.poll(nowSec);
+				Eigen::Vector3f tipMm;
+				double tipTimeSec = -1.0;
+				if (leapTracker.getRightIndexTipMm(&tipMm, &tipTimeSec)) {
+					leapLatestTipMm = tipMm;
+					leapLatestTipTimeSec = tipTimeSec;
+				}
+			}
+#endif
+
+			auto beginForceRecording = [&]() {
+				isRecordingForce = true;
+				recordedForces.clear();
 			recordedTime.clear();
 			recordStartTime = glfwGetTime();
 			std::cout << ">>> Started recording force data..." << std::endl;
@@ -1629,48 +1757,151 @@ int main(int argc, char** argv) {
 		const SimpleUI::Rect uiRunRect{ uiMargin, uiMargin, uiW, uiH };
 
 		// ------------------ Agent sphere controls
-		static KeyLatch agentToggleLatch;
-		static KeyLatch agentHomeLatch;
-		static KeyLatch agentPrintLatch;
-		static KeyLatch agentVcLatch;
+			static KeyLatch agentToggleLatch;
+			static KeyLatch agentHomeLatch;
+			static KeyLatch agentPrintLatch;
+			static KeyLatch agentVcLatch;
+	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+				static KeyLatch leapToggleLatch;
+				static KeyLatch leapRecenterLatch;
+				static KeyLatch leapGainDownLatch;
+				static KeyLatch leapGainUpLatch;
+	#endif
 
-		if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
-			agentSphere.enabled = !agentSphere.enabled;
-			std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
-			          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-			          << "  VirtualCoupling: V | Home: T | Print force: G\n"
-			          << "  Contact: triangles=" << agentContactTriangles.size()
-			          << " vertices=" << agentContactVertices.size() << "\n";
-		}
+			if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
+				agentSphere.enabled = !agentSphere.enabled;
+					std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
+					          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
+					          << "  VirtualCoupling: V | Home: T | Print force: G\n"
+	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+					          << "  Leap: toggle=B | recenter=R | gain: '['/']'\n"
+	#endif
+					          << "  Contact: triangles=" << agentContactTriangles.size()
+					          << " vertices=" << agentContactVertices.size() << "\n";
+				}
 		static bool agentUseVC = agentVirtualCoupling;
 		if (agentVcLatch.consume(window, GLFW_KEY_V)) {
 			agentUseVC = !agentUseVC;
 			std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
 		}
-		if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
-			agentDevicePosition = agentHomePosition;
-			agentDevicePrevPosition = agentHomePosition;
-			agentDeviceVelocity.setZero();
-			agentProxyPosition = agentHomePosition;
-			agentProxyVelocity.setZero();
-		}
+			if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
+				agentDevicePosition = agentHomePosition;
+				agentDevicePrevPosition = agentHomePosition;
+				agentDeviceVelocity.setZero();
+				agentProxyPosition = agentHomePosition;
+				agentProxyVelocity.setZero();
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+				leapMappingCalibrated = false;
+				leapAnchorWorld = agentHomePosition;
+#endif
+			}
 
-		// Continuous movement while key is held.
-		{
-			const bool shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-			                   glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-			const float speed = agentMoveSpeedBboxPerSec * bboxDiag * (shift ? 4.0f : 1.0f);
-			Eigen::Vector3f delta = Eigen::Vector3f::Zero();
-			if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) delta.x() -= speed * timeStep;
-			if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) delta.x() += speed * timeStep;
-			if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) delta.y() += speed * timeStep;
-			if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) delta.y() -= speed * timeStep;
-			if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) delta.z() -= speed * timeStep;
-			if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) delta.z() += speed * timeStep;
-			agentDevicePosition += delta;
-			agentDeviceVelocity = (agentDevicePosition - agentDevicePrevPosition) / std::max(1e-8f, timeStep);
-			agentDevicePrevPosition = agentDevicePosition;
-		}
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+			if (leapToggleLatch.consume(window, GLFW_KEY_B)) {
+				leapUseInput = !leapUseInput;
+				if (leapUseInput && !leapTracker.init()) {
+					std::cerr << "[LeapC] init failed; Leap input remains disabled.\n";
+					leapUseInput = false;
+				}
+				leapMappingCalibrated = false;
+				leapAnchorWorld = agentDevicePosition;
+					std::cout << "[LeapC] Input " << (leapUseInput ? "ON" : "OFF")
+					          << " | workspace(mm)=(" << leapWorkspaceXmm << "," << leapWorkspaceYmm << "," << leapWorkspaceZmm << ")"
+					          << " worldMargin=" << leapWorldMargin
+					          << " gain=" << leapGain
+					          << " smoothing=" << leapSmoothingTime
+					          << " flip=(" << (leapFlipX ? 1 : 0) << "," << (leapFlipY ? 1 : 0) << "," << (leapFlipZ ? 1 : 0) << ")"
+					          << "\n";
+				}
+				if (leapRecenterLatch.consume(window, GLFW_KEY_R)) {
+				leapMappingCalibrated = false;
+				leapAnchorWorld = agentDevicePosition;
+					std::cout << "[LeapC] Recenter requested.\n";
+				}
+				if (leapGainDownLatch.consume(window, GLFW_KEY_LEFT_BRACKET)) {
+					leapGain = std::max(0.0f, leapGain / 1.1f);
+					std::cout << "[LeapC] gain=" << leapGain << "\n";
+				}
+				if (leapGainUpLatch.consume(window, GLFW_KEY_RIGHT_BRACKET)) {
+					leapGain = std::max(0.0f, leapGain * 1.1f);
+					std::cout << "[LeapC] gain=" << leapGain << "\n";
+				}
+	#endif
+
+				// Agent device motion source: Leap (if enabled) else keyboard keys.
+				{
+					bool usedLeap = false;
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+					if (leapUseInput) {
+						const double now = glfwGetTime();
+						const double staleSec = 0.2;
+						if (leapLatestTipTimeSec >= 0.0 && (now - leapLatestTipTimeSec) <= staleSec) {
+							const Eigen::Vector3f extents = bboxMax - bboxMin;
+							const float m = std::max(0.0f, leapWorldMargin);
+							const Eigen::Vector3f worldRange = extents * (1.0f + 2.0f * m);
+
+							const Eigen::Vector3f workspaceMm(
+								std::max(1.0f, leapWorkspaceXmm),
+								std::max(1.0f, leapWorkspaceYmm),
+								std::max(1.0f, leapWorkspaceZmm));
+
+								const float gain = std::max(0.0f, leapGain);
+								const Eigen::Vector3f scale = gain * Eigen::Vector3f(
+									(worldRange.x() > 1e-8f) ? (worldRange.x() / workspaceMm.x()) : (bboxDiag / workspaceMm.x()),
+									(worldRange.y() > 1e-8f) ? (worldRange.y() / workspaceMm.y()) : (bboxDiag / workspaceMm.y()),
+									(worldRange.z() > 1e-8f) ? (worldRange.z() / workspaceMm.z()) : (bboxDiag / workspaceMm.z()));
+
+							const Eigen::Vector3f axisSign(
+								leapFlipX ? -1.0f : 1.0f,
+								leapFlipY ? -1.0f : 1.0f,
+								leapFlipZ ? -1.0f : 1.0f);
+
+							const Eigen::Vector3f tipMm = leapLatestTipMm.cwiseProduct(axisSign);
+							if (!leapMappingCalibrated) {
+								leapCenterMm = tipMm;
+								leapAnchorWorld = agentDevicePosition;
+								leapMappingCalibrated = true;
+							}
+
+							Eigen::Vector3f target = leapAnchorWorld + (tipMm - leapCenterMm).cwiseProduct(scale);
+
+							// Clamp to an expanded bbox to avoid "flying away".
+							const Eigen::Vector3f margin = extents * m;
+							Eigen::Vector3f clampMin = bboxMin - margin;
+							Eigen::Vector3f clampMax = bboxMax + margin;
+							clampMin = clampMin.cwiseMin(leapAnchorWorld - margin);
+							clampMax = clampMax.cwiseMax(leapAnchorWorld + margin);
+							target = target.cwiseMax(clampMin).cwiseMin(clampMax);
+
+							const float smooth = std::max(0.0f, leapSmoothingTime);
+							const float alpha = (smooth > 1e-6f) ? (1.0f - std::exp(-timeStep / smooth)) : 1.0f;
+							agentDevicePosition = agentDevicePosition + alpha * (target - agentDevicePosition);
+							agentDeviceVelocity = (agentDevicePosition - agentDevicePrevPosition) / std::max(1e-8f, timeStep);
+							agentDevicePrevPosition = agentDevicePosition;
+							usedLeap = true;
+						} else {
+							// If tracking is stale, let keyboard drive and re-calibrate on resume.
+							leapMappingCalibrated = false;
+							leapAnchorWorld = agentDevicePosition;
+						}
+					}
+#endif
+					if (!usedLeap) {
+						const bool shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+						                   glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+						const float speed = agentMoveSpeedBboxPerSec * bboxDiag * (shift ? 4.0f : 1.0f);
+						Eigen::Vector3f delta = Eigen::Vector3f::Zero();
+						if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) delta.x() -= speed * timeStep;
+						if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) delta.x() += speed * timeStep;
+						if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) delta.y() += speed * timeStep;
+						if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) delta.y() -= speed * timeStep;
+						if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) delta.z() -= speed * timeStep;
+						if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) delta.z() += speed * timeStep;
+						agentDevicePosition += delta;
+						agentDeviceVelocity = (agentDevicePosition - agentDevicePrevPosition) / std::max(1e-8f, timeStep);
+						agentDevicePrevPosition = agentDevicePosition;
+					}
+				}
 		if (agentPrintLatch.consume(window, GLFW_KEY_G)) {
 			float proxySurfDist = -1.0f;
 			float proxySurfSN = 0.0f;
