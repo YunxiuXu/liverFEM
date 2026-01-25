@@ -34,12 +34,17 @@ float agentVcStiffnessNPerBbox = 250.0f;
 	float agentInfluenceRadiusFrac = 3.0f;
 	float agentCollisionTangentialDamp = 0.6f;
 	bool agentWriteLiveFile = false;
-int agentLiveFileIntervalFrames = 2;
-int exp3SettleSteps = 120;
-int exp3DragSteps = 240;
-float exp3ExOverEy = 5.0f;
-bool exp3OverridePoisson = true;
-float exp3PoissonOverride = 0.08f;
+	int agentLiveFileIntervalFrames = 2;
+
+	bool wallEnabled = true;
+	float wallMarginBboxScale = 0.05f;
+	float wallRestitution = 0.0f;
+	float wallTangentialDamp = 0.2f;
+	int exp3SettleSteps = 120;
+	int exp3DragSteps = 240;
+	float exp3ExOverEy = 5.0f;
+	bool exp3OverridePoisson = true;
+	float exp3PoissonOverride = 0.08f;
 float exp3DragDistanceBboxScale = 0.15f;
 float exp3DragDistanceMin = 0.15f;
 float exp3DragDistanceMax = 0.8f;
@@ -129,7 +134,7 @@ void loadParams(const std::string& filename) {
         return;
     }
 
-	    std::unordered_map<std::string, float*> floatParams = {
+		    std::unordered_map<std::string, float*> floatParams = {
 	        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
 	        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
 	        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
@@ -149,12 +154,15 @@ void loadParams(const std::string& filename) {
 	        {"agent_vcMaxDistanceRadiusFrac", &agentVcMaxDistanceRadiusFrac},
 	        {"agent_maxPenetrationFrac", &agentMaxPenetrationFrac},
 	        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
-	        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
-	        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
-	        {"exp3_exOverEy", &exp3ExOverEy},
-	        {"exp3_poissonOverride", &exp3PoissonOverride},
-	        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
-	        {"exp3_dragDistanceMin", &exp3DragDistanceMin},
+		        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
+		        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
+		        {"wall_marginBboxScale", &wallMarginBboxScale},
+		        {"wall_restitution", &wallRestitution},
+		        {"wall_tangentialDamp", &wallTangentialDamp},
+		        {"exp3_exOverEy", &exp3ExOverEy},
+		        {"exp3_poissonOverride", &exp3PoissonOverride},
+		        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
+		        {"exp3_dragDistanceMin", &exp3DragDistanceMin},
 	        {"exp3_dragDistanceMax", &exp3DragDistanceMax}
 	        ,
 	        {"exp1_pullAccel", &exp1PullAccel},
@@ -217,19 +225,20 @@ void loadParams(const std::string& filename) {
         {"nodeFile", &nodeFile}, {"eleFile", &eleFile}
     };
     
-    std::unordered_map<std::string, bool*> boolParams = {
-        {"useDirectLoading", &useDirectLoading},
-        {"autoSaveMesh", &autoSaveMesh},
-        {"agent_enabled", &agentEnabled},
-        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
-        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
-        {"agent_virtualCoupling", &agentVirtualCoupling},
-        {"agent_writeLiveFile", &agentWriteLiveFile},
-        {"exp3_overridePoisson", &exp3OverridePoisson},
-        {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
-        {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
-        {"exp2_resetAfterFinish", &exp2ResetAfterFinish}
-    };
+	    std::unordered_map<std::string, bool*> boolParams = {
+	        {"useDirectLoading", &useDirectLoading},
+	        {"autoSaveMesh", &autoSaveMesh},
+	        {"agent_enabled", &agentEnabled},
+	        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
+	        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
+	        {"agent_virtualCoupling", &agentVirtualCoupling},
+	        {"agent_writeLiveFile", &agentWriteLiveFile},
+	        {"wall_enabled", &wallEnabled},
+	        {"exp3_overridePoisson", &exp3OverridePoisson},
+	        {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
+	        {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
+	        {"exp2_resetAfterFinish", &exp2ResetAfterFinish}
+	    };
 
     std::string line;
     while (std::getline(file, line)) {

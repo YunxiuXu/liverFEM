@@ -48,6 +48,13 @@ agent_collisionTangentialDamp=0.6
 agent_writeLiveFile=false
 agent_liveFileIntervalFrames=2
 
+# Axis-aligned walls (bbox-like): Y-/Y+ and X+ (3 planes)
+# `wall_marginBboxScale` is a per-axis bbox extent fraction (0.05 => ~5% gap).
+wall_enabled=true
+wall_marginBboxScale=0.05
+wall_restitution=0.0
+wall_tangentialDamp=0.2
+
 # Experiment 3 (one-click) parameters (only used after pressing START EXP3)
 exp3_exOverEy=20
 exp3_overridePoisson=true

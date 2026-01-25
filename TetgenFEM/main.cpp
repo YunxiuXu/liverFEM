@@ -221,14 +221,109 @@ static std::string formatSignedInt(float v)
 			if (n <= 0) return Eigen::Vector4f::Zero();
 			const int idx = filled ? ((head + i) % kCapacity) : i;
 			if (idx < 0 || idx >= kCapacity) return Eigen::Vector4f::Zero();
-			return samples[static_cast<size_t>(idx)];
-		}
-	};
+		return samples[static_cast<size_t>(idx)];
+	}
+};
 
-	static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
-		const Eigen::Vector3f& sphereCenter,
-		const Eigen::Vector3f& sphereVel,
-		float sphereRadius,
+static int applyAxisAlignedWallConstraints(
+	const std::vector<std::vector<Vertex*>>& verticesByPhysId,
+	float wallXMax,
+	float wallYMin,
+	float wallYMax,
+	float dt,
+	float restitution,
+	float tangentialDamp)
+{
+	if (verticesByPhysId.empty()) return 0;
+
+	const float invDt = 1.0f / std::max(1e-8f, dt);
+	const float rest = std::clamp(restitution, 0.0f, 1.0f);
+	const float tanD = std::clamp(tangentialDamp, 0.0f, 1.0f);
+
+	int hitCount = 0;
+	for (const auto& list : verticesByPhysId) {
+		if (list.empty()) continue;
+
+		bool anyFixed = false;
+		for (Vertex* v : list) {
+			if (v && v->isFixed) {
+				anyFixed = true;
+				break;
+			}
+		}
+		if (anyFixed) continue;
+
+		Eigen::Vector3f pAvg = Eigen::Vector3f::Zero();
+		Eigen::Vector3f vAvg = Eigen::Vector3f::Zero();
+		int n = 0;
+		for (Vertex* v : list) {
+			if (!v) continue;
+			pAvg += Eigen::Vector3f(v->x, v->y, v->z);
+			vAvg += Eigen::Vector3f(v->velx, v->vely, v->velz);
+			++n;
+		}
+		if (n <= 0) continue;
+		pAvg /= static_cast<float>(n);
+		vAvg /= static_cast<float>(n);
+
+		Eigen::Vector3f pNew = pAvg;
+		bool hit = false;
+		bool hitXMax = false;
+		bool hitYMax = false;
+		bool hitYMin = false;
+
+		if (pNew.x() > wallXMax) {
+			pNew.x() = wallXMax;
+			hit = true;
+			hitXMax = true;
+		}
+		if (pNew.y() > wallYMax) {
+			pNew.y() = wallYMax;
+			hit = true;
+			hitYMax = true;
+		}
+		if (pNew.y() < wallYMin) {
+			pNew.y() = wallYMin;
+			hit = true;
+			hitYMin = true;
+		}
+
+		if (!hit) continue;
+
+		const Eigen::Vector3f dpAvg = pNew - pAvg;
+		Eigen::Vector3f vNew = vAvg + dpAvg * invDt;
+
+		auto applyPlaneResponse = [&](const Eigen::Vector3f& outwardN) {
+			const float vn = vNew.dot(outwardN);
+			if (vn > 0.0f) {
+				vNew -= outwardN * ((1.0f + rest) * vn);
+			}
+			const Eigen::Vector3f vt = vNew - outwardN * vNew.dot(outwardN);
+			vNew -= vt * tanD;
+		};
+
+		if (hitXMax) applyPlaneResponse(Eigen::Vector3f::UnitX());
+		if (hitYMax) applyPlaneResponse(Eigen::Vector3f::UnitY());
+		if (hitYMin) applyPlaneResponse(-Eigen::Vector3f::UnitY());
+
+		for (Vertex* v : list) {
+			if (!v || v->isFixed) continue;
+			v->x = pNew.x();
+			v->y = pNew.y();
+			v->z = pNew.z();
+			v->velx = vNew.x();
+			v->vely = vNew.y();
+			v->velz = vNew.z();
+		}
+		++hitCount;
+	}
+	return hitCount;
+}
+
+static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
+	const Eigen::Vector3f& sphereCenter,
+	const Eigen::Vector3f& sphereVel,
+	float sphereRadius,
 		float allowedPenetration,
 		float eps,
 		float dt,
@@ -2052,6 +2147,42 @@ int main(int argc, char** argv) {
 							}
 						}
 					}
+
+					// Axis-aligned "walls" (Y±, X+) tight to the initial bbox.
+					if (wallEnabled && !agentVerticesByPhysId.empty()) {
+						const Eigen::Vector3f extents = bboxMax - bboxMin;
+						const Eigen::Vector3f margin = std::max(0.0f, wallMarginBboxScale) * extents;
+						const float wallXMax = bboxMax.x() + margin.x();
+						const float wallYMin = bboxMin.y() - margin.y();
+						const float wallYMax = bboxMax.y() + margin.y();
+
+						const int wallHits = applyAxisAlignedWallConstraints(
+							agentVerticesByPhysId,
+							wallXMax,
+							wallYMin,
+							wallYMax,
+							timeStep,
+							wallRestitution,
+							wallTangentialDamp);
+
+						// Keep Group::groupVelocity consistent with Vertex::vel* for the next frame's primeVec.
+						if (wallHits > 0) {
+							for (int gi = 0; gi < object.groupNum; ++gi) {
+								Group& group = object.groups[gi];
+								for (const auto& vertexPair : group.verticesMap) {
+									Vertex* v = vertexPair.second;
+									if (!v) continue;
+									const int li = v->localIndex;
+									if (li < 0 || (3 * li + 2) >= group.groupVelocity.size()) continue;
+									if (v->isFixed) {
+										group.groupVelocity.segment<3>(3 * li) = Eigen::Vector3f::Zero();
+									} else {
+										group.groupVelocity.segment<3>(3 * li) = Eigen::Vector3f(v->velx, v->vely, v->velz);
+									}
+								}
+							}
+						}
+					}
 				}
 
 		// Update COM for all groups to ensure correct stress cloud visualization
@@ -2146,11 +2277,11 @@ int main(int argc, char** argv) {
 		}
 
 		// Draw constraint plane for volume preservation mode
-		if (showVolumePreservation && planeConstraintY > 0.0f) {
-			glDisable(GL_DEPTH_TEST);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glBegin(GL_QUADS);
-			// Draw a semi-transparent plane
+			if (showVolumePreservation && planeConstraintY > 0.0f) {
+				glDisable(GL_DEPTH_TEST);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				glBegin(GL_QUADS);
+				// Draw a semi-transparent plane
 			if (whiteBackground) {
 				glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
 			} else {
@@ -2162,13 +2293,61 @@ int main(int argc, char** argv) {
 			glVertex3f(planeSize, planeConstraintY, -planeSize);
 			glVertex3f(planeSize, planeConstraintY, planeSize);
 			glVertex3f(-planeSize, planeConstraintY, planeSize);
-			glEnd();
-			glEnable(GL_DEPTH_TEST);
-		}
-		
-		// Draw vertices (skip in stress/volume preservation modes for cleaner visualization)
-		if (!showStressCloud && !showVolumePreservation) {
-			glPointSize(5.0f);
+				glEnd();
+				glEnable(GL_DEPTH_TEST);
+			}
+
+			// Draw axis-aligned walls (Y±, X+) around the initial bbox.
+			if (wallEnabled) {
+				const Eigen::Vector3f extents = bboxMax - bboxMin;
+				const Eigen::Vector3f margin = std::max(0.0f, wallMarginBboxScale) * extents;
+				const float x0 = bboxMin.x() - margin.x();
+				const float x1 = bboxMax.x() + margin.x();
+				const float y0 = bboxMin.y() - margin.y();
+				const float y1 = bboxMax.y() + margin.y();
+				const float z0 = bboxMin.z() - margin.z();
+				const float z1 = bboxMax.z() + margin.z();
+
+				const bool blendWasEnabled = (glIsEnabled(GL_BLEND) == GL_TRUE);
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				glDepthMask(GL_FALSE);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+				if (whiteBackground) {
+					glColor4f(0.1f, 0.2f, 0.6f, 0.18f);
+				} else {
+					glColor4f(0.6f, 0.7f, 1.0f, 0.18f);
+				}
+
+				glBegin(GL_QUADS);
+				// +Y wall
+				glVertex3f(x0, y1, z0);
+				glVertex3f(x1, y1, z0);
+				glVertex3f(x1, y1, z1);
+				glVertex3f(x0, y1, z1);
+				// -Y wall
+				glVertex3f(x0, y0, z0);
+				glVertex3f(x1, y0, z0);
+				glVertex3f(x1, y0, z1);
+				glVertex3f(x0, y0, z1);
+				// +X wall
+				glVertex3f(x1, y0, z0);
+				glVertex3f(x1, y1, z0);
+				glVertex3f(x1, y1, z1);
+				glVertex3f(x1, y0, z1);
+				glEnd();
+
+				glDepthMask(GL_TRUE);
+				if (!blendWasEnabled) glDisable(GL_BLEND);
+				if (!showVolumePreservation) {
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				}
+			}
+			
+			// Draw vertices (skip in stress/volume preservation modes for cleaner visualization)
+			if (!showStressCloud && !showVolumePreservation) {
+				glPointSize(5.0f);
 
 			if (whiteBackground) {
 				glColor3f(0.1f, 0.1f, 0.1f);

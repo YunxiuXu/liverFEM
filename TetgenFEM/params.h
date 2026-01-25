@@ -32,6 +32,13 @@ extern float agentInfluenceRadiusFrac;
 extern float agentCollisionTangentialDamp;
 extern bool agentWriteLiveFile;
 extern int agentLiveFileIntervalFrames;
+
+// Axis-aligned wall constraints (3 planes).
+extern bool wallEnabled;
+// Per-axis bbox extent fraction (0.05 => ~5% gap).
+extern float wallMarginBboxScale;
+extern float wallRestitution;
+extern float wallTangentialDamp;
 // Experiment 3 (one-click) configuration (used only when EXP3 is started).
 extern int exp3SettleSteps, exp3DragSteps;
 extern float exp3ExOverEy;
