@@ -47,6 +47,10 @@ extern float leapWorkspaceXmm, leapWorkspaceYmm, leapWorkspaceZmm;
 extern float leapWorldMargin;
 // Extra multiplier on world mapping scale (1.0 = default).
 extern float leapGain;
+// Add a constant Y offset after mapping, as a fraction of bbox Y extent (negative lowers the hand).
+extern float leapYOffsetBboxFrac;
+// Extra multiplier on finger spread (relative offsets between fingertips).
+extern float leapFingerSpreadGain;
 // Exponential smoothing time constant in seconds (0 disables).
 extern float leapSmoothingTime;
 extern bool leapFlipX, leapFlipY, leapFlipZ;

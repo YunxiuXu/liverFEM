@@ -46,6 +46,8 @@ fi
 mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
 rm -f CMakeCache.txt
+# 关键：确保每次都会重新链接生成最新可执行文件（避免已有旧二进制导致 make 判定“已是最新”）
+rm -f TetgenFEM
 
 echo "运行 CMake..."
 cmake ../.. -DCMAKE_BUILD_TYPE=Release \

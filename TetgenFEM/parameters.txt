@@ -55,13 +55,15 @@ wall_marginBboxScale=0.05
 wall_restitution=0.0
 wall_tangentialDamp=0.2
 
-# Ultraleap Leap Motion (LeapC) right-index fingertip -> agent sphere device mapping
+# Ultraleap Leap Motion (LeapC) right-hand fingertips (thumb..pinky) -> agent spheres mapping
 leap_enabled=false
 leap_workspaceXmm=260
 leap_workspaceYmm=260
 leap_workspaceZmm=260
 leap_worldMargin=0.25
 leap_gain=1.0
+leap_yOffsetBboxFrac=-0.2
+leap_fingerSpreadGain=2.0
 leap_smoothingTime=0.03
 leap_flipX=false
 leap_flipY=false

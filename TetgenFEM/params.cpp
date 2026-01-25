@@ -46,11 +46,13 @@ float agentVcStiffnessNPerBbox = 250.0f;
 	float leapWorkspaceYmm = 260.0f;
 	float leapWorkspaceZmm = 260.0f;
 	float leapWorldMargin = 0.25f;
-	float leapGain = 1.0f;
-	float leapSmoothingTime = 0.03f;
-	bool leapFlipX = false;
-	bool leapFlipY = false;
-	bool leapFlipZ = false;
+		float leapGain = 1.0f;
+		float leapYOffsetBboxFrac = -0.2f;
+		float leapFingerSpreadGain = 2.0f;
+		float leapSmoothingTime = 0.03f;
+		bool leapFlipX = false;
+		bool leapFlipY = false;
+		bool leapFlipZ = false;
 	int exp3SettleSteps = 120;
 	int exp3DragSteps = 240;
 	float exp3ExOverEy = 5.0f;
@@ -173,12 +175,14 @@ void loadParams(const std::string& filename) {
 			        {"leap_workspaceXmm", &leapWorkspaceXmm},
 			        {"leap_workspaceYmm", &leapWorkspaceYmm},
 			        {"leap_workspaceZmm", &leapWorkspaceZmm},
-			        {"leap_worldMargin", &leapWorldMargin},
-			        {"leap_gain", &leapGain},
-			        {"leap_smoothingTime", &leapSmoothingTime},
-			        {"exp3_exOverEy", &exp3ExOverEy},
-			        {"exp3_poissonOverride", &exp3PoissonOverride},
-			        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
+				        {"leap_worldMargin", &leapWorldMargin},
+				        {"leap_gain", &leapGain},
+				        {"leap_yOffsetBboxFrac", &leapYOffsetBboxFrac},
+				        {"leap_fingerSpreadGain", &leapFingerSpreadGain},
+				        {"leap_smoothingTime", &leapSmoothingTime},
+				        {"exp3_exOverEy", &exp3ExOverEy},
+				        {"exp3_poissonOverride", &exp3PoissonOverride},
+				        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
 		        {"exp3_dragDistanceMin", &exp3DragDistanceMin},
 	        {"exp3_dragDistanceMax", &exp3DragDistanceMax}
 	        ,
