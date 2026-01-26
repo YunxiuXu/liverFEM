@@ -1310,68 +1310,9 @@ int main(int argc, char** argv) {
 	//object.commonPoints2 = object.findCommonVertices1(object.groups[2], object.groups[3]);
 	//object.commonPoints3 = object.findCommonVertices1(object.groups[3], object.groups[4]);
 	//std::pair<std::vector<Vertex*>, std::vector<Vertex*>> commonVertices2 = object.findCommonVertices1(object.groups[0], object.groups[1]);
-	// 在肝门区域使用球形区域进行固定：取背面一定厚度的质心作为中心
-	std::unordered_set<Vertex*> visitedVertices;
-	std::vector<Vertex*> uniqueVertices;
-	for (const auto& g : object.groups) {
-		for (const auto& pair : g.verticesMap) {
-			Vertex* v = pair.second;
-			if (visitedVertices.insert(v).second) {
-				uniqueVertices.push_back(v);
-			}
-		}
-	}
-
-	if (!uniqueVertices.empty()) {
-		Eigen::Vector3f minBound(
-			std::numeric_limits<float>::max(),
-			std::numeric_limits<float>::max(),
-			std::numeric_limits<float>::max());
-		Eigen::Vector3f maxBound(
-			-std::numeric_limits<float>::max(),
-			-std::numeric_limits<float>::max(),
-			-std::numeric_limits<float>::max());
-
-		for (const auto* v : uniqueVertices) {
-			minBound.x() = std::min(minBound.x(), v->initx);
-			minBound.y() = std::min(minBound.y(), v->inity);
-			minBound.z() = std::min(minBound.z(), v->initz);
-			maxBound.x() = std::max(maxBound.x(), v->initx);
-			maxBound.y() = std::max(maxBound.y(), v->inity);
-			maxBound.z() = std::max(maxBound.z(), v->initz);
-		}
-
-		const float depth = maxBound.z() - minBound.z();
-		const float backSliceZ = minBound.z() + depth * 0.12f; // 取最靠背面 12% 的区域
-		Eigen::Vector3f backCentroid(0.0f, 0.0f, 0.0f);
-		int backCount = 0;
-		for (const auto* v : uniqueVertices) {
-			if (v->initz <= backSliceZ) {
-				backCentroid.x() += v->initx;
-				backCentroid.y() += v->inity;
-				backCentroid.z() += v->initz;
-				++backCount;
-			}
-		}
-
-		if (backCount > 0) {
-			backCentroid /= static_cast<float>(backCount);
-		}
-		else {
-			backCentroid = Eigen::Vector3f(
-				0.5f * (minBound.x() + maxBound.x()),
-				0.5f * (minBound.y() + maxBound.y()),
-				minBound.z());
-		}
-
-		// 稍微往内部推一点，避免只作用在表面三角面
-		backCentroid.z() = std::min(backCentroid.z() + depth * 0.02f, maxBound.z());
-
-		const float anchorRadius = std::max(depth * 0.2f, 0.001f);
-		object.fixRegion(backCentroid, anchorRadius);
-	} else {
-		std::cout << "No vertices collected for fixing region." << std::endl;
-	}
+		// NOTE: The old code hard-fixed an internal "back slice" anchor region via Object::fixRegion(),
+		// which prevents whole-body motion (you only feel "poking" instead of pushing/rolling/flipping).
+		// Anchoring is now configurable (none / fixed / spring) and is initialized later in phys-id space.
 	
 	std::vector<int> topVertexLocalIndices;
 	std::vector<int> bottomVertexLocalIndices;
@@ -1588,23 +1529,107 @@ int main(int argc, char** argv) {
 			physRep.push_back(v);
 		}
 
-		// Build physId -> all vertex copies (across groups).
-		agentVerticesByPhysId.assign(physRep.size(), {});
-		for (int gi = 0; gi < object.groupNum; ++gi) {
-			Group& g = object.groups[gi];
+			// Build physId -> all vertex copies (across groups).
+			agentVerticesByPhysId.assign(physRep.size(), {});
+			for (int gi = 0; gi < object.groupNum; ++gi) {
+				Group& g = object.groups[gi];
 			for (const auto& vertexPair : g.verticesMap) {
 				Vertex* v = vertexPair.second;
 				if (!v) continue;
 				const auto it = physKeyToId.find(makePhysKey(v));
 				if (it == physKeyToId.end()) continue;
-				agentVerticesByPhysId[static_cast<size_t>(it->second)].push_back(v);
+					agentVerticesByPhysId[static_cast<size_t>(it->second)].push_back(v);
+				}
 			}
-		}
 
-		// Extract outer boundary triangles by counting faces in physId space.
-		if (agentUseSurfaceTriangles && !physRep.empty()) {
-			struct FaceKey {
-				int i0 = -1, i1 = -1, i2 = -1;
+			// ------------------ Optional: object anchoring (none / fixed / spring)
+			//
+			// This is critical for "whole organ manipulation": a hard-fixed anchor makes the organ immovable
+			// (only local indentation). For interactive tasks like pushing/rolling/flipping, set anchor_mode=0
+			// or use a soft spring anchor (anchor_mode=2).
+			const int anchorModeClamped = std::clamp(anchorMode, 0, 2);
+			Eigen::Vector3f anchorCenterRest = Eigen::Vector3f::Zero();
+			float anchorRegionRadius = 0.0f;
+			std::vector<int> anchorPhysIds;
+			bool anchorRegionValid = false;
+
+			if (anchorModeClamped != 0 && !physRep.empty()) {
+				const float depth = bboxMax.z() - bboxMin.z();
+				const float sliceFrac = std::clamp(anchorBackSliceFrac, 0.0f, 1.0f);
+				const float backSliceZ = bboxMin.z() + depth * sliceFrac;
+
+				Eigen::Vector3f centroid(0.0f, 0.0f, 0.0f);
+				int count = 0;
+				for (Vertex* v : physRep) {
+					if (!v) continue;
+					if (v->initz <= backSliceZ) {
+						centroid.x() += v->initx;
+						centroid.y() += v->inity;
+						centroid.z() += v->initz;
+						++count;
+					}
+				}
+				if (count > 0) {
+					centroid /= static_cast<float>(count);
+				} else {
+					centroid = Eigen::Vector3f(
+						0.5f * (bboxMin.x() + bboxMax.x()),
+						0.5f * (bboxMin.y() + bboxMax.y()),
+						bboxMin.z());
+				}
+
+				// Slight push towards +Z to avoid anchoring only a thin surface shell.
+				const float pushFrac = std::clamp(anchorCenterPushFrac, 0.0f, 1.0f);
+				centroid.z() = std::min(centroid.z() + depth * pushFrac, bboxMax.z());
+
+				anchorCenterRest = centroid;
+				anchorRegionRadius = std::max(1e-6f, depth * std::max(0.0f, anchorRadiusDepthFrac));
+
+				const float r2 = anchorRegionRadius * anchorRegionRadius;
+				anchorPhysIds.reserve(std::min<size_t>(physRep.size(), 2048));
+				for (int id = 0; id < static_cast<int>(physRep.size()); ++id) {
+					Vertex* rep = physRep[static_cast<size_t>(id)];
+					if (!rep) continue;
+					const Eigen::Vector3f p(rep->initx, rep->inity, rep->initz);
+					if ((p - anchorCenterRest).squaredNorm() <= r2) {
+						anchorPhysIds.push_back(id);
+					}
+				}
+				anchorRegionValid = !anchorPhysIds.empty();
+
+				if (anchorModeClamped == 1 && anchorRegionValid) {
+					int fixedCount = 0;
+					for (int id : anchorPhysIds) {
+						if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+						for (Vertex* v : agentVerticesByPhysId[static_cast<size_t>(id)]) {
+							if (!v) continue;
+							if (!v->isFixed) {
+								v->isFixed = true;
+								++fixedCount;
+							}
+						}
+					}
+					std::cout << "[Anchor] mode=1 (fixed) center=" << anchorCenterRest.transpose()
+							  << " radius=" << anchorRegionRadius
+							  << " fixedVerts=" << fixedCount << "\n";
+				} else if (anchorModeClamped == 2 && anchorRegionValid) {
+					std::cout << "[Anchor] mode=2 (spring) center=" << anchorCenterRest.transpose()
+							  << " radius=" << anchorRegionRadius
+							  << " physIds=" << anchorPhysIds.size()
+							  << " k=" << anchorSpringK
+							  << " damp=" << anchorSpringDamping
+							  << " maxA=" << anchorSpringMaxAccel << "\n";
+				} else if (!anchorRegionValid) {
+					std::cout << "[Anchor] mode=" << anchorModeClamped << " but region selection found 0 vertices.\n";
+				}
+			} else {
+				std::cout << "[Anchor] mode=0 (none)\n";
+			}
+
+			// Extract outer boundary triangles by counting faces in physId space.
+			if (agentUseSurfaceTriangles && !physRep.empty()) {
+				struct FaceKey {
+					int i0 = -1, i1 = -1, i2 = -1;
 				bool operator==(const FaceKey& o) const noexcept { return i0 == o.i0 && i1 == o.i1 && i2 == o.i2; }
 			};
 			struct FaceKeyHash {
@@ -2473,14 +2498,70 @@ int main(int argc, char** argv) {
 				if (isRecordingForce) {
 					recordedForces.push_back(currentFrameTotalForce);
 					recordedTime.push_back(glfwGetTime() - recordStartTime);
+					}
 				}
 			}
-		}
 
-				// Update agent (finger) kinematics after any drag/experiment force contributions.
-				// Tissue deformation + reaction force are solved as positional collision constraints after the PBD step.
-				if (agentSphere.enabled) {
-					if (agentUseVC) {
+			// Optional: soft spring anchor (applied as per-vertex acceleration via dragForces).
+			// This keeps the organ from drifting away while still allowing global translation/rotation.
+			if (anchorModeClamped == 2 && anchorRegionValid && !anchorPhysIds.empty()) {
+				const float k = std::max(0.0f, anchorSpringK);
+				const float c = std::max(0.0f, anchorSpringDamping);
+				const float maxA = anchorSpringMaxAccel;
+				const float invR = (anchorRegionRadius > 1e-8f) ? (1.0f / anchorRegionRadius) : 0.0f;
+
+				for (int id : anchorPhysIds) {
+					if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+					const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+					if (list.empty()) continue;
+
+					Vertex* rep = (id >= 0 && id < static_cast<int>(physRep.size())) ? physRep[static_cast<size_t>(id)] : nullptr;
+					if (!rep) continue;
+					const Eigen::Vector3f rest(rep->initx, rep->inity, rep->initz);
+
+					Eigen::Vector3f pAvg = Eigen::Vector3f::Zero();
+					Eigen::Vector3f vAvg = Eigen::Vector3f::Zero();
+					int n = 0;
+					for (Vertex* v : list) {
+						if (!v) continue;
+						if (v->isFixed) {
+							n = 0;
+							break;
+						}
+						pAvg += Eigen::Vector3f(v->x, v->y, v->z);
+						vAvg += Eigen::Vector3f(v->velx, v->vely, v->velz);
+						++n;
+					}
+					if (n <= 0) continue;
+					pAvg /= static_cast<float>(n);
+					vAvg /= static_cast<float>(n);
+
+					Eigen::Vector3f accel = k * (rest - pAvg) - c * vAvg;
+					if (invR > 0.0f) {
+						const float t = std::min(1.0f, (pAvg - anchorCenterRest).norm() * invR);
+						float w = 1.0f - t;
+						w = w * w; // smooth falloff near boundary
+						accel *= w;
+					}
+
+					const float aLen = accel.norm();
+					if (maxA > 0.0f && aLen > maxA) accel *= (maxA / aLen);
+					if (accel.squaredNorm() <= 1e-12f) continue;
+
+					for (Vertex* v : list) {
+						if (!v || v->isFixed) continue;
+						const int idx = v->index;
+						if (idx >= 0 && idx < static_cast<int>(dragForces.size())) {
+							dragForces[static_cast<size_t>(idx)] += accel;
+						}
+					}
+				}
+			}
+
+					// Update agent (finger) kinematics after any drag/experiment force contributions.
+					// Tissue deformation + reaction force are solved as positional collision constraints after the PBD step.
+					if (agentSphere.enabled) {
+						if (agentUseVC) {
 						// Virtual coupling: device drives a target; proxy is a smoothed sphere used for collision.
 						const float maxVcDist = std::max(0.0f, agentVcMaxDistanceRadiusFrac) * agentSphere.radius;
 						const float maxStep = std::max(1e-6f, 0.25f * agentSphere.radius);

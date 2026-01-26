@@ -15,6 +15,13 @@ float dragInfluenceRadius = 0.6f;
 float dragStiffness = 2500.0f;
 float dragMaxAccel = 50000.0f;
 float dragMaxDisplacement = 1.0f;
+int anchorMode = 0;
+float anchorBackSliceFrac = 0.12f;
+float anchorRadiusDepthFrac = 0.20f;
+float anchorCenterPushFrac = 0.02f;
+float anchorSpringK = 25.0f;
+float anchorSpringDamping = 10.0f;
+float anchorSpringMaxAccel = 5000.0f;
 	bool tetVolumeConstraintEnabled = false;
 	float tetVolumeConstraintCorrection = 0.15f;
 	int tetVolumeConstraintIterations = 2;
@@ -161,6 +168,12 @@ void loadParams(const std::string& filename) {
 	        {"dragStiffness", &dragStiffness},
 	        {"dragMaxAccel", &dragMaxAccel},
 	        {"dragMaxDisplacement", &dragMaxDisplacement},
+	        {"anchor_backSliceFrac", &anchorBackSliceFrac},
+	        {"anchor_radiusDepthFrac", &anchorRadiusDepthFrac},
+	        {"anchor_centerPushFrac", &anchorCenterPushFrac},
+	        {"anchor_springK", &anchorSpringK},
+	        {"anchor_springDamping", &anchorSpringDamping},
+	        {"anchor_springMaxAccel", &anchorSpringMaxAccel},
 	        {"tet_volumeConstraintCorrection", &tetVolumeConstraintCorrection},
 	        {"agent_radiusBboxScale", &agentRadiusBboxScale},
 	        {"agent_contactStiffness", &agentContactStiffness},
@@ -217,6 +230,7 @@ void loadParams(const std::string& filename) {
 
 	    std::unordered_map<std::string, int*> intParams = {
 	        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
+	        {"anchor_mode", &anchorMode},
 	        {"tet_volumeConstraintIterations", &tetVolumeConstraintIterations},
 	        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
 	        {"agent_vcSubsteps", &agentVcSubsteps},

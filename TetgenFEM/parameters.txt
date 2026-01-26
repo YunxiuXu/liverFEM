@@ -9,7 +9,7 @@ groupNumY=6
 groupNumZ=6
 timeStep=0.01
 dampingConst=50.0
-Gravity=-10.0
+Gravity=0.0
 bindForce= -1000000
 bindVelocity=-0.0
 constraintHardness=50000
@@ -24,6 +24,16 @@ dragInfluenceRadius=0.6
 dragStiffness=750.0
 dragMaxAccel=15000.0
 dragMaxDisplacement=1.0
+
+# Object anchoring (prevents whole-body drift; set to 0 for full-body motion)
+# 0=none, 1=fixed (hard pin), 2=spring (soft attachment)
+anchor_mode=0
+anchor_backSliceFrac=0.12
+anchor_radiusDepthFrac=0.20
+anchor_centerPushFrac=0.02
+anchor_springK=25
+anchor_springDamping=10
+anchor_springMaxAccel=5000
 
 # Optional: volumetric stabilization (prevents extreme compression / inverted tets)
 tet_volumeConstraintEnabled=false

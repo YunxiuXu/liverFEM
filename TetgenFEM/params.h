@@ -11,6 +11,18 @@ extern const float PI;
 extern float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
 extern float dragInfluenceRadius, dragStiffness, dragMaxAccel, dragMaxDisplacement;
 
+// Object anchoring (prevents whole-body drift; disable for full-body motion).
+// 0 = none (free), 1 = fixed (hard pin), 2 = spring (soft attachment).
+extern int anchorMode;
+// Anchor region selection (based on initial bbox Z-depth).
+extern float anchorBackSliceFrac;      // [0..1] thickness from bboxMin.z
+extern float anchorRadiusDepthFrac;    // radius = depth * frac
+extern float anchorCenterPushFrac;     // push anchor center towards +Z (into the body)
+// Spring anchor parameters (only used when anchorMode==2). Units are "acceleration-space".
+extern float anchorSpringK;            // 1/s^2
+extern float anchorSpringDamping;      // 1/s
+extern float anchorSpringMaxAccel;     // clamp (<=0 disables)
+
 // Optional soft-body stabilization (helps avoid "hollow" compression / inverted tets).
 extern bool tetVolumeConstraintEnabled;
 // [0..1] position correction per iteration (smaller = safer/softer).
