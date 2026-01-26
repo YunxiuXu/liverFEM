@@ -11,6 +11,13 @@ extern const float PI;
 extern float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
 extern float dragInfluenceRadius, dragStiffness, dragMaxAccel, dragMaxDisplacement;
 
+// Optional soft-body stabilization (helps avoid "hollow" compression / inverted tets).
+extern bool tetVolumeConstraintEnabled;
+// [0..1] position correction per iteration (smaller = safer/softer).
+extern float tetVolumeConstraintCorrection;
+// Iterations per frame (1-4 recommended).
+extern int tetVolumeConstraintIterations;
+
 // Agent sphere (finger proxy) contact parameters.
 extern bool agentEnabled;
 extern bool agentUseSurfaceVertices;

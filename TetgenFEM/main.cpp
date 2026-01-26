@@ -205,9 +205,18 @@ static std::string formatSignedInt(float v)
 		}
 		glEnd();
 	};
-	drawCircle(Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY());
-		drawCircle(Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitZ());
-		drawCircle(Eigen::Vector3f::UnitY(), Eigen::Vector3f::UnitZ());
+		drawCircle(Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY());
+			drawCircle(Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitZ());
+			drawCircle(Eigen::Vector3f::UnitY(), Eigen::Vector3f::UnitZ());
+	}
+
+	static float signedTetraVolume(
+		const Eigen::Vector3f& p0,
+		const Eigen::Vector3f& p1,
+		const Eigen::Vector3f& p2,
+		const Eigen::Vector3f& p3)
+	{
+		return (p1 - p0).dot((p2 - p0).cross(p3 - p0)) / 6.0f;
 	}
 
 	struct AgentPhysKey {
@@ -1704,19 +1713,74 @@ int main(int argc, char** argv) {
 		}
 
 		// Fallback: if we couldn't build a clean surface vertex set, use all physical vertices.
-		if (agentContactVertices.empty()) {
-			agentContactVertices = objectUniqueVertices;
-			agentContactVertexPhysIds.clear();
-			agentContactVertexPhysIds.reserve(physRep.size());
-			for (int id = 0; id < static_cast<int>(physRep.size()); ++id) {
-				agentContactVertexPhysIds.push_back(id);
+			if (agentContactVertices.empty()) {
+				agentContactVertices = objectUniqueVertices;
+				agentContactVertexPhysIds.clear();
+				agentContactVertexPhysIds.reserve(physRep.size());
+				for (int id = 0; id < static_cast<int>(physRep.size()); ++id) {
+					agentContactVertexPhysIds.push_back(id);
+				}
 			}
-		}
 
-		// [REMOVED] The previous custom export logic was causing "key not found" errors 
-		// because of vertex pointer mismatches after deduplication.
-		// We now use TetGen's native save functions immediately after meshing (see above).
-	
+			// Precompute per-physical-vertex mass (sum of duplicated group vertices) for stable constraints.
+			std::vector<float> physMassSumKg;
+			physMassSumKg.resize(agentVerticesByPhysId.size(), 0.0f);
+			for (size_t id = 0; id < agentVerticesByPhysId.size(); ++id) {
+				float m = 0.0f;
+				for (Vertex* v : agentVerticesByPhysId[id]) {
+					if (!v) continue;
+					m += std::max(0.0f, v->vertexMass);
+				}
+				physMassSumKg[id] = m;
+			}
+
+			// Optional volumetric stabilization: keep tet volumes near rest to avoid "hollow" collapse.
+			struct TetVolumeRec {
+				std::array<int, 4> ids{ {-1, -1, -1, -1} };
+				float restAbsVolume = 0.0f;
+				float restSign = 1.0f; // +1 or -1
+			};
+			std::vector<TetVolumeRec> tetVolumeRecs;
+			tetVolumeRecs.reserve(4096);
+			for (int gi = 0; gi < object.groupNum; ++gi) {
+				Group& g = object.groups[gi];
+				for (Tetrahedron* t : g.tetrahedra) {
+					if (!t) continue;
+					if (!t->vertices[0] || !t->vertices[1] || !t->vertices[2] || !t->vertices[3]) continue;
+
+					auto physId = [&](Vertex* v) -> int {
+						if (!v) return -1;
+						const auto it = physKeyToId.find(makePhysKey(v));
+						return (it == physKeyToId.end()) ? -1 : it->second;
+					};
+
+					const int id0 = physId(t->vertices[0]);
+					const int id1 = physId(t->vertices[1]);
+					const int id2 = physId(t->vertices[2]);
+					const int id3 = physId(t->vertices[3]);
+					if (id0 < 0 || id1 < 0 || id2 < 0 || id3 < 0) continue;
+
+					const Eigen::Vector3f p0(t->vertices[0]->initx, t->vertices[0]->inity, t->vertices[0]->initz);
+					const Eigen::Vector3f p1(t->vertices[1]->initx, t->vertices[1]->inity, t->vertices[1]->initz);
+					const Eigen::Vector3f p2(t->vertices[2]->initx, t->vertices[2]->inity, t->vertices[2]->initz);
+					const Eigen::Vector3f p3(t->vertices[3]->initx, t->vertices[3]->inity, t->vertices[3]->initz);
+					const float v0 = signedTetraVolume(p0, p1, p2, p3);
+					const float av0 = std::abs(v0);
+					if (!(av0 > 1e-12f)) continue;
+
+					TetVolumeRec rec;
+					rec.ids = { id0, id1, id2, id3 };
+					rec.restAbsVolume = av0;
+					rec.restSign = (v0 >= 0.0f) ? 1.0f : -1.0f;
+					tetVolumeRecs.push_back(rec);
+				}
+			}
+			std::vector<Eigen::Vector3f> tetVolumePhysDp(agentVerticesByPhysId.size(), Eigen::Vector3f::Zero());
+
+			// [REMOVED] The previous custom export logic was causing "key not found" errors 
+			// because of vertex pointer mismatches after deduplication.
+			// We now use TetGen's native save functions immediately after meshing (see above).
+		
 	/* 
 	// Export a deterministic "latest" snapshot for XPBD/PBD to consume.
 	// Also export a timestamped snapshot for bookkeeping.
@@ -2543,11 +2607,11 @@ int main(int argc, char** argv) {
 			experiment2.onAfterPhysics();
 			
 			// Apply plane constraint for volume preservation visualization
-			if (showVolumePreservation) {
-				// Find vertices that penetrate the plane and project them back
-				for (int i = 0; i < object.groupNum; ++i) {
-					Group& group = object.groups[i];
-					for (const auto& vertexPair : group.verticesMap) {
+				if (showVolumePreservation) {
+					// Find vertices that penetrate the plane and project them back
+					for (int i = 0; i < object.groupNum; ++i) {
+						Group& group = object.groups[i];
+						for (const auto& vertexPair : group.verticesMap) {
 						Vertex* vertex = vertexPair.second;
 						if (!vertex->isFixed && vertex->y > planeConstraintY) {
 							// Project vertex to the plane
@@ -2556,14 +2620,134 @@ int main(int argc, char** argv) {
 							vertex->vely = 0.0f;
 						}
 					}
+					}
 				}
-			}
 
-						// Hard non-penetration against the agent sphere (prevents the tissue from "ghosting" through).
-						// Use surface TRIANGLES (not all vertices) to avoid non-physical "fat contact" and jitter.
-						if (agentSphere.enabled) {
-							const bool useVC = agentUseVC;
-							const float r = std::max(1e-6f, agentSphere.radius);
+				// Optional: volumetric stabilization (XPBD/PBD-style) to resist extreme compression.
+				// This is NOT "internal collision" per se (the mesh is already a solid), but it prevents
+				// the body from behaving hollow under deep presses by keeping tet volumes near rest.
+				if (tetVolumeConstraintEnabled && !tetVolumeRecs.empty() && !agentVerticesByPhysId.empty()) {
+					const int iters = std::clamp(tetVolumeConstraintIterations, 1, 8);
+					const float corr = std::clamp(tetVolumeConstraintCorrection, 0.0f, 1.0f);
+					const float invDt = 1.0f / std::max(1e-8f, timeStep);
+					const float maxDp = 0.0025f * bboxDiag; // conservative safety clamp
+
+					auto repOf = [&](int id) -> Vertex* {
+						if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) return nullptr;
+						const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+						return list.empty() ? nullptr : list.front();
+					};
+					auto invMassOf = [&](int id, Vertex* rep) -> float {
+						if (!rep || rep->isFixed) return 0.0f;
+						if (id < 0 || id >= static_cast<int>(physMassSumKg.size())) return 0.0f;
+						const float m = physMassSumKg[static_cast<size_t>(id)];
+						return (m > 1e-12f) ? (1.0f / m) : 0.0f;
+					};
+
+					bool anyVolumeCorrection = false;
+					for (int it = 0; it < iters; ++it) {
+						std::fill(tetVolumePhysDp.begin(), tetVolumePhysDp.end(), Eigen::Vector3f::Zero());
+
+						for (const TetVolumeRec& rec : tetVolumeRecs) {
+							const int id0 = rec.ids[0];
+							const int id1 = rec.ids[1];
+							const int id2 = rec.ids[2];
+							const int id3 = rec.ids[3];
+
+							Vertex* v0 = repOf(id0);
+							Vertex* v1 = repOf(id1);
+							Vertex* v2 = repOf(id2);
+							Vertex* v3 = repOf(id3);
+							if (!v0 || !v1 || !v2 || !v3) continue;
+
+							const Eigen::Vector3f p0(v0->x, v0->y, v0->z);
+							const Eigen::Vector3f p1(v1->x, v1->y, v1->z);
+							const Eigen::Vector3f p2(v2->x, v2->y, v2->z);
+							const Eigen::Vector3f p3(v3->x, v3->y, v3->z);
+
+							const float V = signedTetraVolume(p0, p1, p2, p3);
+							const float Vproj = rec.restSign * V;
+							const float C = Vproj - rec.restAbsVolume;
+							if (std::abs(C) <= std::max(1e-10f, 1e-6f * rec.restAbsVolume)) continue;
+
+							const Eigen::Vector3f a = p1 - p0;
+							const Eigen::Vector3f b = p2 - p0;
+							const Eigen::Vector3f c = p3 - p0;
+
+							Eigen::Vector3f g1 = b.cross(c) / 6.0f;
+							Eigen::Vector3f g2 = c.cross(a) / 6.0f;
+							Eigen::Vector3f g3 = a.cross(b) / 6.0f;
+							Eigen::Vector3f g0 = -g1 - g2 - g3;
+							g0 *= rec.restSign;
+							g1 *= rec.restSign;
+							g2 *= rec.restSign;
+							g3 *= rec.restSign;
+
+							const float w0 = invMassOf(id0, v0);
+							const float w1 = invMassOf(id1, v1);
+							const float w2 = invMassOf(id2, v2);
+							const float w3 = invMassOf(id3, v3);
+							const float denom =
+								w0 * g0.squaredNorm() +
+								w1 * g1.squaredNorm() +
+								w2 * g2.squaredNorm() +
+								w3 * g3.squaredNorm();
+							if (!(denom > 1e-18f)) continue;
+
+							const float s = (-C / denom) * corr;
+							if (w0 > 0.0f) tetVolumePhysDp[static_cast<size_t>(id0)] += (w0 * s) * g0;
+							if (w1 > 0.0f) tetVolumePhysDp[static_cast<size_t>(id1)] += (w1 * s) * g1;
+							if (w2 > 0.0f) tetVolumePhysDp[static_cast<size_t>(id2)] += (w2 * s) * g2;
+							if (w3 > 0.0f) tetVolumePhysDp[static_cast<size_t>(id3)] += (w3 * s) * g3;
+						}
+
+						int moved = 0;
+						for (size_t id = 0; id < tetVolumePhysDp.size(); ++id) {
+							Eigen::Vector3f dp = tetVolumePhysDp[id];
+							const float len = dp.norm();
+							if (len <= 1e-12f) continue;
+							if (maxDp > 1e-8f && len > maxDp) dp *= (maxDp / len);
+
+							const auto& list = agentVerticesByPhysId[id];
+							for (Vertex* v : list) {
+								if (!v || v->isFixed) continue;
+								v->x += dp.x();
+								v->y += dp.y();
+								v->z += dp.z();
+								v->velx += dp.x() * invDt;
+								v->vely += dp.y() * invDt;
+								v->velz += dp.z() * invDt;
+							}
+							++moved;
+						}
+
+						anyVolumeCorrection = anyVolumeCorrection || (moved > 0);
+					}
+
+					// Keep Group::groupVelocity consistent with Vertex::vel* for the next frame's primeVec.
+					if (anyVolumeCorrection) {
+						for (int gi = 0; gi < object.groupNum; ++gi) {
+							Group& group = object.groups[gi];
+							for (const auto& vertexPair : group.verticesMap) {
+								Vertex* v = vertexPair.second;
+								if (!v) continue;
+								const int li = v->localIndex;
+								if (li < 0 || (3 * li + 2) >= group.groupVelocity.size()) continue;
+								if (v->isFixed) {
+									group.groupVelocity.segment<3>(3 * li) = Eigen::Vector3f::Zero();
+								} else {
+									group.groupVelocity.segment<3>(3 * li) = Eigen::Vector3f(v->velx, v->vely, v->velz);
+								}
+							}
+						}
+					}
+				}
+
+							// Hard non-penetration against the agent sphere (prevents the tissue from "ghosting" through).
+							// Use surface TRIANGLES (not all vertices) to avoid non-physical "fat contact" and jitter.
+							if (agentSphere.enabled) {
+								const bool useVC = agentUseVC;
+								const float r = std::max(1e-6f, agentSphere.radius);
 							const float maxPenFrac = std::clamp(agentMaxPenetrationFrac, 0.0f, 0.95f);
 							const float allowedPen = maxPenFrac * r;
 							const float eps = 1e-4f * bboxDiag;

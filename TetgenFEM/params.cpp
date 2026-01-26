@@ -15,10 +15,13 @@ float dragInfluenceRadius = 0.6f;
 float dragStiffness = 2500.0f;
 float dragMaxAccel = 50000.0f;
 float dragMaxDisplacement = 1.0f;
-	bool agentEnabled = false;
-	bool agentUseSurfaceVertices = true;
-	bool agentUseSurfaceTriangles = true;
-	bool agentVirtualCoupling = false;
+	bool tetVolumeConstraintEnabled = false;
+	float tetVolumeConstraintCorrection = 0.15f;
+	int tetVolumeConstraintIterations = 2;
+		bool agentEnabled = false;
+		bool agentUseSurfaceVertices = true;
+		bool agentUseSurfaceTriangles = true;
+		bool agentVirtualCoupling = false;
 	float agentRadiusBboxScale = 0.03f;
 	float agentContactStiffness = 40000.0f;
 	float agentContactDamping = 200.0f;
@@ -148,16 +151,17 @@ void loadParams(const std::string& filename) {
         return;
     }
 
-			    std::unordered_map<std::string, float*> floatParams = {
-		        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
-		        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
-		        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
+	    std::unordered_map<std::string, float*> floatParams = {
+	        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
+	        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
+	        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
 	        {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
 	        {"constraintHardness", &constraintHardness},
 	        {"dragInfluenceRadius", &dragInfluenceRadius},
 	        {"dragStiffness", &dragStiffness},
 	        {"dragMaxAccel", &dragMaxAccel},
 	        {"dragMaxDisplacement", &dragMaxDisplacement},
+	        {"tet_volumeConstraintCorrection", &tetVolumeConstraintCorrection},
 	        {"agent_radiusBboxScale", &agentRadiusBboxScale},
 	        {"agent_contactStiffness", &agentContactStiffness},
 	        {"agent_contactDamping", &agentContactDamping},
@@ -211,12 +215,13 @@ void loadParams(const std::string& filename) {
 	        {"exp4_maxVolume5", &exp4MaxVolume5}
 	    };
 
-		    std::unordered_map<std::string, int*> intParams = {
-		        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
-		        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
-		        {"agent_vcSubsteps", &agentVcSubsteps},
-		        {"agent_collisionIterations", &agentCollisionIterations},
-		        {"exp3_settleSteps", &exp3SettleSteps},
+	    std::unordered_map<std::string, int*> intParams = {
+	        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
+	        {"tet_volumeConstraintIterations", &tetVolumeConstraintIterations},
+	        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
+	        {"agent_vcSubsteps", &agentVcSubsteps},
+	        {"agent_collisionIterations", &agentCollisionIterations},
+	        {"exp3_settleSteps", &exp3SettleSteps},
 		        {"exp3_dragSteps", &exp3DragSteps},
 		        {"exp1_settleSteps", &exp1SettleSteps},
 		        {"exp1_dragSteps", &exp1DragSteps},
@@ -248,14 +253,15 @@ void loadParams(const std::string& filename) {
         {"nodeFile", &nodeFile}, {"eleFile", &eleFile}
     };
     
-		    std::unordered_map<std::string, bool*> boolParams = {
-		        {"useDirectLoading", &useDirectLoading},
-		        {"autoSaveMesh", &autoSaveMesh},
-		        {"agent_enabled", &agentEnabled},
-	        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
-	        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
-	        {"agent_virtualCoupling", &agentVirtualCoupling},
-		        {"agent_writeLiveFile", &agentWriteLiveFile},
+			    std::unordered_map<std::string, bool*> boolParams = {
+			        {"useDirectLoading", &useDirectLoading},
+			        {"autoSaveMesh", &autoSaveMesh},
+			        {"tet_volumeConstraintEnabled", &tetVolumeConstraintEnabled},
+			        {"agent_enabled", &agentEnabled},
+		        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
+		        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
+		        {"agent_virtualCoupling", &agentVirtualCoupling},
+			        {"agent_writeLiveFile", &agentWriteLiveFile},
 		        {"wall_enabled", &wallEnabled},
 		        {"leap_enabled", &leapEnabled},
 		        {"leap_flipX", &leapFlipX},

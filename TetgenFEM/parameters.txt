@@ -25,6 +25,11 @@ dragStiffness=750.0
 dragMaxAccel=15000.0
 dragMaxDisplacement=1.0
 
+# Optional: volumetric stabilization (prevents extreme compression / inverted tets)
+tet_volumeConstraintEnabled=false
+tet_volumeConstraintCorrection=0.15
+tet_volumeConstraintIterations=2
+
 # Agent sphere ("finger") contact
 # Toggle at runtime with key 'H' (see console output). These are defaults on startup.
 agent_enabled=false
