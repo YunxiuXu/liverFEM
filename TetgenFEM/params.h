@@ -27,11 +27,13 @@ extern float agentVcMaxDistanceRadiusFrac;
 extern int agentVcSubsteps;
 extern int agentCollisionIterations;
 extern float agentMaxPenetrationFrac;
-extern float agentProxyPositionCorrection;
-extern float agentInfluenceRadiusFrac;
-extern float agentCollisionTangentialDamp;
-extern bool agentWriteLiveFile;
-extern int agentLiveFileIntervalFrames;
+	extern float agentProxyPositionCorrection;
+	extern float agentInfluenceRadiusFrac;
+	extern float agentCollisionTangentialDamp;
+	// Coulomb friction coefficient between proxy sphere and surface (0 disables).
+	extern float agentFrictionMu;
+	extern bool agentWriteLiveFile;
+	extern int agentLiveFileIntervalFrames;
 
 // Axis-aligned wall constraints (3 planes).
 extern bool wallEnabled;

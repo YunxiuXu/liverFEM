@@ -481,20 +481,21 @@ static int applyAxisAlignedWallConstraints(
 	return hitCount;
 }
 
-static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
-	const Eigen::Vector3f& sphereCenter,
-	const Eigen::Vector3f& sphereVel,
-	float sphereRadius,
-		float allowedPenetration,
-		float eps,
-		float dt,
-		float positionCorrection,
-		float tangentialDamp,
-		int iterations,
-		const std::vector<AgentTriangle>& contactTriangles,
-		const std::vector<std::array<int, 3>>& contactTrianglePhysIds,
-		const std::vector<std::vector<Vertex*>>& verticesByPhysId)
-	{
+	static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
+		const Eigen::Vector3f& sphereCenter,
+		const Eigen::Vector3f& sphereVel,
+		float sphereRadius,
+			float allowedPenetration,
+			float eps,
+			float dt,
+			float positionCorrection,
+			float tangentialDamp,
+			float frictionMu,
+			int iterations,
+			const std::vector<AgentTriangle>& contactTriangles,
+			const std::vector<std::array<int, 3>>& contactTrianglePhysIds,
+			const std::vector<std::vector<Vertex*>>& verticesByPhysId)
+		{
 		AgentContactResult out{};
 		if (contactTriangles.empty() || contactTriangles.size() != contactTrianglePhysIds.size() || verticesByPhysId.empty()) return out;
 
@@ -506,43 +507,70 @@ static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
 		const float invDt = 1.0f / std::max(1e-8f, dt);
 		const float invDt2 = invDt * invDt;
 
-		const float corr = std::clamp(positionCorrection, 0.0f, 1.0f);
-		const float tanDamp = std::clamp(tangentialDamp, 0.0f, 1.0f);
-		const int iters = std::clamp(iterations, 1, 64);
+			const float corr = std::clamp(positionCorrection, 0.0f, 1.0f);
+			const float tanDamp = std::clamp(tangentialDamp, 0.0f, 1.0f);
+			const float mu = std::clamp(frictionMu, 0.0f, 10.0f);
+			const int iters = std::clamp(iterations, 1, 64);
 
 		Eigen::Vector3f sumN = Eigen::Vector3f::Zero();
 		float maxPen = 0.0f;
 		int movedVertexCount = 0;
 
-		auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
-			if (dp.squaredNorm() <= 1e-24f) return;
-			if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
-			const auto& list = verticesByPhysId[static_cast<size_t>(id)];
-			for (Vertex* v : list) {
-				if (!v || v->isFixed) continue;
+			auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
+				if (dp.squaredNorm() <= 1e-24f) return;
+				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
+				const auto& list = verticesByPhysId[static_cast<size_t>(id)];
+				for (Vertex* v : list) {
+					if (!v || v->isFixed) continue;
 
 				v->x += dp.x();
 				v->y += dp.y();
 				v->z += dp.z();
 
-				Eigen::Vector3f vv(v->velx, v->vely, v->velz);
-				vv += dp * invDt;
+					Eigen::Vector3f vv(v->velx, v->vely, v->velz);
+					vv += dp * invDt;
 
-				Eigen::Vector3f relV = vv - sphereVel;
-				const float vn = relV.dot(n);
-				if (vn < 0.0f) relV -= n * vn;
-				relV -= (relV - n * relV.dot(n)) * tanDamp;
-				vv = sphereVel + relV;
+					Eigen::Vector3f relV = vv - sphereVel;
+					float dvN = std::max(0.0f, dp.dot(n) * invDt);
 
-				v->velx = vv.x();
-				v->vely = vv.y();
-				v->velz = vv.z();
+					const float vnBefore = relV.dot(n);
+					if (vnBefore < 0.0f) {
+						// Remove inward normal velocity (non-penetration in velocity space).
+						relV -= n * vnBefore;
+						dvN += -vnBefore;
+					}
 
-				const float m = std::max(0.0f, v->vertexMass);
-				out.reactionForceN -= dp * (m * invDt2);
-				++movedVertexCount;
-			}
-		};
+					// Coulomb friction in velocity space (PBD-style approximation):
+					// reduce tangential relative velocity up to mu * (effective normal velocity correction).
+					if (mu > 0.0f && dvN > 0.0f) {
+						const Eigen::Vector3f vt = relV - n * relV.dot(n);
+						const float vtLen = vt.norm();
+						if (vtLen > 1e-8f) {
+							const float maxDvT = mu * dvN;
+							const float dvT = std::min(vtLen, maxDvT);
+							const Eigen::Vector3f vtNew = vt * ((vtLen - dvT) / vtLen);
+							const Eigen::Vector3f dvt = vtNew - vt;
+							relV += dvt;
+
+							// Reaction on the sphere from friction impulse (approx force over dt).
+							const float m = std::max(0.0f, v->vertexMass);
+							out.reactionForceN -= dvt * (m * invDt);
+						}
+					}
+
+					// Optional viscous tangential damping (helps suppress chatter).
+					relV -= (relV - n * relV.dot(n)) * tanDamp;
+					vv = sphereVel + relV;
+
+					v->velx = vv.x();
+					v->vely = vv.y();
+					v->velz = vv.z();
+
+					const float m = std::max(0.0f, v->vertexMass);
+					out.reactionForceN -= dp * (m * invDt2);
+					++movedVertexCount;
+				}
+			};
 
 		for (int it = 0; it < iters; ++it) {
 			bool any = false;
@@ -597,19 +625,20 @@ static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
 		return out;
 	}
 
-	static AgentContactResult solveAgentSphereVertexCollisionConstraint(
-		const Eigen::Vector3f& sphereCenter,
-		const Eigen::Vector3f& sphereVel,
-		float sphereRadius,
-		float allowedPenetration,
-		float eps,
-		float dt,
-		float positionCorrection,
-		float tangentialDamp,
-		int iterations,
-		const std::vector<int>& contactVertexPhysIds,
-		const std::vector<std::vector<Vertex*>>& verticesByPhysId)
-	{
+		static AgentContactResult solveAgentSphereVertexCollisionConstraint(
+			const Eigen::Vector3f& sphereCenter,
+			const Eigen::Vector3f& sphereVel,
+			float sphereRadius,
+			float allowedPenetration,
+			float eps,
+			float dt,
+			float positionCorrection,
+			float tangentialDamp,
+			float frictionMu,
+			int iterations,
+			const std::vector<int>& contactVertexPhysIds,
+			const std::vector<std::vector<Vertex*>>& verticesByPhysId)
+		{
 		AgentContactResult out{};
 		if (contactVertexPhysIds.empty() || verticesByPhysId.empty()) return out;
 
@@ -621,43 +650,65 @@ static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
 		const float invDt = 1.0f / std::max(1e-8f, dt);
 		const float invDt2 = invDt * invDt;
 
-		const float corr = std::clamp(positionCorrection, 0.0f, 1.0f);
-		const float tanDamp = std::clamp(tangentialDamp, 0.0f, 1.0f);
-		const int iters = std::clamp(iterations, 1, 64);
+			const float corr = std::clamp(positionCorrection, 0.0f, 1.0f);
+			const float tanDamp = std::clamp(tangentialDamp, 0.0f, 1.0f);
+			const float mu = std::clamp(frictionMu, 0.0f, 10.0f);
+			const int iters = std::clamp(iterations, 1, 64);
 
 		Eigen::Vector3f sumN = Eigen::Vector3f::Zero();
 		float maxPen = 0.0f;
 		int movedVertexCount = 0;
 
-		auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
-			if (dp.squaredNorm() <= 1e-24f) return;
-			if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
-			const auto& list = verticesByPhysId[static_cast<size_t>(id)];
-			for (Vertex* v : list) {
-				if (!v || v->isFixed) continue;
+			auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
+				if (dp.squaredNorm() <= 1e-24f) return;
+				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
+				const auto& list = verticesByPhysId[static_cast<size_t>(id)];
+				for (Vertex* v : list) {
+					if (!v || v->isFixed) continue;
 
 				v->x += dp.x();
 				v->y += dp.y();
 				v->z += dp.z();
 
-				Eigen::Vector3f vv(v->velx, v->vely, v->velz);
-				vv += dp * invDt;
+					Eigen::Vector3f vv(v->velx, v->vely, v->velz);
+					vv += dp * invDt;
 
-				Eigen::Vector3f relV = vv - sphereVel;
-				const float vn = relV.dot(n);
-				if (vn < 0.0f) relV -= n * vn;
-				relV -= (relV - n * relV.dot(n)) * tanDamp;
-				vv = sphereVel + relV;
+					Eigen::Vector3f relV = vv - sphereVel;
+					float dvN = std::max(0.0f, dp.dot(n) * invDt);
 
-				v->velx = vv.x();
-				v->vely = vv.y();
-				v->velz = vv.z();
+					const float vnBefore = relV.dot(n);
+					if (vnBefore < 0.0f) {
+						relV -= n * vnBefore;
+						dvN += -vnBefore;
+					}
 
-				const float m = std::max(0.0f, v->vertexMass);
-				out.reactionForceN -= dp * (m * invDt2);
-				++movedVertexCount;
-			}
-		};
+					if (mu > 0.0f && dvN > 0.0f) {
+						const Eigen::Vector3f vt = relV - n * relV.dot(n);
+						const float vtLen = vt.norm();
+						if (vtLen > 1e-8f) {
+							const float maxDvT = mu * dvN;
+							const float dvT = std::min(vtLen, maxDvT);
+							const Eigen::Vector3f vtNew = vt * ((vtLen - dvT) / vtLen);
+							const Eigen::Vector3f dvt = vtNew - vt;
+							relV += dvt;
+
+							const float m = std::max(0.0f, v->vertexMass);
+							out.reactionForceN -= dvt * (m * invDt);
+						}
+					}
+
+					relV -= (relV - n * relV.dot(n)) * tanDamp;
+					vv = sphereVel + relV;
+
+					v->velx = vv.x();
+					v->vely = vv.y();
+					v->velz = vv.z();
+
+					const float m = std::max(0.0f, v->vertexMass);
+					out.reactionForceN -= dp * (m * invDt2);
+					++movedVertexCount;
+				}
+			};
 
 		for (int it = 0; it < iters; ++it) {
 			bool any = false;
@@ -2528,33 +2579,35 @@ int main(int argc, char** argv) {
 
 								AgentContactResult contact{};
 								if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
-									contact = solveAgentSphereTriangleCollisionConstraint(
-										sphereCenter,
-										sphereVel,
-										r,
-										allowedPen,
-										eps,
-										timeStep,
-										corr,
-										tangentialDamp,
-										iters,
-										agentContactTriangles,
-										agentContactTrianglePhysIds,
-										agentVerticesByPhysId);
-								} else if (!agentContactVertexPhysIds.empty()) {
-									contact = solveAgentSphereVertexCollisionConstraint(
-										sphereCenter,
-										sphereVel,
-										r,
-										allowedPen,
-										eps,
-										timeStep,
-										corr,
-										tangentialDamp,
-										iters,
-										agentContactVertexPhysIds,
-										agentVerticesByPhysId);
-								}
+										contact = solveAgentSphereTriangleCollisionConstraint(
+											sphereCenter,
+											sphereVel,
+											r,
+											allowedPen,
+											eps,
+											timeStep,
+											corr,
+											tangentialDamp,
+											agentFrictionMu,
+											iters,
+											agentContactTriangles,
+											agentContactTrianglePhysIds,
+											agentVerticesByPhysId);
+									} else if (!agentContactVertexPhysIds.empty()) {
+										contact = solveAgentSphereVertexCollisionConstraint(
+											sphereCenter,
+											sphereVel,
+											r,
+											allowedPen,
+											eps,
+											timeStep,
+											corr,
+											tangentialDamp,
+											agentFrictionMu,
+											iters,
+											agentContactVertexPhysIds,
+											agentVerticesByPhysId);
+									}
 
 								agentLastContactForcesN[static_cast<size_t>(fi)] = contact.reactionForceN;
 								agentLastContactCounts[static_cast<size_t>(fi)] = contact.contactVertexCount;

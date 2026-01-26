@@ -33,6 +33,7 @@ float agentVcStiffnessNPerBbox = 250.0f;
 	float agentProxyPositionCorrection = 1.0f;
 	float agentInfluenceRadiusFrac = 3.0f;
 	float agentCollisionTangentialDamp = 0.6f;
+	float agentFrictionMu = 1.0f;
 	bool agentWriteLiveFile = false;
 	int agentLiveFileIntervalFrames = 2;
 
@@ -166,12 +167,13 @@ void loadParams(const std::string& filename) {
 	        {"agent_vcDampingNsPerBbox", &agentVcDampingNsPerBbox},
 	        {"agent_vcMaxDistanceRadiusFrac", &agentVcMaxDistanceRadiusFrac},
 	        {"agent_maxPenetrationFrac", &agentMaxPenetrationFrac},
-	        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
-		        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
-		        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
-			        {"wall_marginBboxScale", &wallMarginBboxScale},
-			        {"wall_restitution", &wallRestitution},
-			        {"wall_tangentialDamp", &wallTangentialDamp},
+		        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
+			        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
+			        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
+			        {"agent_frictionMu", &agentFrictionMu},
+				        {"wall_marginBboxScale", &wallMarginBboxScale},
+				        {"wall_restitution", &wallRestitution},
+				        {"wall_tangentialDamp", &wallTangentialDamp},
 			        {"leap_workspaceXmm", &leapWorkspaceXmm},
 			        {"leap_workspaceYmm", &leapWorkspaceYmm},
 			        {"leap_workspaceZmm", &leapWorkspaceZmm},

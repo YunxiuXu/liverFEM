@@ -45,6 +45,7 @@ agent_maxPenetrationFrac=0.0
 agent_proxyPositionCorrection=1.0
 agent_influenceRadiusFrac=3.0
 agent_collisionTangentialDamp=0.6
+agent_frictionMu=2.0
 agent_writeLiveFile=false
 agent_liveFileIntervalFrames=2
 
