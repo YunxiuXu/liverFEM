@@ -320,6 +320,33 @@ static Eigen::Vector3f closestPointOnTriangle(
 	return a + ab * v + ac * w;
 }
 
+static bool segmentSphereFirstHitT(
+	const Eigen::Vector3f& p0,
+	const Eigen::Vector3f& p1,
+	float r,
+	float* outT)
+{
+	const Eigen::Vector3f d = p1 - p0;
+	const float a = d.dot(d);
+	if (a <= 1e-20f) return false;
+
+	const float b = 2.0f * p0.dot(d);
+	const float c = p0.dot(p0) - r * r;
+	const float disc = b * b - 4.0f * a * c;
+	if (disc <= 0.0f) return false;
+
+	const float s = std::sqrt(disc);
+	float t0 = (-b - s) / (2.0f * a);
+	float t1 = (-b + s) / (2.0f * a);
+	if (t0 > t1) std::swap(t0, t1);
+
+	if (t1 < 0.0f || t0 > 1.0f) return false;
+	const float t = (t0 >= 0.0f) ? t0 : t1;
+	if (t < 0.0f || t > 1.0f) return false;
+	if (outT) *outT = t;
+	return true;
+}
+
 static bool rayIntersectsTriangle(
 	const Eigen::Vector3f& rayOrigin,
 	const Eigen::Vector3f& rayDir,
@@ -372,11 +399,46 @@ static bool isPointInsideSurfaceRayCast(
 	return (hits % 2) == 1;
 }
 
+static bool isPointInsideSurfaceRayCastMulti(
+	const Eigen::Vector3f& p,
+	const std::vector<AgentTriangle>& tris,
+	float eps)
+{
+	if (tris.empty()) return false;
+
+	// Use multiple fixed ray directions and take a majority vote to reduce flicker near edges/vertices.
+	static const std::array<Eigen::Vector3f, 3> dirs = {
+		Eigen::Vector3f(1.0f, 0.2345f, 0.3456f).normalized(),
+		Eigen::Vector3f(-0.143f, 1.0f, 0.311f).normalized(),
+		Eigen::Vector3f(0.271f, -0.531f, 1.0f).normalized(),
+	};
+
+	const float e = std::max(1e-9f, eps);
+	int insideVotes = 0;
+	for (const Eigen::Vector3f& dir : dirs) {
+		const Eigen::Vector3f origin = p + dir * e;
+		int hits = 0;
+		for (const auto& tri : tris) {
+			if (!tri.a || !tri.b || !tri.c) continue;
+			const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+			const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+			const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+			float t = 0.0f;
+			if (rayIntersectsTriangle(origin, dir, a, b, c, &t)) {
+				++hits;
+			}
+		}
+		if ((hits % 2) == 1) ++insideVotes;
+	}
+
+	return insideVotes >= 2;
+}
+
 struct ForceGraphHistory {
 	static constexpr int kCapacity = 240;
 	std::array<Eigen::Vector4f, kCapacity> samples{};
 	int head = 0;     // next write position
-		bool filled = false;
+			bool filled = false;
 
 		void push(const Eigen::Vector4f& s) {
 			samples[static_cast<size_t>(head)] = s;
@@ -490,13 +552,14 @@ static int applyAxisAlignedWallConstraints(
 	return hitCount;
 }
 
-	static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
-		const Eigen::Vector3f& sphereCenter,
-		const Eigen::Vector3f& sphereVel,
-		float sphereRadius,
-			float allowedPenetration,
-			float eps,
-			float dt,
+		static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
+			Eigen::Vector3f& sphereCenter,
+			Eigen::Vector3f& sphereVel,
+			float sphereInvMass,
+			float sphereRadius,
+				float allowedPenetration,
+				float eps,
+				float dt,
 			float positionCorrection,
 			float tangentialDamp,
 			float frictionMu,
@@ -505,19 +568,20 @@ static int applyAxisAlignedWallConstraints(
 			const std::vector<std::array<int, 3>>& contactTrianglePhysIds,
 			const std::vector<std::vector<Vertex*>>& verticesByPhysId)
 		{
-		AgentContactResult out{};
-		if (contactTriangles.empty() || contactTriangles.size() != contactTrianglePhysIds.size() || verticesByPhysId.empty()) return out;
+			AgentContactResult out{};
+			if (contactTriangles.empty() || contactTriangles.size() != contactTrianglePhysIds.size() || verticesByPhysId.empty()) return out;
 
-		const float r = std::max(1e-6f, sphereRadius);
-		const float allowedPen = std::clamp(allowedPenetration, 0.0f, 0.95f * r);
-		const float targetR = std::max(0.0f, r - allowedPen);
-		const float shellR = targetR + std::max(0.0f, eps);
-		const float shellR2 = shellR * shellR;
-		const float invDt = 1.0f / std::max(1e-8f, dt);
-		const float invDt2 = invDt * invDt;
+				const float invMs = std::max(0.0f, sphereInvMass);
+				const float r = std::max(1e-6f, sphereRadius);
+				const float allowedPen = std::clamp(allowedPenetration, 0.0f, 0.95f * r);
+				const float targetR = std::max(0.0f, r - allowedPen);
+				const float shellR = targetR + std::max(0.0f, eps);
+				const float shellR2 = shellR * shellR;
+				const float invDt = 1.0f / std::max(1e-8f, dt);
+				const float invDt2 = invDt * invDt;
 
-			const float corr = std::clamp(positionCorrection, 0.0f, 1.0f);
-			const float tanDamp = std::clamp(tangentialDamp, 0.0f, 1.0f);
+				const float corr = std::clamp(positionCorrection, 0.0f, 1.0f);
+				const float tanDamp = std::clamp(tangentialDamp, 0.0f, 1.0f);
 			const float mu = std::clamp(frictionMu, 0.0f, 10.0f);
 			const int iters = std::clamp(iterations, 1, 64);
 
@@ -576,16 +640,16 @@ static int applyAxisAlignedWallConstraints(
 					v->velz = vv.z();
 
 					const float m = std::max(0.0f, v->vertexMass);
-					out.reactionForceN -= dp * (m * invDt2);
-					++movedVertexCount;
-				}
-			};
+						out.reactionForceN -= dp * (m * invDt2);
+						++movedVertexCount;
+					}
+				};
 
-		for (int it = 0; it < iters; ++it) {
-			bool any = false;
-			for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
-				const auto& tri = contactTriangles[ti];
-				const auto& ids = contactTrianglePhysIds[ti];
+			for (int it = 0; it < iters; ++it) {
+				bool any = false;
+				for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
+					const auto& tri = contactTriangles[ti];
+					const auto& ids = contactTrianglePhysIds[ti];
 				if (!tri.a || !tri.b || !tri.c) continue;
 
 				const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
@@ -613,34 +677,40 @@ static int applyAxisAlignedWallConstraints(
 				const float w0 = bary.x();
 				const float w1 = bary.y();
 				const float w2 = bary.z();
-				const float denom = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc;
+				const float denom = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMs;
 				if (denom <= 1e-18f) continue;
 
 				const Eigen::Vector3f deltaQ = n * (pen * corr);
-				applyDeltaToPhysId(ids[0], deltaQ * (w0 * invMa / denom), n);
-				applyDeltaToPhysId(ids[1], deltaQ * (w1 * invMb / denom), n);
-				applyDeltaToPhysId(ids[2], deltaQ * (w2 * invMc / denom), n);
-				any = true;
+					if (invMs > 0.0f) {
+						const Eigen::Vector3f dpSphere = -deltaQ * (invMs / denom);
+						sphereCenter += dpSphere;
+						sphereVel += dpSphere * invDt;
+					}
+					applyDeltaToPhysId(ids[0], deltaQ * (w0 * invMa / denom), n);
+					applyDeltaToPhysId(ids[1], deltaQ * (w1 * invMb / denom), n);
+					applyDeltaToPhysId(ids[2], deltaQ * (w2 * invMc / denom), n);
+					any = true;
+				}
+				if (!any) break;
 			}
-			if (!any) break;
-		}
 
-		out.contactVertexCount = movedVertexCount;
-		out.maxPenetration = maxPen;
-		{
-			const float nlen = sumN.norm();
-			if (nlen > 1e-12f) out.avgNormal = sumN / nlen;
+			out.contactVertexCount = movedVertexCount;
+			out.maxPenetration = maxPen;
+			{
+				const float nlen = sumN.norm();
+				if (nlen > 1e-12f) out.avgNormal = sumN / nlen;
 		}
 		return out;
 	}
 
-		static AgentContactResult solveAgentSphereVertexCollisionConstraint(
-			const Eigen::Vector3f& sphereCenter,
-			const Eigen::Vector3f& sphereVel,
-			float sphereRadius,
-			float allowedPenetration,
-			float eps,
-			float dt,
+			static AgentContactResult solveAgentSphereVertexCollisionConstraint(
+				Eigen::Vector3f& sphereCenter,
+				Eigen::Vector3f& sphereVel,
+				float sphereInvMass,
+				float sphereRadius,
+				float allowedPenetration,
+				float eps,
+				float dt,
 			float positionCorrection,
 			float tangentialDamp,
 			float frictionMu,
@@ -648,16 +718,17 @@ static int applyAxisAlignedWallConstraints(
 			const std::vector<int>& contactVertexPhysIds,
 			const std::vector<std::vector<Vertex*>>& verticesByPhysId)
 		{
-		AgentContactResult out{};
-		if (contactVertexPhysIds.empty() || verticesByPhysId.empty()) return out;
+			AgentContactResult out{};
+			if (contactVertexPhysIds.empty() || verticesByPhysId.empty()) return out;
 
-		const float r = std::max(1e-6f, sphereRadius);
-		const float allowedPen = std::clamp(allowedPenetration, 0.0f, 0.95f * r);
-		const float targetR = std::max(0.0f, r - allowedPen);
-		const float shellR = targetR + std::max(0.0f, eps);
-		const float shellR2 = shellR * shellR;
-		const float invDt = 1.0f / std::max(1e-8f, dt);
-		const float invDt2 = invDt * invDt;
+				const float invMs = std::max(0.0f, sphereInvMass);
+				const float r = std::max(1e-6f, sphereRadius);
+				const float allowedPen = std::clamp(allowedPenetration, 0.0f, 0.95f * r);
+				const float targetR = std::max(0.0f, r - allowedPen);
+				const float shellR = targetR + std::max(0.0f, eps);
+				const float shellR2 = shellR * shellR;
+				const float invDt = 1.0f / std::max(1e-8f, dt);
+			const float invDt2 = invDt * invDt;
 
 			const float corr = std::clamp(positionCorrection, 0.0f, 1.0f);
 			const float tanDamp = std::clamp(tangentialDamp, 0.0f, 1.0f);
@@ -714,15 +785,15 @@ static int applyAxisAlignedWallConstraints(
 					v->velz = vv.z();
 
 					const float m = std::max(0.0f, v->vertexMass);
-					out.reactionForceN -= dp * (m * invDt2);
-					++movedVertexCount;
-				}
-			};
+						out.reactionForceN -= dp * (m * invDt2);
+						++movedVertexCount;
+					}
+				};
 
-		for (int it = 0; it < iters; ++it) {
-			bool any = false;
-			for (int id : contactVertexPhysIds) {
-				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) continue;
+			for (int it = 0; it < iters; ++it) {
+				bool any = false;
+				for (int id : contactVertexPhysIds) {
+					if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) continue;
 				const auto& list = verticesByPhysId[static_cast<size_t>(id)];
 				if (list.empty()) continue;
 				Vertex* vRef = list.front();
@@ -733,26 +804,35 @@ static int applyAxisAlignedWallConstraints(
 				const float dist2 = d.squaredNorm();
 				if (dist2 >= shellR2) continue;
 
-				const float dist = std::sqrt(std::max(dist2, 1e-18f));
-				const Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
-				const float pen = shellR - dist;
-				if (pen <= 0.0f) continue;
+					const float dist = std::sqrt(std::max(dist2, 1e-18f));
+					const Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+					const float pen = shellR - dist;
+					if (pen <= 0.0f) continue;
 
 				maxPen = std::max(maxPen, pen);
 				sumN += n * pen;
 
-				const Eigen::Vector3f dp = n * (pen * corr);
-				applyDeltaToPhysId(id, dp, n);
-				any = true;
-			}
-			if (!any) break;
-		}
+					const float invMv = (!vRef->isFixed && vRef->vertexMass > 1e-12f) ? (1.0f / vRef->vertexMass) : 0.0f;
+					const float denom = invMv + invMs;
+					if (denom <= 1e-18f) continue;
 
-		out.contactVertexCount = movedVertexCount;
-		out.maxPenetration = maxPen;
-		{
-			const float nlen = sumN.norm();
-			if (nlen > 1e-12f) out.avgNormal = sumN / nlen;
+					const Eigen::Vector3f dp = n * (pen * corr);
+					if (invMs > 0.0f) {
+						const Eigen::Vector3f dpSphere = -dp * (invMs / denom);
+						sphereCenter += dpSphere;
+						sphereVel += dpSphere * invDt;
+					}
+					applyDeltaToPhysId(id, dp * (invMv / denom), n);
+					any = true;
+				}
+				if (!any) break;
+			}
+
+			out.contactVertexCount = movedVertexCount;
+			out.maxPenetration = maxPen;
+			{
+				const float nlen = sumN.norm();
+				if (nlen > 1e-12f) out.avgNormal = sumN / nlen;
 		}
 		return out;
 	}
@@ -1469,14 +1549,14 @@ int main(int argc, char** argv) {
 			agentProxyVelocities[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
 		}
 	
-		std::array<Eigen::Vector3f, kFingerCount> agentLastDeviceForcesN;
-		std::array<Eigen::Vector3f, kFingerCount> agentLastContactForcesN;
-		std::array<Eigen::Vector3f, kFingerCount> agentLastCouplingForcesN;
-		std::array<int, kFingerCount> agentLastContactCounts{};
-		agentLastDeviceForcesN.fill(Eigen::Vector3f::Zero());
-		agentLastContactForcesN.fill(Eigen::Vector3f::Zero());
-		agentLastCouplingForcesN.fill(Eigen::Vector3f::Zero());
-	
+			std::array<Eigen::Vector3f, kFingerCount> agentLastDeviceForcesN;
+			std::array<Eigen::Vector3f, kFingerCount> agentLastContactForcesN;
+			std::array<Eigen::Vector3f, kFingerCount> agentLastCouplingForcesN;
+			std::array<int, kFingerCount> agentLastContactCounts{};
+				agentLastDeviceForcesN.fill(Eigen::Vector3f::Zero());
+				agentLastContactForcesN.fill(Eigen::Vector3f::Zero());
+				agentLastCouplingForcesN.fill(Eigen::Vector3f::Zero());
+		
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 		LeapCTracker leapTracker;
 		bool leapUseInput = leapEnabled;
@@ -1531,20 +1611,29 @@ int main(int argc, char** argv) {
 
 			// Build physId -> all vertex copies (across groups).
 			agentVerticesByPhysId.assign(physRep.size(), {});
-			for (int gi = 0; gi < object.groupNum; ++gi) {
-				Group& g = object.groups[gi];
-			for (const auto& vertexPair : g.verticesMap) {
-				Vertex* v = vertexPair.second;
-				if (!v) continue;
-				const auto it = physKeyToId.find(makePhysKey(v));
-				if (it == physKeyToId.end()) continue;
-					agentVerticesByPhysId[static_cast<size_t>(it->second)].push_back(v);
+				for (int gi = 0; gi < object.groupNum; ++gi) {
+					Group& g = object.groups[gi];
+				for (const auto& vertexPair : g.verticesMap) {
+					Vertex* v = vertexPair.second;
+					if (!v) continue;
+					const auto it = physKeyToId.find(makePhysKey(v));
+					if (it == physKeyToId.end()) continue;
+						agentVerticesByPhysId[static_cast<size_t>(it->second)].push_back(v);
+					}
 				}
-			}
 
-			// ------------------ Optional: object anchoring (none / fixed / spring)
-			//
-			// This is critical for "whole organ manipulation": a hard-fixed anchor makes the organ immovable
+				// Previous-frame physical positions (used for conservative vertex-vs-sphere CCD).
+				std::vector<Eigen::Vector3f> physPrevPositions(agentVerticesByPhysId.size(), Eigen::Vector3f::Zero());
+				for (size_t id = 0; id < agentVerticesByPhysId.size(); ++id) {
+					const auto& list = agentVerticesByPhysId[id];
+					if (list.empty() || !list.front()) continue;
+					const Vertex* v = list.front();
+					physPrevPositions[id] = Eigen::Vector3f(v->x, v->y, v->z);
+				}
+
+				// ------------------ Optional: object anchoring (none / fixed / spring)
+				//
+				// This is critical for "whole organ manipulation": a hard-fixed anchor makes the organ immovable
 			// (only local indentation). For interactive tasks like pushing/rolling/flipping, set anchor_mode=0
 			// or use a soft spring anchor (anchor_mode=2).
 			const int anchorModeClamped = std::clamp(anchorMode, 0, 2);
@@ -1935,39 +2024,39 @@ int main(int argc, char** argv) {
 		const float uiH = 50.0f;
 		const SimpleUI::Rect uiRunRect{ uiMargin, uiMargin, uiW, uiH };
 
-		// ------------------ Agent sphere controls
-			static KeyLatch agentToggleLatch;
-			static KeyLatch agentHomeLatch;
-			static KeyLatch agentPrintLatch;
-			static KeyLatch agentVcLatch;
-	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-				static KeyLatch leapToggleLatch;
-				static KeyLatch leapRecenterLatch;
-				static KeyLatch leapGainDownLatch;
-				static KeyLatch leapGainUpLatch;
+			// ------------------ Agent sphere controls
+					static KeyLatch agentToggleLatch;
+					static KeyLatch agentHomeLatch;
+					static KeyLatch agentPrintLatch;
+					static KeyLatch agentVcLatch;
+			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+						static KeyLatch leapToggleLatch;
+						static KeyLatch leapRecenterLatch;
+						static KeyLatch leapGainDownLatch;
+					static KeyLatch leapGainUpLatch;
 	#endif
 
-			if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
-				agentSphere.enabled = !agentSphere.enabled;
-					std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
-					          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-					          << "  VirtualCoupling: V | Home: T | Print force: G\n"
-	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-					          << "  Leap: toggle=B | recenter=R | gain: '['/']'\n"
-	#endif
-					          << "  Contact: triangles=" << agentContactTriangles.size()
-					          << " vertices=" << agentContactVertices.size()
-					          << " fingers=" << kFingerCount << "\n";
-					}
-		static bool agentUseVC = agentVirtualCoupling;
-		if (agentVcLatch.consume(window, GLFW_KEY_V)) {
-			agentUseVC = !agentUseVC;
-			std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
-		}
-				if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
-					for (int fi = 0; fi < kFingerCount; ++fi) {
-						const Eigen::Vector3f p = agentHomePositions[static_cast<size_t>(fi)];
-						agentDevicePositions[static_cast<size_t>(fi)] = p;
+						if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
+							agentSphere.enabled = !agentSphere.enabled;
+								std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
+								          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
+							          << "  VirtualCoupling: V | Home: T | Print force: G | Print COM: M\n"
+			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+								          << "  Leap: toggle=B | recenter=R | gain: '['/']'\n"
+			#endif
+							          << "  Contact: triangles=" << agentContactTriangles.size()
+							          << " vertices=" << agentContactVertices.size()
+							          << " fingers=" << kFingerCount << "\n";
+						}
+			static bool agentUseVC = agentVirtualCoupling;
+				if (agentVcLatch.consume(window, GLFW_KEY_V)) {
+					agentUseVC = !agentUseVC;
+					std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
+				}
+						if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
+							for (int fi = 0; fi < kFingerCount; ++fi) {
+								const Eigen::Vector3f p = agentHomePositions[static_cast<size_t>(fi)];
+								agentDevicePositions[static_cast<size_t>(fi)] = p;
 						agentDevicePrevPositions[static_cast<size_t>(fi)] = p;
 						agentDeviceVelocities[static_cast<size_t>(fi)].setZero();
 						agentProxyPositions[static_cast<size_t>(fi)] = p;
@@ -1991,15 +2080,9 @@ int main(int argc, char** argv) {
 						leapUseInput = false;
 					}
 
-					// Leap is already a kinematic input; default to non-VC to avoid the "springy" feel unless explicitly enabled.
-					if (leapUseInput && agentUseVC) {
-						agentUseVC = false;
-						std::cout << "[AgentSphere] VirtualCoupling OFF (Leap input)\n";
-					}
-
-					leapMappingCalibrated = false;
-					leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
-					std::cout << "[LeapC] Input " << (leapUseInput ? "ON" : "OFF")
+						leapMappingCalibrated = false;
+						leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
+						std::cout << "[LeapC] Input " << (leapUseInput ? "ON" : "OFF")
 					          << " | workspace(mm)=(" << leapWorkspaceXmm << "," << leapWorkspaceYmm << "," << leapWorkspaceZmm << ")"
 					          << " worldMargin=" << leapWorldMargin
 					          << " gain=" << leapGain
@@ -2068,22 +2151,26 @@ int main(int argc, char** argv) {
 										leapCenterMm = indexTipMm;
 										leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
 
+										Eigen::Vector3f clampMin = bboxMin - margin;
+										Eigen::Vector3f clampMax = bboxMax + margin;
+										clampMin = clampMin.cwiseMin(leapAnchorWorld - margin);
+										clampMax = clampMax.cwiseMax(leapAnchorWorld + margin);
+
+										// Clamp only the hand base (index) to avoid all fingertips collapsing onto a clamp plane.
+										Eigen::Vector3f base = leapAnchorWorld;
+										base.y() += yOffset;
+										base = base.cwiseMax(clampMin).cwiseMin(clampMax);
+
+										const float maxRel = 0.5f * bboxDiag;
+										const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
+
 										// Snap all fingers once so the hand appears immediately.
 										for (int fi = 0; fi < kFingerCount; ++fi) {
 											const Eigen::Vector3f tipMm = leapLatestTipsMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
-											const Eigen::Vector3f indexDeltaMm = indexTipMm - leapCenterMm;
 											const Eigen::Vector3f relMm = tipMm - indexTipMm;
-											Eigen::Vector3f target =
-												leapAnchorWorld +
-												indexDeltaMm.cwiseProduct(scale) +
-												relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
-											target.y() += yOffset;
-
-											Eigen::Vector3f clampMin = bboxMin - margin;
-											Eigen::Vector3f clampMax = bboxMax + margin;
-											clampMin = clampMin.cwiseMin(leapAnchorWorld - margin);
-											clampMax = clampMax.cwiseMax(leapAnchorWorld + margin);
-											target = target.cwiseMax(clampMin).cwiseMin(clampMax);
+											Eigen::Vector3f relWorld = relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
+											relWorld = relWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
+											const Eigen::Vector3f target = base + relWorld;
 
 											agentDevicePositions[static_cast<size_t>(fi)] = target;
 											agentDevicePrevPositions[static_cast<size_t>(fi)] = target;
@@ -2097,16 +2184,20 @@ int main(int argc, char** argv) {
 										clampMin = clampMin.cwiseMin(leapAnchorWorld - margin);
 										clampMax = clampMax.cwiseMax(leapAnchorWorld + margin);
 
+										// Clamp only the hand base (index) to avoid all fingertips collapsing onto a clamp plane.
+										Eigen::Vector3f base = leapAnchorWorld + (indexTipMm - leapCenterMm).cwiseProduct(scale);
+										base.y() += yOffset;
+										base = base.cwiseMax(clampMin).cwiseMin(clampMax);
+
+										const float maxRel = 0.5f * bboxDiag;
+										const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
+
 										for (int fi = 0; fi < kFingerCount; ++fi) {
 											const Eigen::Vector3f tipMm = leapLatestTipsMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
-											const Eigen::Vector3f indexDeltaMm = indexTipMm - leapCenterMm;
 											const Eigen::Vector3f relMm = tipMm - indexTipMm;
-											Eigen::Vector3f target =
-												leapAnchorWorld +
-												indexDeltaMm.cwiseProduct(scale) +
-												relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
-											target.y() += yOffset;
-											target = target.cwiseMax(clampMin).cwiseMin(clampMax);
+											Eigen::Vector3f relWorld = relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
+											relWorld = relWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
+											const Eigen::Vector3f target = base + relWorld;
 
 											auto& p = agentDevicePositions[static_cast<size_t>(fi)];
 											auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
@@ -2146,9 +2237,9 @@ int main(int argc, char** argv) {
 							}
 						}
 				}
-				if (agentPrintLatch.consume(window, GLFW_KEY_G)) {
-					std::cout << "[AgentSphere] vc=" << (agentUseVC ? "1" : "0") << " fingers=" << kFingerCount << "\n";
-					for (int fi = 0; fi < kFingerCount; ++fi) {
+					if (agentPrintLatch.consume(window, GLFW_KEY_G)) {
+						std::cout << "[AgentSphere] vc=" << (agentUseVC ? "1" : "0") << " fingers=" << kFingerCount << "\n";
+						for (int fi = 0; fi < kFingerCount; ++fi) {
 					const Eigen::Vector3f& devPos = agentDevicePositions[static_cast<size_t>(fi)];
 					const Eigen::Vector3f& proxyPos = agentProxyPositions[static_cast<size_t>(fi)];
 					const Eigen::Vector3f& devForceN = agentLastDeviceForcesN[static_cast<size_t>(fi)];
@@ -2177,7 +2268,7 @@ int main(int argc, char** argv) {
 					          << " surfSN=" << proxySurfSN
 						          << " pen=" << proxyPen
 						          << "\n";
-					}
+						}
 
 #if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 					if (leapUseInput) {
@@ -2195,9 +2286,29 @@ int main(int argc, char** argv) {
 						          << " MR " << dist(2, 3)
 						          << " RP " << dist(3, 4)
 						          << " TP " << dist(0, 4) << "\n";
-					}
+						}
 #endif
-				}
+					}
+					static KeyLatch comPrintLatch;
+					if (comPrintLatch.consume(window, GLFW_KEY_M)) {
+						Eigen::Vector3f com = Eigen::Vector3f::Zero();
+						float totalMass = 0.0f;
+						int fixedCount = 0;
+						for (Vertex* v : objectUniqueVertices) {
+							if (!v) continue;
+							const float m = std::max(0.0f, v->vertexMass);
+							totalMass += m;
+							com += m * Eigen::Vector3f(v->x, v->y, v->z);
+							if (v->isFixed) ++fixedCount;
+						}
+						if (totalMass > 1e-12f) com /= totalMass;
+						std::cout << "[COM] (" << com.x() << "," << com.y() << "," << com.z() << ")"
+						          << " fixed=" << fixedCount << "/" << objectUniqueVertices.size()
+						          << " anchor_mode=" << anchorMode
+						          << " wall=" << (wallEnabled ? 1 : 0)
+						          << " tetVol=" << (tetVolumeConstraintEnabled ? 1 : 0)
+						          << "\n";
+					}
 
 		// UI button triggers deterministic Experiment 3 (one-click).
 
@@ -2556,11 +2667,14 @@ int main(int argc, char** argv) {
 						}
 					}
 				}
-			}
+				}
 
-					// Update agent (finger) kinematics after any drag/experiment force contributions.
-					// Tissue deformation + reaction force are solved as positional collision constraints after the PBD step.
-					if (agentSphere.enabled) {
+				// Remember previous proxy positions (used for collision substepping in direct/kinematic mode).
+				std::array<Eigen::Vector3f, kFingerCount> agentProxyStartPositions = agentProxyPositions;
+
+						// Update agent (finger) kinematics after any drag/experiment force contributions.
+						// Tissue deformation + reaction force are solved as positional collision constraints after the PBD step.
+						if (agentSphere.enabled) {
 						if (agentUseVC) {
 						// Virtual coupling: device drives a target; proxy is a smoothed sphere used for collision.
 						const float maxVcDist = std::max(0.0f, agentVcMaxDistanceRadiusFrac) * agentSphere.radius;
@@ -2613,34 +2727,35 @@ int main(int argc, char** argv) {
 						}
 					}
 	
-					// Prevent tunneling: if the proxy CENTER goes inside the closed surface, project it back to just
-					// outside the closest surface point. This avoids the "center fully inside => dist>r =>
-					// collision constraints stop firing => 穿透/穿模" failure mode without affecting near-surface motion.
-					if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
-						const float r = std::max(1e-6f, agentSphere.radius);
-						const float slop = std::max(1e-4f * bboxDiag, 0.02f * r);
-						const float rayEps = 1e-5f * bboxDiag;
-						for (int fi = 0; fi < kFingerCount; ++fi) {
-							Eigen::Vector3f p = agentProxyPositions[static_cast<size_t>(fi)];
-							if (isPointInsideSurfaceRayCast(p, agentContactTriangles, rayEps)) {
-								const AgentSurfaceQueryResult q = queryAgentSurface(p, agentContactTriangles);
-								if (q.found && q.outwardNormal.squaredNorm() > 1e-12f) {
-									p = q.closestPoint + q.outwardNormal * slop;
+							// Prevent tunneling: if the proxy CENTER goes inside the closed surface, project it back to just
+							// outside the closest surface point. This avoids the "center fully inside => dist>r =>
+							// collision constraints stop firing => 穿透/穿模" failure mode without affecting near-surface motion.
+							if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+								const float slop = std::max(1e-4f * bboxDiag, 0.02f * std::max(1e-6f, agentSphere.radius));
+								const float rayEps = 1e-5f * bboxDiag;
+								for (int fi = 0; fi < kFingerCount; ++fi) {
+									Eigen::Vector3f p = agentProxyPositions[static_cast<size_t>(fi)];
+									if (!isPointInsideSurfaceRayCastMulti(p, agentContactTriangles, rayEps)) {
+										continue;
+									}
 
-									Eigen::Vector3f v = agentProxyVelocities[static_cast<size_t>(fi)];
-									const float vn = v.dot(q.outwardNormal);
-									if (vn < 0.0f) v -= q.outwardNormal * vn;
+									const AgentSurfaceQueryResult q = queryAgentSurface(p, agentContactTriangles);
+									if (q.found && q.outwardNormal.squaredNorm() > 1e-12f) {
+										p = q.closestPoint + q.outwardNormal * slop;
 
-									agentProxyPositions[static_cast<size_t>(fi)] = p;
-									agentProxyVelocities[static_cast<size_t>(fi)] = v;
+										Eigen::Vector3f v = agentProxyVelocities[static_cast<size_t>(fi)];
+										const float vn = v.dot(q.outwardNormal);
+										if (vn < 0.0f) v -= q.outwardNormal * vn;
+
+										agentProxyPositions[static_cast<size_t>(fi)] = p;
+										agentProxyVelocities[static_cast<size_t>(fi)] = v;
+									}
 								}
 							}
-						}
-					}
-				} else {
-					for (int fi = 0; fi < kFingerCount; ++fi) {
-						agentLastDeviceForcesN[static_cast<size_t>(fi)].setZero();
-						agentLastContactForcesN[static_cast<size_t>(fi)].setZero();
+						} else {
+						for (int fi = 0; fi < kFingerCount; ++fi) {
+							agentLastDeviceForcesN[static_cast<size_t>(fi)].setZero();
+							agentLastContactForcesN[static_cast<size_t>(fi)].setZero();
 						agentLastCouplingForcesN[static_cast<size_t>(fi)].setZero();
 						agentLastContactCounts[static_cast<size_t>(fi)] = 0;
 					}
@@ -2824,6 +2939,63 @@ int main(int argc, char** argv) {
 					}
 				}
 
+				// Conservative CCD: prevent surface vertices from tunneling through the proxy sphere between frames.
+				int agentCcdHits = 0;
+				if (agentSphere.enabled && !physPrevPositions.empty()) {
+					const float rCcd = std::max(1e-6f, agentSphere.radius);
+					const float r2Ccd = rCcd * rCcd;
+					const float slop = std::max(1e-4f * bboxDiag, 0.01f * rCcd);
+					const float invDt = 1.0f / std::max(1e-8f, timeStep);
+
+					for (size_t id = 0; id < agentVerticesByPhysId.size(); ++id) {
+						const auto& list = agentVerticesByPhysId[id];
+						if (list.empty() || !list.front()) continue;
+						Vertex* vRef = list.front();
+						if (!vRef || vRef->isFixed) continue;
+
+						const Eigen::Vector3f p0 = physPrevPositions[id];
+						Eigen::Vector3f p1(vRef->x, vRef->y, vRef->z);
+						const Eigen::Vector3f dpWorld = p1 - p0;
+						if (dpWorld.squaredNorm() <= 1e-18f) continue;
+
+						for (int fi = 0; fi < kFingerCount; ++fi) {
+							const Eigen::Vector3f c0 = agentProxyStartPositions[static_cast<size_t>(fi)];
+							const Eigen::Vector3f c1 = agentProxyPositions[static_cast<size_t>(fi)];
+
+							const Eigen::Vector3f rel0 = p0 - c0;
+							const Eigen::Vector3f rel1 = p1 - c1;
+							if (rel0.squaredNorm() <= r2Ccd || rel1.squaredNorm() <= r2Ccd) continue;
+
+							float tHit = 0.0f;
+							if (!segmentSphereFirstHitT(rel0, rel1, rCcd, &tHit)) continue;
+
+							const Eigen::Vector3f vHit = p0 + tHit * (p1 - p0);
+							const Eigen::Vector3f cHit = c0 + tHit * (c1 - c0);
+							Eigen::Vector3f n = vHit - cHit;
+							const float nlen = n.norm();
+							if (nlen <= 1e-8f) n = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+							else n /= nlen;
+
+							const Eigen::Vector3f corrected = cHit + n * (rCcd + slop);
+							const Eigen::Vector3f dp = corrected - p1;
+							if (dp.squaredNorm() <= 1e-24f) break;
+
+							for (Vertex* v : list) {
+								if (!v || v->isFixed) continue;
+								v->x += dp.x();
+								v->y += dp.y();
+								v->z += dp.z();
+								v->velx += dp.x() * invDt;
+								v->vely += dp.y() * invDt;
+								v->velz += dp.z() * invDt;
+							}
+							p1 += dp;
+							++agentCcdHits;
+							break;
+						}
+					}
+				}
+
 							// Hard non-penetration against the agent sphere (prevents the tissue from "ghosting" through).
 							// Use surface TRIANGLES (not all vertices) to avoid non-physical "fat contact" and jitter.
 							if (agentSphere.enabled) {
@@ -2831,57 +3003,155 @@ int main(int argc, char** argv) {
 								const float r = std::max(1e-6f, agentSphere.radius);
 							const float maxPenFrac = std::clamp(agentMaxPenetrationFrac, 0.0f, 0.95f);
 							const float allowedPen = maxPenFrac * r;
-							const float eps = 1e-4f * bboxDiag;
-							const float corr = std::clamp(agentProxyPositionCorrection, 0.0f, 1.0f);
-							const float tangentialDamp = std::clamp(agentCollisionTangentialDamp, 0.0f, 1.0f);
-							const int iters = std::clamp(agentCollisionIterations, 1, 64);
-	
-							bool anyContact = false;
-							for (int fi = 0; fi < kFingerCount; ++fi) {
-								// Always collide against the proxy (it may be clamped to avoid tunneling).
-								const Eigen::Vector3f sphereCenter = agentProxyPositions[static_cast<size_t>(fi)];
-								const Eigen::Vector3f sphereVel = agentProxyVelocities[static_cast<size_t>(fi)];
+							// Small "contact shell" thickness improves stability and provides a basis for friction even
+							// when the proxy is only lightly touching (PBD-style).
+							const float eps = std::max(1e-4f * bboxDiag, 0.02f * r);
+								const float corr = std::clamp(agentProxyPositionCorrection, 0.0f, 1.0f);
+								const float tangentialDamp = std::clamp(agentCollisionTangentialDamp, 0.0f, 1.0f);
+								const int iters = std::clamp(agentCollisionIterations, 1, 64);
+								const float maxStep = std::max(1e-6f, 0.25f * r);
+		
+								bool anyContact = (agentCcdHits > 0);
+								for (int fi = 0; fi < kFingerCount; ++fi) {
+									AgentContactResult contact{};
+									if (useVC) {
+										Eigen::Vector3f& sphereCenter = agentProxyPositions[static_cast<size_t>(fi)];
+										Eigen::Vector3f& sphereVel = agentProxyVelocities[static_cast<size_t>(fi)];
+										const float sphereInvMass = 1.0f / agentProxyMassKg;
+										if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+											contact = solveAgentSphereTriangleCollisionConstraint(
+												sphereCenter,
+												sphereVel,
+												sphereInvMass,
+												r,
+												allowedPen,
+												eps,
+												timeStep,
+												corr,
+												tangentialDamp,
+												agentFrictionMu,
+												iters,
+												agentContactTriangles,
+												agentContactTrianglePhysIds,
+												agentVerticesByPhysId);
+										} else if (!agentContactVertexPhysIds.empty()) {
+											contact = solveAgentSphereVertexCollisionConstraint(
+												sphereCenter,
+												sphereVel,
+												sphereInvMass,
+												r,
+												allowedPen,
+												eps,
+												timeStep,
+												corr,
+												tangentialDamp,
+												agentFrictionMu,
+												iters,
+												agentContactVertexPhysIds,
+												agentVerticesByPhysId);
+										}
+									} else {
+										// Kinematic drive: substep along the proxy motion to avoid tunneling when the user moves fast.
+										const Eigen::Vector3f p0 = agentProxyStartPositions[static_cast<size_t>(fi)];
+										const Eigen::Vector3f p1 = agentProxyPositions[static_cast<size_t>(fi)];
+										const Eigen::Vector3f dp = p1 - p0;
+										const float stepLen = dp.norm();
+										const int substeps = std::clamp(static_cast<int>(std::ceil(stepLen / maxStep)), 1, 64);
+										const float dtSub = timeStep / static_cast<float>(substeps);
+										const int itersSub = std::clamp(std::max(1, static_cast<int>(std::ceil(static_cast<float>(iters) / static_cast<float>(substeps)))), 1, 64);
 
-								AgentContactResult contact{};
-								if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
-										contact = solveAgentSphereTriangleCollisionConstraint(
-											sphereCenter,
-											sphereVel,
-											r,
-											allowedPen,
-											eps,
-											timeStep,
-											corr,
-											tangentialDamp,
-											agentFrictionMu,
-											iters,
-											agentContactTriangles,
-											agentContactTrianglePhysIds,
-											agentVerticesByPhysId);
-									} else if (!agentContactVertexPhysIds.empty()) {
-										contact = solveAgentSphereVertexCollisionConstraint(
-											sphereCenter,
-											sphereVel,
-											r,
-											allowedPen,
-											eps,
-											timeStep,
-											corr,
-											tangentialDamp,
-											agentFrictionMu,
-											iters,
-											agentContactVertexPhysIds,
-											agentVerticesByPhysId);
+										Eigen::Vector3f impulseNsec = Eigen::Vector3f::Zero();
+										int contactVerts = 0;
+										float maxPen = 0.0f;
+										Eigen::Vector3f sumN = Eigen::Vector3f::Zero();
+
+										Eigen::Vector3f prevP = p0;
+										for (int si = 0; si < substeps; ++si) {
+											const float a = static_cast<float>(si + 1) / static_cast<float>(substeps);
+											Eigen::Vector3f p = p0 + dp * a;
+											Eigen::Vector3f v = (p - prevP) / std::max(1e-8f, dtSub);
+
+											AgentContactResult c{};
+											if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+												c = solveAgentSphereTriangleCollisionConstraint(
+													p,
+													v,
+													0.0f,
+													r,
+													allowedPen,
+													eps,
+													dtSub,
+													corr,
+													tangentialDamp,
+													agentFrictionMu,
+													itersSub,
+													agentContactTriangles,
+													agentContactTrianglePhysIds,
+													agentVerticesByPhysId);
+											} else if (!agentContactVertexPhysIds.empty()) {
+												c = solveAgentSphereVertexCollisionConstraint(
+													p,
+													v,
+													0.0f,
+													r,
+													allowedPen,
+													eps,
+													dtSub,
+													corr,
+													tangentialDamp,
+													agentFrictionMu,
+													itersSub,
+													agentContactVertexPhysIds,
+													agentVerticesByPhysId);
+											}
+
+											impulseNsec += c.reactionForceN * dtSub;
+											contactVerts += c.contactVertexCount;
+											maxPen = std::max(maxPen, c.maxPenetration);
+											sumN += c.avgNormal * std::max(0.0f, c.maxPenetration);
+
+											prevP = p;
+										}
+
+										contact.reactionForceN = impulseNsec / std::max(1e-8f, timeStep);
+										contact.contactVertexCount = contactVerts;
+										contact.maxPenetration = maxPen;
+										const float nlen = sumN.norm();
+										if (nlen > 1e-12f) contact.avgNormal = sumN / nlen;
 									}
 
-								agentLastContactForcesN[static_cast<size_t>(fi)] = contact.reactionForceN;
-								agentLastContactCounts[static_cast<size_t>(fi)] = contact.contactVertexCount;
-								if (!useVC) {
+									agentLastContactForcesN[static_cast<size_t>(fi)] = contact.reactionForceN;
+									agentLastContactCounts[static_cast<size_t>(fi)] = contact.contactVertexCount;
+									if (!useVC) {
 									agentLastDeviceForcesN[static_cast<size_t>(fi)] = contact.reactionForceN;
 								}
 
 								anyContact = anyContact || (contact.contactVertexCount > 0);
 							}
+
+								// If using virtual coupling, update the device/coupling force after contact may have
+								// pushed the proxy (so logs/plots reflect the final state this frame).
+								if (useVC) {
+									const float maxVcDist = std::max(0.0f, agentVcMaxDistanceRadiusFrac) * r;
+									for (int fi = 0; fi < kFingerCount; ++fi) {
+										const Eigen::Vector3f& devPos = agentDevicePositions[static_cast<size_t>(fi)];
+										const Eigen::Vector3f& devVel = agentDeviceVelocities[static_cast<size_t>(fi)];
+										const Eigen::Vector3f& proxyPos = agentProxyPositions[static_cast<size_t>(fi)];
+										const Eigen::Vector3f& proxyVel = agentProxyVelocities[static_cast<size_t>(fi)];
+
+										Eigen::Vector3f disp = devPos - proxyPos;
+										const float dispLen = disp.norm();
+										if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
+											disp *= (maxVcDist / dispLen);
+										}
+
+										const Eigen::Vector3f couplingForceN =
+											agentVcKLen * disp +
+											agentVcCLen * (devVel - proxyVel);
+										agentLastCouplingForcesN[static_cast<size_t>(fi)] = couplingForceN;
+										agentLastDeviceForcesN[static_cast<size_t>(fi)] = -couplingForceN;
+									}
+								}
 	
 							// Keep Group::groupVelocity consistent with Vertex::vel* for the next frame's primeVec.
 							if (anyContact) {
@@ -2937,7 +3207,7 @@ int main(int argc, char** argv) {
 					}
 
 					// Axis-aligned "walls" (Y±, X+) tight to the initial bbox.
-					if (wallEnabled && !agentVerticesByPhysId.empty()) {
+						if (wallEnabled && !agentVerticesByPhysId.empty()) {
 						const Eigen::Vector3f extents = bboxMax - bboxMin;
 						const Eigen::Vector3f margin = std::max(0.0f, wallMarginBboxScale) * extents;
 						const float wallXMax = bboxMax.x() + margin.x();
@@ -2969,11 +3239,21 @@ int main(int argc, char** argv) {
 									}
 								}
 							}
+							}
+						}
+
+						// Update previous physical positions for the next frame's CCD.
+						if (!physPrevPositions.empty()) {
+							for (size_t id = 0; id < agentVerticesByPhysId.size(); ++id) {
+								const auto& list = agentVerticesByPhysId[id];
+								if (list.empty() || !list.front()) continue;
+								const Vertex* v = list.front();
+								physPrevPositions[id] = Eigen::Vector3f(v->x, v->y, v->z);
+							}
 						}
 					}
-				}
 
-		// Update COM for all groups to ensure correct stress cloud visualization
+			// Update COM for all groups to ensure correct stress cloud visualization
 		if (showStressCloud) {
 			for (int i = 0; i < object.groupNum; ++i) {
 				object.groups[i].calCenterofMass();
@@ -3050,21 +3330,13 @@ int main(int argc, char** argv) {
 		mat.block<3, 3>(0, 0) = rotation.toRotationMatrix();
 		glMultMatrixf(mat.data());
 
-			// Draw agent sphere ("finger") device/proxy.
-			if (agentSphere.enabled) {
-				glLineWidth(2.0f);
-				// Only draw device targets when VC is enabled (otherwise device==proxy and it looks like an extra sphere).
-				if (agentUseVC) {
-					if (whiteBackground) glColor3f(0.2f, 0.2f, 0.2f);
-					else glColor3f(0.7f, 0.7f, 0.7f);
-					for (int fi = 0; fi < kFingerCount; ++fi) {
-						drawWireSphereCircles(agentDevicePositions[static_cast<size_t>(fi)], agentSphere.radius, 36);
-					}
-				}
+				// Draw agent sphere ("finger") device/proxy.
+				if (agentSphere.enabled) {
+					glLineWidth(2.0f);
 
-				// Proxies (colored by finger).
-				const std::array<Eigen::Vector3f, kFingerCount> proxyColors = {
-					Eigen::Vector3f(0.92f, 0.18f, 0.18f), // thumb
+					// Proxies (colored by finger).
+					const std::array<Eigen::Vector3f, kFingerCount> proxyColors = {
+						Eigen::Vector3f(0.92f, 0.18f, 0.18f), // thumb
 					Eigen::Vector3f(1.00f, 0.55f, 0.20f), // index
 					Eigen::Vector3f(0.95f, 0.90f, 0.20f), // middle
 					Eigen::Vector3f(0.25f, 0.90f, 0.35f), // ring
@@ -3073,23 +3345,10 @@ int main(int argc, char** argv) {
 				for (int fi = 0; fi < kFingerCount; ++fi) {
 					Eigen::Vector3f c = proxyColors[static_cast<size_t>(fi)];
 					if (whiteBackground) c *= 0.75f;
-					glColor3f(c.x(), c.y(), c.z());
-					drawWireSphereCircles(agentProxyPositions[static_cast<size_t>(fi)], agentSphere.radius, 36);
-				}
-
-				// Optional: visualize VC coupling as line segments.
-				if (agentUseVC) {
-					glColor3f(0.9f, 0.9f, 0.9f);
-					glBegin(GL_LINES);
-					for (int fi = 0; fi < kFingerCount; ++fi) {
-						const Eigen::Vector3f a = agentDevicePositions[static_cast<size_t>(fi)];
-						const Eigen::Vector3f b = agentProxyPositions[static_cast<size_t>(fi)];
-						glVertex3f(a.x(), a.y(), a.z());
-						glVertex3f(b.x(), b.y(), b.z());
+						glColor3f(c.x(), c.y(), c.z());
+						drawWireSphereCircles(agentProxyPositions[static_cast<size_t>(fi)], agentSphere.radius, 36);
 					}
-					glEnd();
 				}
-			}
 
 		// Draw constraint plane for volume preservation mode
 			if (showVolumePreservation && planeConstraintY > 0.0f) {

@@ -46,7 +46,7 @@ extern float agentVcMaxDistanceRadiusFrac;
 extern int agentVcSubsteps;
 extern int agentCollisionIterations;
 extern float agentMaxPenetrationFrac;
-	extern float agentProxyPositionCorrection;
+extern float agentProxyPositionCorrection;
 	extern float agentInfluenceRadiusFrac;
 	extern float agentCollisionTangentialDamp;
 	// Coulomb friction coefficient between proxy sphere and surface (0 disables).
