@@ -581,6 +581,10 @@ static bool outwardNormalForTriangle(
 			Eigen::Vector3f& sphereCenter,
 			Eigen::Vector3f& sphereVel,
 			float sphereInvMass,
+			float proxyInvMassScale,
+			float contactVelocityRelaxation,
+			float contactVelocityRelaxationMin,
+			float contactNormalDamp,
 			float sphereRadius,
 				float allowedPenetration,
 				float eps,
@@ -599,6 +603,7 @@ static bool outwardNormalForTriangle(
 			if (contactTriangles.empty() || contactTriangles.size() != contactTrianglePhysIds.size() || verticesByPhysId.empty() || physMassSumKg.empty()) return out;
 
 				const float invMs = std::max(0.0f, sphereInvMass);
+				const float invMsResp = invMs * std::clamp(proxyInvMassScale, 0.0f, 1.0f);
 				const float r = std::max(1e-6f, sphereRadius);
 				const float allowedPen = std::clamp(allowedPenetration, 0.0f, 0.95f * r);
 				const float targetR = std::max(0.0f, r - allowedPen);
@@ -627,7 +632,11 @@ static bool outwardNormalForTriangle(
 				return (m > 1e-12f) ? (1.0f / m) : 0.0f;
 			};
 
-			auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
+				const float velRelaxBase = std::clamp(contactVelocityRelaxation, 0.0f, 1.0f);
+				const float velRelaxMin = std::clamp(contactVelocityRelaxationMin, 0.0f, velRelaxBase);
+				const float nDamp = std::clamp(contactNormalDamp, 0.0f, 1.0f);
+
+				auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
 				if (dp.squaredNorm() <= 1e-24f) return;
 				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
 				const auto& list = verticesByPhysId[static_cast<size_t>(id)];
@@ -642,11 +651,11 @@ static bool outwardNormalForTriangle(
 					// Apply velocity correction with relaxation to prevent oscillation.
 					// Adaptive relaxation: if correction is large (fast impact), use LESS velocity feedback
 					// to avoid adding huge energy to the system.
-					float velocityRelaxation = 0.4f;
+					float velocityRelaxation = velRelaxBase;
 					const float corrLen = dp.norm();
 					if (corrLen > 1e-4f) {
 						// Reduce relaxation for large corrections
-						velocityRelaxation = std::max(0.05f, 0.4f / (1.0f + 100.0f * corrLen));
+						velocityRelaxation = std::max(velRelaxMin, velRelaxBase / (1.0f + 100.0f * corrLen));
 					}
 					vv += dp * invDt * velocityRelaxation;
 
@@ -684,6 +693,18 @@ static bool outwardNormalForTriangle(
 					if (vnAfterFriction < 0.0f) {
 						relV -= n * vnAfterFriction;
 					}
+
+					// Dampen outward normal relative velocity while PRESSING to prevent "buzzing" at contact.
+					// Only apply when the proxy drive is into the surface (avoid sticky adhesion on release).
+					if (nDamp > 0.0f) {
+						float driveInto = 0.0f;
+						if (sphereDriveForceN.squaredNorm() > 1e-12f) driveInto = sphereDriveForceN.dot(n);
+						else driveInto = sphereVel.dot(n);
+						if (driveInto > 0.0f) {
+							const float vnRel = relV.dot(n);
+							if (vnRel > 0.0f) relV -= n * (vnRel * nDamp);
+						}
+					}
 					vv = sphereVel + relV;
 
 					v->velx = vv.x();
@@ -696,96 +717,131 @@ static bool outwardNormalForTriangle(
 					}
 				};
 
-			for (int it = 0; it < iters; ++it) {
-				bool any = false;
-				for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
-					const auto& tri = contactTriangles[ti];
-					const auto& ids = contactTrianglePhysIds[ti];
-				if (!tri.a || !tri.b || !tri.c) continue;
+				// Use a single "active" surface triangle while it remains in contact.
+				// Switching triangles mid-solve (especially near edges) is a common source of haptic-unfriendly buzzing.
+				int activeTi = -1;
+				auto findActive = [&]() -> bool {
+					activeTi = -1;
+					float bestDist2 = std::numeric_limits<float>::infinity();
+					for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
+						const auto& tri = contactTriangles[ti];
+						if (!tri.a || !tri.b || !tri.c) continue;
 
-				const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
-				const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
-				const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+						const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+						const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+						const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
 
-				// One-sided gating: only treat the boundary face as "solid" from the exterior.
-				// Without this, deep indentation can bring the proxy close to the backside of the organ and
-				// the solver will alternate between opposite faces, causing classic penetrate/non-penetrate jitter.
-				if (tri.opp) {
-					const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
-					const Eigen::Vector3f nRaw = (b - a).cross(c - a);
-					const float n2 = nRaw.squaredNorm();
-					if (n2 > 1e-24f) {
-						const float sOpp = nRaw.dot(opp - a);
-						const float sP = nRaw.dot(sphereCenter - a);
-						if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) {
-							// Sphere center is on the interior side of this boundary face.
-							continue;
+						// One-sided gating (see comment in the friction pass below).
+						if (tri.opp) {
+							const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
+							const Eigen::Vector3f nRaw = (b - a).cross(c - a);
+							const float n2 = nRaw.squaredNorm();
+							if (n2 > 1e-24f) {
+								const float sOpp = nRaw.dot(opp - a);
+								const float sP = nRaw.dot(sphereCenter - a);
+								if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) continue;
+							}
+						}
+
+						Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
+						const Eigen::Vector3f q = closestPointOnTriangle(sphereCenter, a, b, c, &bary);
+						const float dist2 = (q - sphereCenter).squaredNorm();
+						if (dist2 >= shellR2) continue;
+						if (dist2 < bestDist2) {
+							bestDist2 = dist2;
+							activeTi = ti;
 						}
 					}
-				}
+					return activeTi >= 0;
+				};
 
-				Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
-				const Eigen::Vector3f q = closestPointOnTriangle(sphereCenter, a, b, c, &bary);
-				Eigen::Vector3f d = q - sphereCenter;
-				const float dist2 = d.squaredNorm();
-				if (dist2 >= shellR2) continue;
+				for (int it = 0; it < iters; ++it) {
+					if (activeTi < 0 && !findActive()) break;
 
-				const float dist = std::sqrt(std::max(dist2, 1e-18f));
-				const float pen = shellR - dist;
-				if (pen <= 0.0f) continue;
-				
-				Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+					const auto& tri = contactTriangles[activeTi];
+					const auto& ids = contactTrianglePhysIds[activeTi];
+					if (!tri.a || !tri.b || !tri.c) {
+						activeTi = -1;
+						continue;
+					}
 
-				// Robustness fix: only flip normal for DEEP penetration to avoid oscillation.
-				// Use a threshold: only apply correction when penetration exceeds 30% of the shell radius.
-				const float deepPenThreshold = 0.3f * shellR;
-				if (pen > deepPenThreshold) {
-					Eigen::Vector3f outwardN;
-					if (outwardNormalForTriangle(tri, a, b, c, &outwardN)) {
-						// Check if we're genuinely inside (d aligns with outward normal).
-						// Add hysteresis: require strong alignment (dot > 0.2) to avoid flipping on boundaries.
-						if (d.dot(outwardN) > 0.2f * d.norm() * outwardN.norm()) {
-							n = -outwardN;
+					const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+					const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+					const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+
+					// Re-check one-sided gating (positions may have moved).
+					if (tri.opp) {
+						const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
+						const Eigen::Vector3f nRaw = (b - a).cross(c - a);
+						const float n2 = nRaw.squaredNorm();
+						if (n2 > 1e-24f) {
+							const float sOpp = nRaw.dot(opp - a);
+							const float sP = nRaw.dot(sphereCenter - a);
+							if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) {
+								activeTi = -1;
+								continue;
+							}
 						}
 					}
-				}
 
-				maxPen = std::max(maxPen, pen);
-				if (pen >= maxPen) {
-					maxPenNormal = n;
-				}
-				sumN += n * pen;
+					Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
+					const Eigen::Vector3f q = closestPointOnTriangle(sphereCenter, a, b, c, &bary);
+					const float dist2 = (q - sphereCenter).squaredNorm();
+					if (dist2 >= shellR2) {
+						// No longer in contact with this triangle; pick a new one next iteration.
+						activeTi = -1;
+						continue;
+					}
 
-				const float invMa = invMassOfPhysId(ids[0]);
-				const float invMb = invMassOfPhysId(ids[1]);
-				const float invMc = invMassOfPhysId(ids[2]);
+					Eigen::Vector3f d = q - sphereCenter;
+					const float dist = std::sqrt(std::max(dist2, 1e-18f));
+					const float pen = shellR - dist;
+					if (!(pen > 0.0f)) {
+						activeTi = -1;
+						continue;
+					}
 
-				const float w0 = bary.x();
-				const float w1 = bary.y();
-				const float w2 = bary.z();
-				const float denom = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMs;
-				if (denom <= 1e-18f) continue;
+					Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
 
-				// Limit max correction per iteration to prevent velocity explosion on deep impact
-				// Even if we penetrate deep (fast motion), only push out a small amount per frame.
-				// This acts like a "soft limit" for high-speed impacts.
-				float correctionMag = pen * corr;
-				const float maxCorrPerIter = 0.05f * shellR; // Max 5% of radius per iteration
-				if (correctionMag > maxCorrPerIter) correctionMag = maxCorrPerIter;
+					// Robustness: only flip normal for DEEP penetration, otherwise we risk oscillation at edges.
+					const float deepPenThreshold = 0.3f * shellR;
+					if (pen > deepPenThreshold) {
+						Eigen::Vector3f outwardN;
+						if (outwardNormalForTriangle(tri, a, b, c, &outwardN)) {
+							if (d.dot(outwardN) > 0.2f * d.norm() * outwardN.norm()) {
+								n = -outwardN;
+							}
+						}
+					}
 
-				const Eigen::Vector3f deltaQ = n * correctionMag;
-					if (invMs > 0.0f) {
-						const Eigen::Vector3f dpSphere = -deltaQ * (invMs / denom);
+					maxPen = std::max(maxPen, pen);
+					if (pen >= maxPen) maxPenNormal = n;
+					sumN += n * pen;
+
+					const float invMa = invMassOfPhysId(ids[0]);
+					const float invMb = invMassOfPhysId(ids[1]);
+					const float invMc = invMassOfPhysId(ids[2]);
+
+					const float w0 = bary.x();
+					const float w1 = bary.y();
+					const float w2 = bary.z();
+					const float denom = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMsResp;
+					if (denom <= 1e-18f) break;
+
+					float correctionMag = pen * corr;
+					const float maxCorrPerIter = 0.05f * shellR;
+					if (correctionMag > maxCorrPerIter) correctionMag = maxCorrPerIter;
+
+					const Eigen::Vector3f deltaQ = n * correctionMag;
+					if (invMsResp > 0.0f) {
+						const Eigen::Vector3f dpSphere = -deltaQ * (invMsResp / denom);
 						sphereCenter += dpSphere;
 						sphereVel += dpSphere * invDt;
 					}
 					applyDeltaToPhysId(ids[0], deltaQ * (w0 * invMa / denom), n);
 					applyDeltaToPhysId(ids[1], deltaQ * (w1 * invMb / denom), n);
 					applyDeltaToPhysId(ids[2], deltaQ * (w2 * invMc / denom), n);
-					any = true;
 				}
-				if (!any) break;
-			}
 
 			out.contactVertexCount = movedVertexCount;
 			out.maxPenetration = maxPen;
@@ -796,7 +852,7 @@ static bool outwardNormalForTriangle(
 
 			// Static friction pass (even when there is little/no penetration correction): use the closest
 			// surface triangle and the VC drive force as a normal-force estimate.
-			if (mu > 0.0f && sphereInvMass > 0.0f && sphereDriveForceN.squaredNorm() > 1e-12f) {
+			if (mu > 0.0f && invMs > 0.0f && sphereDriveForceN.squaredNorm() > 1e-12f) {
 				int bestTi = -1;
 				float bestD2 = std::numeric_limits<float>::infinity();
 				Eigen::Vector3f bestBary(0.0f, 0.0f, 0.0f);
@@ -837,7 +893,9 @@ static bool outwardNormalForTriangle(
 					const float fricR = r + std::max(0.0f, eps);
 					if (dist <= fricR && dist > 1e-8f) {
 						const Eigen::Vector3f n = (bestQ - sphereCenter) / dist; // from center to contact point
-						const float normalForceMag = std::max(0.0f, sphereDriveForceN.dot(n));
+						const float normalForceFromDrive = std::max(0.0f, sphereDriveForceN.dot(n));
+						const float normalForceFromContact = std::max(0.0f, (-out.reactionForceN).dot(n));
+						const float normalForceMag = std::max(normalForceFromDrive, normalForceFromContact);
 						const float Jn = normalForceMag * dt;
 						if (Jn > 1e-8f) {
 							const auto& ids = contactTrianglePhysIds[bestTi];
@@ -877,8 +935,7 @@ static bool outwardNormalForTriangle(
 								const float invMa = invMassOfPhysId(ids[0]);
 								const float invMb = invMassOfPhysId(ids[1]);
 								const float invMc = invMassOfPhysId(ids[2]);
-								const float invMs = std::max(0.0f, sphereInvMass);
-								const float invEff = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMs;
+								const float invEff = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMsResp;
 								if (invEff > 1e-18f) {
 									Eigen::Vector3f Jt = -vt / invEff;
 									const float JtMax = mu * Jn;
@@ -888,8 +945,8 @@ static bool outwardNormalForTriangle(
 									}
 
 									// Apply to sphere (dynamic proxy) and to all duplicates of each phys vertex.
-									if (invMs > 0.0f) {
-										sphereVel += (-Jt) * invMs;
+									if (invMsResp > 0.0f) {
+										sphereVel += (-Jt) * invMsResp;
 									}
 
 									auto applyDvToPhysId = [&](int id, const Eigen::Vector3f& dv) {
@@ -944,6 +1001,10 @@ static bool outwardNormalForTriangle(
 				Eigen::Vector3f& sphereCenter,
 				Eigen::Vector3f& sphereVel,
 				float sphereInvMass,
+				float proxyInvMassScale,
+				float contactVelocityRelaxation,
+				float contactVelocityRelaxationMin,
+				float contactNormalDamp,
 				float sphereRadius,
 				float allowedPenetration,
 				float eps,
@@ -961,6 +1022,7 @@ static bool outwardNormalForTriangle(
 			if (contactVertexPhysIds.empty() || verticesByPhysId.empty() || physMassSumKg.empty()) return out;
 
 				const float invMs = std::max(0.0f, sphereInvMass);
+				const float invMsResp = invMs * std::clamp(proxyInvMassScale, 0.0f, 1.0f);
 				const float r = std::max(1e-6f, sphereRadius);
 				const float allowedPen = std::clamp(allowedPenetration, 0.0f, 0.95f * r);
 				const float targetR = std::max(0.0f, r - allowedPen);
@@ -989,6 +1051,10 @@ static bool outwardNormalForTriangle(
 				return (m > 1e-12f) ? (1.0f / m) : 0.0f;
 			};
 
+			const float velRelaxBase = std::clamp(contactVelocityRelaxation, 0.0f, 1.0f);
+			const float velRelaxMin = std::clamp(contactVelocityRelaxationMin, 0.0f, velRelaxBase);
+			const float nDamp = std::clamp(contactNormalDamp, 0.0f, 1.0f);
+
 			auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
 				if (dp.squaredNorm() <= 1e-24f) return;
 				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
@@ -1004,11 +1070,11 @@ static bool outwardNormalForTriangle(
 					// Apply velocity correction with relaxation to prevent oscillation.
 					// Adaptive relaxation: if correction is large (fast impact), use LESS velocity feedback
 					// to avoid adding huge energy to the system.
-					float velocityRelaxation = 0.4f;
+					float velocityRelaxation = velRelaxBase;
 					const float corrLen = dp.norm();
 					if (corrLen > 1e-4f) {
 						// Reduce relaxation for large corrections
-						velocityRelaxation = std::max(0.05f, 0.4f / (1.0f + 100.0f * corrLen));
+						velocityRelaxation = std::max(velRelaxMin, velRelaxBase / (1.0f + 100.0f * corrLen));
 					}
 					vv += dp * invDt * velocityRelaxation;
 
@@ -1037,6 +1103,15 @@ static bool outwardNormalForTriangle(
 					}
 
 					relV -= (relV - n * relV.dot(n)) * tanDamp;
+					if (nDamp > 0.0f) {
+						float driveInto = 0.0f;
+						if (sphereDriveForceN.squaredNorm() > 1e-12f) driveInto = sphereDriveForceN.dot(n);
+						else driveInto = sphereVel.dot(n);
+						if (driveInto > 0.0f) {
+							const float vnRel = relV.dot(n);
+							if (vnRel > 0.0f) relV -= n * (vnRel * nDamp);
+						}
+					}
 					vv = sphereVel + relV;
 
 					v->velx = vv.x();
@@ -1075,12 +1150,12 @@ static bool outwardNormalForTriangle(
 				sumN += n * pen;
 
 					const float invMv = invMassOfPhysId(id);
-					const float denom = invMv + invMs;
+					const float denom = invMv + invMsResp;
 					if (denom <= 1e-18f) continue;
 
 					const Eigen::Vector3f dp = n * (pen * corr);
-					if (invMs > 0.0f) {
-						const Eigen::Vector3f dpSphere = -dp * (invMs / denom);
+					if (invMsResp > 0.0f) {
+						const Eigen::Vector3f dpSphere = -dp * (invMsResp / denom);
 						sphereCenter += dpSphere;
 						sphereVel += dpSphere * invDt;
 					}
@@ -1831,13 +1906,15 @@ int main(int argc, char** argv) {
 			agentProxyVelocities[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
 		}
 	
-			std::array<Eigen::Vector3f, kFingerCount> agentLastDeviceForcesN;
-			std::array<Eigen::Vector3f, kFingerCount> agentLastContactForcesN;
-			std::array<Eigen::Vector3f, kFingerCount> agentLastCouplingForcesN;
-			std::array<int, kFingerCount> agentLastContactCounts{};
-				agentLastDeviceForcesN.fill(Eigen::Vector3f::Zero());
-				agentLastContactForcesN.fill(Eigen::Vector3f::Zero());
-				agentLastCouplingForcesN.fill(Eigen::Vector3f::Zero());
+				std::array<Eigen::Vector3f, kFingerCount> agentLastDeviceForcesN;
+				std::array<Eigen::Vector3f, kFingerCount> agentLastContactForcesN;
+				std::array<Eigen::Vector3f, kFingerCount> agentLastCouplingForcesN;
+				std::array<Eigen::Vector3f, kFingerCount> agentFilteredDeviceForcesN;
+				std::array<int, kFingerCount> agentLastContactCounts{};
+					agentLastDeviceForcesN.fill(Eigen::Vector3f::Zero());
+					agentLastContactForcesN.fill(Eigen::Vector3f::Zero());
+					agentLastCouplingForcesN.fill(Eigen::Vector3f::Zero());
+					agentFilteredDeviceForcesN.fill(Eigen::Vector3f::Zero());
 		
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 		LeapCTracker leapTracker;
@@ -1858,11 +1935,12 @@ int main(int argc, char** argv) {
 		for (const auto* v : objectUniqueVertices) {
 			objectMassKg += std::max(0.0f, v->vertexMass);
 		}
-		const float agentProxyMassKgTotal = std::max(1e-6f, std::abs(agentProxyMassFracOfObject) * std::max(1e-6f, objectMassKg));
-		const float agentProxyMassKg = std::max(1e-6f, agentProxyMassKgTotal / static_cast<float>(kFingerCount));
+	const float agentProxyMassKgTotal = std::max(1e-6f, std::abs(agentProxyMassFracOfObject) * std::max(1e-6f, objectMassKg));
+	const float agentProxyMassKg = std::max(1e-6f, agentProxyMassKgTotal / static_cast<float>(kFingerCount));
 	const float invBboxDiag = 1.0f / std::max(1e-6f, bboxDiag);
-		const float agentVcKLen = std::max(0.0f, agentVcStiffnessNPerBbox) * invBboxDiag;     // N per unit length
-		const float agentVcCLen = std::max(0.0f, agentVcDampingNsPerBbox) * invBboxDiag;      // N*s per unit length
+	const float agentVcKLen = std::max(0.0f, agentVcStiffnessNPerBbox) * invBboxDiag;     // N per unit length
+	const float agentVcCLenFree = std::max(0.0f, agentVcDampingNsPerBbox) * invBboxDiag;                 // N*s per unit length
+	const float agentVcCLenContact = std::max(0.0f, agentVcDampingNsPerBboxInContact) * invBboxDiag;     // N*s per unit length
 
 		// Choose contact vertices/triangles on the OUTER surface.
 		//
@@ -2976,16 +3054,18 @@ int main(int argc, char** argv) {
 							const int substeps = std::clamp(baseSubsteps, 1, 64);
 							const float dtSub = timeStep / static_cast<float>(substeps);
 
-							Eigen::Vector3f lastCouplingForceN = Eigen::Vector3f::Zero();
-							for (int si = 0; si < substeps; ++si) {
-								Eigen::Vector3f disp = (devPos - proxyPos);
-								const float dispLen = disp.norm();
-								if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
-									disp *= (maxVcDist / dispLen);
-								}
-								const Eigen::Vector3f couplingForceN =
-									agentVcKLen * disp +
-									agentVcCLen * (devVel - proxyVel);
+								Eigen::Vector3f lastCouplingForceN = Eigen::Vector3f::Zero();
+								const bool wasContact = (agentLastContactCounts[static_cast<size_t>(fi)] > 0);
+								const float vcCLen = wasContact ? agentVcCLenContact : agentVcCLenFree;
+								for (int si = 0; si < substeps; ++si) {
+									Eigen::Vector3f disp = (devPos - proxyPos);
+									const float dispLen = disp.norm();
+									if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
+										disp *= (maxVcDist / dispLen);
+									}
+									const Eigen::Vector3f couplingForceN =
+										agentVcKLen * disp +
+										vcCLen * (devVel - proxyVel);
 
 								const Eigen::Vector3f proxyAcc = couplingForceN / agentProxyMassKg;
 								proxyVel += proxyAcc * dtSub;
@@ -3297,9 +3377,13 @@ int main(int argc, char** argv) {
 							const float allowedPen = maxPenFrac * r;
 							// Small "contact shell" thickness improves stability and provides a basis for friction even
 							// when the proxy is only lightly touching (PBD-style).
-							const float eps = std::max(1e-4f * bboxDiag, 0.02f * r);
+								const float eps = std::max(1e-4f * bboxDiag, 0.02f * r);
 								const float corr = std::clamp(agentProxyPositionCorrection, 0.0f, 1.0f);
 								const float tangentialDamp = std::clamp(agentCollisionTangentialDamp, 0.0f, 1.0f);
+								const float contactProxyInvMassScale = std::clamp(agentContactProxyInvMassScale, 0.0f, 1.0f);
+								const float contactVelRelax = std::clamp(agentContactVelocityRelaxation, 0.0f, 1.0f);
+								const float contactVelRelaxMin = std::clamp(agentContactVelocityRelaxationMin, 0.0f, contactVelRelax);
+								const float contactNormalDamp = std::clamp(agentContactNormalDamp, 0.0f, 1.0f);
 								const int iters = std::clamp(agentCollisionIterations, 1, 64);
 								const float maxStep = std::max(1e-6f, 0.25f * r);
 		
@@ -3318,13 +3402,19 @@ int main(int argc, char** argv) {
 										if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
 											disp *= (maxVcDist / dispLen);
 										}
-										const Eigen::Vector3f driveForceN = agentVcKLen * disp + agentVcCLen * (devVel - sphereVel);
+											const bool wasContact = (agentLastContactCounts[static_cast<size_t>(fi)] > 0);
+											const float vcCLen = wasContact ? agentVcCLenContact : agentVcCLenFree;
+											const Eigen::Vector3f driveForceN = agentVcKLen * disp + vcCLen * (devVel - sphereVel);
 										const float sphereInvMass = 1.0f / agentProxyMassKg;
 										if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
 											contact = solveAgentSphereTriangleCollisionConstraint(
 												sphereCenter,
 												sphereVel,
 												sphereInvMass,
+												contactProxyInvMassScale,
+												contactVelRelax,
+												contactVelRelaxMin,
+												contactNormalDamp,
 												r,
 												allowedPen,
 												eps,
@@ -3343,6 +3433,10 @@ int main(int argc, char** argv) {
 												sphereCenter,
 												sphereVel,
 												sphereInvMass,
+												contactProxyInvMassScale,
+												contactVelRelax,
+												contactVelRelaxMin,
+												contactNormalDamp,
 												r,
 												allowedPen,
 												eps,
@@ -3383,6 +3477,10 @@ int main(int argc, char** argv) {
 													p,
 													v,
 													0.0f,
+													contactProxyInvMassScale,
+													contactVelRelax,
+													contactVelRelaxMin,
+													contactNormalDamp,
 													r,
 													allowedPen,
 													eps,
@@ -3401,6 +3499,10 @@ int main(int argc, char** argv) {
 													p,
 													v,
 													0.0f,
+													contactProxyInvMassScale,
+													contactVelRelax,
+													contactVelRelaxMin,
+													contactNormalDamp,
 													r,
 													allowedPen,
 													eps,
@@ -3463,7 +3565,9 @@ int main(int argc, char** argv) {
 											if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
 												disp *= (maxVcDist / dispLen);
 											}
-											const Eigen::Vector3f driveForceN = agentVcKLen * disp + agentVcCLen * (devVel - sphereVel);
+											const bool wasContact = (agentLastContactCounts[static_cast<size_t>(fi)] > 0);
+											const float vcCLen = wasContact ? agentVcCLenContact : agentVcCLenFree;
+											const Eigen::Vector3f driveForceN = agentVcKLen * disp + vcCLen * (devVel - sphereVel);
 											const float sphereInvMass = 1.0f / agentProxyMassKg;
 
 											if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
@@ -3471,6 +3575,10 @@ int main(int argc, char** argv) {
 													sphereCenter,
 													sphereVel,
 													sphereInvMass,
+													contactProxyInvMassScale,
+													contactVelRelax,
+													contactVelRelaxMin,
+													contactNormalDamp,
 													r,
 													allowedPen,
 													eps,
@@ -3489,6 +3597,10 @@ int main(int argc, char** argv) {
 													sphereCenter,
 													sphereVel,
 													sphereInvMass,
+													contactProxyInvMassScale,
+													contactVelRelax,
+													contactVelRelaxMin,
+													contactNormalDamp,
 													r,
 													allowedPen,
 													eps,
@@ -3525,17 +3637,37 @@ int main(int argc, char** argv) {
 
 										Eigen::Vector3f disp = devPos - proxyPos;
 										const float dispLen = disp.norm();
-										if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
-											disp *= (maxVcDist / dispLen);
-										}
+											if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
+												disp *= (maxVcDist / dispLen);
+											}
 
-										const Eigen::Vector3f couplingForceN =
-											agentVcKLen * disp +
-											agentVcCLen * (devVel - proxyVel);
-										agentLastCouplingForcesN[static_cast<size_t>(fi)] = couplingForceN;
-										agentLastDeviceForcesN[static_cast<size_t>(fi)] = -couplingForceN;
+											const Eigen::Vector3f couplingForceN =
+												agentVcKLen * disp +
+												((agentLastContactCounts[static_cast<size_t>(fi)] > 0) ? agentVcCLenContact : agentVcCLenFree) *
+													(devVel - proxyVel);
+											agentLastCouplingForcesN[static_cast<size_t>(fi)] = couplingForceN;
+											agentLastDeviceForcesN[static_cast<size_t>(fi)] = -couplingForceN;
+										}
 									}
-								}
+
+									// Optional: low-pass filter the device force for haptic stability (does not affect motion).
+									{
+										const float tau = std::max(0.0f, agentDeviceForceFilterTauSec);
+										if (tau > 0.0f) {
+											const float a = std::exp(-timeStep / std::max(1e-6f, tau));
+											for (int fi = 0; fi < kFingerCount; ++fi) {
+												const Eigen::Vector3f raw = agentLastDeviceForcesN[static_cast<size_t>(fi)];
+												Eigen::Vector3f& f = agentFilteredDeviceForcesN[static_cast<size_t>(fi)];
+												f = f * a + raw * (1.0f - a);
+												agentLastDeviceForcesN[static_cast<size_t>(fi)] = f;
+											}
+										} else {
+											for (int fi = 0; fi < kFingerCount; ++fi) {
+												agentFilteredDeviceForcesN[static_cast<size_t>(fi)] =
+													agentLastDeviceForcesN[static_cast<size_t>(fi)];
+											}
+										}
+									}
 	
 							// Keep Group::groupVelocity consistent with Vertex::vel* for the next frame's primeVec.
 							if (anyContact) {
@@ -4217,17 +4349,15 @@ int main(int argc, char** argv) {
 			glPopMatrix();
 
 			// ------------------ UI overlay (draw last)
-			// Record force history (use force on the object = -reaction on the agent).
-				static ForceGraphHistory agentForceHistory;
-				static float agentForceGraphScaleN = 1.0f;
-				if (agentSphere.enabled && !isPaused) {
-					Eigen::Vector3f sumContactN = Eigen::Vector3f::Zero();
-					for (int fi = 0; fi < kFingerCount; ++fi) {
-						sumContactN += agentLastContactForcesN[static_cast<size_t>(fi)];
-					}
-					const Eigen::Vector3f objForceN = -sumContactN;
-					agentForceHistory.push(Eigen::Vector4f(objForceN.x(), objForceN.y(), objForceN.z(), objForceN.norm()));
-				}
+			// Record force history for plotting.
+			// Requested: show only the INDEX fingertip proxy force (not the sum across fingers).
+			static constexpr int kForceGraphFingerIndex = 1; // 0=thumb, 1=index, 2=middle, 3=ring, 4=pinky
+			static ForceGraphHistory agentForceHistory;
+			static float agentForceGraphScaleN = 1.0f;
+			if (agentSphere.enabled && !isPaused) {
+				const Eigen::Vector3f proxyForceN = agentLastContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
+				agentForceHistory.push(Eigen::Vector4f(proxyForceN.x(), proxyForceN.y(), proxyForceN.z(), proxyForceN.norm()));
+			}
 
 			ui.beginDraw2D();
 			// Left side buttons
@@ -4478,7 +4608,7 @@ int main(int argc, char** argv) {
 				{
 					const SimpleUI::Rect graphLabelRect{ graphX + 8.0f, graphY + 2.0f, graphW - 16.0f, legendHWin };
 					const std::string label =
-						"OBJ FORCE N  SCALE " + formatSignedInt(agentForceGraphScaleN) +
+						"INDEX PROXY FORCE N  SCALE " + formatSignedInt(agentForceGraphScaleN) +
 						"  FX FY FZ MAG";
 					ui.drawLabel(graphLabelRect, label, 9.0f);
 				}
@@ -4494,18 +4624,14 @@ int main(int argc, char** argv) {
 			const SimpleUI::Rect agentLabelRect{ x, y, labelW, labelH };
 
 				if (agentSphere.enabled) {
-					Eigen::Vector3f sumDeviceForceN = Eigen::Vector3f::Zero();
-					int sumContacts = 0;
-					for (int fi = 0; fi < kFingerCount; ++fi) {
-						sumDeviceForceN += agentLastDeviceForcesN[static_cast<size_t>(fi)];
-						sumContacts += agentLastContactCounts[static_cast<size_t>(fi)];
-					}
+					const Eigen::Vector3f proxyForceN = agentLastContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
+					const int contacts = agentLastContactCounts[static_cast<size_t>(kForceGraphFingerIndex)];
 					const std::string label =
 						"AGENT ON VC " + std::string(agentUseVC ? "1" : "0") +
-						" FX " + formatSignedInt(sumDeviceForceN.x()) +
-						" FY " + formatSignedInt(sumDeviceForceN.y()) +
-						" FZ " + formatSignedInt(sumDeviceForceN.z()) +
-						" CNT " + std::to_string(sumContacts);
+						" IDX FX " + formatSignedInt(proxyForceN.x()) +
+						" FY " + formatSignedInt(proxyForceN.y()) +
+						" FZ " + formatSignedInt(proxyForceN.z()) +
+						" CNT " + std::to_string(contacts);
 					ui.drawLabel(agentLabelRect, label, sizePx);
 				} else {
 				ui.drawLabel(agentLabelRect, "AGENT OFF  PRESS H", sizePx);

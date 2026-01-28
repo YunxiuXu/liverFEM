@@ -42,6 +42,8 @@ extern float agentMoveSpeedBboxPerSec;
 extern float agentProxyMassFracOfObject;
 extern float agentVcStiffnessNPerBbox;
 extern float agentVcDampingNsPerBbox;
+// Optional: higher VC damping while in contact (improves stability without slowing free-space motion).
+extern float agentVcDampingNsPerBboxInContact;
 extern float agentVcMaxDistanceRadiusFrac;
 extern int agentVcSubsteps;
 extern int agentCollisionIterations;
@@ -49,8 +51,21 @@ extern float agentMaxPenetrationFrac;
 extern float agentProxyPositionCorrection;
 	extern float agentInfluenceRadiusFrac;
 	extern float agentCollisionTangentialDamp;
+	// Scales proxy inverse mass used in contact response (0=push only tissue, 1=physical proxy mass).
+	// This does NOT change the VC integration mass; it only biases collision constraint corrections.
+	extern float agentContactProxyInvMassScale;
+	// Velocity feedback factor for contact position corrections (0 disables velocity injection, 1 full dp/dt).
+	// Lower values reduce high-frequency "buzzing" during strong press.
+	extern float agentContactVelocityRelaxation;
+	// Minimum relaxation used for large corrections (safety).
+	extern float agentContactVelocityRelaxationMin;
+	// Normal relative velocity damping while pressing (0..1). Helps eliminate contact chatter without
+	// requiring huge VC damping. Applied only when the proxy is driving into the surface.
+	extern float agentContactNormalDamp;
 	// Coulomb friction coefficient between proxy sphere and surface (0 disables).
 	extern float agentFrictionMu;
+	// Optional low-pass filter for device force output (seconds; 0 disables).
+	extern float agentDeviceForceFilterTauSec;
 	extern bool agentWriteLiveFile;
 	extern int agentLiveFileIntervalFrames;
 

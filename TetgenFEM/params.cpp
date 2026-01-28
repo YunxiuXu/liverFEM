@@ -36,6 +36,7 @@ float anchorSpringMaxAccel = 5000.0f;
 	float agentProxyMassFracOfObject = 0.01f;
 float agentVcStiffnessNPerBbox = 250.0f;
 	float agentVcDampingNsPerBbox = 20.0f;
+	float agentVcDampingNsPerBboxInContact = 20.0f;
 	float agentVcMaxDistanceRadiusFrac = 4.0f;
 	int agentVcSubsteps = 6;
 	int agentCollisionIterations = 30;
@@ -43,7 +44,12 @@ float agentVcStiffnessNPerBbox = 250.0f;
 	float agentProxyPositionCorrection = 1.0f;
 	float agentInfluenceRadiusFrac = 3.0f;
 	float agentCollisionTangentialDamp = 0.6f;
+	float agentContactProxyInvMassScale = 1.0f;
+	float agentContactVelocityRelaxation = 0.15f;
+	float agentContactVelocityRelaxationMin = 0.02f;
+	float agentContactNormalDamp = 0.8f;
 	float agentFrictionMu = 1.0f;
+	float agentDeviceForceFilterTauSec = 0.0f;
 	bool agentWriteLiveFile = false;
 	int agentLiveFileIntervalFrames = 2;
 
@@ -182,12 +188,18 @@ void loadParams(const std::string& filename) {
 	        {"agent_proxyMassFracOfObject", &agentProxyMassFracOfObject},
 	        {"agent_vcStiffnessNPerBbox", &agentVcStiffnessNPerBbox},
 	        {"agent_vcDampingNsPerBbox", &agentVcDampingNsPerBbox},
+	        {"agent_vcDampingNsPerBboxInContact", &agentVcDampingNsPerBboxInContact},
 	        {"agent_vcMaxDistanceRadiusFrac", &agentVcMaxDistanceRadiusFrac},
 	        {"agent_maxPenetrationFrac", &agentMaxPenetrationFrac},
-		        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
+			        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
 			        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
 			        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
+			        {"agent_contactProxyInvMassScale", &agentContactProxyInvMassScale},
+			        {"agent_contactVelocityRelaxation", &agentContactVelocityRelaxation},
+			        {"agent_contactVelocityRelaxationMin", &agentContactVelocityRelaxationMin},
+			        {"agent_contactNormalDamp", &agentContactNormalDamp},
 			        {"agent_frictionMu", &agentFrictionMu},
+			        {"agent_deviceForceFilterTauSec", &agentDeviceForceFilterTauSec},
 				        {"wall_marginBboxScale", &wallMarginBboxScale},
 				        {"wall_restitution", &wallRestitution},
 				        {"wall_tangentialDamp", &wallTangentialDamp},
