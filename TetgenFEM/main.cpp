@@ -589,6 +589,7 @@ static bool outwardNormalForTriangle(
 			float tangentialDamp,
 			float frictionMu,
 			int iterations,
+			const Eigen::Vector3f& sphereDriveForceN,
 			const std::vector<AgentTriangle>& contactTriangles,
 			const std::vector<std::array<int, 3>>& contactTrianglePhysIds,
 			const std::vector<std::vector<Vertex*>>& verticesByPhysId,
@@ -659,39 +660,24 @@ static bool outwardNormalForTriangle(
 						dvN += -vnBefore;
 					}
 
-					// Improved Friction Model: Combined Coulomb (Stick-Slip) + Viscous Drag
-					// This addresses the "micro-oscillation" during dragging.
-					// 1. Calculate relative tangential velocity
-					const float vnAfter = relV.dot(n);
-					const Eigen::Vector3f vt = relV - n * vnAfter;
-					const float vtLen = vt.norm();
-					
-					if (vtLen > 1e-8f) {
-						// 2. Viscous friction (damping) - smooths out the "slip" phase
-						// This is critical for preventing high-frequency chatter.
-						const float viscousForceMag = vtLen * tanDamp * 50.0f; // Stronger viscous term
-						
-						// 3. Coulomb friction limit
-						const float m = std::max(0.0f, v->vertexMass);
-						const float normalForceMag = m * dvN * invDt;
-						const float maxCoulombForce = std::max(0.0f, normalForceMag) * mu;
+					// Coulomb friction in velocity space (enables stick-slip without relying on penetration depth).
+					if (mu > 0.0f && dvN > 0.0f) {
+						const float vnAfter = relV.dot(n);
+						const Eigen::Vector3f vt = relV - n * vnAfter;
+						const float vtLen = vt.norm();
+						if (vtLen > 1e-8f) {
+							const float maxDvT = mu * dvN;
+							const float dvT = std::min(vtLen, maxDvT);
+							const Eigen::Vector3f dvt = -vt * (dvT / vtLen);
+							relV += dvt;
 
-						// 4. Combined limit
-						// At low speeds, viscous term dominates (sticky). At high speeds, Coulomb limit applies.
-						// We apply this as a velocity correction.
-						const float frictionImpulseMag = std::min(viscousForceMag, maxCoulombForce) * dt;
-						const float maxDvT = std::min(vtLen, frictionImpulseMag * invDt * 2.0f); // *2.0 factor for stability
-						
-						const Eigen::Vector3f dvt = -vt * (maxDvT / vtLen);
-						relV += dvt;
-						
-						// Reaction on sphere
-						out.reactionForceN -= dvt * (m * invDt);
+							const float m = std::max(0.0f, v->vertexMass);
+							out.reactionForceN -= dvt * (m * invDt);
+						}
 					}
 
-					// Optional additional viscous tangential damping (helps suppress chatter).
-					// Kept low as we handled it above.
-					// relV -= (relV - n * relV.dot(n)) * tanDamp;
+					// Extra tangential damping (0..1): helps suppress chatter and improves "sticky drag".
+					relV -= (relV - n * relV.dot(n)) * tanDamp;
 
 					// Safety: never re-introduce inward normal velocity via friction corrections.
 					const float vnAfterFriction = relV.dot(n);
@@ -808,6 +794,126 @@ static bool outwardNormalForTriangle(
 				if (nlen > 1e-12f) out.avgNormal = sumN / nlen;
 		}
 
+			// Static friction pass (even when there is little/no penetration correction): use the closest
+			// surface triangle and the VC drive force as a normal-force estimate.
+			if (mu > 0.0f && sphereInvMass > 0.0f && sphereDriveForceN.squaredNorm() > 1e-12f) {
+				int bestTi = -1;
+				float bestD2 = std::numeric_limits<float>::infinity();
+				Eigen::Vector3f bestBary(0.0f, 0.0f, 0.0f);
+				Eigen::Vector3f bestQ = Eigen::Vector3f::Zero();
+
+				for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
+					const auto& tri = contactTriangles[ti];
+					if (!tri.a || !tri.b || !tri.c) continue;
+					const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+					const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+					const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+
+					// Same one-sided gating as the normal solver.
+					if (tri.opp) {
+						const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
+						const Eigen::Vector3f nRaw = (b - a).cross(c - a);
+						const float n2 = nRaw.squaredNorm();
+						if (n2 > 1e-24f) {
+							const float sOpp = nRaw.dot(opp - a);
+							const float sP = nRaw.dot(sphereCenter - a);
+							if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) continue;
+						}
+					}
+
+					Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
+					const Eigen::Vector3f q = closestPointOnTriangle(sphereCenter, a, b, c, &bary);
+					const float d2 = (q - sphereCenter).squaredNorm();
+					if (d2 < bestD2) {
+						bestD2 = d2;
+						bestTi = ti;
+						bestBary = bary;
+						bestQ = q;
+					}
+				}
+
+				if (bestTi >= 0 && std::isfinite(bestD2)) {
+					const float dist = std::sqrt(std::max(bestD2, 0.0f));
+					const float fricR = r + std::max(0.0f, eps);
+					if (dist <= fricR && dist > 1e-8f) {
+						const Eigen::Vector3f n = (bestQ - sphereCenter) / dist; // from center to contact point
+						const float normalForceMag = std::max(0.0f, sphereDriveForceN.dot(n));
+						const float Jn = normalForceMag * dt;
+						if (Jn > 1e-8f) {
+							const auto& ids = contactTrianglePhysIds[bestTi];
+							const float w0 = bestBary.x();
+							const float w1 = bestBary.y();
+							const float w2 = bestBary.z();
+
+							// Average per-phys-id velocity for stability.
+							auto physVel = [&](int id) -> Eigen::Vector3f {
+								if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return Eigen::Vector3f::Zero();
+								const auto& list = verticesByPhysId[static_cast<size_t>(id)];
+								Eigen::Vector3f v = Eigen::Vector3f::Zero();
+								int n = 0;
+								for (Vertex* vx : list) {
+									if (!vx) continue;
+									v += Eigen::Vector3f(vx->velx, vx->vely, vx->velz);
+									++n;
+								}
+								if (n > 0) {
+									v /= static_cast<float>(n);
+								} else {
+									v.setZero();
+								}
+								return v;
+							};
+
+							const Eigen::Vector3f va = physVel(ids[0]);
+							const Eigen::Vector3f vb = physVel(ids[1]);
+							const Eigen::Vector3f vc = physVel(ids[2]);
+							const Eigen::Vector3f vq = va * w0 + vb * w1 + vc * w2;
+
+							Eigen::Vector3f relV = vq - sphereVel;
+							const float vn = relV.dot(n);
+							const Eigen::Vector3f vt = relV - n * vn;
+							const float vtLen = vt.norm();
+							if (vtLen > 1e-6f) {
+								const float invMa = invMassOfPhysId(ids[0]);
+								const float invMb = invMassOfPhysId(ids[1]);
+								const float invMc = invMassOfPhysId(ids[2]);
+								const float invMs = std::max(0.0f, sphereInvMass);
+								const float invEff = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMs;
+								if (invEff > 1e-18f) {
+									Eigen::Vector3f Jt = -vt / invEff;
+									const float JtMax = mu * Jn;
+									const float JtLen = Jt.norm();
+									if (JtLen > JtMax) {
+										Jt *= (JtMax / std::max(1e-12f, JtLen));
+									}
+
+									// Apply to sphere (dynamic proxy) and to all duplicates of each phys vertex.
+									if (invMs > 0.0f) {
+										sphereVel += (-Jt) * invMs;
+									}
+
+									auto applyDvToPhysId = [&](int id, const Eigen::Vector3f& dv) {
+										if (dv.squaredNorm() <= 1e-20f) return;
+										if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return;
+										const auto& list = verticesByPhysId[static_cast<size_t>(id)];
+										for (Vertex* vx : list) {
+											if (!vx || vx->isFixed) continue;
+											vx->velx += dv.x();
+											vx->vely += dv.y();
+											vx->velz += dv.z();
+										}
+									};
+
+									applyDvToPhysId(ids[0], (w0 * Jt) * invMa);
+									applyDvToPhysId(ids[1], (w1 * Jt) * invMb);
+									applyDvToPhysId(ids[2], (w2 * Jt) * invMc);
+								}
+							}
+						}
+					}
+				}
+			}
+
 			// Stabilize deep contact: after all iterations, remove any proxy velocity component that
 			// would move further "into" the contact normal direction this frame (prevents chatter).
 			if (movedVertexCount > 0) {
@@ -846,6 +952,7 @@ static bool outwardNormalForTriangle(
 			float tangentialDamp,
 			float frictionMu,
 			int iterations,
+			const Eigen::Vector3f& sphereDriveForceN,
 			const std::vector<int>& contactVertexPhysIds,
 			const std::vector<std::vector<Vertex*>>& verticesByPhysId,
 			const std::vector<float>& physMassSumKg)
@@ -2994,12 +3101,14 @@ int main(int argc, char** argv) {
 					}
 				}
 
-				// Optional: volumetric stabilization (XPBD/PBD-style) to resist extreme compression.
-				// This is NOT "internal collision" per se (the mesh is already a solid), but it prevents
-				// the body from behaving hollow under deep presses by keeping tet volumes near rest.
-				if (tetVolumeConstraintEnabled && !tetVolumeRecs.empty() && !agentVerticesByPhysId.empty()) {
-					const int iters = std::clamp(tetVolumeConstraintIterations, 1, 8);
-					const float corr = std::clamp(tetVolumeConstraintCorrection, 0.0f, 1.0f);
+				auto applyTetVolumeStabilization = [&](int iterationsReq, float correctionReq) -> bool {
+					if (!tetVolumeConstraintEnabled) return false;
+					if (tetVolumeRecs.empty() || agentVerticesByPhysId.empty() || physMassSumKg.empty()) return false;
+
+					const int iters = std::clamp(iterationsReq, 1, 8);
+					const float corr = std::clamp(correctionReq, 0.0f, 1.0f);
+					if (!(corr > 0.0f)) return false;
+
 					const float invDt = 1.0f / std::max(1e-8f, timeStep);
 					const float maxDp = 0.0025f * bboxDiag; // conservative safety clamp
 
@@ -3112,6 +3221,14 @@ int main(int argc, char** argv) {
 							}
 						}
 					}
+
+					return anyVolumeCorrection;
+				};
+
+				// Optional: volumetric stabilization (pre-contact). Helpful for global stability; deep-press
+				// stability is additionally handled with a post-contact pass below.
+				if (tetVolumeConstraintEnabled) {
+					applyTetVolumeStabilization(tetVolumeConstraintIterations, tetVolumeConstraintCorrection);
 				}
 
 				// Conservative CCD: prevent surface vertices from tunneling through the proxy sphere between frames.
@@ -3187,11 +3304,21 @@ int main(int argc, char** argv) {
 								const float maxStep = std::max(1e-6f, 0.25f * r);
 		
 								bool anyContact = (agentCcdHits > 0);
+								float maxPenetrationThisFrame = 0.0f;
 								for (int fi = 0; fi < kFingerCount; ++fi) {
 									AgentContactResult contact{};
 									if (useVC) {
 										Eigen::Vector3f& sphereCenter = agentProxyPositions[static_cast<size_t>(fi)];
 										Eigen::Vector3f& sphereVel = agentProxyVelocities[static_cast<size_t>(fi)];
+										const Eigen::Vector3f& devPos = agentDevicePositions[static_cast<size_t>(fi)];
+										const Eigen::Vector3f& devVel = agentDeviceVelocities[static_cast<size_t>(fi)];
+										Eigen::Vector3f disp = devPos - sphereCenter;
+										const float maxVcDist = std::max(0.0f, agentVcMaxDistanceRadiusFrac) * r;
+										const float dispLen = disp.norm();
+										if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
+											disp *= (maxVcDist / dispLen);
+										}
+										const Eigen::Vector3f driveForceN = agentVcKLen * disp + agentVcCLen * (devVel - sphereVel);
 										const float sphereInvMass = 1.0f / agentProxyMassKg;
 										if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
 											contact = solveAgentSphereTriangleCollisionConstraint(
@@ -3206,6 +3333,7 @@ int main(int argc, char** argv) {
 												tangentialDamp,
 												agentFrictionMu,
 												iters,
+												driveForceN,
 												agentContactTriangles,
 												agentContactTrianglePhysIds,
 												agentVerticesByPhysId,
@@ -3223,6 +3351,7 @@ int main(int argc, char** argv) {
 												tangentialDamp,
 												agentFrictionMu,
 												iters,
+												driveForceN,
 												agentContactVertexPhysIds,
 												agentVerticesByPhysId,
 												physMassSumKg);
@@ -3262,6 +3391,7 @@ int main(int argc, char** argv) {
 													tangentialDamp,
 													agentFrictionMu,
 													itersSub,
+													Eigen::Vector3f::Zero(),
 													agentContactTriangles,
 													agentContactTrianglePhysIds,
 													agentVerticesByPhysId,
@@ -3279,6 +3409,7 @@ int main(int argc, char** argv) {
 													tangentialDamp,
 													agentFrictionMu,
 													itersSub,
+													Eigen::Vector3f::Zero(),
 													agentContactVertexPhysIds,
 													agentVerticesByPhysId,
 													physMassSumKg);
@@ -3306,7 +3437,81 @@ int main(int argc, char** argv) {
 								}
 
 								anyContact = anyContact || (contact.contactVertexCount > 0);
+								maxPenetrationThisFrame = std::max(maxPenetrationThisFrame, contact.maxPenetration);
 							}
+
+								// Post-contact volumetric stabilization (deep press): prevents local collapse/inversion
+								// which otherwise manifests as "penetrate / depenetrate" jitter at large indentations.
+								// Apply once, then re-run a cheap contact pass to restore non-penetration.
+								if (tetVolumeConstraintEnabled && anyContact && maxPenetrationThisFrame > 0.25f * r) {
+									const bool didVolume = applyTetVolumeStabilization(
+										tetVolumeConstraintIterations,
+										0.5f * tetVolumeConstraintCorrection);
+									if (didVolume && useVC) {
+										const int iters2 = std::clamp(std::max(4, iters / 2), 1, 64);
+										bool anyContact2 = false;
+										float maxPen2 = 0.0f;
+										for (int fi = 0; fi < kFingerCount; ++fi) {
+											AgentContactResult contact2{};
+											Eigen::Vector3f& sphereCenter = agentProxyPositions[static_cast<size_t>(fi)];
+											Eigen::Vector3f& sphereVel = agentProxyVelocities[static_cast<size_t>(fi)];
+											const Eigen::Vector3f& devPos = agentDevicePositions[static_cast<size_t>(fi)];
+											const Eigen::Vector3f& devVel = agentDeviceVelocities[static_cast<size_t>(fi)];
+											Eigen::Vector3f disp = devPos - sphereCenter;
+											const float maxVcDist = std::max(0.0f, agentVcMaxDistanceRadiusFrac) * r;
+											const float dispLen = disp.norm();
+											if (maxVcDist > 1e-6f && dispLen > maxVcDist) {
+												disp *= (maxVcDist / dispLen);
+											}
+											const Eigen::Vector3f driveForceN = agentVcKLen * disp + agentVcCLen * (devVel - sphereVel);
+											const float sphereInvMass = 1.0f / agentProxyMassKg;
+
+											if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+												contact2 = solveAgentSphereTriangleCollisionConstraint(
+													sphereCenter,
+													sphereVel,
+													sphereInvMass,
+													r,
+													allowedPen,
+													eps,
+													timeStep,
+													corr,
+													tangentialDamp,
+													agentFrictionMu,
+													iters2,
+													driveForceN,
+													agentContactTriangles,
+													agentContactTrianglePhysIds,
+													agentVerticesByPhysId,
+													physMassSumKg);
+											} else if (!agentContactVertexPhysIds.empty()) {
+												contact2 = solveAgentSphereVertexCollisionConstraint(
+													sphereCenter,
+													sphereVel,
+													sphereInvMass,
+													r,
+													allowedPen,
+													eps,
+													timeStep,
+													corr,
+													tangentialDamp,
+													agentFrictionMu,
+													iters2,
+													driveForceN,
+													agentContactVertexPhysIds,
+													agentVerticesByPhysId,
+													physMassSumKg);
+											}
+
+											agentLastContactForcesN[static_cast<size_t>(fi)] = contact2.reactionForceN;
+											agentLastContactCounts[static_cast<size_t>(fi)] = contact2.contactVertexCount;
+											anyContact2 = anyContact2 || (contact2.contactVertexCount > 0);
+											maxPen2 = std::max(maxPen2, contact2.maxPenetration);
+										}
+										anyContact = anyContact || anyContact2;
+										maxPenetrationThisFrame = std::max(maxPenetrationThisFrame, maxPen2);
+									}
+								}
 
 								// If using virtual coupling, update the device/coupling force after contact may have
 								// pushed the proxy (so logs/plots reflect the final state this frame).

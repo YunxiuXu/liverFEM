@@ -36,7 +36,7 @@ anchor_springDamping=10
 anchor_springMaxAccel=5000
 
 # Optional: volumetric stabilization (prevents extreme compression / inverted tets)
-tet_volumeConstraintEnabled=false
+tet_volumeConstraintEnabled=true
 tet_volumeConstraintCorrection=0.15
 tet_volumeConstraintIterations=2
 
