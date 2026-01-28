@@ -626,14 +626,14 @@ static bool outwardNormalForTriangle(
 				v->z += dp.z();
 
 					Eigen::Vector3f vv(v->velx, v->vely, v->velz);
-					// Dynamic velocity relaxation:
-					// For small corrections (stable contact), apply full correction (1.0) to stop sliding/jitter.
-					// For large corrections (impact), relax to 0.2 to prevent explosion.
+					// Apply velocity correction with relaxation to prevent oscillation.
+					// Adaptive relaxation: if correction is large (fast impact), use LESS velocity feedback
+					// to avoid adding huge energy to the system.
+					float velocityRelaxation = 0.4f;
 					const float corrLen = dp.norm();
-					float velocityRelaxation = 1.0f; 
-					if (corrLen > 1e-5f) {
-						// Smooth decay function: 1.0 -> 0.2 as correction size increases
-						velocityRelaxation = 0.2f + 0.8f / (1.0f + 5000.0f * corrLen);
+					if (corrLen > 1e-4f) {
+						// Reduce relaxation for large corrections
+						velocityRelaxation = std::max(0.05f, 0.4f / (1.0f + 100.0f * corrLen));
 					}
 					vv += dp * invDt * velocityRelaxation;
 
@@ -647,26 +647,38 @@ static bool outwardNormalForTriangle(
 						dvN += -vnBefore;
 					}
 
-					// Coulomb friction in velocity space (PBD-style approximation):
-					// reduce tangential relative velocity up to mu * (effective normal velocity correction).
-					if (mu > 0.0f && dvN > 0.0f) {
-						const Eigen::Vector3f vt = relV - n * relV.dot(n);
-						const float vtLen = vt.norm();
-						if (vtLen > 1e-8f) {
-							const float maxDvT = mu * dvN;
-							const float dvT = std::min(vtLen, maxDvT);
-							const Eigen::Vector3f vtNew = vt * ((vtLen - dvT) / vtLen);
-							const Eigen::Vector3f dvt = vtNew - vt;
-							relV += dvt;
+					// Improved Friction Model: Combined Coulomb (Stick-Slip) + Viscous Drag
+					// This addresses the "micro-oscillation" during dragging.
+					// 1. Calculate relative tangential velocity
+					const Eigen::Vector3f vt = relV - n * vnBefore;
+					const float vtLen = vt.norm();
+					
+					if (vtLen > 1e-8f) {
+						// 2. Viscous friction (damping) - smooths out the "slip" phase
+						// This is critical for preventing high-frequency chatter.
+						const float viscousForceMag = vtLen * tanDamp * 50.0f; // Stronger viscous term
+						
+						// 3. Coulomb friction limit
+						const float normalForceMag = std::abs(out.reactionForceN.dot(n)); // Approximate normal force from position correction
+						const float maxCoulombForce = normalForceMag * mu;
 
-							// Reaction on the sphere from friction impulse (approx force over dt).
-							const float m = std::max(0.0f, v->vertexMass);
-							out.reactionForceN -= dvt * (m * invDt);
-						}
+						// 4. Combined limit
+						// At low speeds, viscous term dominates (sticky). At high speeds, Coulomb limit applies.
+						// We apply this as a velocity correction.
+						const float frictionImpulseMag = std::min(viscousForceMag, maxCoulombForce) * dt;
+						const float maxDvT = std::min(vtLen, frictionImpulseMag * invDt * 2.0f); // *2.0 factor for stability
+						
+						const Eigen::Vector3f dvt = -vt * (maxDvT / vtLen);
+						relV += dvt;
+						
+						// Reaction on sphere
+						const float m = std::max(0.0f, v->vertexMass);
+						out.reactionForceN -= dvt * (m * invDt);
 					}
 
-					// Optional viscous tangential damping (helps suppress chatter).
-					relV -= (relV - n * relV.dot(n)) * tanDamp;
+					// Optional additional viscous tangential damping (helps suppress chatter).
+					// Kept low as we handled it above.
+					// relV -= (relV - n * relV.dot(n)) * tanDamp;
 					vv = sphereVel + relV;
 
 					v->velx = vv.x();
@@ -807,14 +819,14 @@ static bool outwardNormalForTriangle(
 				v->z += dp.z();
 
 					Eigen::Vector3f vv(v->velx, v->vely, v->velz);
-					// Dynamic velocity relaxation:
-					// For small corrections (stable contact), apply full correction (1.0) to stop sliding/jitter.
-					// For large corrections (impact), relax to 0.2 to prevent explosion.
+					// Apply velocity correction with relaxation to prevent oscillation.
+					// Adaptive relaxation: if correction is large (fast impact), use LESS velocity feedback
+					// to avoid adding huge energy to the system.
+					float velocityRelaxation = 0.4f;
 					const float corrLen = dp.norm();
-					float velocityRelaxation = 1.0f; 
-					if (corrLen > 1e-5f) {
-						// Smooth decay function: 1.0 -> 0.2 as correction size increases
-						velocityRelaxation = 0.2f + 0.8f / (1.0f + 5000.0f * corrLen);
+					if (corrLen > 1e-4f) {
+						// Reduce relaxation for large corrections
+						velocityRelaxation = std::max(0.05f, 0.4f / (1.0f + 100.0f * corrLen));
 					}
 					vv += dp * invDt * velocityRelaxation;
 
