@@ -552,6 +552,31 @@ static int applyAxisAlignedWallConstraints(
 	return hitCount;
 }
 
+// Add helper function for normal consistency
+static bool outwardNormalForTriangle(
+	const AgentTriangle& tri,
+	const Eigen::Vector3f& a,
+	const Eigen::Vector3f& b,
+	const Eigen::Vector3f& c,
+	Eigen::Vector3f* outwardUnitOut)
+{
+	const Eigen::Vector3f nRaw = (b - a).cross(c - a);
+	const float n2 = nRaw.squaredNorm();
+	if (n2 <= 1e-24f) return false;
+
+	Eigen::Vector3f n = nRaw;
+	if (tri.opp) {
+		const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
+		const float sOpp = nRaw.dot(opp - a);
+		if (std::abs(sOpp) > 1e-18f) {
+			if (sOpp > 0.0f) n = -nRaw;
+			else n = nRaw;
+		}
+	}
+	*outwardUnitOut = n.normalized();
+	return true;
+}
+
 		static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
 			Eigen::Vector3f& sphereCenter,
 			Eigen::Vector3f& sphereVel,
@@ -601,7 +626,16 @@ static int applyAxisAlignedWallConstraints(
 				v->z += dp.z();
 
 					Eigen::Vector3f vv(v->velx, v->vely, v->velz);
-					vv += dp * invDt;
+					// Dynamic velocity relaxation:
+					// For small corrections (stable contact), apply full correction (1.0) to stop sliding/jitter.
+					// For large corrections (impact), relax to 0.2 to prevent explosion.
+					const float corrLen = dp.norm();
+					float velocityRelaxation = 1.0f; 
+					if (corrLen > 1e-5f) {
+						// Smooth decay function: 1.0 -> 0.2 as correction size increases
+						velocityRelaxation = 0.2f + 0.8f / (1.0f + 5000.0f * corrLen);
+					}
+					vv += dp * invDt * velocityRelaxation;
 
 					Eigen::Vector3f relV = vv - sphereVel;
 					float dvN = std::max(0.0f, dp.dot(n) * invDt);
@@ -663,9 +697,24 @@ static int applyAxisAlignedWallConstraints(
 				if (dist2 >= shellR2) continue;
 
 				const float dist = std::sqrt(std::max(dist2, 1e-18f));
-				const Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
 				const float pen = shellR - dist;
 				if (pen <= 0.0f) continue;
+				
+				Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+
+				// Robustness fix: only flip normal for DEEP penetration to avoid oscillation.
+				// Use a threshold: only apply correction when penetration exceeds 30% of the shell radius.
+				const float deepPenThreshold = 0.3f * shellR;
+				if (pen > deepPenThreshold) {
+					Eigen::Vector3f outwardN;
+					if (outwardNormalForTriangle(tri, a, b, c, &outwardN)) {
+						// Check if we're genuinely inside (d aligns with outward normal).
+						// Add hysteresis: require strong alignment (dot > 0.2) to avoid flipping on boundaries.
+						if (d.dot(outwardN) > 0.2f * d.norm() * outwardN.norm()) {
+							n = -outwardN;
+						}
+					}
+				}
 
 				maxPen = std::max(maxPen, pen);
 				sumN += n * pen;
@@ -680,7 +729,14 @@ static int applyAxisAlignedWallConstraints(
 				const float denom = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMs;
 				if (denom <= 1e-18f) continue;
 
-				const Eigen::Vector3f deltaQ = n * (pen * corr);
+				// Limit max correction per iteration to prevent velocity explosion on deep impact
+				// Even if we penetrate deep (fast motion), only push out a small amount per frame.
+				// This acts like a "soft limit" for high-speed impacts.
+				float correctionMag = pen * corr;
+				const float maxCorrPerIter = 0.05f * shellR; // Max 5% of radius per iteration
+				if (correctionMag > maxCorrPerIter) correctionMag = maxCorrPerIter;
+
+				const Eigen::Vector3f deltaQ = n * correctionMag;
 					if (invMs > 0.0f) {
 						const Eigen::Vector3f dpSphere = -deltaQ * (invMs / denom);
 						sphereCenter += dpSphere;
@@ -751,7 +807,16 @@ static int applyAxisAlignedWallConstraints(
 				v->z += dp.z();
 
 					Eigen::Vector3f vv(v->velx, v->vely, v->velz);
-					vv += dp * invDt;
+					// Dynamic velocity relaxation:
+					// For small corrections (stable contact), apply full correction (1.0) to stop sliding/jitter.
+					// For large corrections (impact), relax to 0.2 to prevent explosion.
+					const float corrLen = dp.norm();
+					float velocityRelaxation = 1.0f; 
+					if (corrLen > 1e-5f) {
+						// Smooth decay function: 1.0 -> 0.2 as correction size increases
+						velocityRelaxation = 0.2f + 0.8f / (1.0f + 5000.0f * corrLen);
+					}
+					vv += dp * invDt * velocityRelaxation;
 
 					Eigen::Vector3f relV = vv - sphereVel;
 					float dvN = std::max(0.0f, dp.dot(n) * invDt);
