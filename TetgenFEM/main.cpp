@@ -613,6 +613,7 @@ static bool outwardNormalForTriangle(
 
 		Eigen::Vector3f sumN = Eigen::Vector3f::Zero();
 		float maxPen = 0.0f;
+		Eigen::Vector3f maxPenNormal = Eigen::Vector3f::Zero();
 		int movedVertexCount = 0;
 
 			auto invMassOfPhysId = [&](int id) -> float {
@@ -720,6 +721,23 @@ static bool outwardNormalForTriangle(
 				const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
 				const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
 
+				// One-sided gating: only treat the boundary face as "solid" from the exterior.
+				// Without this, deep indentation can bring the proxy close to the backside of the organ and
+				// the solver will alternate between opposite faces, causing classic penetrate/non-penetrate jitter.
+				if (tri.opp) {
+					const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
+					const Eigen::Vector3f nRaw = (b - a).cross(c - a);
+					const float n2 = nRaw.squaredNorm();
+					if (n2 > 1e-24f) {
+						const float sOpp = nRaw.dot(opp - a);
+						const float sP = nRaw.dot(sphereCenter - a);
+						if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) {
+							// Sphere center is on the interior side of this boundary face.
+							continue;
+						}
+					}
+				}
+
 				Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
 				const Eigen::Vector3f q = closestPointOnTriangle(sphereCenter, a, b, c, &bary);
 				Eigen::Vector3f d = q - sphereCenter;
@@ -747,6 +765,9 @@ static bool outwardNormalForTriangle(
 				}
 
 				maxPen = std::max(maxPen, pen);
+				if (pen >= maxPen) {
+					maxPenNormal = n;
+				}
 				sumN += n * pen;
 
 				const float invMa = invMassOfPhysId(ids[0]);
@@ -790,11 +811,24 @@ static bool outwardNormalForTriangle(
 			// Stabilize deep contact: after all iterations, remove any proxy velocity component that
 			// would move further "into" the contact normal direction this frame (prevents chatter).
 			if (movedVertexCount > 0) {
-				const float nlen = out.avgNormal.norm();
-				if (nlen > 1e-12f) {
-					const Eigen::Vector3f n = out.avgNormal / nlen;
+				Eigen::Vector3f n = Eigen::Vector3f::Zero();
+				if (out.avgNormal.squaredNorm() > 1e-12f) {
+					n = out.avgNormal;
+				} else if (maxPenNormal.squaredNorm() > 1e-12f) {
+					n = maxPenNormal.normalized();
+				}
+				if (n.squaredNorm() > 1e-12f) {
 					const float vn = sphereVel.dot(n);
 					if (vn > 0.0f) sphereVel -= n * vn;
+				}
+
+				// Additional damping for very deep indentation: suppresses the classic "penetrate / depenetrate"
+				// oscillation when VC keeps driving the proxy into a highly compressed region.
+				// (Shallow contact remains responsive.)
+				const float penFrac = maxPen / std::max(1e-6f, r);
+				if (penFrac > 0.25f) {
+					const float t = std::clamp((penFrac - 0.25f) / 0.75f, 0.0f, 1.0f);
+					sphereVel *= (1.0f - 0.8f * t);
 				}
 			}
 		return out;
@@ -834,8 +868,9 @@ static bool outwardNormalForTriangle(
 			const int iters = std::clamp(iterations, 1, 64);
 
 		Eigen::Vector3f sumN = Eigen::Vector3f::Zero();
-			float maxPen = 0.0f;
-			int movedVertexCount = 0;
+		float maxPen = 0.0f;
+		Eigen::Vector3f maxPenNormal = Eigen::Vector3f::Zero();
+		int movedVertexCount = 0;
 
 			auto invMassOfPhysId = [&](int id) -> float {
 				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return 0.0f;
@@ -927,6 +962,9 @@ static bool outwardNormalForTriangle(
 					if (pen <= 0.0f) continue;
 
 				maxPen = std::max(maxPen, pen);
+				if (pen >= maxPen) {
+					maxPenNormal = n;
+				}
 				sumN += n * pen;
 
 					const float invMv = invMassOfPhysId(id);
@@ -954,11 +992,21 @@ static bool outwardNormalForTriangle(
 
 			// Same stabilization as triangle contact.
 			if (movedVertexCount > 0) {
-				const float nlen = out.avgNormal.norm();
-				if (nlen > 1e-12f) {
-					const Eigen::Vector3f n = out.avgNormal / nlen;
+				Eigen::Vector3f n = Eigen::Vector3f::Zero();
+				if (out.avgNormal.squaredNorm() > 1e-12f) {
+					n = out.avgNormal;
+				} else if (maxPenNormal.squaredNorm() > 1e-12f) {
+					n = maxPenNormal.normalized();
+				}
+				if (n.squaredNorm() > 1e-12f) {
 					const float vn = sphereVel.dot(n);
 					if (vn > 0.0f) sphereVel -= n * vn;
+				}
+
+				const float penFrac = maxPen / std::max(1e-6f, r);
+				if (penFrac > 0.25f) {
+					const float t = std::clamp((penFrac - 0.25f) / 0.75f, 0.0f, 1.0f);
+					sphereVel *= (1.0f - 0.8f * t);
 				}
 			}
 		return out;
