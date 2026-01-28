@@ -591,10 +591,11 @@ static bool outwardNormalForTriangle(
 			int iterations,
 			const std::vector<AgentTriangle>& contactTriangles,
 			const std::vector<std::array<int, 3>>& contactTrianglePhysIds,
-			const std::vector<std::vector<Vertex*>>& verticesByPhysId)
+			const std::vector<std::vector<Vertex*>>& verticesByPhysId,
+			const std::vector<float>& physMassSumKg)
 		{
 			AgentContactResult out{};
-			if (contactTriangles.empty() || contactTriangles.size() != contactTrianglePhysIds.size() || verticesByPhysId.empty()) return out;
+			if (contactTriangles.empty() || contactTriangles.size() != contactTrianglePhysIds.size() || verticesByPhysId.empty() || physMassSumKg.empty()) return out;
 
 				const float invMs = std::max(0.0f, sphereInvMass);
 				const float r = std::max(1e-6f, sphereRadius);
@@ -613,6 +614,16 @@ static bool outwardNormalForTriangle(
 		Eigen::Vector3f sumN = Eigen::Vector3f::Zero();
 		float maxPen = 0.0f;
 		int movedVertexCount = 0;
+
+			auto invMassOfPhysId = [&](int id) -> float {
+				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return 0.0f;
+				const auto& list = verticesByPhysId[static_cast<size_t>(id)];
+				if (list.empty() || !list.front()) return 0.0f;
+				if (list.front()->isFixed) return 0.0f;
+				if (id < 0 || id >= static_cast<int>(physMassSumKg.size())) return 0.0f;
+				const float m = physMassSumKg[static_cast<size_t>(id)];
+				return (m > 1e-12f) ? (1.0f / m) : 0.0f;
+			};
 
 			auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
 				if (dp.squaredNorm() <= 1e-24f) return;
@@ -650,7 +661,8 @@ static bool outwardNormalForTriangle(
 					// Improved Friction Model: Combined Coulomb (Stick-Slip) + Viscous Drag
 					// This addresses the "micro-oscillation" during dragging.
 					// 1. Calculate relative tangential velocity
-					const Eigen::Vector3f vt = relV - n * vnBefore;
+					const float vnAfter = relV.dot(n);
+					const Eigen::Vector3f vt = relV - n * vnAfter;
 					const float vtLen = vt.norm();
 					
 					if (vtLen > 1e-8f) {
@@ -659,8 +671,9 @@ static bool outwardNormalForTriangle(
 						const float viscousForceMag = vtLen * tanDamp * 50.0f; // Stronger viscous term
 						
 						// 3. Coulomb friction limit
-						const float normalForceMag = std::abs(out.reactionForceN.dot(n)); // Approximate normal force from position correction
-						const float maxCoulombForce = normalForceMag * mu;
+						const float m = std::max(0.0f, v->vertexMass);
+						const float normalForceMag = m * dvN * invDt;
+						const float maxCoulombForce = std::max(0.0f, normalForceMag) * mu;
 
 						// 4. Combined limit
 						// At low speeds, viscous term dominates (sticky). At high speeds, Coulomb limit applies.
@@ -672,13 +685,18 @@ static bool outwardNormalForTriangle(
 						relV += dvt;
 						
 						// Reaction on sphere
-						const float m = std::max(0.0f, v->vertexMass);
 						out.reactionForceN -= dvt * (m * invDt);
 					}
 
 					// Optional additional viscous tangential damping (helps suppress chatter).
 					// Kept low as we handled it above.
 					// relV -= (relV - n * relV.dot(n)) * tanDamp;
+
+					// Safety: never re-introduce inward normal velocity via friction corrections.
+					const float vnAfterFriction = relV.dot(n);
+					if (vnAfterFriction < 0.0f) {
+						relV -= n * vnAfterFriction;
+					}
 					vv = sphereVel + relV;
 
 					v->velx = vv.x();
@@ -731,9 +749,9 @@ static bool outwardNormalForTriangle(
 				maxPen = std::max(maxPen, pen);
 				sumN += n * pen;
 
-				const float invMa = (!tri.a->isFixed && tri.a->vertexMass > 1e-12f) ? (1.0f / tri.a->vertexMass) : 0.0f;
-				const float invMb = (!tri.b->isFixed && tri.b->vertexMass > 1e-12f) ? (1.0f / tri.b->vertexMass) : 0.0f;
-				const float invMc = (!tri.c->isFixed && tri.c->vertexMass > 1e-12f) ? (1.0f / tri.c->vertexMass) : 0.0f;
+				const float invMa = invMassOfPhysId(ids[0]);
+				const float invMb = invMassOfPhysId(ids[1]);
+				const float invMc = invMassOfPhysId(ids[2]);
 
 				const float w0 = bary.x();
 				const float w1 = bary.y();
@@ -768,6 +786,17 @@ static bool outwardNormalForTriangle(
 				const float nlen = sumN.norm();
 				if (nlen > 1e-12f) out.avgNormal = sumN / nlen;
 		}
+
+			// Stabilize deep contact: after all iterations, remove any proxy velocity component that
+			// would move further "into" the contact normal direction this frame (prevents chatter).
+			if (movedVertexCount > 0) {
+				const float nlen = out.avgNormal.norm();
+				if (nlen > 1e-12f) {
+					const Eigen::Vector3f n = out.avgNormal / nlen;
+					const float vn = sphereVel.dot(n);
+					if (vn > 0.0f) sphereVel -= n * vn;
+				}
+			}
 		return out;
 	}
 
@@ -784,10 +813,11 @@ static bool outwardNormalForTriangle(
 			float frictionMu,
 			int iterations,
 			const std::vector<int>& contactVertexPhysIds,
-			const std::vector<std::vector<Vertex*>>& verticesByPhysId)
+			const std::vector<std::vector<Vertex*>>& verticesByPhysId,
+			const std::vector<float>& physMassSumKg)
 		{
 			AgentContactResult out{};
-			if (contactVertexPhysIds.empty() || verticesByPhysId.empty()) return out;
+			if (contactVertexPhysIds.empty() || verticesByPhysId.empty() || physMassSumKg.empty()) return out;
 
 				const float invMs = std::max(0.0f, sphereInvMass);
 				const float r = std::max(1e-6f, sphereRadius);
@@ -804,8 +834,18 @@ static bool outwardNormalForTriangle(
 			const int iters = std::clamp(iterations, 1, 64);
 
 		Eigen::Vector3f sumN = Eigen::Vector3f::Zero();
-		float maxPen = 0.0f;
-		int movedVertexCount = 0;
+			float maxPen = 0.0f;
+			int movedVertexCount = 0;
+
+			auto invMassOfPhysId = [&](int id) -> float {
+				if (id < 0 || id >= static_cast<int>(verticesByPhysId.size())) return 0.0f;
+				const auto& list = verticesByPhysId[static_cast<size_t>(id)];
+				if (list.empty() || !list.front()) return 0.0f;
+				if (list.front()->isFixed) return 0.0f;
+				if (id < 0 || id >= static_cast<int>(physMassSumKg.size())) return 0.0f;
+				const float m = physMassSumKg[static_cast<size_t>(id)];
+				return (m > 1e-12f) ? (1.0f / m) : 0.0f;
+			};
 
 			auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
 				if (dp.squaredNorm() <= 1e-24f) return;
@@ -889,7 +929,7 @@ static bool outwardNormalForTriangle(
 				maxPen = std::max(maxPen, pen);
 				sumN += n * pen;
 
-					const float invMv = (!vRef->isFixed && vRef->vertexMass > 1e-12f) ? (1.0f / vRef->vertexMass) : 0.0f;
+					const float invMv = invMassOfPhysId(id);
 					const float denom = invMv + invMs;
 					if (denom <= 1e-18f) continue;
 
@@ -911,6 +951,16 @@ static bool outwardNormalForTriangle(
 				const float nlen = sumN.norm();
 				if (nlen > 1e-12f) out.avgNormal = sumN / nlen;
 		}
+
+			// Same stabilization as triangle contact.
+			if (movedVertexCount > 0) {
+				const float nlen = out.avgNormal.norm();
+				if (nlen > 1e-12f) {
+					const Eigen::Vector3f n = out.avgNormal / nlen;
+					const float vn = sphereVel.dot(n);
+					if (vn > 0.0f) sphereVel -= n * vn;
+				}
+			}
 		return out;
 	}
 	} // namespace
@@ -3110,7 +3160,8 @@ int main(int argc, char** argv) {
 												iters,
 												agentContactTriangles,
 												agentContactTrianglePhysIds,
-												agentVerticesByPhysId);
+												agentVerticesByPhysId,
+												physMassSumKg);
 										} else if (!agentContactVertexPhysIds.empty()) {
 											contact = solveAgentSphereVertexCollisionConstraint(
 												sphereCenter,
@@ -3125,7 +3176,8 @@ int main(int argc, char** argv) {
 												agentFrictionMu,
 												iters,
 												agentContactVertexPhysIds,
-												agentVerticesByPhysId);
+												agentVerticesByPhysId,
+												physMassSumKg);
 										}
 									} else {
 										// Kinematic drive: substep along the proxy motion to avoid tunneling when the user moves fast.
@@ -3164,7 +3216,8 @@ int main(int argc, char** argv) {
 													itersSub,
 													agentContactTriangles,
 													agentContactTrianglePhysIds,
-													agentVerticesByPhysId);
+													agentVerticesByPhysId,
+													physMassSumKg);
 											} else if (!agentContactVertexPhysIds.empty()) {
 												c = solveAgentSphereVertexCollisionConstraint(
 													p,
@@ -3179,7 +3232,8 @@ int main(int argc, char** argv) {
 													agentFrictionMu,
 													itersSub,
 													agentContactVertexPhysIds,
-													agentVerticesByPhysId);
+													agentVerticesByPhysId,
+													physMassSumKg);
 											}
 
 											impulseNsec += c.reactionForceN * dtSub;
