@@ -515,6 +515,26 @@ void Object::PBDLOOP(int looptime) {
 					v1->x = v2->x = avgX;
 					v1->y = v2->y = avgY;
 					v1->z = v2->z = avgZ;
+
+					// 同步速度（非常重要）：否则下一帧 primeVec 使用旧速度 + 新位置，会注入能量导致抖动/爆炸。
+					float avgVx = (v1->velx + v2->velx) * 0.5f;
+					float avgVy = (v1->vely + v2->vely) * 0.5f;
+					float avgVz = (v1->velz + v2->velz) * 0.5f;
+					v1->velx = v2->velx = avgVx;
+					v1->vely = v2->vely = avgVy;
+					v1->velz = v2->velz = avgVz;
+
+					// 保持 Group::groupVelocity 与 Vertex::vel* 一致（primeVec 会用到 groupVelocity）。
+					{
+						const int li1 = v1->localIndex;
+						if (li1 >= 0 && (3 * li1 + 2) < groups[i].groupVelocity.size()) {
+							groups[i].groupVelocity.segment<3>(3 * li1) = Eigen::Vector3f(avgVx, avgVy, avgVz);
+						}
+						const int li2 = v2->localIndex;
+						if (li2 >= 0 && (3 * li2 + 2) < groups[adjacentGroupIdx].groupVelocity.size()) {
+							groups[adjacentGroupIdx].groupVelocity.segment<3>(3 * li2) = Eigen::Vector3f(avgVx, avgVy, avgVz);
+						}
+					}
 				}
 			}
 		}
