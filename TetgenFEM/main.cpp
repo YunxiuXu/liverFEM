@@ -577,27 +577,29 @@ static bool outwardNormalForTriangle(
 	return true;
 }
 
-		static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
-			Eigen::Vector3f& sphereCenter,
-			Eigen::Vector3f& sphereVel,
-			float sphereInvMass,
-			float proxyInvMassScale,
-			float contactVelocityRelaxation,
-			float contactVelocityRelaxationMin,
-			float contactNormalDamp,
-			float sphereRadius,
-				float allowedPenetration,
-				float eps,
-				float dt,
-			float positionCorrection,
-			float tangentialDamp,
-			float frictionMu,
-			int iterations,
-			const Eigen::Vector3f& sphereDriveForceN,
-			const std::vector<AgentTriangle>& contactTriangles,
-			const std::vector<std::array<int, 3>>& contactTrianglePhysIds,
-			const std::vector<std::vector<Vertex*>>& verticesByPhysId,
-			const std::vector<float>& physMassSumKg)
+			static AgentContactResult solveAgentSphereTriangleCollisionConstraint(
+				Eigen::Vector3f& sphereCenter,
+				Eigen::Vector3f& sphereVel,
+				float sphereInvMass,
+				float proxyInvMassScale,
+				float contactVelocityRelaxation,
+				float contactVelocityRelaxationMin,
+				float contactNormalDamp,
+				float sphereRadius,
+					float allowedPenetration,
+					float eps,
+					float dt,
+				float positionCorrection,
+				float tangentialDamp,
+				float frictionMu,
+				int iterations,
+				int manifoldTriangles,
+				int* activeTriangleIndexInOut,
+				const Eigen::Vector3f& sphereDriveForceN,
+				const std::vector<AgentTriangle>& contactTriangles,
+				const std::vector<std::array<int, 3>>& contactTrianglePhysIds,
+				const std::vector<std::vector<Vertex*>>& verticesByPhysId,
+				const std::vector<float>& physMassSumKg)
 		{
 			AgentContactResult out{};
 			if (contactTriangles.empty() || contactTriangles.size() != contactTrianglePhysIds.size() || verticesByPhysId.empty() || physMassSumKg.empty()) return out;
@@ -654,8 +656,9 @@ static bool outwardNormalForTriangle(
 					float velocityRelaxation = velRelaxBase;
 					const float corrLen = dp.norm();
 					if (corrLen > 1e-4f) {
-						// Reduce relaxation for large corrections
-						velocityRelaxation = std::max(velRelaxMin, velRelaxBase / (1.0f + 100.0f * corrLen));
+						// Reduce relaxation for large corrections, but less aggressively (100 -> 20)
+						// to allow better penetration response without oscillation.
+						velocityRelaxation = std::max(velRelaxMin, velRelaxBase / (1.0f + 20.0f * corrLen));
 					}
 					vv += dp * invDt * velocityRelaxation;
 
@@ -717,15 +720,21 @@ static bool outwardNormalForTriangle(
 					}
 				};
 
-				// Use a single "active" surface triangle while it remains in contact.
-				// Switching triangles mid-solve (especially near edges) is a common source of haptic-unfriendly buzzing.
-				int activeTi = -1;
-				auto findActive = [&]() -> bool {
-					activeTi = -1;
-					float bestDist2 = std::numeric_limits<float>::infinity();
-					for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
+					// Contact manifold: solve a small set of nearest surface triangles.
+					// Using >1 triangle near edges greatly reduces "falling into cracks" and contact buzzing.
+					int preferredTi = -1;
+					if (activeTriangleIndexInOut && *activeTriangleIndexInOut >= 0 &&
+						*activeTriangleIndexInOut < static_cast<int>(contactTriangles.size())) {
+						preferredTi = *activeTriangleIndexInOut;
+					}
+
+					const int manifoldK = std::clamp(manifoldTriangles, 1, 8);
+					std::vector<int> activeTis;
+					activeTis.reserve(static_cast<size_t>(manifoldK));
+
+					auto triInShell = [&](int ti, float* dist2Out) -> bool {
 						const auto& tri = contactTriangles[ti];
-						if (!tri.a || !tri.b || !tri.c) continue;
+						if (!tri.a || !tri.b || !tri.c) return false;
 
 						const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
 						const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
@@ -739,109 +748,181 @@ static bool outwardNormalForTriangle(
 							if (n2 > 1e-24f) {
 								const float sOpp = nRaw.dot(opp - a);
 								const float sP = nRaw.dot(sphereCenter - a);
-								if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) continue;
+								if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) return false;
 							}
 						}
 
 						Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
 						const Eigen::Vector3f q = closestPointOnTriangle(sphereCenter, a, b, c, &bary);
 						const float dist2 = (q - sphereCenter).squaredNorm();
-						if (dist2 >= shellR2) continue;
-						if (dist2 < bestDist2) {
-							bestDist2 = dist2;
-							activeTi = ti;
+						if (dist2 >= shellR2) return false;
+						if (dist2Out) *dist2Out = dist2;
+						return true;
+					};
+
+					auto findActiveSet = [&]() -> bool {
+						activeTis.clear();
+						std::vector<float> bestD2;
+						bestD2.reserve(static_cast<size_t>(manifoldK));
+
+						auto tryInsert = [&](int ti, float d2) {
+							for (int existing : activeTis) {
+								if (existing == ti) return;
+							}
+
+							if (static_cast<int>(activeTis.size()) < manifoldK) {
+								activeTis.push_back(ti);
+								bestD2.push_back(d2);
+								return;
+							}
+
+							int worst = 0;
+							for (int i = 1; i < static_cast<int>(bestD2.size()); ++i) {
+								if (bestD2[i] > bestD2[worst]) worst = i;
+							}
+							if (d2 < bestD2[worst]) {
+								activeTis[worst] = ti;
+								bestD2[worst] = d2;
+							}
+						};
+
+						if (preferredTi >= 0) {
+							float d2 = 0.0f;
+							if (triInShell(preferredTi, &d2)) tryInsert(preferredTi, d2);
 						}
-					}
-					return activeTi >= 0;
-				};
 
-				for (int it = 0; it < iters; ++it) {
-					if (activeTi < 0 && !findActive()) break;
+						for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
+							if (ti == preferredTi) continue;
+							float d2 = 0.0f;
+							if (!triInShell(ti, &d2)) continue;
+							tryInsert(ti, d2);
+						}
 
-					const auto& tri = contactTriangles[activeTi];
-					const auto& ids = contactTrianglePhysIds[activeTi];
-					if (!tri.a || !tri.b || !tri.c) {
-						activeTi = -1;
-						continue;
-					}
+						if (activeTis.empty()) return false;
 
-					const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
-					const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
-					const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
-
-					// Re-check one-sided gating (positions may have moved).
-					if (tri.opp) {
-						const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
-						const Eigen::Vector3f nRaw = (b - a).cross(c - a);
-						const float n2 = nRaw.squaredNorm();
-						if (n2 > 1e-24f) {
-							const float sOpp = nRaw.dot(opp - a);
-							const float sP = nRaw.dot(sphereCenter - a);
-							if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) {
-								activeTi = -1;
-								continue;
+						// Sort by distance (K is small).
+						for (int i = 0; i < static_cast<int>(activeTis.size()); ++i) {
+							for (int j = i + 1; j < static_cast<int>(activeTis.size()); ++j) {
+								if (bestD2[j] < bestD2[i]) {
+									std::swap(bestD2[i], bestD2[j]);
+									std::swap(activeTis[i], activeTis[j]);
+								}
 							}
 						}
-					}
 
-					Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
-					const Eigen::Vector3f q = closestPointOnTriangle(sphereCenter, a, b, c, &bary);
-					const float dist2 = (q - sphereCenter).squaredNorm();
-					if (dist2 >= shellR2) {
-						// No longer in contact with this triangle; pick a new one next iteration.
-						activeTi = -1;
-						continue;
-					}
+						preferredTi = activeTis.front();
+						return true;
+					};
 
-					Eigen::Vector3f d = q - sphereCenter;
-					const float dist = std::sqrt(std::max(dist2, 1e-18f));
-					const float pen = shellR - dist;
-					if (!(pen > 0.0f)) {
-						activeTi = -1;
-						continue;
-					}
+					bool anyShellContact = false;
+					for (int it = 0; it < iters; ++it) {
+						if (activeTis.empty() && !findActiveSet()) break;
 
-					Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+						bool anyPenetration = false;
+						float bestD2ThisIter = std::numeric_limits<float>::infinity();
+						int bestTiThisIter = -1;
 
-					// Robustness: only flip normal for DEEP penetration, otherwise we risk oscillation at edges.
-					const float deepPenThreshold = 0.3f * shellR;
-					if (pen > deepPenThreshold) {
-						Eigen::Vector3f outwardN;
-						if (outwardNormalForTriangle(tri, a, b, c, &outwardN)) {
-							if (d.dot(outwardN) > 0.2f * d.norm() * outwardN.norm()) {
-								n = -outwardN;
+						for (int ti : activeTis) {
+							const auto& tri = contactTriangles[ti];
+							const auto& ids = contactTrianglePhysIds[ti];
+							if (!tri.a || !tri.b || !tri.c) continue;
+
+							const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+							const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+							const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+
+							// Re-check one-sided gating (positions may have moved).
+							if (tri.opp) {
+								const Eigen::Vector3f opp(tri.opp->x, tri.opp->y, tri.opp->z);
+								const Eigen::Vector3f nRaw = (b - a).cross(c - a);
+								const float n2 = nRaw.squaredNorm();
+								if (n2 > 1e-24f) {
+									const float sOpp = nRaw.dot(opp - a);
+									const float sP = nRaw.dot(sphereCenter - a);
+									if (std::abs(sOpp) > 1e-18f && (sP * sOpp) > 0.0f) continue;
+								}
+							}
+
+							Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
+							const Eigen::Vector3f q = closestPointOnTriangle(sphereCenter, a, b, c, &bary);
+							const float dist2 = (q - sphereCenter).squaredNorm();
+							if (dist2 >= shellR2) continue;
+							anyShellContact = true;
+
+							if (dist2 < bestD2ThisIter) {
+								bestD2ThisIter = dist2;
+								bestTiThisIter = ti;
+							}
+
+							Eigen::Vector3f d = q - sphereCenter;
+							const float dist = std::sqrt(std::max(dist2, 1e-18f));
+							const float pen = shellR - dist;
+							if (!(pen > 0.0f)) continue;
+							anyPenetration = true;
+
+							Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+
+							// Robustness: only flip normal for DEEP penetration, otherwise we risk oscillation at edges.
+							const float deepPenThreshold = 0.3f * shellR;
+							if (pen > deepPenThreshold) {
+								Eigen::Vector3f outwardN;
+								if (outwardNormalForTriangle(tri, a, b, c, &outwardN)) {
+									if (d.dot(outwardN) > 0.2f * d.norm() * outwardN.norm()) {
+										n = -outwardN;
+									}
+								}
+							}
+
+							maxPen = std::max(maxPen, pen);
+							if (pen >= maxPen) maxPenNormal = n;
+							sumN += n * pen;
+
+							const float invMa = invMassOfPhysId(ids[0]);
+							const float invMb = invMassOfPhysId(ids[1]);
+							const float invMc = invMassOfPhysId(ids[2]);
+
+							const float w0 = bary.x();
+							const float w1 = bary.y();
+							const float w2 = bary.z();
+							const float denom = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMsResp;
+							if (denom <= 1e-18f) continue;
+
+							float correctionMag = pen * corr;
+							const float maxCorrPerIter = 0.05f * shellR;
+							if (correctionMag > maxCorrPerIter) correctionMag = maxCorrPerIter;
+
+							const Eigen::Vector3f deltaQ = n * correctionMag;
+							if (invMsResp > 0.0f) {
+								const Eigen::Vector3f dpSphere = -deltaQ * (invMsResp / denom);
+								sphereCenter += dpSphere;
+								sphereVel += dpSphere * invDt;
+							}
+							applyDeltaToPhysId(ids[0], deltaQ * (w0 * invMa / denom), n);
+							applyDeltaToPhysId(ids[1], deltaQ * (w1 * invMb / denom), n);
+							applyDeltaToPhysId(ids[2], deltaQ * (w2 * invMc / denom), n);
+						}
+
+						// Update preferred triangle for temporal coherence.
+						if (bestTiThisIter >= 0) preferredTi = bestTiThisIter;
+
+						// If we didn't apply any correction this iteration, we're done.
+						if (!anyPenetration) break;
+
+						// Keep the active set only while at least one triangle remains in the shell.
+						bool anyInShell = false;
+						for (int ti : activeTis) {
+							float d2 = 0.0f;
+							if (triInShell(ti, &d2)) {
+								anyInShell = true;
+								break;
 							}
 						}
+						if (!anyInShell) activeTis.clear();
 					}
 
-					maxPen = std::max(maxPen, pen);
-					if (pen >= maxPen) maxPenNormal = n;
-					sumN += n * pen;
-
-					const float invMa = invMassOfPhysId(ids[0]);
-					const float invMb = invMassOfPhysId(ids[1]);
-					const float invMc = invMassOfPhysId(ids[2]);
-
-					const float w0 = bary.x();
-					const float w1 = bary.y();
-					const float w2 = bary.z();
-					const float denom = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMsResp;
-					if (denom <= 1e-18f) break;
-
-					float correctionMag = pen * corr;
-					const float maxCorrPerIter = 0.05f * shellR;
-					if (correctionMag > maxCorrPerIter) correctionMag = maxCorrPerIter;
-
-					const Eigen::Vector3f deltaQ = n * correctionMag;
-					if (invMsResp > 0.0f) {
-						const Eigen::Vector3f dpSphere = -deltaQ * (invMsResp / denom);
-						sphereCenter += dpSphere;
-						sphereVel += dpSphere * invDt;
+					if (activeTriangleIndexInOut) {
+						*activeTriangleIndexInOut = anyShellContact ? preferredTi : -1;
 					}
-					applyDeltaToPhysId(ids[0], deltaQ * (w0 * invMa / denom), n);
-					applyDeltaToPhysId(ids[1], deltaQ * (w1 * invMb / denom), n);
-					applyDeltaToPhysId(ids[2], deltaQ * (w2 * invMc / denom), n);
-				}
 
 			out.contactVertexCount = movedVertexCount;
 			out.maxPenetration = maxPen;
@@ -1073,8 +1154,9 @@ static bool outwardNormalForTriangle(
 					float velocityRelaxation = velRelaxBase;
 					const float corrLen = dp.norm();
 					if (corrLen > 1e-4f) {
-						// Reduce relaxation for large corrections
-						velocityRelaxation = std::max(velRelaxMin, velRelaxBase / (1.0f + 100.0f * corrLen));
+						// Reduce relaxation for large corrections, but less aggressively (100 -> 20)
+						// to allow better penetration response without oscillation.
+						velocityRelaxation = std::max(velRelaxMin, velRelaxBase / (1.0f + 20.0f * corrLen));
 					}
 					vv += dp * invDt * velocityRelaxation;
 
@@ -1906,15 +1988,17 @@ int main(int argc, char** argv) {
 			agentProxyVelocities[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
 		}
 	
-				std::array<Eigen::Vector3f, kFingerCount> agentLastDeviceForcesN;
-				std::array<Eigen::Vector3f, kFingerCount> agentLastContactForcesN;
-				std::array<Eigen::Vector3f, kFingerCount> agentLastCouplingForcesN;
-				std::array<Eigen::Vector3f, kFingerCount> agentFilteredDeviceForcesN;
-				std::array<int, kFingerCount> agentLastContactCounts{};
-					agentLastDeviceForcesN.fill(Eigen::Vector3f::Zero());
-					agentLastContactForcesN.fill(Eigen::Vector3f::Zero());
-					agentLastCouplingForcesN.fill(Eigen::Vector3f::Zero());
-					agentFilteredDeviceForcesN.fill(Eigen::Vector3f::Zero());
+					std::array<Eigen::Vector3f, kFingerCount> agentLastDeviceForcesN;
+					std::array<Eigen::Vector3f, kFingerCount> agentLastContactForcesN;
+					std::array<Eigen::Vector3f, kFingerCount> agentLastCouplingForcesN;
+					std::array<Eigen::Vector3f, kFingerCount> agentFilteredDeviceForcesN;
+					std::array<int, kFingerCount> agentLastContactCounts{};
+					std::array<int, kFingerCount> agentLastActiveContactTriangle{};
+						agentLastDeviceForcesN.fill(Eigen::Vector3f::Zero());
+						agentLastContactForcesN.fill(Eigen::Vector3f::Zero());
+						agentLastCouplingForcesN.fill(Eigen::Vector3f::Zero());
+						agentFilteredDeviceForcesN.fill(Eigen::Vector3f::Zero());
+						agentLastActiveContactTriangle.fill(-1);
 		
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 		LeapCTracker leapTracker;
@@ -1939,8 +2023,20 @@ int main(int argc, char** argv) {
 	const float agentProxyMassKg = std::max(1e-6f, agentProxyMassKgTotal / static_cast<float>(kFingerCount));
 	const float invBboxDiag = 1.0f / std::max(1e-6f, bboxDiag);
 	const float agentVcKLen = std::max(0.0f, agentVcStiffnessNPerBbox) * invBboxDiag;     // N per unit length
-	const float agentVcCLenFree = std::max(0.0f, agentVcDampingNsPerBbox) * invBboxDiag;                 // N*s per unit length
-	const float agentVcCLenContact = std::max(0.0f, agentVcDampingNsPerBboxInContact) * invBboxDiag;     // N*s per unit length
+	float agentVcCLenFree = 0.0f;
+	float agentVcCLenContact = 0.0f;
+	if (agentVcAutoDamping) {
+		const float zFree = std::clamp(agentVcDampingRatioFree, 0.0f, 20.0f);
+		const float zContact = std::clamp(agentVcDampingRatioContact, 0.0f, 20.0f);
+		const float cCrit = (agentVcKLen > 0.0f && agentProxyMassKg > 1e-12f)
+			? (2.0f * std::sqrt(agentVcKLen * agentProxyMassKg))
+			: 0.0f;
+		agentVcCLenFree = zFree * cCrit;
+		agentVcCLenContact = zContact * cCrit;
+	} else {
+		agentVcCLenFree = std::max(0.0f, agentVcDampingNsPerBbox) * invBboxDiag;                 // N*s per unit length
+		agentVcCLenContact = std::max(0.0f, agentVcDampingNsPerBboxInContact) * invBboxDiag;     // N*s per unit length
+	}
 
 		// Choose contact vertices/triangles on the OUTER surface.
 		//
@@ -3385,6 +3481,7 @@ int main(int argc, char** argv) {
 								const float contactVelRelaxMin = std::clamp(agentContactVelocityRelaxationMin, 0.0f, contactVelRelax);
 								const float contactNormalDamp = std::clamp(agentContactNormalDamp, 0.0f, 1.0f);
 								const int iters = std::clamp(agentCollisionIterations, 1, 64);
+								const int manifoldK = std::clamp(agentContactManifoldTriangles, 1, 8);
 								const float maxStep = std::max(1e-6f, 0.25f * r);
 		
 								bool anyContact = (agentCcdHits > 0);
@@ -3406,29 +3503,31 @@ int main(int argc, char** argv) {
 											const float vcCLen = wasContact ? agentVcCLenContact : agentVcCLenFree;
 											const Eigen::Vector3f driveForceN = agentVcKLen * disp + vcCLen * (devVel - sphereVel);
 										const float sphereInvMass = 1.0f / agentProxyMassKg;
-										if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
-											contact = solveAgentSphereTriangleCollisionConstraint(
-												sphereCenter,
-												sphereVel,
-												sphereInvMass,
-												contactProxyInvMassScale,
-												contactVelRelax,
-												contactVelRelaxMin,
-												contactNormalDamp,
-												r,
-												allowedPen,
-												eps,
-												timeStep,
-												corr,
-												tangentialDamp,
-												agentFrictionMu,
-												iters,
-												driveForceN,
-												agentContactTriangles,
-												agentContactTrianglePhysIds,
-												agentVerticesByPhysId,
-												physMassSumKg);
-										} else if (!agentContactVertexPhysIds.empty()) {
+											if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+												contact = solveAgentSphereTriangleCollisionConstraint(
+													sphereCenter,
+													sphereVel,
+													sphereInvMass,
+													contactProxyInvMassScale,
+													contactVelRelax,
+													contactVelRelaxMin,
+													contactNormalDamp,
+													r,
+													allowedPen,
+													eps,
+													timeStep,
+													corr,
+													tangentialDamp,
+													agentFrictionMu,
+													iters,
+													manifoldK,
+													&agentLastActiveContactTriangle[static_cast<size_t>(fi)],
+													driveForceN,
+													agentContactTriangles,
+													agentContactTrianglePhysIds,
+													agentVerticesByPhysId,
+													physMassSumKg);
+											} else if (!agentContactVertexPhysIds.empty()) {
 											contact = solveAgentSphereVertexCollisionConstraint(
 												sphereCenter,
 												sphereVel,
@@ -3472,27 +3571,29 @@ int main(int argc, char** argv) {
 											Eigen::Vector3f v = (p - prevP) / std::max(1e-8f, dtSub);
 
 											AgentContactResult c{};
-											if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
-												c = solveAgentSphereTriangleCollisionConstraint(
-													p,
-													v,
-													0.0f,
-													contactProxyInvMassScale,
-													contactVelRelax,
-													contactVelRelaxMin,
-													contactNormalDamp,
-													r,
-													allowedPen,
-													eps,
-													dtSub,
-													corr,
-													tangentialDamp,
-													agentFrictionMu,
-													itersSub,
-													Eigen::Vector3f::Zero(),
-													agentContactTriangles,
-													agentContactTrianglePhysIds,
-													agentVerticesByPhysId,
+												if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+													c = solveAgentSphereTriangleCollisionConstraint(
+														p,
+														v,
+														0.0f,
+														contactProxyInvMassScale,
+														contactVelRelax,
+														contactVelRelaxMin,
+														contactNormalDamp,
+														r,
+														allowedPen,
+														eps,
+														dtSub,
+														corr,
+														tangentialDamp,
+														agentFrictionMu,
+														itersSub,
+														manifoldK,
+														&agentLastActiveContactTriangle[static_cast<size_t>(fi)],
+														Eigen::Vector3f::Zero(),
+														agentContactTriangles,
+														agentContactTrianglePhysIds,
+														agentVerticesByPhysId,
 													physMassSumKg);
 											} else if (!agentContactVertexPhysIds.empty()) {
 												c = solveAgentSphereVertexCollisionConstraint(
@@ -3570,27 +3671,29 @@ int main(int argc, char** argv) {
 											const Eigen::Vector3f driveForceN = agentVcKLen * disp + vcCLen * (devVel - sphereVel);
 											const float sphereInvMass = 1.0f / agentProxyMassKg;
 
-											if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
-												contact2 = solveAgentSphereTriangleCollisionConstraint(
-													sphereCenter,
-													sphereVel,
-													sphereInvMass,
-													contactProxyInvMassScale,
-													contactVelRelax,
-													contactVelRelaxMin,
-													contactNormalDamp,
-													r,
-													allowedPen,
-													eps,
-													timeStep,
-													corr,
-													tangentialDamp,
-													agentFrictionMu,
-													iters2,
-													driveForceN,
-													agentContactTriangles,
-													agentContactTrianglePhysIds,
-													agentVerticesByPhysId,
+												if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+													contact2 = solveAgentSphereTriangleCollisionConstraint(
+														sphereCenter,
+														sphereVel,
+														sphereInvMass,
+														contactProxyInvMassScale,
+														contactVelRelax,
+														contactVelRelaxMin,
+														contactNormalDamp,
+														r,
+														allowedPen,
+														eps,
+														timeStep,
+														corr,
+														tangentialDamp,
+														agentFrictionMu,
+														iters2,
+														manifoldK,
+														&agentLastActiveContactTriangle[static_cast<size_t>(fi)],
+														driveForceN,
+														agentContactTriangles,
+														agentContactTrianglePhysIds,
+														agentVerticesByPhysId,
 													physMassSumKg);
 											} else if (!agentContactVertexPhysIds.empty()) {
 												contact2 = solveAgentSphereVertexCollisionConstraint(

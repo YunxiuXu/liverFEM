@@ -37,9 +37,13 @@ float anchorSpringMaxAccel = 5000.0f;
 float agentVcStiffnessNPerBbox = 250.0f;
 	float agentVcDampingNsPerBbox = 20.0f;
 	float agentVcDampingNsPerBboxInContact = 20.0f;
+	bool agentVcAutoDamping = false;
+	float agentVcDampingRatioFree = 1.0f;
+	float agentVcDampingRatioContact = 2.0f;
 	float agentVcMaxDistanceRadiusFrac = 4.0f;
 	int agentVcSubsteps = 6;
 	int agentCollisionIterations = 30;
+	int agentContactManifoldTriangles = 1;
 	float agentMaxPenetrationFrac = 0.0f;
 	float agentProxyPositionCorrection = 1.0f;
 	float agentInfluenceRadiusFrac = 3.0f;
@@ -189,6 +193,8 @@ void loadParams(const std::string& filename) {
 	        {"agent_vcStiffnessNPerBbox", &agentVcStiffnessNPerBbox},
 	        {"agent_vcDampingNsPerBbox", &agentVcDampingNsPerBbox},
 	        {"agent_vcDampingNsPerBboxInContact", &agentVcDampingNsPerBboxInContact},
+	        {"agent_vcDampingRatioFree", &agentVcDampingRatioFree},
+	        {"agent_vcDampingRatioContact", &agentVcDampingRatioContact},
 	        {"agent_vcMaxDistanceRadiusFrac", &agentVcMaxDistanceRadiusFrac},
 	        {"agent_maxPenetrationFrac", &agentMaxPenetrationFrac},
 			        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
@@ -247,6 +253,7 @@ void loadParams(const std::string& filename) {
 	        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
 	        {"agent_vcSubsteps", &agentVcSubsteps},
 	        {"agent_collisionIterations", &agentCollisionIterations},
+	        {"agent_contactManifoldTriangles", &agentContactManifoldTriangles},
 	        {"exp3_settleSteps", &exp3SettleSteps},
 		        {"exp3_dragSteps", &exp3DragSteps},
 		        {"exp1_settleSteps", &exp1SettleSteps},
@@ -286,7 +293,8 @@ void loadParams(const std::string& filename) {
 			        {"agent_enabled", &agentEnabled},
 		        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
 		        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
-		        {"agent_virtualCoupling", &agentVirtualCoupling},
+			        {"agent_virtualCoupling", &agentVirtualCoupling},
+			        {"agent_vcAutoDamping", &agentVcAutoDamping},
 			        {"agent_writeLiveFile", &agentWriteLiveFile},
 		        {"wall_enabled", &wallEnabled},
 		        {"leap_enabled", &leapEnabled},

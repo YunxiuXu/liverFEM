@@ -147,8 +147,8 @@ AgentContactResult applyAgentSphereContact(
 
 		// Add smooth extra stiffness for deep penetration to prevent tunneling
 		const float penRatio = penetration / std::max(1e-6f, r);
-		// Start extra penalty later (50%) and grow slower to allow softer deep press
-		const float extraStiffness = (penRatio > 0.50f) ? (k * (penRatio - 0.50f) * 2.0f) : 0.0f;
+		// Start extra penalty later (80%) and grow slower to allow softer deep press
+		const float extraStiffness = (penRatio > 0.80f) ? (k * (penRatio - 0.80f) * 1.0f) : 0.0f;
 		const float accelMag = k * penetration + dampMag + extraStiffness * penetration;
 		const Eigen::Vector3f accel = n * (accelMag * forceWeight);
 
@@ -248,8 +248,8 @@ AgentContactResult applyAgentSphereTriangleContact(
 
 		// Add smooth extra stiffness for deep penetration to prevent tunneling
 		const float penRatio = penetration / std::max(1e-6f, r);
-		// Start extra penalty later (50%) and grow slower to allow softer deep press
-		const float extraStiffness = (penRatio > 0.50f) ? (k * (penRatio - 0.50f) * 2.0f) : 0.0f;
+		// Start extra penalty later (80%) and grow slower to allow softer deep press
+		const float extraStiffness = (penRatio > 0.80f) ? (k * (penRatio - 0.80f) * 1.0f) : 0.0f;
 		const float accelMag = k * penetration + dampMag + extraStiffness * penetration;
 		const Eigen::Vector3f accel = n * (accelMag * forceWeight);
 

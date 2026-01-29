@@ -44,9 +44,16 @@ extern float agentVcStiffnessNPerBbox;
 extern float agentVcDampingNsPerBbox;
 // Optional: higher VC damping while in contact (improves stability without slowing free-space motion).
 extern float agentVcDampingNsPerBboxInContact;
+// Optional: compute VC damping from critical damping (c = 2*zeta*sqrt(k*m)).
+// If enabled, agent_vcDampingNsPerBbox* values are ignored.
+extern bool agentVcAutoDamping;
+extern float agentVcDampingRatioFree;
+extern float agentVcDampingRatioContact;
 extern float agentVcMaxDistanceRadiusFrac;
 extern int agentVcSubsteps;
 extern int agentCollisionIterations;
+// Max number of simultaneous contact triangles to solve per proxy (1 = single triangle, >1 = manifold).
+extern int agentContactManifoldTriangles;
 extern float agentMaxPenetrationFrac;
 extern float agentProxyPositionCorrection;
 	extern float agentInfluenceRadiusFrac;
