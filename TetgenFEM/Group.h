@@ -46,6 +46,8 @@ public:
 	Eigen::VectorXf initLocalPos;//initial position - center of mass
 	Eigen::MatrixXf FEMLHS;
 	Eigen::MatrixXf FEMLHS_Inv;
+	Eigen::ColPivHouseholderQR<Eigen::MatrixXf> FEMLHS_QR;
+	bool FEMLHS_QR_Ready = false;
 	Eigen::VectorXf FEMRHS;
 	Eigen::VectorXf Fbind;
 	Eigen::VectorXf prevFbind;

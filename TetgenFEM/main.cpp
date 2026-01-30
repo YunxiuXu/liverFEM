@@ -3341,9 +3341,21 @@ int main(int argc, char** argv) {
 								lastCouplingForceN = couplingForceN;
 							}
 
-							agentLastCouplingForcesN[static_cast<size_t>(fi)] = lastCouplingForceN;
-							// For a real haptic device this is the force you'd output (device feels the spring).
-							agentLastDeviceForcesN[static_cast<size_t>(fi)] = -lastCouplingForceN;
+								agentLastCouplingForcesN[static_cast<size_t>(fi)] = lastCouplingForceN;
+								// For a real haptic device this is the force you'd output.
+								//
+								// IMPORTANT: Do NOT feed proxyVel into the output damping term. proxyVel picks up
+								// high-frequency noise from contact corrections and will show up as "buzzing" even
+								// when the device is held still. Keep full damping for proxy dynamics, but output
+								// only spring + device-velocity damping.
+								Eigen::Vector3f dispOut = (devPos - proxyPos);
+								const float dispLenOut = dispOut.norm();
+								if (maxVcDist > 1e-6f && dispLenOut > maxVcDist) {
+									dispOut *= (maxVcDist / dispLenOut);
+								}
+								const Eigen::Vector3f springForceN = (agentVcKLen * vcStiffnessScale) * dispOut;
+								const Eigen::Vector3f deviceForceN = -(springForceN + vcCLen * devVel);
+								agentLastDeviceForcesN[static_cast<size_t>(fi)] = deviceForceN;
 						}
 					} else {
 						// Direct: kinematic sphere.
@@ -3995,18 +4007,29 @@ int main(int argc, char** argv) {
 												(agentVcKLen * vcStiffnessScale) * disp +
 												(wasContact ? agentVcCLenContact : agentVcCLenFree) * (devVel - proxyVel);
 											agentLastCouplingForcesN[static_cast<size_t>(fi)] = couplingForceN;
-											agentLastDeviceForcesN[static_cast<size_t>(fi)] = -couplingForceN;
+											const float vcCLen = wasContact ? agentVcCLenContact : agentVcCLenFree;
+											const Eigen::Vector3f springForceN = (agentVcKLen * vcStiffnessScale) * disp;
+											agentLastDeviceForcesN[static_cast<size_t>(fi)] = -(springForceN + vcCLen * devVel);
 										}
 									}
 
 									// Optional: low-pass filter the device force for haptic stability (does not affect motion).
 									{
-										const float tau = std::max(0.0f, agentDeviceForceFilterTauSec);
-										if (tau > 0.0f) {
-											const float a = std::exp(-timeStep / std::max(1e-6f, tau));
+										const float tauBase = std::max(0.0f, agentDeviceForceFilterTauSec);
+										if (tauBase > 0.0f) {
+											const float v0 = 0.02f * bboxDiag;
+											const float v1 = 0.10f * bboxDiag;
+											const float tauContact = std::max(tauBase, 0.02f); // heavier smoothing only while pressing
 											for (int fi = 0; fi < kFingerCount; ++fi) {
 												const Eigen::Vector3f raw = agentLastDeviceForcesN[static_cast<size_t>(fi)];
 												Eigen::Vector3f& f = agentFilteredDeviceForcesN[static_cast<size_t>(fi)];
+												float tauEff = tauBase;
+												if (agentLastContactCounts[static_cast<size_t>(fi)] > 0) {
+													const float speed = agentDeviceVelocities[static_cast<size_t>(fi)].norm();
+													const float t = (v1 > v0) ? std::clamp((speed - v0) / (v1 - v0), 0.0f, 1.0f) : 1.0f;
+													tauEff = tauContact + (tauBase - tauContact) * t;
+												}
+												const float a = std::exp(-timeStep / std::max(1e-6f, tauEff));
 												f = f * a + raw * (1.0f - a);
 												agentLastDeviceForcesN[static_cast<size_t>(fi)] = f;
 											}

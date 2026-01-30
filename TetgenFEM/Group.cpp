@@ -911,7 +911,25 @@ void Group::calLHS() {
 	RHS_A = RHS_E * initLocalPos;
 
 	FEMLHS = LHS_I + LHS_A - LHS_B;
-	FEMLHS_Inv = FEMLHS.inverse();
+	FEMLHS_QR_Ready = false;
+	FEMLHS_Inv.resize(0, 0);
+	if (FEMLHS.size() > 0) {
+		// Numerical stability: regularize slightly to reduce extreme condition numbers at high stiffness.
+		const float diagMax = FEMLHS.diagonal().cwiseAbs().maxCoeff();
+		if (diagMax > 0.0f) {
+			const float reg = std::max(1e-6f, 1e-10f * diagMax);
+			FEMLHS.diagonal().array() += reg;
+		}
+
+		// Use a robust solver for the ORIGINAL (generally non-symmetric) system.
+		// Symmetrizing changes the physics and can catastrophically destabilize the simulation.
+		FEMLHS_QR.compute(FEMLHS);
+		FEMLHS_QR_Ready = true;
+	}
+	if (!FEMLHS_QR_Ready && FEMLHS.size() > 0) {
+		// Legacy fallback: explicit inverse (may be unstable for very stiff/ill-conditioned systems).
+		FEMLHS_Inv = FEMLHS.inverse();
+	}
 }
 void Group::calLHSFEM() {
 	//A = timeStep * timeStep * (massMatrix + timeStep * dampingMatrix).inverse() * groupK;
@@ -954,7 +972,19 @@ void Group::calRInvLocalPos() {
 void Group::calDeltaX() {
 
 	// Solve Ax=b
-	deltaX = FEMLHS_Inv * FEMRHS;
+	if (FEMLHS.size() == 0) {
+		deltaX.resize(0);
+	} else if (FEMLHS_QR_Ready) {
+		deltaX = FEMLHS_QR.solve(FEMRHS);
+	} else if (FEMLHS_Inv.size() > 0) {
+		deltaX = FEMLHS_Inv * FEMRHS;
+	} else {
+		deltaX = Eigen::VectorXf::Zero(FEMRHS.size());
+	}
+
+	if (!deltaX.allFinite()) {
+		deltaX.setZero();
+	}
 	//deltaX = FEMLHS.colPivHouseholderQr().solve(FEMRHS);
 
 	
