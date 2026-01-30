@@ -1,7 +1,7 @@
-youngs=6000
-youngs1=6000
-youngs2=6000
-youngs3=6000
+youngs=7000
+youngs1=7000
+youngs2=7000
+youngs3=7000
 poisson=0.49
 density=200
 groupNumX=8
@@ -176,7 +176,7 @@ haptic_uart_port=/dev/cu.usbserial-AUOK5THN
 haptic_uart_motor_id=1
 haptic_min_force_input=0.0
 haptic_max_force_input=6.0
-haptic_min_pwm_output=0.0
+haptic_min_pwm_output=30.0
 haptic_max_pwm_output=180.0
 # Gamma correction for haptics (Power Law)
 # 1.0 = Linear
