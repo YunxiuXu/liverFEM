@@ -2100,6 +2100,9 @@ int main(int argc, char** argv) {
 					std::array<int, kFingerCount> agentLastContactCounts{};
 					std::array<float, kFingerCount> agentLastContactPenetrations{};
 					std::array<int, kFingerCount> agentLastActiveContactTriangle{};
+					std::array<bool, kFingerCount> agentGripActive{};
+					std::array<int, kFingerCount> agentGripTriangle{};
+					std::array<Eigen::Vector3f, kFingerCount> agentGripBary{};
 						agentLastDeviceForcesN.fill(Eigen::Vector3f::Zero());
 						agentLastContactForcesN.fill(Eigen::Vector3f::Zero());
 						agentLastCouplingForcesN.fill(Eigen::Vector3f::Zero());
@@ -2108,6 +2111,9 @@ int main(int argc, char** argv) {
 						agentLastContactNormalsIn.fill(Eigen::Vector3f::Zero());
 						agentFilteredContactNormalsIn.fill(Eigen::Vector3f::Zero());
 						agentLastActiveContactTriangle.fill(-1);
+						agentGripActive.fill(false);
+						agentGripTriangle.fill(-1);
+						agentGripBary.fill(Eigen::Vector3f::Zero());
 		
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 		LeapCTracker leapTracker;
@@ -2669,6 +2675,7 @@ int main(int argc, char** argv) {
 					static KeyLatch agentPrintLatch;
 					static KeyLatch agentVcLatch;
 					static KeyLatch agentForceModeLatch;
+					static KeyLatch agentGripLatch;
 			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 						static KeyLatch leapToggleLatch;
 						static KeyLatch leapRecenterLatch;
@@ -2680,7 +2687,7 @@ int main(int argc, char** argv) {
 							agentSphere.enabled = !agentSphere.enabled;
 								std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
 								          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-							          << "  VirtualCoupling: V | Home: T | Print force: G | Force graph: F | Print COM: M\n"
+							          << "  VirtualCoupling: V | Grip: Y | Home: T | Print force: G | Force graph: F | Print COM: M\n"
 			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 								          << "  Leap: toggle=B | recenter=R | gain: '['/']'\n"
 			#endif
@@ -2690,6 +2697,7 @@ int main(int argc, char** argv) {
 						}
 			static bool agentUseVC = agentVirtualCoupling;
 			static int agentForceGraphMode = 1; // 0=CONTACT, 1=DEVICE (filtered)
+			static bool agentGripEnabledRuntime = agentGripEnabled;
 				if (agentVcLatch.consume(window, GLFW_KEY_V)) {
 					agentUseVC = !agentUseVC;
 					std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
@@ -2697,6 +2705,15 @@ int main(int argc, char** argv) {
 				if (agentForceModeLatch.consume(window, GLFW_KEY_F)) {
 					agentForceGraphMode = 1 - agentForceGraphMode;
 					std::cout << "[AgentSphere] ForceGraph " << (agentForceGraphMode ? "DEVICE" : "CONTACT") << "\n";
+				}
+				if (agentGripLatch.consume(window, GLFW_KEY_Y)) {
+					agentGripEnabledRuntime = !agentGripEnabledRuntime;
+					if (!agentGripEnabledRuntime) {
+						agentGripActive.fill(false);
+						agentGripTriangle.fill(-1);
+						agentGripBary.fill(Eigen::Vector3f::Zero());
+					}
+					std::cout << "[AgentSphere] Grip " << (agentGripEnabledRuntime ? "ON" : "OFF") << "\n";
 				}
 						if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
 							for (int fi = 0; fi < kFingerCount; ++fi) {
@@ -2716,6 +2733,9 @@ int main(int argc, char** argv) {
 						agentLastContactNormalsIn[static_cast<size_t>(fi)].setZero();
 						agentFilteredContactNormalsIn[static_cast<size_t>(fi)].setZero();
 						agentLastActiveContactTriangle[static_cast<size_t>(fi)] = -1;
+						agentGripActive[static_cast<size_t>(fi)] = false;
+						agentGripTriangle[static_cast<size_t>(fi)] = -1;
+						agentGripBary[static_cast<size_t>(fi)].setZero();
 					}
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 						leapMappingCalibrated = false;
@@ -3462,6 +3482,9 @@ int main(int argc, char** argv) {
 						agentLastContactNormalsIn[static_cast<size_t>(fi)].setZero();
 						agentFilteredContactNormalsIn[static_cast<size_t>(fi)].setZero();
 						agentLastActiveContactTriangle[static_cast<size_t>(fi)] = -1;
+						agentGripActive[static_cast<size_t>(fi)] = false;
+						agentGripTriangle[static_cast<size_t>(fi)] = -1;
+						agentGripBary[static_cast<size_t>(fi)].setZero();
 					}
 				}
 
@@ -4117,6 +4140,136 @@ int main(int argc, char** argv) {
 										if (tauN > 0.0f) n = n * aN + rawN * (1.0f - aN);
 										else n = rawN;
 										if (n.squaredNorm() > 1e-12f) n.normalize();
+									}
+								}
+
+								// Optional: grip/adhesion (tangential spring) to help "grab" and drag the surface.
+								if (agentGripEnabledRuntime && agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+									const float gripCorr = std::clamp(agentGripTangentCorrection, 0.0f, 1.0f);
+									const float gripSlip = std::max(0.0f, agentGripSlipDistanceFrac) * r;
+									const float gripMaxStep = std::max(0.0f, agentGripMaxTangentStepFrac) * r;
+									const float gripMinPen = std::max(0.0f, agentGripMinPenetrationFrac) * r;
+									const float invDt = 1.0f / std::max(1e-8f, timeStep);
+									const float invMs = 1.0f / std::max(1e-8f, agentProxyMassKg);
+									const float invMsResp = invMs * std::clamp(contactProxyInvMassScale, 0.0f, 1.0f);
+
+									auto invMassOfPhysId = [&](int id) -> float {
+										if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) return 0.0f;
+										const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+										if (list.empty() || !list.front()) return 0.0f;
+										if (list.front()->isFixed) return 0.0f;
+										if (id < 0 || id >= static_cast<int>(physMassSumKg.size())) return 0.0f;
+										const float m = physMassSumKg[static_cast<size_t>(id)];
+										return (m > 1e-12f) ? (1.0f / m) : 0.0f;
+									};
+
+									auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp) {
+										if (dp.squaredNorm() <= 1e-24f) return;
+										if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) return;
+										const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+										for (Vertex* v : list) {
+											if (!v || v->isFixed) continue;
+											v->x += dp.x();
+											v->y += dp.y();
+											v->z += dp.z();
+											v->velx += dp.x() * invDt;
+											v->vely += dp.y() * invDt;
+											v->velz += dp.z() * invDt;
+										}
+									};
+
+									for (int fi = 0; fi < kFingerCount; ++fi) {
+										const size_t idx = static_cast<size_t>(fi);
+										if (agentLastContactCounts[idx] <= 0) {
+											agentGripActive[idx] = false;
+											agentGripTriangle[idx] = -1;
+											continue;
+										}
+
+										const float pen = agentLastContactPenetrations[idx];
+										if (pen < gripMinPen) {
+											agentGripActive[idx] = false;
+											agentGripTriangle[idx] = -1;
+											continue;
+										}
+
+										const int preferredTi = agentLastActiveContactTriangle[idx];
+										if (preferredTi < 0 || preferredTi >= static_cast<int>(agentContactTriangles.size())) {
+											agentGripActive[idx] = false;
+											agentGripTriangle[idx] = -1;
+											continue;
+										}
+
+										if (!agentGripActive[idx]) {
+											const auto& tri = agentContactTriangles[static_cast<size_t>(preferredTi)];
+											if (!tri.a || !tri.b || !tri.c) continue;
+											const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+											const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+											const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+											Eigen::Vector3f bary(0.0f, 0.0f, 0.0f);
+											(void)closestPointOnTriangle(agentProxyPositions[idx], a, b, c, &bary);
+											agentGripActive[idx] = true;
+											agentGripTriangle[idx] = preferredTi;
+											agentGripBary[idx] = bary;
+										}
+
+										if (!agentGripActive[idx]) continue;
+										const int gripTi = agentGripTriangle[idx];
+										if (gripTi < 0 || gripTi >= static_cast<int>(agentContactTriangles.size())) {
+											agentGripActive[idx] = false;
+											agentGripTriangle[idx] = -1;
+											continue;
+										}
+
+										const auto& tri = agentContactTriangles[static_cast<size_t>(gripTi)];
+										if (!tri.a || !tri.b || !tri.c) {
+											agentGripActive[idx] = false;
+											agentGripTriangle[idx] = -1;
+											continue;
+										}
+
+										const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+										const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+										const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+										Eigen::Vector3f outwardN = Eigen::Vector3f::Zero();
+										if (!outwardNormalForTriangle(tri, a, b, c, &outwardN)) continue;
+
+										const Eigen::Vector3f bary = agentGripBary[idx];
+										const Eigen::Vector3f anchor = a * bary.x() + b * bary.y() + c * bary.z();
+										Eigen::Vector3f rel = agentProxyPositions[idx] - anchor;
+										Eigen::Vector3f relT = rel - outwardN * rel.dot(outwardN);
+										const float relTLen = relT.norm();
+										if (gripSlip > 0.0f && relTLen > gripSlip) {
+											agentGripActive[idx] = false;
+											agentGripTriangle[idx] = -1;
+											continue;
+										}
+										if (relTLen <= 1e-8f || gripCorr <= 0.0f) continue;
+
+										Eigen::Vector3f dp = -relT * gripCorr;
+										const float dpLen = dp.norm();
+										if (gripMaxStep > 0.0f && dpLen > gripMaxStep) {
+											dp *= (gripMaxStep / std::max(1e-12f, dpLen));
+										}
+
+										const auto& ids = agentContactTrianglePhysIds[static_cast<size_t>(gripTi)];
+										const float w0 = bary.x();
+										const float w1 = bary.y();
+										const float w2 = bary.z();
+										const float invMa = invMassOfPhysId(ids[0]);
+										const float invMb = invMassOfPhysId(ids[1]);
+										const float invMc = invMassOfPhysId(ids[2]);
+										const float denom = (w0 * w0) * invMa + (w1 * w1) * invMb + (w2 * w2) * invMc + invMsResp;
+										if (denom <= 1e-18f) continue;
+
+										if (invMsResp > 0.0f) {
+											const Eigen::Vector3f dpSphere = dp * (invMsResp / denom);
+											agentProxyPositions[idx] += dpSphere;
+											agentProxyVelocities[idx] += dpSphere * invDt;
+										}
+										applyDeltaToPhysId(ids[0], -dp * (w0 * invMa / denom));
+										applyDeltaToPhysId(ids[1], -dp * (w1 * invMb / denom));
+										applyDeltaToPhysId(ids[2], -dp * (w2 * invMc / denom));
 									}
 								}
 

@@ -53,6 +53,11 @@ float agentVcStiffnessNPerBbox = 250.0f;
 	float agentContactVelocityRelaxationMin = 0.02f;
 	float agentContactNormalDamp = 0.8f;
 	float agentFrictionMu = 1.0f;
+	bool agentGripEnabled = false;
+	float agentGripTangentCorrection = 0.6f;
+	float agentGripMaxTangentStepFrac = 0.25f;
+	float agentGripSlipDistanceFrac = 0.6f;
+	float agentGripMinPenetrationFrac = 0.03f;
 	float agentDeviceForceFilterTauSec = 0.0f;
 	float agentContactForceFilterTauSec = 0.03f;
 	float agentContactNormalFilterTauSec = 0.02f;
@@ -205,10 +210,14 @@ void loadParams(const std::string& filename) {
 			        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
 			        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
 			        {"agent_contactProxyInvMassScale", &agentContactProxyInvMassScale},
-			        {"agent_contactVelocityRelaxation", &agentContactVelocityRelaxation},
-			        {"agent_contactVelocityRelaxationMin", &agentContactVelocityRelaxationMin},
+	        {"agent_contactVelocityRelaxation", &agentContactVelocityRelaxation},
+	        {"agent_contactVelocityRelaxationMin", &agentContactVelocityRelaxationMin},
 	        {"agent_contactNormalDamp", &agentContactNormalDamp},
 	        {"agent_frictionMu", &agentFrictionMu},
+	        {"agent_gripTangentCorrection", &agentGripTangentCorrection},
+	        {"agent_gripMaxTangentStepFrac", &agentGripMaxTangentStepFrac},
+	        {"agent_gripSlipDistanceFrac", &agentGripSlipDistanceFrac},
+	        {"agent_gripMinPenetrationFrac", &agentGripMinPenetrationFrac},
 	        {"agent_deviceForceFilterTauSec", &agentDeviceForceFilterTauSec},
 	        {"agent_contactForceFilterTauSec", &agentContactForceFilterTauSec},
 	        {"agent_contactNormalFilterTauSec", &agentContactNormalFilterTauSec},
@@ -301,9 +310,10 @@ void loadParams(const std::string& filename) {
 			        {"agent_enabled", &agentEnabled},
 		        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
 		        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
-			        {"agent_virtualCoupling", &agentVirtualCoupling},
-			        {"agent_vcAutoDamping", &agentVcAutoDamping},
-			        {"agent_writeLiveFile", &agentWriteLiveFile},
+		        {"agent_virtualCoupling", &agentVirtualCoupling},
+		        {"agent_vcAutoDamping", &agentVcAutoDamping},
+		        {"agent_gripEnabled", &agentGripEnabled},
+		        {"agent_writeLiveFile", &agentWriteLiveFile},
 		        {"wall_enabled", &wallEnabled},
 		        {"leap_enabled", &leapEnabled},
 		        {"leap_flipX", &leapFlipX},

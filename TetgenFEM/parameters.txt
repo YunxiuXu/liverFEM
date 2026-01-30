@@ -70,6 +70,12 @@ agent_contactVelocityRelaxation=0.25
 agent_contactVelocityRelaxationMin=0.1
 agent_contactNormalDamp=0.8
 agent_frictionMu=2.0
+# Grip/adhesion (tangential spring to help dragging/rolling)
+agent_gripEnabled=true
+agent_gripTangentCorrection=0.6
+agent_gripMaxTangentStepFrac=0.25
+agent_gripSlipDistanceFrac=0.6
+agent_gripMinPenetrationFrac=0.03
 agent_deviceForceFilterTauSec=0.004
 agent_contactForceFilterTauSec=0.03
 agent_contactNormalFilterTauSec=0.02

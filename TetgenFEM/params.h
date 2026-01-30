@@ -71,6 +71,16 @@ extern float agentProxyPositionCorrection;
 	extern float agentContactNormalDamp;
 	// Coulomb friction coefficient between proxy sphere and surface (0 disables).
 	extern float agentFrictionMu;
+	// Optional grip/stick mode (tangential spring) to help "grab" and drag the surface.
+	extern bool agentGripEnabled;
+	// Tangential correction fraction per frame (0..1).
+	extern float agentGripTangentCorrection;
+	// Maximum tangential correction step per frame (as fraction of proxy radius).
+	extern float agentGripMaxTangentStepFrac;
+	// Slip distance threshold to release grip (as fraction of proxy radius).
+	extern float agentGripSlipDistanceFrac;
+	// Minimum penetration required to engage grip (as fraction of proxy radius).
+	extern float agentGripMinPenetrationFrac;
 	// Optional low-pass filter for device force output (seconds; 0 disables).
 	extern float agentDeviceForceFilterTauSec;
 	// Optional low-pass filter for proxy contact force output (seconds; 0 disables).
