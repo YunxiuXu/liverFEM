@@ -998,13 +998,19 @@ static bool outwardNormalForTriangle(
 							if (denom <= 1e-18f) continue;
 
 							float correctionMag = pen * corr;
-							float maxCorrPerIter = 0.05f * shellR;
+							// Per-iteration clamp: avoids explosive corrections, but must still be strong enough
+							// to prevent "tunnel / depenetrate" chatter under fast motion.
+							//
+							// NOTE: kinematic mode substeps reduce solver iterations per substep; if this clamp is
+							// too conservative, penetration accumulates and shows up as buzzing/ghosting. Prefer a
+							// slightly larger clamp and rely on velocity relaxation + normal damping for stability.
+							float maxCorrPerIter = 0.10f * shellR;
 							if (shellR > 1e-12f) {
 								// When deeply inside, allow a larger correction step so the proxy can't "sink"
 								// many frames before being pushed back out.
 								const float penOver = pen / shellR; // ~[0..3] after clamping
 								const float tDeep = std::clamp((penOver - 1.0f) / 2.0f, 0.0f, 1.0f);
-								maxCorrPerIter = shellR * (0.05f + 0.10f * tDeep); // 5%..15% of shellR
+								maxCorrPerIter = shellR * (0.10f + 0.20f * tDeep); // 10%..30% of shellR
 							}
 							if (correctionMag > maxCorrPerIter) correctionMag = maxCorrPerIter;
 
@@ -3822,7 +3828,14 @@ int main(int argc, char** argv) {
 										const float stepLen = dp.norm();
 										const int substeps = std::clamp(static_cast<int>(std::ceil(stepLen / maxStep)), 1, 64);
 										const float dtSub = timeStep / static_cast<float>(substeps);
-										const int itersSub = std::clamp(std::max(1, static_cast<int>(std::ceil(static_cast<float>(iters) / static_cast<float>(substeps)))), 1, 64);
+										// For stability, keep a minimum number of collision iterations per substep.
+										// Otherwise, fast motion increases substeps but *decreases* per-substep work,
+										// causing accumulated penetration and contact buzzing.
+										const int itersPerSubstepMin = 6;
+										const int itersSub = std::clamp(
+											std::max(itersPerSubstepMin, static_cast<int>(std::ceil(static_cast<float>(iters) / static_cast<float>(substeps)))),
+											1,
+											64);
 
 										Eigen::Vector3f impulseNsec = Eigen::Vector3f::Zero();
 										int contactVerts = 0;
