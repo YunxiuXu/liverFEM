@@ -42,7 +42,7 @@ tet_volumeConstraintIterations=2
 
 # Agent sphere ("finger") contact
 # Toggle at runtime with key 'H' (see console output). These are defaults on startup.
-agent_enabled=false
+agent_enabled=true
 agent_useSurfaceVertices=true
 agent_useSurfaceTriangles=true
 agent_virtualCoupling=true
@@ -169,3 +169,17 @@ exp4_thread2=10
 exp4_thread3=14
 		
 		
+
+# Haptic UART Configuration
+haptic_uart_enabled=true
+haptic_uart_port=/dev/cu.usbserial-AUOK5THN
+haptic_uart_motor_id=1
+haptic_min_force_input=0.0
+haptic_max_force_input=30.0
+haptic_min_pwm_output=0.0
+haptic_max_pwm_output=255.0
+# Gamma correction for haptics (Power Law)
+# 1.0 = Linear
+# < 1.0 (e.g. 0.5-0.8) = Boosts small forces (Weber's Law / better sensitivity)
+# > 1.0 = Suppresses small forces
+haptic_gamma=0.6

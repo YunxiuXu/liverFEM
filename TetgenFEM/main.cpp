@@ -30,6 +30,7 @@
 #include "Experiment1.h"
 #include "Experiment2.h"
 #include "Experiment4.h"
+#include "HapticInterface.h"
 
 #if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 #include "LeapC.h"
@@ -1897,6 +1898,77 @@ int main(int argc, char** argv) {
 	}
 	std::cout << "Non-empty groups: " << nonEmptyGroupCount << "/" << groupNum << std::endl;
 
+	// ====================================
+	// Initialize Haptic UART Interface
+	// ====================================
+	HapticInterface haptic;
+	if (haptic_uart_enabled) {
+		std::cout << "\n========================================" << std::endl;
+		std::cout << "Initializing Haptic UART Interface..." << std::endl;
+		
+		// 1. Scan for ports
+		std::vector<std::string> ports;
+		try {
+			if (std::filesystem::exists("/dev")) {
+				for (const auto& entry : std::filesystem::directory_iterator("/dev")) {
+					std::string name = entry.path().filename().string();
+					// Look for macOS usbserial devices
+					if (name.rfind("cu.usbserial", 0) == 0 || name.rfind("tty.usbserial", 0) == 0 || name.rfind("cu.usbmodem", 0) == 0) {
+						ports.push_back(entry.path().string());
+					}
+				}
+			}
+		} catch (const std::filesystem::filesystem_error& ex) {
+			std::cerr << "Error scanning /dev: " << ex.what() << std::endl;
+		}
+		std::sort(ports.begin(), ports.end());
+
+		std::string selectedPort = haptic_uart_port;
+
+		// 2. List ports and ask user
+		if (ports.empty()) {
+			std::cout << "No USB serial ports found (matching cu.usbserial* or cu.usbmodem*)." << std::endl;
+			std::cout << "Using configured port: " << selectedPort << std::endl;
+		} else {
+			std::cout << "\nAvailable Serial Ports:" << std::endl;
+			for (size_t i = 0; i < ports.size(); ++i) {
+				std::cout << "  [" << i << "] " << ports[i] << std::endl;
+			}
+			std::cout << "\nSelect port number (default " << selectedPort << "): ";
+			
+			std::string input;
+			// Use getline to handle empty Enter key
+			// Clear any previous newline char left in buffer? No, initialization is early.
+			if (std::getline(std::cin, input)) {
+				if (!input.empty()) {
+					try {
+						int idx = std::stoi(input);
+						if (idx >= 0 && idx < static_cast<int>(ports.size())) {
+							selectedPort = ports[idx];
+						} else {
+							std::cout << "Invalid index, using default." << std::endl;
+						}
+					} catch (...) {
+						std::cout << "Invalid input, using default." << std::endl;
+					}
+				}
+			}
+			std::cout << "Target Port: " << selectedPort << std::endl;
+		}
+		
+		std::cout << "  Motor ID: " << haptic_uart_motor_id << std::endl;
+		std::cout << "  Force range: " << haptic_min_force_input << " - " << haptic_max_force_input << " N" << std::endl;
+		std::cout << "  PWM range: " << haptic_min_pwm_output << " - " << haptic_max_pwm_output << std::endl;
+		std::cout << "  Gamma: " << haptic_gamma << " (Power Law Mapping)" << std::endl;
+		
+		haptic.setParameters(haptic_min_force_input, haptic_max_force_input, haptic_min_pwm_output, haptic_max_pwm_output, haptic_gamma);
+		if (haptic.init(selectedPort)) {
+			std::cout << "✓ Haptic interface initialized successfully!" << std::endl;
+		} else {
+			std::cout << "✗ Failed to initialize haptic interface" << std::endl;
+		}
+		std::cout << "========================================\n" << std::endl;
+	}
 
 	// Initialize the GLFW library
 	if (!glfwInit()) {
@@ -5149,6 +5221,15 @@ int main(int argc, char** argv) {
 					// CONTACT force (filtered; raw PBD-derived contact force is too noisy to use directly).
 					fN = agentFilteredContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
 				}
+
+				if (haptic_uart_enabled) {
+					// Always use CONTACT force for haptic output, ignoring graph mode
+					// ensuring no force is felt when moving in free space (no drag/inertia)
+					Eigen::Vector3f contactF = agentFilteredContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
+					float forceMag = contactF.norm();
+					haptic.sendForce(haptic_uart_motor_id, forceMag);
+				}
+
 				agentForceHistory.push(Eigen::Vector4f(fN.x(), fN.y(), fN.z(), fN.norm()));
 			}
 

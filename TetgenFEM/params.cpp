@@ -22,72 +22,72 @@ float anchorCenterPushFrac = 0.02f;
 float anchorSpringK = 25.0f;
 float anchorSpringDamping = 10.0f;
 float anchorSpringMaxAccel = 5000.0f;
-	bool tetVolumeConstraintEnabled = false;
-	float tetVolumeConstraintCorrection = 0.15f;
-	int tetVolumeConstraintIterations = 2;
-		bool agentEnabled = false;
-		bool agentUseSurfaceVertices = true;
-		bool agentUseSurfaceTriangles = true;
-		bool agentVirtualCoupling = false;
-	float agentRadiusBboxScale = 0.03f;
-	float agentContactStiffness = 40000.0f;
-	float agentContactDamping = 200.0f;
-	float agentMoveSpeedBboxPerSec = 0.25f;
-	float agentProxyMassFracOfObject = 0.01f;
+bool tetVolumeConstraintEnabled = false;
+float tetVolumeConstraintCorrection = 0.15f;
+int tetVolumeConstraintIterations = 2;
+bool agentEnabled = false;
+bool agentUseSurfaceVertices = true;
+bool agentUseSurfaceTriangles = true;
+bool agentVirtualCoupling = false;
+float agentRadiusBboxScale = 0.03f;
+float agentContactStiffness = 40000.0f;
+float agentContactDamping = 200.0f;
+float agentMoveSpeedBboxPerSec = 0.25f;
+float agentProxyMassFracOfObject = 0.01f;
 float agentVcStiffnessNPerBbox = 250.0f;
-	float agentVcDampingNsPerBbox = 20.0f;
-	float agentVcDampingNsPerBboxInContact = 20.0f;
-	bool agentVcAutoDamping = false;
-	float agentVcDampingRatioFree = 1.0f;
-	float agentVcDampingRatioContact = 2.0f;
-	float agentVcMaxDistanceRadiusFrac = 4.0f;
-	int agentVcSubsteps = 6;
-	int agentCollisionIterations = 30;
-	int agentContactManifoldTriangles = 1;
-	float agentMaxPenetrationFrac = 0.0f;
-	float agentProxyPositionCorrection = 1.0f;
-	float agentInfluenceRadiusFrac = 3.0f;
-	float agentCollisionTangentialDamp = 0.6f;
-	float agentContactProxyInvMassScale = 1.0f;
-	float agentContactVelocityRelaxation = 0.15f;
-	float agentContactVelocityRelaxationMin = 0.02f;
-	float agentContactNormalDamp = 0.8f;
-	float agentFrictionMu = 1.0f;
-	bool agentGripEnabled = false;
-	float agentGripTangentCorrection = 0.6f;
-	float agentGripMaxTangentStepFrac = 0.25f;
-	float agentGripSlipDistanceFrac = 0.6f;
-	float agentGripMinPenetrationFrac = 0.03f;
-	float agentDeviceForceFilterTauSec = 0.0f;
-	float agentContactForceFilterTauSec = 0.03f;
-	float agentContactNormalFilterTauSec = 0.02f;
-	float agentDeviceForceGain = 1.0f;
-	float agentDeviceForceMaxN = 0.0f;
-	bool agentWriteLiveFile = false;
-	int agentLiveFileIntervalFrames = 2;
+float agentVcDampingNsPerBbox = 20.0f;
+float agentVcDampingNsPerBboxInContact = 20.0f;
+bool agentVcAutoDamping = false;
+float agentVcDampingRatioFree = 1.0f;
+float agentVcDampingRatioContact = 2.0f;
+float agentVcMaxDistanceRadiusFrac = 4.0f;
+int agentVcSubsteps = 6;
+int agentCollisionIterations = 30;
+int agentContactManifoldTriangles = 1;
+float agentMaxPenetrationFrac = 0.0f;
+float agentProxyPositionCorrection = 1.0f;
+float agentInfluenceRadiusFrac = 3.0f;
+float agentCollisionTangentialDamp = 0.6f;
+float agentContactProxyInvMassScale = 1.0f;
+float agentContactVelocityRelaxation = 0.15f;
+float agentContactVelocityRelaxationMin = 0.02f;
+float agentContactNormalDamp = 0.8f;
+float agentFrictionMu = 1.0f;
+bool agentGripEnabled = false;
+float agentGripTangentCorrection = 0.6f;
+float agentGripMaxTangentStepFrac = 0.25f;
+float agentGripSlipDistanceFrac = 0.6f;
+float agentGripMinPenetrationFrac = 0.03f;
+float agentDeviceForceFilterTauSec = 0.0f;
+float agentContactForceFilterTauSec = 0.03f;
+float agentContactNormalFilterTauSec = 0.02f;
+float agentDeviceForceGain = 1.0f;
+float agentDeviceForceMaxN = 0.0f;
+bool agentWriteLiveFile = false;
+int agentLiveFileIntervalFrames = 2;
 
-	bool wallEnabled = true;
-	float wallMarginBboxScale = 0.05f;
-	float wallRestitution = 0.0f;
-	float wallTangentialDamp = 0.2f;
+bool wallEnabled = true;
+float wallMarginBboxScale = 0.05f;
+float wallRestitution = 0.0f;
+float wallTangentialDamp = 0.2f;
 
-	bool leapEnabled = false;
-	float leapWorkspaceXmm = 260.0f;
-	float leapWorkspaceYmm = 260.0f;
-	float leapWorkspaceZmm = 260.0f;
-	float leapWorldMargin = 0.25f;
-		float leapGain = 1.0f;
-		float leapYOffsetBboxFrac = -0.2f;
-		float leapFingerSpreadGain = 2.0f;
-		float leapSmoothingTime = 0.03f;
-		bool leapFlipX = false;
-		bool leapFlipY = false;
-				bool leapFlipZ = false;
-	int exp3SettleSteps = 120;
-	int exp3DragSteps = 240;
-	float exp3ExOverEy = 5.0f;
-	bool exp3OverridePoisson = true;
-	float exp3PoissonOverride = 0.08f;
+bool leapEnabled = false;
+float leapWorkspaceXmm = 260.0f;
+float leapWorkspaceYmm = 260.0f;
+float leapWorkspaceZmm = 260.0f;
+float leapWorldMargin = 0.25f;
+float leapGain = 1.0f;
+float leapYOffsetBboxFrac = -0.2f;
+float leapFingerSpreadGain = 2.0f;
+float leapSmoothingTime = 0.03f;
+bool leapFlipX = false;
+bool leapFlipY = false;
+bool leapFlipZ = false;
+int exp3SettleSteps = 120;
+int exp3DragSteps = 240;
+float exp3ExOverEy = 5.0f;
+bool exp3OverridePoisson = true;
+float exp3PoissonOverride = 0.08f;
 float exp3DragDistanceBboxScale = 0.15f;
 float exp3DragDistanceMin = 0.15f;
 float exp3DragDistanceMax = 0.8f;
@@ -140,6 +140,17 @@ std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
 bool autoSaveMesh = true;
 
+// Haptic UART Interface
+bool haptic_uart_enabled = false;
+std::string haptic_uart_port = "/dev/cu.usbserial-AUOK5THN";
+int haptic_uart_motor_id = 1;
+float haptic_min_force_input = 0.0f;
+float haptic_max_force_input = 10.0f;
+float haptic_min_pwm_output = 0.0f;
+float haptic_max_pwm_output = 255.0f;
+float haptic_gamma = 1.0f;
+
+
 namespace {
 std::string trim(std::string s) {
 	auto notSpace = [](unsigned char ch) { return !std::isspace(ch); };
@@ -177,105 +188,108 @@ void loadParams(const std::string& filename) {
         return;
     }
 
-	    std::unordered_map<std::string, float*> floatParams = {
-	        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
-	        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
-	        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
-	        {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
-	        {"constraintHardness", &constraintHardness},
-	        {"dragInfluenceRadius", &dragInfluenceRadius},
-	        {"dragStiffness", &dragStiffness},
-	        {"dragMaxAccel", &dragMaxAccel},
-	        {"dragMaxDisplacement", &dragMaxDisplacement},
-	        {"anchor_backSliceFrac", &anchorBackSliceFrac},
-	        {"anchor_radiusDepthFrac", &anchorRadiusDepthFrac},
-	        {"anchor_centerPushFrac", &anchorCenterPushFrac},
-	        {"anchor_springK", &anchorSpringK},
-	        {"anchor_springDamping", &anchorSpringDamping},
-	        {"anchor_springMaxAccel", &anchorSpringMaxAccel},
-	        {"tet_volumeConstraintCorrection", &tetVolumeConstraintCorrection},
-	        {"agent_radiusBboxScale", &agentRadiusBboxScale},
-	        {"agent_contactStiffness", &agentContactStiffness},
-	        {"agent_contactDamping", &agentContactDamping},
-	        {"agent_moveSpeedBboxPerSec", &agentMoveSpeedBboxPerSec},
-	        {"agent_proxyMassFracOfObject", &agentProxyMassFracOfObject},
-	        {"agent_vcStiffnessNPerBbox", &agentVcStiffnessNPerBbox},
-	        {"agent_vcDampingNsPerBbox", &agentVcDampingNsPerBbox},
-	        {"agent_vcDampingNsPerBboxInContact", &agentVcDampingNsPerBboxInContact},
-	        {"agent_vcDampingRatioFree", &agentVcDampingRatioFree},
-	        {"agent_vcDampingRatioContact", &agentVcDampingRatioContact},
-	        {"agent_vcMaxDistanceRadiusFrac", &agentVcMaxDistanceRadiusFrac},
-	        {"agent_maxPenetrationFrac", &agentMaxPenetrationFrac},
-			        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
-			        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
-			        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
-			        {"agent_contactProxyInvMassScale", &agentContactProxyInvMassScale},
-	        {"agent_contactVelocityRelaxation", &agentContactVelocityRelaxation},
-	        {"agent_contactVelocityRelaxationMin", &agentContactVelocityRelaxationMin},
-	        {"agent_contactNormalDamp", &agentContactNormalDamp},
-	        {"agent_frictionMu", &agentFrictionMu},
-	        {"agent_gripTangentCorrection", &agentGripTangentCorrection},
-	        {"agent_gripMaxTangentStepFrac", &agentGripMaxTangentStepFrac},
-	        {"agent_gripSlipDistanceFrac", &agentGripSlipDistanceFrac},
-	        {"agent_gripMinPenetrationFrac", &agentGripMinPenetrationFrac},
-	        {"agent_deviceForceFilterTauSec", &agentDeviceForceFilterTauSec},
-	        {"agent_contactForceFilterTauSec", &agentContactForceFilterTauSec},
-	        {"agent_contactNormalFilterTauSec", &agentContactNormalFilterTauSec},
-	        {"agent_deviceForceGain", &agentDeviceForceGain},
-	        {"agent_deviceForceMaxN", &agentDeviceForceMaxN},
-				        {"wall_marginBboxScale", &wallMarginBboxScale},
-				        {"wall_restitution", &wallRestitution},
-				        {"wall_tangentialDamp", &wallTangentialDamp},
-			        {"leap_workspaceXmm", &leapWorkspaceXmm},
-			        {"leap_workspaceYmm", &leapWorkspaceYmm},
-			        {"leap_workspaceZmm", &leapWorkspaceZmm},
-				        {"leap_worldMargin", &leapWorldMargin},
-				        {"leap_gain", &leapGain},
-				        {"leap_yOffsetBboxFrac", &leapYOffsetBboxFrac},
-				        {"leap_fingerSpreadGain", &leapFingerSpreadGain},
-				        {"leap_smoothingTime", &leapSmoothingTime},
-				        {"exp3_exOverEy", &exp3ExOverEy},
-				        {"exp3_poissonOverride", &exp3PoissonOverride},
-				        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
-		        {"exp3_dragDistanceMin", &exp3DragDistanceMin},
-	        {"exp3_dragDistanceMax", &exp3DragDistanceMax}
-	        ,
-	        {"exp1_pullAccel", &exp1PullAccel},
-	        {"exp1_forceInfluenceRadius", &exp1ForceInfluenceRadius}
-	        ,
-	        {"exp1_sweepAccel1", &exp1SweepAccel1},
-	        {"exp1_sweepAccel2", &exp1SweepAccel2},
-	        {"exp1_sweepAccel3", &exp1SweepAccel3}
-	        ,
-	        {"exp2_poissonIncompressible", &exp2PoissonIncompressible},
-	        {"exp2_dragDistanceBboxScale", &exp2DragDistanceBboxScale},
-	        {"exp2_dragDistanceMin", &exp2DragDistanceMin},
-	        {"exp2_dragDistanceMax", &exp2DragDistanceMax},
-	        {"exp2_anchorSliceFrac", &exp2AnchorSliceFrac},
-	        {"exp2_pullSliceFrac", &exp2PullSliceFrac},
-	        {"exp2_pullStiffness", &exp2PullStiffness},
-	        {"exp2_pullMaxAccel", &exp2PullMaxAccel},
-	        {"exp4_maxVolumeStart", &exp4MaxVolumeStart},
-	        {"exp4_maxVolume1", &exp4MaxVolume1},
-	        {"exp4_maxVolume2", &exp4MaxVolume2},
-	        {"exp4_maxVolume3", &exp4MaxVolume3},
-	        {"exp4_maxVolume4", &exp4MaxVolume4},
-	        {"exp4_maxVolume5", &exp4MaxVolume5}
-	    };
+    std::unordered_map<std::string, float*> floatParams = {
+        {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
+        {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
+        {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
+        {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
+        {"constraintHardness", &constraintHardness},
+        {"dragInfluenceRadius", &dragInfluenceRadius},
+        {"dragStiffness", &dragStiffness},
+        {"dragMaxAccel", &dragMaxAccel},
+        {"dragMaxDisplacement", &dragMaxDisplacement},
+        {"anchor_backSliceFrac", &anchorBackSliceFrac},
+        {"anchor_radiusDepthFrac", &anchorRadiusDepthFrac},
+        {"anchor_centerPushFrac", &anchorCenterPushFrac},
+        {"anchor_springK", &anchorSpringK},
+        {"anchor_springDamping", &anchorSpringDamping},
+        {"anchor_springMaxAccel", &anchorSpringMaxAccel},
+        {"tet_volumeConstraintCorrection", &tetVolumeConstraintCorrection},
+        {"agent_radiusBboxScale", &agentRadiusBboxScale},
+        {"agent_contactStiffness", &agentContactStiffness},
+        {"agent_contactDamping", &agentContactDamping},
+        {"agent_moveSpeedBboxPerSec", &agentMoveSpeedBboxPerSec},
+        {"agent_proxyMassFracOfObject", &agentProxyMassFracOfObject},
+        {"agent_vcStiffnessNPerBbox", &agentVcStiffnessNPerBbox},
+        {"agent_vcDampingNsPerBbox", &agentVcDampingNsPerBbox},
+        {"agent_vcDampingNsPerBboxInContact", &agentVcDampingNsPerBboxInContact},
+        {"agent_vcDampingRatioFree", &agentVcDampingRatioFree},
+        {"agent_vcDampingRatioContact", &agentVcDampingRatioContact},
+        {"agent_vcMaxDistanceRadiusFrac", &agentVcMaxDistanceRadiusFrac},
+        {"agent_maxPenetrationFrac", &agentMaxPenetrationFrac},
+        {"agent_proxyPositionCorrection", &agentProxyPositionCorrection},
+        {"agent_influenceRadiusFrac", &agentInfluenceRadiusFrac},
+        {"agent_collisionTangentialDamp", &agentCollisionTangentialDamp},
+        {"agent_contactProxyInvMassScale", &agentContactProxyInvMassScale},
+        {"agent_contactVelocityRelaxation", &agentContactVelocityRelaxation},
+        {"agent_contactVelocityRelaxationMin", &agentContactVelocityRelaxationMin},
+        {"agent_contactNormalDamp", &agentContactNormalDamp},
+        {"agent_frictionMu", &agentFrictionMu},
+        {"agent_gripTangentCorrection", &agentGripTangentCorrection},
+        {"agent_gripMaxTangentStepFrac", &agentGripMaxTangentStepFrac},
+        {"agent_gripSlipDistanceFrac", &agentGripSlipDistanceFrac},
+        {"agent_gripMinPenetrationFrac", &agentGripMinPenetrationFrac},
+        {"agent_deviceForceFilterTauSec", &agentDeviceForceFilterTauSec},
+        {"agent_contactForceFilterTauSec", &agentContactForceFilterTauSec},
+        {"agent_contactNormalFilterTauSec", &agentContactNormalFilterTauSec},
+        {"agent_deviceForceGain", &agentDeviceForceGain},
+        {"agent_deviceForceMaxN", &agentDeviceForceMaxN},
+        {"wall_marginBboxScale", &wallMarginBboxScale},
+        {"wall_restitution", &wallRestitution},
+        {"wall_tangentialDamp", &wallTangentialDamp},
+        {"leap_workspaceXmm", &leapWorkspaceXmm},
+        {"leap_workspaceYmm", &leapWorkspaceYmm},
+        {"leap_workspaceZmm", &leapWorkspaceZmm},
+        {"leap_worldMargin", &leapWorldMargin},
+        {"leap_gain", &leapGain},
+        {"leap_yOffsetBboxFrac", &leapYOffsetBboxFrac},
+        {"leap_fingerSpreadGain", &leapFingerSpreadGain},
+        {"leap_smoothingTime", &leapSmoothingTime},
+        {"exp3_exOverEy", &exp3ExOverEy},
+        {"exp3_poissonOverride", &exp3PoissonOverride},
+        {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
+        {"exp3_dragDistanceMin", &exp3DragDistanceMin},
+        {"exp3_dragDistanceMax", &exp3DragDistanceMax},
+        {"exp1_pullAccel", &exp1PullAccel},
+        {"exp1_forceInfluenceRadius", &exp1ForceInfluenceRadius},
+        {"exp1_sweepAccel1", &exp1SweepAccel1},
+        {"exp1_sweepAccel2", &exp1SweepAccel2},
+        {"exp1_sweepAccel3", &exp1SweepAccel3},
+        {"exp2_poissonIncompressible", &exp2PoissonIncompressible},
+        {"exp2_dragDistanceBboxScale", &exp2DragDistanceBboxScale},
+        {"exp2_dragDistanceMin", &exp2DragDistanceMin},
+        {"exp2_dragDistanceMax", &exp2DragDistanceMax},
+        {"exp2_anchorSliceFrac", &exp2AnchorSliceFrac},
+        {"exp2_pullSliceFrac", &exp2PullSliceFrac},
+        {"exp2_pullStiffness", &exp2PullStiffness},
+        {"exp2_pullMaxAccel", &exp2PullMaxAccel},
+        {"exp4_maxVolumeStart", &exp4MaxVolumeStart},
+        {"exp4_maxVolume1", &exp4MaxVolume1},
+        {"exp4_maxVolume2", &exp4MaxVolume2},
+        {"exp4_maxVolume3", &exp4MaxVolume3},
+        {"exp4_maxVolume4", &exp4MaxVolume4},
+        {"exp4_maxVolume5", &exp4MaxVolume5},
+        // Haptic params
+        {"haptic_min_force_input", &haptic_min_force_input},
+        {"haptic_max_force_input", &haptic_max_force_input},
+        {"haptic_min_pwm_output", &haptic_min_pwm_output},
+        {"haptic_max_pwm_output", &haptic_max_pwm_output},
+        {"haptic_gamma", &haptic_gamma}
+    };
 
-	    std::unordered_map<std::string, int*> intParams = {
-	        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
-	        {"anchor_mode", &anchorMode},
-	        {"tet_volumeConstraintIterations", &tetVolumeConstraintIterations},
-	        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
-	        {"agent_vcSubsteps", &agentVcSubsteps},
-	        {"agent_collisionIterations", &agentCollisionIterations},
-	        {"agent_contactManifoldTriangles", &agentContactManifoldTriangles},
-	        {"exp3_settleSteps", &exp3SettleSteps},
-		        {"exp3_dragSteps", &exp3DragSteps},
-		        {"exp1_settleSteps", &exp1SettleSteps},
-		        {"exp1_dragSteps", &exp1DragSteps},
-	        {"exp1_holdSteps", &exp1HoldSteps},
+    std::unordered_map<std::string, int*> intParams = {
+        {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
+        {"anchor_mode", &anchorMode},
+        {"tet_volumeConstraintIterations", &tetVolumeConstraintIterations},
+        {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
+        {"agent_vcSubsteps", &agentVcSubsteps},
+        {"agent_collisionIterations", &agentCollisionIterations},
+        {"agent_contactManifoldTriangles", &agentContactManifoldTriangles},
+        {"exp3_settleSteps", &exp3SettleSteps},
+        {"exp3_dragSteps", &exp3DragSteps},
+        {"exp1_settleSteps", &exp1SettleSteps},
+        {"exp1_dragSteps", &exp1DragSteps},
+        {"exp1_holdSteps", &exp1HoldSteps},
         {"exp1_pbdIterationsFast", &exp1PbdIterationsFast},
         {"exp1_pbdIterationsReference", &exp1PbdIterationsReference},
         {"exp2_settleSteps", &exp2SettleSteps},
@@ -294,36 +308,42 @@ void loadParams(const std::string& filename) {
         {"exp4_tuneIters", &exp4TuneIters},
         {"exp4_thread1", &exp4Thread1},
         {"exp4_thread2", &exp4Thread2},
-        {"exp4_thread3", &exp4Thread3}
+        {"exp4_thread3", &exp4Thread3},
+        // Haptic params
+        {"haptic_uart_motor_id", &haptic_uart_motor_id}
     };
 
     std::unordered_map<std::string, std::string*> stringParams = {
         {"modelDir", &modelDir},
         {"stlFile", &stlFile}, {"tetgenArgs", &tetgenArgs}, 
-        {"nodeFile", &nodeFile}, {"eleFile", &eleFile}
+        {"nodeFile", &nodeFile}, {"eleFile", &eleFile},
+        // Haptic params
+        {"haptic_uart_port", &haptic_uart_port}
     };
     
-			    std::unordered_map<std::string, bool*> boolParams = {
-			        {"useDirectLoading", &useDirectLoading},
-			        {"autoSaveMesh", &autoSaveMesh},
-			        {"tet_volumeConstraintEnabled", &tetVolumeConstraintEnabled},
-			        {"agent_enabled", &agentEnabled},
-		        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
-		        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
-		        {"agent_virtualCoupling", &agentVirtualCoupling},
-		        {"agent_vcAutoDamping", &agentVcAutoDamping},
-		        {"agent_gripEnabled", &agentGripEnabled},
-		        {"agent_writeLiveFile", &agentWriteLiveFile},
-		        {"wall_enabled", &wallEnabled},
-		        {"leap_enabled", &leapEnabled},
-		        {"leap_flipX", &leapFlipX},
-		        {"leap_flipY", &leapFlipY},
-		        {"leap_flipZ", &leapFlipZ},
-		        {"exp3_overridePoisson", &exp3OverridePoisson},
-		        {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
-		        {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
-	        {"exp2_resetAfterFinish", &exp2ResetAfterFinish}
-	    };
+    std::unordered_map<std::string, bool*> boolParams = {
+        {"useDirectLoading", &useDirectLoading},
+        {"autoSaveMesh", &autoSaveMesh},
+        {"tet_volumeConstraintEnabled", &tetVolumeConstraintEnabled},
+        {"agent_enabled", &agentEnabled},
+        {"agent_useSurfaceVertices", &agentUseSurfaceVertices},
+        {"agent_useSurfaceTriangles", &agentUseSurfaceTriangles},
+        {"agent_virtualCoupling", &agentVirtualCoupling},
+        {"agent_vcAutoDamping", &agentVcAutoDamping},
+        {"agent_gripEnabled", &agentGripEnabled},
+        {"agent_writeLiveFile", &agentWriteLiveFile},
+        {"wall_enabled", &wallEnabled},
+        {"leap_enabled", &leapEnabled},
+        {"leap_flipX", &leapFlipX},
+        {"leap_flipY", &leapFlipY},
+        {"leap_flipZ", &leapFlipZ},
+        {"exp3_overridePoisson", &exp3OverridePoisson},
+        {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
+        {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
+        {"exp2_resetAfterFinish", &exp2ResetAfterFinish},
+        // Haptic params
+        {"haptic_uart_enabled", &haptic_uart_enabled}
+    };
 
     std::string line;
     while (std::getline(file, line)) {
