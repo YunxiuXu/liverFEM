@@ -73,6 +73,13 @@ extern float agentProxyPositionCorrection;
 	extern float agentFrictionMu;
 	// Optional low-pass filter for device force output (seconds; 0 disables).
 	extern float agentDeviceForceFilterTauSec;
+	// Optional low-pass filter for proxy contact force output (seconds; 0 disables).
+	// NOTE: The raw "contact force" derived from position corrections is inherently noisy in PBD;
+	// use this to make recorded/visualized force data usable.
+	extern float agentContactForceFilterTauSec;
+	// Optional smoothing for contact normal used for force decomposition (seconds; 0 disables).
+	// Helps reduce high-frequency force noise from triangle/manifold normal flipping.
+	extern float agentContactNormalFilterTauSec;
 	// Output scaling for haptic force (>=0). This does NOT affect simulation/contact, only the force you output.
 	extern float agentDeviceForceGain;
 	// Optional magnitude clamp for haptic force output (N; <=0 disables).

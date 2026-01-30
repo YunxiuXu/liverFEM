@@ -770,9 +770,33 @@ static bool outwardNormalForTriangle(
 							std::vector<float> bestD2;
 							bestD2.reserve(static_cast<size_t>(manifoldK));
 
-						auto tryInsert = [&](int ti, float d2) {
+							// Manifold normal-consistency: prevent contact "fighting" between opposite sides of
+							// thin features (common source of local twitching + force buzzing).
+							// Allow fairly sharp edges, but reject near-opposite faces.
+							const float manifoldNormalCosMin = -0.2f;
+							Eigen::Vector3f preferredOutwardN = Eigen::Vector3f::Zero();
+							bool hasPreferredOutwardN = false;
+
+							auto triOutwardNormal = [&](int ti, Eigen::Vector3f* nOut) -> bool {
+								if (!nOut) return false;
+								if (ti < 0 || ti >= static_cast<int>(contactTriangles.size())) return false;
+								const auto& tri = contactTriangles[ti];
+								if (!tri.a || !tri.b || !tri.c) return false;
+								const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+								const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+								const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+								return outwardNormalForTriangle(tri, a, b, c, nOut);
+							};
+
+						auto tryInsert = [&](int ti, float d2, bool enforceNormalConsistency) {
 							for (int existing : activeTis) {
 								if (existing == ti) return;
+							}
+
+							if (enforceNormalConsistency && hasPreferredOutwardN) {
+								Eigen::Vector3f outN = Eigen::Vector3f::Zero();
+								if (!triOutwardNormal(ti, &outN)) return;
+								if (outN.dot(preferredOutwardN) < manifoldNormalCosMin) return;
 							}
 
 							if (static_cast<int>(activeTis.size()) < manifoldK) {
@@ -814,6 +838,11 @@ static bool outwardNormalForTriangle(
 								}
 							}
 
+							// Establish a reference outward normal from the preferred triangle (if possible).
+							if (preferredTi >= 0) {
+								hasPreferredOutwardN = triOutwardNormal(preferredTi, &preferredOutwardN);
+							}
+
 							// Local manifold search around the preferred triangle.
 							if (preferredTi >= 0 && !contactTriangleNeighbors.empty()) {
 								const int maxVisited = 128;
@@ -837,7 +866,7 @@ static bool outwardNormalForTriangle(
 									float d2 = std::numeric_limits<float>::infinity();
 									const bool inShell = triInShell(ti, &d2);
 									visitedD2.emplace_back(ti, d2);
-									if (inShell) tryInsert(ti, d2);
+									if (inShell) tryInsert(ti, d2, /*enforceNormalConsistency=*/true);
 
 									const auto& nbs = contactTriangleNeighbors[static_cast<size_t>(ti)];
 									for (int nb : nbs) {
@@ -852,26 +881,27 @@ static bool outwardNormalForTriangle(
 								if (activeTis.empty()) {
 									for (const auto& it : visitedD2) {
 										if (!std::isfinite(it.second)) continue;
-										tryInsert(it.first, it.second);
+										// Relax normal-consistency when we have no candidates at all (deep inside case).
+										tryInsert(it.first, it.second, /*enforceNormalConsistency=*/false);
 									}
 								}
 							} else {
 								// Fallback: slow scan (should be rare; e.g., if neighbors not provided).
 								if (preferredTi >= 0) {
 									float d2 = 0.0f;
-									if (triInShell(preferredTi, &d2)) tryInsert(preferredTi, d2);
+									if (triInShell(preferredTi, &d2)) tryInsert(preferredTi, d2, /*enforceNormalConsistency=*/true);
 								}
 								for (int ti = 0; ti < static_cast<int>(contactTriangles.size()); ++ti) {
 									if (ti == preferredTi) continue;
 									float d2 = 0.0f;
 									if (!triInShell(ti, &d2)) continue;
-									tryInsert(ti, d2);
+									tryInsert(ti, d2, /*enforceNormalConsistency=*/true);
 								}
 
 								// Deep-inside fallback: keep at least the preferred triangle so we can push out.
 								if (activeTis.empty() && preferredTi >= 0) {
 									const float d2 = triDistance2(preferredTi);
-									if (std::isfinite(d2)) tryInsert(preferredTi, d2);
+									if (std::isfinite(d2)) tryInsert(preferredTi, d2, /*enforceNormalConsistency=*/false);
 								}
 							}
 
@@ -933,56 +963,25 @@ static bool outwardNormalForTriangle(
 								bestTiThisIter = ti;
 							}
 
-							// Check if sphere center is behind the triangle face (inside the object).
-							Eigen::Vector3f outwardN;
-							bool hasOutward = outwardNormalForTriangle(tri, a, b, c, &outwardN);
-							bool isInside = false;
-							
-							Eigen::Vector3f d = q - sphereCenter;
+							Eigen::Vector3f outwardN = Eigen::Vector3f::Zero();
+							const bool hasOutward = outwardNormalForTriangle(tri, a, b, c, &outwardN);
+
+							// Standard (two-sided) distance-based collision:
+							// pen > 0 means the sphere intersects the triangle by "shellR - dist".
+							// Fully-inside-without-intersection is handled separately by the ray-cast tunnel fix.
+							const Eigen::Vector3f d = q - sphereCenter;
 							const float dist = std::sqrt(std::max(dist2, 1e-18f));
-							
-							if (hasOutward) {
-								// d points from center to surface. If d aligns with outward normal, center is inside.
-								// We use a small tolerance.
-								if (d.dot(outwardN) > 1e-4f * dist) {
-									isInside = true;
-								}
-							}
+							const float pen = shellR - dist;
+							if (pen <= 0.0f) continue;
 
-							float pen = 0.0f;
-							Eigen::Vector3f n;
-
-							if (isInside) {
-								// Deep penetration handling:
-								// If center is inside, we must push it out along the normal.
-								// Continuity: at surface (dist=0), pen = shellR.
-								// Inside (dist>0), pen should increase.
-								pen = shellR + dist;
-								
-								// Cap huge penetrations to avoid explosion if we detect false positives far away.
-								// Do NOT skip the constraint entirely (skipping causes "tunnel & no-force" chatter).
-								pen = std::min(pen, 3.0f * shellR);
-
-								// We need deltaQ (correction displacement) to be along -outwardN (inwards),
-								// so that sphere update (-deltaQ) is along outwardN (outwards).
+							Eigen::Vector3f n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+							if (dist <= 1e-6f && hasOutward) {
+								// Fallback normal if d is degenerate (use inward direction).
 								n = -outwardN;
-							} else {
-								// Standard case: center is outside
-								pen = shellR - dist;
-								if (pen <= 0.0f) continue;
-
-								n = (dist > 1e-6f) ? (d / dist) : Eigen::Vector3f(0.0f, 1.0f, 0.0f);
-								
-								// Fallback normal if d is degenerate
-								if (dist <= 1e-6f && hasOutward) {
-									n = -outwardN; // Point inward
-								}
 							}
 
 							anyPenetration = true;
 
-							// Robustness: deep penetration logic is now handled by isInside branch.
-							// We keep maxPen updating logic.
 							maxPen = std::max(maxPen, pen);
 							if (pen >= maxPen) maxPenNormal = n;
 							sumN += n * pen;
@@ -2095,7 +2094,9 @@ int main(int argc, char** argv) {
 					std::array<Eigen::Vector3f, kFingerCount> agentLastContactForcesN;
 					std::array<Eigen::Vector3f, kFingerCount> agentLastCouplingForcesN;
 					std::array<Eigen::Vector3f, kFingerCount> agentFilteredDeviceForcesN;
+					std::array<Eigen::Vector3f, kFingerCount> agentFilteredContactForcesN;
 					std::array<Eigen::Vector3f, kFingerCount> agentLastContactNormalsIn;
+					std::array<Eigen::Vector3f, kFingerCount> agentFilteredContactNormalsIn;
 					std::array<int, kFingerCount> agentLastContactCounts{};
 					std::array<float, kFingerCount> agentLastContactPenetrations{};
 					std::array<int, kFingerCount> agentLastActiveContactTriangle{};
@@ -2103,7 +2104,9 @@ int main(int argc, char** argv) {
 						agentLastContactForcesN.fill(Eigen::Vector3f::Zero());
 						agentLastCouplingForcesN.fill(Eigen::Vector3f::Zero());
 						agentFilteredDeviceForcesN.fill(Eigen::Vector3f::Zero());
+						agentFilteredContactForcesN.fill(Eigen::Vector3f::Zero());
 						agentLastContactNormalsIn.fill(Eigen::Vector3f::Zero());
+						agentFilteredContactNormalsIn.fill(Eigen::Vector3f::Zero());
 						agentLastActiveContactTriangle.fill(-1);
 		
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
@@ -2665,6 +2668,7 @@ int main(int argc, char** argv) {
 					static KeyLatch agentHomeLatch;
 					static KeyLatch agentPrintLatch;
 					static KeyLatch agentVcLatch;
+					static KeyLatch agentForceModeLatch;
 			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 						static KeyLatch leapToggleLatch;
 						static KeyLatch leapRecenterLatch;
@@ -2676,7 +2680,7 @@ int main(int argc, char** argv) {
 							agentSphere.enabled = !agentSphere.enabled;
 								std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
 								          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-							          << "  VirtualCoupling: V | Home: T | Print force: G | Print COM: M\n"
+							          << "  VirtualCoupling: V | Home: T | Print force: G | Force graph: F | Print COM: M\n"
 			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 								          << "  Leap: toggle=B | recenter=R | gain: '['/']'\n"
 			#endif
@@ -2685,9 +2689,14 @@ int main(int argc, char** argv) {
 							          << " fingers=" << kFingerCount << "\n";
 						}
 			static bool agentUseVC = agentVirtualCoupling;
+			static int agentForceGraphMode = 1; // 0=CONTACT, 1=DEVICE (filtered)
 				if (agentVcLatch.consume(window, GLFW_KEY_V)) {
 					agentUseVC = !agentUseVC;
 					std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
+				}
+				if (agentForceModeLatch.consume(window, GLFW_KEY_F)) {
+					agentForceGraphMode = 1 - agentForceGraphMode;
+					std::cout << "[AgentSphere] ForceGraph " << (agentForceGraphMode ? "DEVICE" : "CONTACT") << "\n";
 				}
 						if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
 							for (int fi = 0; fi < kFingerCount; ++fi) {
@@ -2701,9 +2710,11 @@ int main(int argc, char** argv) {
 						agentLastContactForcesN[static_cast<size_t>(fi)].setZero();
 						agentLastCouplingForcesN[static_cast<size_t>(fi)].setZero();
 						agentFilteredDeviceForcesN[static_cast<size_t>(fi)].setZero();
+						agentFilteredContactForcesN[static_cast<size_t>(fi)].setZero();
 						agentLastContactCounts[static_cast<size_t>(fi)] = 0;
 						agentLastContactPenetrations[static_cast<size_t>(fi)] = 0.0f;
 						agentLastContactNormalsIn[static_cast<size_t>(fi)].setZero();
+						agentFilteredContactNormalsIn[static_cast<size_t>(fi)].setZero();
 						agentLastActiveContactTriangle[static_cast<size_t>(fi)] = -1;
 					}
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
@@ -2883,7 +2894,8 @@ int main(int argc, char** argv) {
 					const Eigen::Vector3f& devPos = agentDevicePositions[static_cast<size_t>(fi)];
 					const Eigen::Vector3f& proxyPos = agentProxyPositions[static_cast<size_t>(fi)];
 					const Eigen::Vector3f& devForceN = agentLastDeviceForcesN[static_cast<size_t>(fi)];
-					const Eigen::Vector3f& contactForceN = agentLastContactForcesN[static_cast<size_t>(fi)];
+					const Eigen::Vector3f& contactForceN = agentFilteredContactForcesN[static_cast<size_t>(fi)];
+					const Eigen::Vector3f& contactForceRawN = agentLastContactForcesN[static_cast<size_t>(fi)];
 					const int contacts = agentLastContactCounts[static_cast<size_t>(fi)];
 
 					float proxySurfDist = -1.0f;
@@ -2903,6 +2915,7 @@ int main(int argc, char** argv) {
 					          << " proxy=(" << proxyPos.x() << "," << proxyPos.y() << "," << proxyPos.z() << ")"
 					          << " devF=(" << devForceN.x() << "," << devForceN.y() << "," << devForceN.z() << ")"
 					          << " contactF=(" << contactForceN.x() << "," << contactForceN.y() << "," << contactForceN.z() << ")"
+					          << " contactFraw=(" << contactForceRawN.x() << "," << contactForceRawN.y() << "," << contactForceRawN.z() << ")"
 					          << " cnt=" << contacts
 					          << " surfDist=" << proxySurfDist
 					          << " surfSN=" << proxySurfSN
@@ -3340,7 +3353,7 @@ int main(int argc, char** argv) {
 
 								// VC stability without losing tangential "grip":
 								// Reduce only the NORMAL spring stiffness when deeply pressed, keep tangential stiffness.
-								Eigen::Vector3f nIn = agentLastContactNormalsIn[static_cast<size_t>(fi)];
+								Eigen::Vector3f nIn = agentFilteredContactNormalsIn[static_cast<size_t>(fi)];
 								const bool hasN = (wasContact && nIn.squaredNorm() > 1e-12f);
 								if (hasN) nIn.normalize();
 
@@ -3441,11 +3454,13 @@ int main(int argc, char** argv) {
 							for (int fi = 0; fi < kFingerCount; ++fi) {
 								agentLastDeviceForcesN[static_cast<size_t>(fi)].setZero();
 								agentFilteredDeviceForcesN[static_cast<size_t>(fi)].setZero();
+								agentFilteredContactForcesN[static_cast<size_t>(fi)].setZero();
 							agentLastContactForcesN[static_cast<size_t>(fi)].setZero();
 						agentLastCouplingForcesN[static_cast<size_t>(fi)].setZero();
 						agentLastContactCounts[static_cast<size_t>(fi)] = 0;
 						agentLastContactPenetrations[static_cast<size_t>(fi)] = 0.0f;
 						agentLastContactNormalsIn[static_cast<size_t>(fi)].setZero();
+						agentFilteredContactNormalsIn[static_cast<size_t>(fi)].setZero();
 						agentLastActiveContactTriangle[static_cast<size_t>(fi)] = -1;
 					}
 				}
@@ -3733,7 +3748,7 @@ int main(int argc, char** argv) {
 											const bool wasContact = (agentLastContactCounts[static_cast<size_t>(fi)] > 0);
 											const float vcCLen = wasContact ? agentVcCLenContact : agentVcCLenFree;
 
-											Eigen::Vector3f nIn = agentLastContactNormalsIn[static_cast<size_t>(fi)];
+											Eigen::Vector3f nIn = agentFilteredContactNormalsIn[static_cast<size_t>(fi)];
 											const bool hasN = (wasContact && nIn.squaredNorm() > 1e-12f);
 											if (hasN) nIn.normalize();
 
@@ -3958,7 +3973,7 @@ int main(int argc, char** argv) {
 												const bool wasContact = (agentLastContactCounts[static_cast<size_t>(fi)] > 0);
 												const float vcCLen = wasContact ? agentVcCLenContact : agentVcCLenFree;
 
-												Eigen::Vector3f nIn = agentLastContactNormalsIn[static_cast<size_t>(fi)];
+												Eigen::Vector3f nIn = agentFilteredContactNormalsIn[static_cast<size_t>(fi)];
 												const bool hasN = (wasContact && nIn.squaredNorm() > 1e-12f);
 												if (hasN) nIn.normalize();
 
@@ -4068,6 +4083,43 @@ int main(int argc, char** argv) {
 									}
 								}
 
+								// Smooth (filter) contact force and normal for stable visualization/logging and
+								// for less noisy normal-based force decomposition on the next frame.
+								{
+									const float tauF = std::max(0.0f, agentContactForceFilterTauSec);
+									const float tauN = std::max(0.0f, agentContactNormalFilterTauSec);
+									const float aF = (tauF > 0.0f) ? std::exp(-timeStep / std::max(1e-6f, tauF)) : 0.0f;
+									const float aN = (tauN > 0.0f) ? std::exp(-timeStep / std::max(1e-6f, tauN)) : 0.0f;
+
+									for (int fi = 0; fi < kFingerCount; ++fi) {
+										const size_t idx = static_cast<size_t>(fi);
+
+										// Force.
+										const Eigen::Vector3f rawF = agentLastContactForcesN[idx];
+										Eigen::Vector3f& f = agentFilteredContactForcesN[idx];
+										if (tauF > 0.0f) f = f * aF + rawF * (1.0f - aF);
+										else f = rawF;
+
+										// Normal (unit, inward). Align sign for continuity before filtering.
+										const bool inContact = (agentLastContactCounts[idx] > 0);
+										const Eigen::Vector3f rawN0 = agentLastContactNormalsIn[idx];
+										Eigen::Vector3f& n = agentFilteredContactNormalsIn[idx];
+										if (!inContact || rawN0.squaredNorm() <= 1e-12f) {
+											if (tauN > 0.0f) n *= aN;
+											else n.setZero();
+											continue;
+										}
+
+										Eigen::Vector3f rawN = rawN0;
+										if (n.squaredNorm() > 1e-12f && rawN.squaredNorm() > 1e-12f) {
+											if (n.dot(rawN) < 0.0f) rawN = -rawN;
+										}
+										if (tauN > 0.0f) n = n * aN + rawN * (1.0f - aN);
+										else n = rawN;
+										if (n.squaredNorm() > 1e-12f) n.normalize();
+									}
+								}
+
 									// Proxy anti-tunneling (rare): if the proxy CENTER ended up fully inside the closed surface
 									// *and* we had no contact constraints this frame, project it back to just outside the closest
 									// surface point. This is intentionally gated to avoid per-frame ray casting (perf + haptics).
@@ -4105,7 +4157,10 @@ int main(int argc, char** argv) {
 													if (dist <= (rProxy + slop)) continue;
 												}
 											}
-											constexpr int kInsideTestIntervalFrames = 4;
+											// Run every frame while the proxy is in the "suspicious" state (no contact but
+											// plausibly inside). This avoids multi-frame "fully inside" states which
+											// manifest as jittery force spikes when the solver re-acquires the surface.
+											constexpr int kInsideTestIntervalFrames = 1;
 											if (((frame + fi) % kInsideTestIntervalFrames) != 0) continue;
 
 											if (!isPointInsideSurfaceRayCastMulti(p, agentContactTriangles, rayEps)) continue;
@@ -4145,7 +4200,7 @@ int main(int argc, char** argv) {
 												const bool wasContact = (agentLastContactCounts[static_cast<size_t>(fi)] > 0);
 												const float vcCLen = wasContact ? agentVcCLenContact : agentVcCLenFree;
 
-												Eigen::Vector3f nIn = agentLastContactNormalsIn[static_cast<size_t>(fi)];
+												Eigen::Vector3f nIn = agentFilteredContactNormalsIn[static_cast<size_t>(fi)];
 												const bool hasN = (wasContact && nIn.squaredNorm() > 1e-12f);
 												if (hasN) nIn.normalize();
 
@@ -4280,13 +4335,15 @@ int main(int argc, char** argv) {
 												const Eigen::Vector3f& devPos = agentDevicePositions[static_cast<size_t>(fi)];
 												const Eigen::Vector3f& proxyPos = agentProxyPositions[static_cast<size_t>(fi)];
 												const Eigen::Vector3f& devForce = agentLastDeviceForcesN[static_cast<size_t>(fi)];
-												const Eigen::Vector3f& contactForce = agentLastContactForcesN[static_cast<size_t>(fi)];
+												const Eigen::Vector3f& contactForceRaw = agentLastContactForcesN[static_cast<size_t>(fi)];
+												const Eigen::Vector3f& contactForce = agentFilteredContactForcesN[static_cast<size_t>(fi)];
 												const int contacts = agentLastContactCounts[static_cast<size_t>(fi)];
 
 												f << "finger" << idx << "_name " << kFingerNames[static_cast<size_t>(fi)] << "\n";
 												f << "finger" << idx << "_devicePos " << devPos.x() << " " << devPos.y() << " " << devPos.z() << "\n";
 												f << "finger" << idx << "_proxyPos " << proxyPos.x() << " " << proxyPos.y() << " " << proxyPos.z() << "\n";
 												f << "finger" << idx << "_deviceForceN " << devForce.x() << " " << devForce.y() << " " << devForce.z() << "\n";
+												f << "finger" << idx << "_contactForceN_raw " << contactForceRaw.x() << " " << contactForceRaw.y() << " " << contactForceRaw.z() << "\n";
 												f << "finger" << idx << "_contactForceN " << contactForce.x() << " " << contactForce.y() << " " << contactForce.z() << "\n";
 												f << "finger" << idx << "_contacts " << contacts << "\n";
 											}
@@ -4931,8 +4988,15 @@ int main(int argc, char** argv) {
 			static ForceGraphHistory agentForceHistory;
 			static float agentForceGraphScaleN = 1.0f;
 			if (agentSphere.enabled && !isPaused) {
-				const Eigen::Vector3f proxyForceN = agentLastContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
-				agentForceHistory.push(Eigen::Vector4f(proxyForceN.x(), proxyForceN.y(), proxyForceN.z(), proxyForceN.norm()));
+				Eigen::Vector3f fN = Eigen::Vector3f::Zero();
+				if (agentForceGraphMode != 0) {
+					// DEVICE force (haptic output; already filtered/gain/clamped).
+					fN = agentLastDeviceForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
+				} else {
+					// CONTACT force (filtered; raw PBD-derived contact force is too noisy to use directly).
+					fN = agentFilteredContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
+				}
+				agentForceHistory.push(Eigen::Vector4f(fN.x(), fN.y(), fN.z(), fN.norm()));
 			}
 
 			ui.beginDraw2D();
@@ -5183,8 +5247,9 @@ int main(int argc, char** argv) {
 				// Title/scale label (segment font supports digits + letters only).
 				{
 					const SimpleUI::Rect graphLabelRect{ graphX + 8.0f, graphY + 2.0f, graphW - 16.0f, legendHWin };
+					const std::string mode = (agentForceGraphMode != 0) ? "DEVICE" : "CONTACT";
 					const std::string label =
-						"INDEX PROXY FORCE N  SCALE " + formatSignedInt(agentForceGraphScaleN) +
+						"INDEX " + mode + " FORCE N  SCALE " + formatSignedInt(agentForceGraphScaleN) +
 						"  FX FY FZ MAG";
 					ui.drawLabel(graphLabelRect, label, 9.0f);
 				}
@@ -5200,13 +5265,18 @@ int main(int argc, char** argv) {
 			const SimpleUI::Rect agentLabelRect{ x, y, labelW, labelH };
 
 				if (agentSphere.enabled) {
-					const Eigen::Vector3f proxyForceN = agentLastContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
+					Eigen::Vector3f fN = Eigen::Vector3f::Zero();
+					if (agentForceGraphMode != 0) {
+						fN = agentLastDeviceForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
+					} else {
+						fN = agentFilteredContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
+					}
 					const int contacts = agentLastContactCounts[static_cast<size_t>(kForceGraphFingerIndex)];
 					const std::string label =
 						"AGENT ON VC " + std::string(agentUseVC ? "1" : "0") +
-						" IDX FX " + formatSignedInt(proxyForceN.x()) +
-						" FY " + formatSignedInt(proxyForceN.y()) +
-						" FZ " + formatSignedInt(proxyForceN.z()) +
+						" IDX FX " + formatSignedInt(fN.x()) +
+						" FY " + formatSignedInt(fN.y()) +
+						" FZ " + formatSignedInt(fN.z()) +
 						" CNT " + std::to_string(contacts);
 					ui.drawLabel(agentLabelRect, label, sizePx);
 				} else {

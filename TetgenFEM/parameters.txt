@@ -71,6 +71,8 @@ agent_contactVelocityRelaxationMin=0.1
 agent_contactNormalDamp=0.8
 agent_frictionMu=1.0
 agent_deviceForceFilterTauSec=0.004
+agent_contactForceFilterTauSec=0.03
+agent_contactNormalFilterTauSec=0.02
 # Haptic output scaling/clamp (does NOT affect simulation/contact)
 agent_deviceForceGain=1.0
 agent_deviceForceMaxN=0

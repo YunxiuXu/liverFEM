@@ -54,6 +54,8 @@ float agentVcStiffnessNPerBbox = 250.0f;
 	float agentContactNormalDamp = 0.8f;
 	float agentFrictionMu = 1.0f;
 	float agentDeviceForceFilterTauSec = 0.0f;
+	float agentContactForceFilterTauSec = 0.03f;
+	float agentContactNormalFilterTauSec = 0.02f;
 	float agentDeviceForceGain = 1.0f;
 	float agentDeviceForceMaxN = 0.0f;
 	bool agentWriteLiveFile = false;
@@ -208,6 +210,8 @@ void loadParams(const std::string& filename) {
 	        {"agent_contactNormalDamp", &agentContactNormalDamp},
 	        {"agent_frictionMu", &agentFrictionMu},
 	        {"agent_deviceForceFilterTauSec", &agentDeviceForceFilterTauSec},
+	        {"agent_contactForceFilterTauSec", &agentContactForceFilterTauSec},
+	        {"agent_contactNormalFilterTauSec", &agentContactNormalFilterTauSec},
 	        {"agent_deviceForceGain", &agentDeviceForceGain},
 	        {"agent_deviceForceMaxN", &agentDeviceForceMaxN},
 				        {"wall_marginBboxScale", &wallMarginBboxScale},
