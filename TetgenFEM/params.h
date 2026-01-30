@@ -73,6 +73,10 @@ extern float agentProxyPositionCorrection;
 	extern float agentFrictionMu;
 	// Optional low-pass filter for device force output (seconds; 0 disables).
 	extern float agentDeviceForceFilterTauSec;
+	// Output scaling for haptic force (>=0). This does NOT affect simulation/contact, only the force you output.
+	extern float agentDeviceForceGain;
+	// Optional magnitude clamp for haptic force output (N; <=0 disables).
+	extern float agentDeviceForceMaxN;
 	extern bool agentWriteLiveFile;
 	extern int agentLiveFileIntervalFrames;
 
