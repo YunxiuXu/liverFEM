@@ -152,6 +152,13 @@ struct KeyLatch {
 			return true;
 		}
 
+		bool getRightHandRotations(std::array<Eigen::Quaternionf, 5>* outRotations) const
+		{
+			if (!hasHand_) return false;
+			if (outRotations) *outRotations = tipsRot_;
+			return true;
+		}
+
 	private:
 		void onTracking(const LEAP_TRACKING_EVENT* evt, double nowSec)
 		{
@@ -168,6 +175,9 @@ struct KeyLatch {
 				for (int fi = 0; fi < 5; ++fi) {
 					const LEAP_VECTOR tip = hand->digits[fi].distal.next_joint; // mm
 					tipsMm_[static_cast<size_t>(fi)] = Eigen::Vector3f(tip.x, tip.y, tip.z);
+					
+					const LEAP_QUATERNION rot = hand->digits[fi].distal.rotation;
+					tipsRot_[static_cast<size_t>(fi)] = Eigen::Quaternionf(rot.w, rot.x, rot.y, rot.z);
 				}
 
 				timeSec_ = nowSec;
@@ -181,6 +191,7 @@ struct KeyLatch {
 		bool hasHand_ = false;
 		Eigen::Vector3f palmMm_ = Eigen::Vector3f::Zero();
 		std::array<Eigen::Vector3f, 5> tipsMm_{};
+		std::array<Eigen::Quaternionf, 5> tipsRot_{}; // Initialized to Identity by default constructor? No, array init.
 		double timeSec_ = -1.0;
 	};
 	#endif
@@ -2145,8 +2156,9 @@ int main(int argc, char** argv) {
 			Eigen::Vector3f(2.2f * rFinger, 0.0f, 0.0f)              // pinky
 		};
 	
-		std::array<Eigen::Vector3f, kFingerCount> agentDevicePositions;
-		std::array<Eigen::Vector3f, kFingerCount> agentDevicePrevPositions;
+	std::array<Eigen::Vector3f, kFingerCount> agentDevicePositions;
+	std::array<Eigen::Quaternionf, kFingerCount> agentDeviceRotations; // Added for rotation mapping
+	std::array<Eigen::Vector3f, kFingerCount> agentDevicePrevPositions;
 		std::array<Eigen::Vector3f, kFingerCount> agentDeviceVelocities;
 		std::array<Eigen::Vector3f, kFingerCount> agentProxyPositions;
 		std::array<Eigen::Vector3f, kFingerCount> agentProxyVelocities;
@@ -2154,9 +2166,10 @@ int main(int argc, char** argv) {
 	
 		for (int fi = 0; fi < kFingerCount; ++fi) {
 			const Eigen::Vector3f p = agentHandHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)];
-			agentHomePositions[static_cast<size_t>(fi)] = p;
-			agentDevicePositions[static_cast<size_t>(fi)] = p;
-			agentDevicePrevPositions[static_cast<size_t>(fi)] = p;
+		agentHomePositions[static_cast<size_t>(fi)] = p;
+		agentDevicePositions[static_cast<size_t>(fi)] = p;
+		agentDeviceRotations[static_cast<size_t>(fi)] = Eigen::Quaternionf::Identity();
+		agentDevicePrevPositions[static_cast<size_t>(fi)] = p;
 			agentDeviceVelocities[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
 			agentProxyPositions[static_cast<size_t>(fi)] = p;
 			agentProxyVelocities[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
@@ -2890,11 +2903,15 @@ int main(int argc, char** argv) {
 									const Eigen::Vector3f indexTipMm =
 										leapLatestTipsMm[static_cast<size_t>(kIndexFinger)].cwiseProduct(axisSign);
 									if (!leapMappingCalibrated) {
-										// Keep the original 1-finger behavior: recenter on INDEX fingertip.
-										leapCenterMm = indexTipMm;
-										leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
+							// Keep the original 1-finger behavior: recenter on INDEX fingertip.
+									leapCenterMm = indexTipMm;
+									leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
 
-										Eigen::Vector3f clampMin = bboxMin - margin;
+									// Get rotations
+									std::array<Eigen::Quaternionf, kFingerCount> rotations;
+									leapTracker.getRightHandRotations(&rotations);
+
+									Eigen::Vector3f clampMin = bboxMin - margin;
 										Eigen::Vector3f clampMax = bboxMax + margin;
 										clampMin = clampMin.cwiseMin(leapAnchorWorld - margin);
 										clampMax = clampMax.cwiseMax(leapAnchorWorld + margin);
@@ -2916,6 +2933,7 @@ int main(int argc, char** argv) {
 											const Eigen::Vector3f target = base + relWorld;
 
 											agentDevicePositions[static_cast<size_t>(fi)] = target;
+											agentDeviceRotations[static_cast<size_t>(fi)] = rotations[static_cast<size_t>(fi)]; // Copy rotation
 											agentDevicePrevPositions[static_cast<size_t>(fi)] = target;
 											agentDeviceVelocities[static_cast<size_t>(fi)].setZero();
 										}
@@ -2934,6 +2952,10 @@ int main(int argc, char** argv) {
 
 										const float maxRel = 0.5f * bboxDiag;
 										const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
+										
+										// Get rotations every frame
+										std::array<Eigen::Quaternionf, kFingerCount> rotations;
+										leapTracker.getRightHandRotations(&rotations);
 
 										for (int fi = 0; fi < kFingerCount; ++fi) {
 											const Eigen::Vector3f tipMm = leapLatestTipsMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
@@ -2947,6 +2969,7 @@ int main(int argc, char** argv) {
 											auto& v = agentDeviceVelocities[static_cast<size_t>(fi)];
 
 											p = p + alpha * (target - p);
+											agentDeviceRotations[static_cast<size_t>(fi)] = rotations[static_cast<size_t>(fi)]; // Copy rotation
 											v = (p - pPrev) / std::max(1e-8f, timeStep);
 											pPrev = p;
 										}
@@ -4719,9 +4742,40 @@ int main(int argc, char** argv) {
 				for (int fi = 0; fi < kFingerCount; ++fi) {
 					Eigen::Vector3f c = proxyColors[static_cast<size_t>(fi)];
 					if (whiteBackground) c *= 0.75f;
-						glColor3f(c.x(), c.y(), c.z());
-						drawWireSphereCircles(agentProxyPositions[static_cast<size_t>(fi)], agentSphere.radius, 36);
-					}
+					glColor3f(c.x(), c.y(), c.z());
+					
+					glPushMatrix();
+					const Eigen::Vector3f& pos = agentProxyPositions[static_cast<size_t>(fi)];
+					// Translate to proxy position
+					glTranslatef(pos.x(), pos.y(), pos.z());
+					
+					// Apply finger rotation
+					const Eigen::Quaternionf& rot = agentDeviceRotations[static_cast<size_t>(fi)];
+					Eigen::AngleAxisf aa(rot);
+					glRotatef(aa.angle() * 180.0f / 3.14159265f, aa.axis().x(), aa.axis().y(), aa.axis().z());
+					
+					// Draw sphere at local origin (so it rotates)
+					drawWireSphereCircles(Eigen::Vector3f::Zero(), agentSphere.radius, 36);
+					
+					// Draw local axes (length = radius)
+					// Draw manually to avoid offset in drawAxis()
+					glBegin(GL_LINES);
+					// X (Red)
+					glColor3f(1.0f, 0.0f, 0.0f);
+					glVertex3f(0.0f, 0.0f, 0.0f);
+					glVertex3f(agentSphere.radius, 0.0f, 0.0f);
+					// Y (Green)
+					glColor3f(0.0f, 1.0f, 0.0f);
+					glVertex3f(0.0f, 0.0f, 0.0f);
+					glVertex3f(0.0f, agentSphere.radius, 0.0f);
+					// Z (Blue)
+					glColor3f(0.0f, 0.0f, 1.0f);
+					glVertex3f(0.0f, 0.0f, 0.0f);
+					glVertex3f(0.0f, 0.0f, agentSphere.radius);
+					glEnd();
+					
+					glPopMatrix();
+				}
 				}
 
 		// Draw constraint plane for volume preservation mode
@@ -5223,10 +5277,27 @@ int main(int argc, char** argv) {
 				}
 
 				if (haptic_uart_enabled) {
-					// Always use CONTACT force for haptic output, ignoring graph mode
-					// ensuring no force is felt when moving in free space (no drag/inertia)
+					// Always use CONTACT force for haptic output
+					// Project force onto finger pad normal (Local -Y axis rotated by finger orientation)
 					Eigen::Vector3f contactF = agentFilteredContactForcesN[static_cast<size_t>(kForceGraphFingerIndex)];
-					float forceMag = contactF.norm();
+					
+					// Get finger rotation (Index finger)
+					Eigen::Quaternionf fingerRot = agentDeviceRotations[static_cast<size_t>(kForceGraphFingerIndex)];
+					
+					// Calculate pad normal in world space (Local -Y -> World)
+					// Assuming Leap Motion hand: Y is up/normal to palm, -Y is down/pad direction?
+					// Leap Coordinate: Y is UP (away from palm if palm up? No, Y is perp to palm plane)
+					// If palm is flat, Y is vertical.
+					// Pad usually faces -Y.
+					Eigen::Vector3f padNormal = fingerRot * Eigen::Vector3f(0.0f, -1.0f, 0.0f);
+					padNormal.normalize();
+
+					// Project contact force onto pad normal.
+					// Contact force from object pushes ON finger.
+					// If pressing down, force is UP (+Y). Normal is DOWN (-Y). Dot is negative.
+					// We want magnitude of normal force.
+					float forceMag = std::abs(contactF.dot(padNormal));
+					
 					haptic.sendForce(haptic_uart_motor_id, forceMag);
 				}
 

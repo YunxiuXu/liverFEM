@@ -175,11 +175,11 @@ haptic_uart_enabled=true
 haptic_uart_port=/dev/cu.usbserial-AUOK5THN
 haptic_uart_motor_id=1
 haptic_min_force_input=0.0
-haptic_max_force_input=30.0
+haptic_max_force_input=6.0
 haptic_min_pwm_output=0.0
-haptic_max_pwm_output=255.0
+haptic_max_pwm_output=180.0
 # Gamma correction for haptics (Power Law)
 # 1.0 = Linear
 # < 1.0 (e.g. 0.5-0.8) = Boosts small forces (Weber's Law / better sensitivity)
 # > 1.0 = Suppresses small forces
-haptic_gamma=0.6
+haptic_gamma=1.0
