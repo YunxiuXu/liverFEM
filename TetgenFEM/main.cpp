@@ -978,9 +978,6 @@ static bool outwardNormalForTriangle(
 							Eigen::Vector3f outwardN = Eigen::Vector3f::Zero();
 							const bool hasOutward = outwardNormalForTriangle(tri, a, b, c, &outwardN);
 
-							// Standard (two-sided) distance-based collision:
-							// pen > 0 means the sphere intersects the triangle by "shellR - dist".
-							// Fully-inside-without-intersection is handled separately by the ray-cast tunnel fix.
 							const Eigen::Vector3f d = q - sphereCenter;
 							const float dist = std::sqrt(std::max(dist2, 1e-18f));
 							const float pen = shellR - dist;
@@ -3837,7 +3834,16 @@ int main(int argc, char** argv) {
 							const float allowedPen = maxPenFrac * r;
 							// Small "contact shell" thickness improves stability and provides a basis for friction even
 							// when the proxy is only lightly touching (PBD-style).
-								const float eps = std::max(1e-4f * bboxDiag, 0.02f * r);
+								float maxProxyStep = 0.0f;
+								for (int fi = 0; fi < kFingerCount; ++fi) {
+									const Eigen::Vector3f dp = agentProxyPositions[static_cast<size_t>(fi)] -
+										agentProxyStartPositions[static_cast<size_t>(fi)];
+									const float step = dp.norm();
+									if (step > maxProxyStep) maxProxyStep = step;
+								}
+								const float epsBase = std::max(1e-4f * bboxDiag, 0.02f * r);
+								const float epsSpeed = std::min(maxProxyStep, 2.0f * r);
+								const float eps = epsBase + epsSpeed;
 								const float corr = std::clamp(agentProxyPositionCorrection, 0.0f, 1.0f);
 								const float tangentialDamp = std::clamp(agentCollisionTangentialDamp, 0.0f, 1.0f);
 								const float contactProxyInvMassScale = std::clamp(agentContactProxyInvMassScale, 0.0f, 1.0f);
@@ -4731,51 +4737,60 @@ int main(int argc, char** argv) {
 				if (agentSphere.enabled) {
 					glLineWidth(2.0f);
 
-					// Proxies (colored by finger).
+					// Proxies (high-contrast palette + outline).
 					const std::array<Eigen::Vector3f, kFingerCount> proxyColors = {
-						Eigen::Vector3f(0.92f, 0.18f, 0.18f), // thumb
-					Eigen::Vector3f(1.00f, 0.55f, 0.20f), // index
-					Eigen::Vector3f(0.95f, 0.90f, 0.20f), // middle
-					Eigen::Vector3f(0.25f, 0.90f, 0.35f), // ring
-					Eigen::Vector3f(0.30f, 0.60f, 0.95f)  // pinky
-				};
-				for (int fi = 0; fi < kFingerCount; ++fi) {
-					Eigen::Vector3f c = proxyColors[static_cast<size_t>(fi)];
-					if (whiteBackground) c *= 0.75f;
-					glColor3f(c.x(), c.y(), c.z());
-					
-					glPushMatrix();
-					const Eigen::Vector3f& pos = agentProxyPositions[static_cast<size_t>(fi)];
-					// Translate to proxy position
-					glTranslatef(pos.x(), pos.y(), pos.z());
-					
-					// Apply finger rotation
-					const Eigen::Quaternionf& rot = agentDeviceRotations[static_cast<size_t>(fi)];
-					Eigen::AngleAxisf aa(rot);
-					glRotatef(aa.angle() * 180.0f / 3.14159265f, aa.axis().x(), aa.axis().y(), aa.axis().z());
-					
-					// Draw sphere at local origin (so it rotates)
-					drawWireSphereCircles(Eigen::Vector3f::Zero(), agentSphere.radius, 36);
-					
-					// Draw local axes (length = radius)
-					// Draw manually to avoid offset in drawAxis()
-					glBegin(GL_LINES);
-					// X (Red)
-					glColor3f(1.0f, 0.0f, 0.0f);
-					glVertex3f(0.0f, 0.0f, 0.0f);
-					glVertex3f(agentSphere.radius, 0.0f, 0.0f);
-					// Y (Green)
-					glColor3f(0.0f, 1.0f, 0.0f);
-					glVertex3f(0.0f, 0.0f, 0.0f);
-					glVertex3f(0.0f, agentSphere.radius, 0.0f);
-					// Z (Blue)
-					glColor3f(0.0f, 0.0f, 1.0f);
-					glVertex3f(0.0f, 0.0f, 0.0f);
-					glVertex3f(0.0f, 0.0f, agentSphere.radius);
-					glEnd();
-					
-					glPopMatrix();
-				}
+						Eigen::Vector3f(0.98f, 0.20f, 0.75f), // thumb (magenta)
+						Eigen::Vector3f(0.10f, 0.90f, 0.95f), // index (cyan)
+						Eigen::Vector3f(1.00f, 0.90f, 0.15f), // middle (yellow)
+						Eigen::Vector3f(0.20f, 1.00f, 0.30f), // ring (lime)
+						Eigen::Vector3f(1.00f, 0.50f, 0.10f)  // pinky (orange)
+					};
+					const Eigen::Vector3f proxyOutlineColor = whiteBackground
+						? Eigen::Vector3f(0.08f, 0.08f, 0.08f)
+						: Eigen::Vector3f(0.96f, 0.96f, 0.96f);
+					const float proxyOutlineWidth = 4.0f;
+					const float proxyLineWidth = 2.0f;
+					for (int fi = 0; fi < kFingerCount; ++fi) {
+						Eigen::Vector3f c = proxyColors[static_cast<size_t>(fi)];
+						if (whiteBackground) c *= 0.80f;
+						
+						glPushMatrix();
+						const Eigen::Vector3f& pos = agentProxyPositions[static_cast<size_t>(fi)];
+						// Translate to proxy position
+						glTranslatef(pos.x(), pos.y(), pos.z());
+						
+						// Apply finger rotation
+						const Eigen::Quaternionf& rot = agentDeviceRotations[static_cast<size_t>(fi)];
+						Eigen::AngleAxisf aa(rot);
+						glRotatef(aa.angle() * 180.0f / 3.14159265f, aa.axis().x(), aa.axis().y(), aa.axis().z());
+						
+						// Draw sphere at local origin (so it rotates)
+						glLineWidth(proxyOutlineWidth);
+						glColor3f(proxyOutlineColor.x(), proxyOutlineColor.y(), proxyOutlineColor.z());
+						drawWireSphereCircles(Eigen::Vector3f::Zero(), agentSphere.radius, 36);
+						glLineWidth(proxyLineWidth);
+						glColor3f(c.x(), c.y(), c.z());
+						drawWireSphereCircles(Eigen::Vector3f::Zero(), agentSphere.radius, 36);
+						
+						// Draw local axes (length = radius)
+						// Draw manually to avoid offset in drawAxis()
+						glBegin(GL_LINES);
+						// X (Red)
+						glColor3f(1.0f, 0.0f, 0.0f);
+						glVertex3f(0.0f, 0.0f, 0.0f);
+						glVertex3f(agentSphere.radius, 0.0f, 0.0f);
+						// Y (Green)
+						glColor3f(0.0f, 1.0f, 0.0f);
+						glVertex3f(0.0f, 0.0f, 0.0f);
+						glVertex3f(0.0f, agentSphere.radius, 0.0f);
+						// Z (Blue)
+						glColor3f(0.0f, 0.0f, 1.0f);
+						glVertex3f(0.0f, 0.0f, 0.0f);
+						glVertex3f(0.0f, 0.0f, agentSphere.radius);
+						glEnd();
+						
+						glPopMatrix();
+					}
 				}
 
 		// Draw constraint plane for volume preservation mode
