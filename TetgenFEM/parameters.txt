@@ -93,7 +93,7 @@ wall_restitution=0.0
 wall_tangentialDamp=0.2
 
 # Ultraleap Leap Motion (LeapC) right-hand fingertips (thumb..pinky) -> agent spheres mapping
-leap_enabled=false
+leap_enabled=true
 leap_workspaceXmm=260
 leap_workspaceYmm=260
 leap_workspaceZmm=260

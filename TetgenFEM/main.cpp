@@ -110,8 +110,10 @@ struct KeyLatch {
 			LeapDestroyConnection(connection_);
 			connection_ = nullptr;
 			connected_ = false;
-			hasHand_ = false;
-			timeSec_ = -1.0;
+			hasRightHand_ = false;
+			hasLeftHand_ = false;
+			rightTimeSec_ = -1.0;
+			leftTimeSec_ = -1.0;
 		}
 
 	void poll(double nowSec)
@@ -145,17 +147,33 @@ struct KeyLatch {
 
 		bool getRightHandTipsMm(std::array<Eigen::Vector3f, 5>* outTipsMm, Eigen::Vector3f* outPalmMm, double* outTimeSec) const
 		{
-			if (!hasHand_) return false;
-			if (outTipsMm) *outTipsMm = tipsMm_;
-			if (outPalmMm) *outPalmMm = palmMm_;
-			if (outTimeSec) *outTimeSec = timeSec_;
+			if (!hasRightHand_) return false;
+			if (outTipsMm) *outTipsMm = rightTipsMm_;
+			if (outPalmMm) *outPalmMm = rightPalmMm_;
+			if (outTimeSec) *outTimeSec = rightTimeSec_;
 			return true;
 		}
 
 		bool getRightHandRotations(std::array<Eigen::Quaternionf, 5>* outRotations) const
 		{
-			if (!hasHand_) return false;
-			if (outRotations) *outRotations = tipsRot_;
+			if (!hasRightHand_) return false;
+			if (outRotations) *outRotations = rightTipsRot_;
+			return true;
+		}
+
+		bool getLeftHandTipsMm(std::array<Eigen::Vector3f, 5>* outTipsMm, Eigen::Vector3f* outPalmMm, double* outTimeSec) const
+		{
+			if (!hasLeftHand_) return false;
+			if (outTipsMm) *outTipsMm = leftTipsMm_;
+			if (outPalmMm) *outPalmMm = leftPalmMm_;
+			if (outTimeSec) *outTimeSec = leftTimeSec_;
+			return true;
+		}
+
+		bool getLeftHandRotations(std::array<Eigen::Quaternionf, 5>* outRotations) const
+		{
+			if (!hasLeftHand_) return false;
+			if (outRotations) *outRotations = leftTipsRot_;
 			return true;
 		}
 
@@ -163,36 +181,60 @@ struct KeyLatch {
 		void onTracking(const LEAP_TRACKING_EVENT* evt, double nowSec)
 		{
 			if (!evt) return;
+			bool sawRight = false;
+			bool sawLeft = false;
 			for (uint32_t i = 0; i < evt->nHands; ++i) {
 				const LEAP_HAND* hand = &evt->pHands[i];
 				if (!hand) continue;
-				if (hand->type != eLeapHandType_Right) continue;
+				const bool isRight = (hand->type == eLeapHandType_Right);
+				const bool isLeft = (hand->type == eLeapHandType_Left);
+				if (!isRight && !isLeft) continue;
 
 				const LEAP_VECTOR palm = hand->palm.position; // mm
-				palmMm_ = Eigen::Vector3f(palm.x, palm.y, palm.z);
+				Eigen::Vector3f palmMm(palm.x, palm.y, palm.z);
 
+				std::array<Eigen::Vector3f, 5> tipsMm;
+				std::array<Eigen::Quaternionf, 5> tipsRot;
 				// digits[0]=thumb, [1]=index, [2]=middle, [3]=ring, [4]=pinky
 				for (int fi = 0; fi < 5; ++fi) {
 					const LEAP_VECTOR tip = hand->digits[fi].distal.next_joint; // mm
-					tipsMm_[static_cast<size_t>(fi)] = Eigen::Vector3f(tip.x, tip.y, tip.z);
-					
+					tipsMm[static_cast<size_t>(fi)] = Eigen::Vector3f(tip.x, tip.y, tip.z);
+
 					const LEAP_QUATERNION rot = hand->digits[fi].distal.rotation;
-					tipsRot_[static_cast<size_t>(fi)] = Eigen::Quaternionf(rot.w, rot.x, rot.y, rot.z);
+					tipsRot[static_cast<size_t>(fi)] = Eigen::Quaternionf(rot.w, rot.x, rot.y, rot.z);
 				}
 
-				timeSec_ = nowSec;
-				hasHand_ = true;
-				return;
+				if (isRight) {
+					rightPalmMm_ = palmMm;
+					rightTipsMm_ = tipsMm;
+					rightTipsRot_ = tipsRot;
+					rightTimeSec_ = nowSec;
+					sawRight = true;
+				}
+				if (isLeft) {
+					leftPalmMm_ = palmMm;
+					leftTipsMm_ = tipsMm;
+					leftTipsRot_ = tipsRot;
+					leftTimeSec_ = nowSec;
+					sawLeft = true;
+				}
 			}
+			hasRightHand_ = sawRight;
+			hasLeftHand_ = sawLeft;
 		}
 
 		LEAP_CONNECTION connection_ = nullptr;
 		bool connected_ = false;
-		bool hasHand_ = false;
-		Eigen::Vector3f palmMm_ = Eigen::Vector3f::Zero();
-		std::array<Eigen::Vector3f, 5> tipsMm_{};
-		std::array<Eigen::Quaternionf, 5> tipsRot_{}; // Initialized to Identity by default constructor? No, array init.
-		double timeSec_ = -1.0;
+		bool hasRightHand_ = false;
+		bool hasLeftHand_ = false;
+		Eigen::Vector3f rightPalmMm_ = Eigen::Vector3f::Zero();
+		Eigen::Vector3f leftPalmMm_ = Eigen::Vector3f::Zero();
+		std::array<Eigen::Vector3f, 5> rightTipsMm_{};
+		std::array<Eigen::Vector3f, 5> leftTipsMm_{};
+		std::array<Eigen::Quaternionf, 5> rightTipsRot_{};
+		std::array<Eigen::Quaternionf, 5> leftTipsRot_{};
+		double rightTimeSec_ = -1.0;
+		double leftTimeSec_ = -1.0;
 	};
 	#endif
 
@@ -2199,13 +2241,56 @@ int main(int argc, char** argv) {
 		
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 		LeapCTracker leapTracker;
-		bool leapUseInput = leapEnabled;
+		// Start with Leap input enabled by default (can still be toggled with 'B').
+		bool leapUseInput = true;
 		bool leapMappingCalibrated = false;
 		Eigen::Vector3f leapCenterMm = Eigen::Vector3f::Zero();
 		Eigen::Vector3f leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
 		std::array<Eigen::Vector3f, kFingerCount> leapLatestTipsMm;
 		leapLatestTipsMm.fill(Eigen::Vector3f::Zero());
 		double leapLatestTimeSec = -1.0;
+
+		// Left-hand (non-physical) handle: track tips + map to world, then optionally "stick" surface points.
+		bool leapLeftMappingCalibrated = false;
+		Eigen::Vector3f leapLeftCenterMm = Eigen::Vector3f::Zero();
+		const Eigen::Vector3f leapLeftHomeAnchor(
+			bboxCenter.x() - 0.25f * bboxDiag,
+			bboxMax.y() + agentSphere.radius * 1.5f,
+			bboxCenter.z());
+		Eigen::Vector3f leapLeftAnchorWorld = leapLeftHomeAnchor;
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftLatestTipsMm;
+		leapLeftLatestTipsMm.fill(Eigen::Vector3f::Zero());
+		double leapLeftLatestTimeSec = -1.0;
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldTips;
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldPrevTips;
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldVelTips;
+		std::array<bool, kFingerCount> leapLeftTipHasSurface{};
+		std::array<float, kFingerCount> leapLeftTipSurfaceDist{};
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftTipClosest{};
+		for (int fi = 0; fi < kFingerCount; ++fi) {
+			const Eigen::Vector3f p = leapLeftHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)];
+			leapLeftWorldTips[static_cast<size_t>(fi)] = p;
+			leapLeftWorldPrevTips[static_cast<size_t>(fi)] = p;
+			leapLeftWorldVelTips[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
+			leapLeftTipHasSurface[static_cast<size_t>(fi)] = false;
+			leapLeftTipSurfaceDist[static_cast<size_t>(fi)] = std::numeric_limits<float>::infinity();
+			leapLeftTipClosest[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
+		}
+
+		struct LeftHandStickPoint {
+			bool active = false;
+			int tri = -1;
+			Eigen::Vector3f bary = Eigen::Vector3f::Zero();
+			Eigen::Vector3f tipToAnchorOffset = Eigen::Vector3f::Zero(); // (anchor - tip) at acquire time
+		};
+		enum class LeftHandStickMode { Off = 0, Follow = 1, Hold = 2 };
+		LeftHandStickMode leftHandStickMode = LeftHandStickMode::Off;
+		bool leftHandStickNeedsAcquire = false;
+		std::array<LeftHandStickPoint, kFingerCount> leftHandStick;
+		std::array<Eigen::Vector3f, kFingerCount> leftHandHoldTargetWorld;
+		leftHandHoldTargetWorld.fill(Eigen::Vector3f::Zero());
+		std::array<Eigen::Vector3f, kFingerCount> leftHandHoldTipWorld;
+		leftHandHoldTipWorld.fill(Eigen::Vector3f::Zero());
 		if (leapUseInput && !leapTracker.init()) {
 			std::cerr << "[LeapC] init failed; disabling Leap input.\n";
 			leapUseInput = false;
@@ -2708,6 +2793,12 @@ int main(int argc, char** argv) {
 						leapLatestTipsMm = tipsMm;
 						leapLatestTimeSec = timeSec;
 					}
+					std::array<Eigen::Vector3f, kFingerCount> leftTipsMm;
+					double leftTimeSec = -1.0;
+					if (leapTracker.getLeftHandTipsMm(&leftTipsMm, nullptr, &leftTimeSec)) {
+						leapLeftLatestTipsMm = leftTipsMm;
+						leapLeftLatestTimeSec = leftTimeSec;
+					}
 				}
 	#endif
 
@@ -2763,6 +2854,7 @@ int main(int argc, char** argv) {
 						static KeyLatch leapRecenterLatch;
 						static KeyLatch leapGainDownLatch;
 					static KeyLatch leapGainUpLatch;
+					static KeyLatch leftHandStickLatch;
 	#endif
 
 						if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
@@ -2772,6 +2864,7 @@ int main(int argc, char** argv) {
 							          << "  VirtualCoupling: V | Grip: Y | Home: T | Print force: G | Force graph: F | Print COM: M\n"
 			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 								          << "  Leap: toggle=B | recenter=R | gain: '['/']'\n"
+								          << "  Left hand (non-physical): stick toggle=N\n"
 			#endif
 							          << "  Contact: triangles=" << agentContactTriangles.size()
 							          << " vertices=" << agentContactVertices.size()
@@ -2822,6 +2915,29 @@ int main(int argc, char** argv) {
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 						leapMappingCalibrated = false;
 						leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
+						// NOTE: Don't disturb left-hand HOLD state on 'T' (user may want to keep the "frozen" grasp
+						// while resetting the right-hand/agent home).
+						if (leftHandStickMode != LeftHandStickMode::Hold) {
+							leapLeftMappingCalibrated = false;
+							leapLeftCenterMm.setZero();
+							leapLeftAnchorWorld = leapLeftHomeAnchor;
+							for (int fi = 0; fi < kFingerCount; ++fi) {
+								const Eigen::Vector3f p = leapLeftHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)];
+								leapLeftWorldTips[static_cast<size_t>(fi)] = p;
+								leapLeftWorldPrevTips[static_cast<size_t>(fi)] = p;
+								leapLeftWorldVelTips[static_cast<size_t>(fi)].setZero();
+							}
+							leftHandStickMode = LeftHandStickMode::Off;
+							leftHandStickNeedsAcquire = false;
+							for (auto& s : leftHandStick) {
+								s.active = false;
+								s.tri = -1;
+								s.bary.setZero();
+								s.tipToAnchorOffset.setZero();
+							}
+							leftHandHoldTargetWorld.fill(Eigen::Vector3f::Zero());
+							leftHandHoldTipWorld.fill(Eigen::Vector3f::Zero());
+						}
 	#endif
 					}
 
@@ -2835,6 +2951,20 @@ int main(int argc, char** argv) {
 
 						leapMappingCalibrated = false;
 						leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
+						leapLeftMappingCalibrated = false;
+						leapLeftAnchorWorld = leapLeftHomeAnchor;
+						if (!leapUseInput) {
+							leftHandStickMode = LeftHandStickMode::Off;
+							leftHandStickNeedsAcquire = false;
+							for (auto& s : leftHandStick) {
+								s.active = false;
+								s.tri = -1;
+								s.bary.setZero();
+								s.tipToAnchorOffset.setZero();
+							}
+							leftHandHoldTargetWorld.fill(Eigen::Vector3f::Zero());
+							leftHandHoldTipWorld.fill(Eigen::Vector3f::Zero());
+						}
 						std::cout << "[LeapC] Input " << (leapUseInput ? "ON" : "OFF")
 					          << " | workspace(mm)=(" << leapWorkspaceXmm << "," << leapWorkspaceYmm << "," << leapWorkspaceZmm << ")"
 					          << " worldMargin=" << leapWorldMargin
@@ -2858,7 +2988,76 @@ int main(int argc, char** argv) {
 					leapGain = std::max(0.0f, leapGain * 1.1f);
 					std::cout << "[LeapC] gain=" << leapGain << "\n";
 				}
+				if (leftHandStickLatch.consume(window, GLFW_KEY_N)) {
+					// Cycle: OFF -> FOLLOW (stick to hand) -> HOLD (freeze in world) -> OFF (release)
+					if (!leapUseInput) {
+						leftHandStickMode = LeftHandStickMode::Off;
+						leftHandStickNeedsAcquire = false;
+						std::cout << "[LeftHand] Stick requires Leap input ON (press B)\n";
+					} else {
+						if (leftHandStickMode == LeftHandStickMode::Off) {
+							leftHandStickMode = LeftHandStickMode::Follow;
+							leftHandStickNeedsAcquire = true;
+						} else if (leftHandStickMode == LeftHandStickMode::Follow) {
+							leftHandStickMode = LeftHandStickMode::Hold;
+							leftHandStickNeedsAcquire = false;
+							// Freeze current anchors in world so you can move the other hand independently.
+							for (int fi = 0; fi < kFingerCount; ++fi) {
+								const size_t idx = static_cast<size_t>(fi);
+								if (!leftHandStick[idx].active) {
+									leftHandHoldTargetWorld[idx].setZero();
+									leftHandHoldTipWorld[idx].setZero();
+									continue;
+								}
+								const int ti = leftHandStick[idx].tri;
+								if (ti < 0 || ti >= static_cast<int>(agentContactTriangles.size())) {
+									leftHandStick[idx].active = false;
+									leftHandStick[idx].tri = -1;
+									leftHandHoldTargetWorld[idx].setZero();
+									leftHandHoldTipWorld[idx].setZero();
+									continue;
+								}
+								const auto& tri = agentContactTriangles[static_cast<size_t>(ti)];
+								if (!tri.a || !tri.b || !tri.c) {
+									leftHandStick[idx].active = false;
+									leftHandStick[idx].tri = -1;
+									leftHandHoldTargetWorld[idx].setZero();
+									leftHandHoldTipWorld[idx].setZero();
+									continue;
+								}
+								const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+								const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+								const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+								const Eigen::Vector3f bary = leftHandStick[idx].bary;
+								leftHandHoldTargetWorld[idx] = a * bary.x() + b * bary.y() + c * bary.z();
+								leftHandHoldTipWorld[idx] = leapLeftWorldTips[idx];
+							}
+						} else {
+							// Hold -> Off
+							leftHandStickMode = LeftHandStickMode::Off;
+							leftHandStickNeedsAcquire = false;
+							for (auto& s : leftHandStick) {
+								s.active = false;
+								s.tri = -1;
+								s.bary.setZero();
+								s.tipToAnchorOffset.setZero();
+							}
+							leftHandHoldTargetWorld.fill(Eigen::Vector3f::Zero());
+							leftHandHoldTipWorld.fill(Eigen::Vector3f::Zero());
+						}
+					}
+
+					const char* modeStr =
+						(leftHandStickMode == LeftHandStickMode::Off) ? "OFF" :
+						(leftHandStickMode == LeftHandStickMode::Follow) ? "FOLLOW" :
+						"HOLD";
+					std::cout << "[LeftHand] Stick mode " << modeStr << " (N)\n";
+				}
 	#endif
+
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+				bool leftHandWorldFresh = false;
+#endif
 
 				// Agent device motion source: Leap (if enabled) else keyboard keys.
 					{
@@ -2999,6 +3198,218 @@ int main(int argc, char** argv) {
 								pPrev = p;
 							}
 						}
+
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+						// Left-hand tip mapping (Leap mm -> world). Used only for visualization and non-physical "stick".
+						leftHandWorldFresh = false;
+						if (leapUseInput) {
+							const double now = glfwGetTime();
+							const double staleSec = 0.2;
+							if (leapLeftLatestTimeSec >= 0.0 && (now - leapLeftLatestTimeSec) <= staleSec) {
+								const Eigen::Vector3f extents = bboxMax - bboxMin;
+								const float m = std::max(0.0f, leapWorldMargin);
+								const Eigen::Vector3f worldRange = extents * (1.0f + 2.0f * m);
+
+								const Eigen::Vector3f workspaceMm(
+									std::max(1.0f, leapWorkspaceXmm),
+									std::max(1.0f, leapWorkspaceYmm),
+									std::max(1.0f, leapWorkspaceZmm));
+
+								const float gain = std::max(0.0f, leapGain);
+								const Eigen::Vector3f scale = gain * Eigen::Vector3f(
+									(worldRange.x() > 1e-8f) ? (worldRange.x() / workspaceMm.x()) : (bboxDiag / workspaceMm.x()),
+									(worldRange.y() > 1e-8f) ? (worldRange.y() / workspaceMm.y()) : (bboxDiag / workspaceMm.y()),
+									(worldRange.z() > 1e-8f) ? (worldRange.z() / workspaceMm.z()) : (bboxDiag / workspaceMm.z()));
+
+								const Eigen::Vector3f axisSign(
+									leapFlipX ? -1.0f : 1.0f,
+									leapFlipY ? -1.0f : 1.0f,
+									leapFlipZ ? -1.0f : 1.0f);
+
+								const float smooth = std::max(0.0f, leapSmoothingTime);
+								const float alpha = (smooth > 1e-6f) ? (1.0f - std::exp(-timeStep / smooth)) : 1.0f;
+								const float yOffset = leapYOffsetBboxFrac * extents.y();
+								const Eigen::Vector3f margin = extents * m;
+
+								const float spreadGain = std::max(0.0f, leapFingerSpreadGain);
+								const Eigen::Vector3f spreadScale(spreadGain, 1.0f, spreadGain);
+
+								const Eigen::Vector3f indexTipMm =
+									leapLeftLatestTipsMm[static_cast<size_t>(kIndexFinger)].cwiseProduct(axisSign);
+								if (!leapLeftMappingCalibrated) {
+									leapLeftCenterMm = indexTipMm;
+									leapLeftAnchorWorld = leapLeftHomeAnchor;
+
+									Eigen::Vector3f clampMin = bboxMin - margin;
+									Eigen::Vector3f clampMax = bboxMax + margin;
+									clampMin = clampMin.cwiseMin(leapLeftAnchorWorld - margin);
+									clampMax = clampMax.cwiseMax(leapLeftAnchorWorld + margin);
+
+									Eigen::Vector3f base = leapLeftAnchorWorld;
+									base.y() += yOffset;
+									base = base.cwiseMax(clampMin).cwiseMin(clampMax);
+
+									const float maxRel = 0.5f * bboxDiag;
+									const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
+
+									for (int fi = 0; fi < kFingerCount; ++fi) {
+										const Eigen::Vector3f tipMm = leapLeftLatestTipsMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
+										const Eigen::Vector3f relMm = tipMm - indexTipMm;
+										Eigen::Vector3f relWorld = relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
+										relWorld = relWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
+										const Eigen::Vector3f target = base + relWorld;
+
+										leapLeftWorldTips[static_cast<size_t>(fi)] = target;
+										leapLeftWorldPrevTips[static_cast<size_t>(fi)] = target;
+										leapLeftWorldVelTips[static_cast<size_t>(fi)].setZero();
+									}
+									leapLeftMappingCalibrated = true;
+								} else {
+									Eigen::Vector3f clampMin = bboxMin - margin;
+									Eigen::Vector3f clampMax = bboxMax + margin;
+									clampMin = clampMin.cwiseMin(leapLeftAnchorWorld - margin);
+									clampMax = clampMax.cwiseMax(leapLeftAnchorWorld + margin);
+
+									Eigen::Vector3f base = leapLeftAnchorWorld + (indexTipMm - leapLeftCenterMm).cwiseProduct(scale);
+									base.y() += yOffset;
+									base = base.cwiseMax(clampMin).cwiseMin(clampMax);
+
+									const float maxRel = 0.5f * bboxDiag;
+									const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
+
+									for (int fi = 0; fi < kFingerCount; ++fi) {
+										const Eigen::Vector3f tipMm = leapLeftLatestTipsMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
+										const Eigen::Vector3f relMm = tipMm - indexTipMm;
+										Eigen::Vector3f relWorld = relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
+										relWorld = relWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
+										const Eigen::Vector3f target = base + relWorld;
+
+										auto& p = leapLeftWorldTips[static_cast<size_t>(fi)];
+										auto& pPrev = leapLeftWorldPrevTips[static_cast<size_t>(fi)];
+										auto& v = leapLeftWorldVelTips[static_cast<size_t>(fi)];
+										p = p + alpha * (target - p);
+										v = (p - pPrev) / std::max(1e-8f, timeStep);
+										pPrev = p;
+									}
+								}
+
+								leftHandWorldFresh = true;
+							} else {
+								leapLeftMappingCalibrated = false;
+								leapLeftAnchorWorld = leapLeftWorldTips[static_cast<size_t>(kIndexFinger)];
+							}
+						}
+
+						// Per-tip surface proximity (for 2D-screen usability feedback).
+						{
+							for (int fi = 0; fi < kFingerCount; ++fi) {
+								const size_t idx = static_cast<size_t>(fi);
+								leapLeftTipHasSurface[idx] = false;
+								leapLeftTipSurfaceDist[idx] = std::numeric_limits<float>::infinity();
+								leapLeftTipClosest[idx].setZero();
+							}
+							const bool wantProbe = (leftHandWorldFresh || leftHandStickMode == LeftHandStickMode::Hold);
+							if (wantProbe && !agentContactTriangles.empty()) {
+								for (int fi = 0; fi < kFingerCount; ++fi) {
+									const size_t idx = static_cast<size_t>(fi);
+									const Eigen::Vector3f p = (leftHandStickMode == LeftHandStickMode::Hold)
+										? leftHandHoldTipWorld[idx]
+										: leapLeftWorldTips[idx];
+									const AgentSurfaceQueryResult q = queryAgentSurface(p, agentContactTriangles);
+									if (!q.found) continue;
+									leapLeftTipHasSurface[idx] = true;
+									leapLeftTipSurfaceDist[idx] = q.distanceToSurface;
+									leapLeftTipClosest[idx] = q.closestPoint;
+								}
+							}
+						}
+
+						// If tracking drops while FOLLOWing, release to avoid pinning the tissue to stale data.
+						// In HOLD mode we deliberately keep holding even if tracking is lost.
+						if (leftHandStickMode == LeftHandStickMode::Follow && !leftHandWorldFresh) {
+							leftHandStickMode = LeftHandStickMode::Off;
+							leftHandStickNeedsAcquire = false;
+							for (auto& s : leftHandStick) {
+								s.active = false;
+								s.tri = -1;
+								s.bary.setZero();
+								s.tipToAnchorOffset.setZero();
+							}
+							leftHandHoldTargetWorld.fill(Eigen::Vector3f::Zero());
+							leftHandHoldTipWorld.fill(Eigen::Vector3f::Zero());
+							std::cout << "[LeftHand] Stick OFF (tracking stale)\n";
+						}
+
+						// Acquire stick points once on toggle.
+						if (leftHandStickMode == LeftHandStickMode::Follow && leftHandStickNeedsAcquire) {
+							leftHandStickNeedsAcquire = false;
+							for (auto& s : leftHandStick) {
+								s.active = false;
+								s.tri = -1;
+								s.bary.setZero();
+								s.tipToAnchorOffset.setZero();
+							}
+							leftHandHoldTargetWorld.fill(Eigen::Vector3f::Zero());
+							leftHandHoldTipWorld.fill(Eigen::Vector3f::Zero());
+
+							if (!leftHandWorldFresh || agentContactTriangles.empty() || agentContactTrianglePhysIds.size() != agentContactTriangles.size()) {
+								leftHandStickMode = LeftHandStickMode::Off;
+								std::cout << "[LeftHand] Stick acquire failed (no tracking/surface)\n";
+							} else {
+								const float attachDist = 3.5f * std::max(1e-6f, agentSphere.radius);
+								auto findClosestTriangle = [&](const Eigen::Vector3f& p, float* outDist, Eigen::Vector3f* outBary, Eigen::Vector3f* outClosest) -> int {
+									int bestTi = -1;
+									float bestD = std::numeric_limits<float>::infinity();
+									Eigen::Vector3f bestBary = Eigen::Vector3f::Zero();
+									Eigen::Vector3f bestQ = Eigen::Vector3f::Zero();
+									for (size_t ti = 0; ti < agentContactTriangles.size(); ++ti) {
+										const auto& tri = agentContactTriangles[ti];
+										if (!tri.a || !tri.b || !tri.c) continue;
+										const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+										const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+										const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+										Eigen::Vector3f bary = Eigen::Vector3f::Zero();
+										const Eigen::Vector3f q = closestPointOnTriangle(p, a, b, c, &bary);
+										const float d = (q - p).norm();
+										if (d < bestD) {
+											bestD = d;
+											bestTi = static_cast<int>(ti);
+											bestBary = bary;
+											bestQ = q;
+										}
+									}
+									if (outDist) *outDist = bestD;
+									if (outBary) *outBary = bestBary;
+									if (outClosest) *outClosest = bestQ;
+									return bestTi;
+								};
+
+								int attached = 0;
+								for (int fi = 0; fi < kFingerCount; ++fi) {
+									const size_t idx = static_cast<size_t>(fi);
+									const Eigen::Vector3f tip = leapLeftWorldTips[idx];
+									float d = 0.0f;
+									Eigen::Vector3f bary = Eigen::Vector3f::Zero();
+									Eigen::Vector3f q = Eigen::Vector3f::Zero();
+									const int ti = findClosestTriangle(tip, &d, &bary, &q);
+									if (ti >= 0 && d <= attachDist) {
+										leftHandStick[idx].active = true;
+										leftHandStick[idx].tri = ti;
+										leftHandStick[idx].bary = bary;
+										leftHandStick[idx].tipToAnchorOffset = q - tip;
+										++attached;
+									}
+								}
+								if (attached <= 0) {
+									leftHandStickMode = LeftHandStickMode::Off;
+									std::cout << "[LeftHand] Stick acquire failed (no fingertip near surface)\n";
+								} else {
+									std::cout << "[LeftHand] Stick acquired " << attached << "/" << kFingerCount
+									          << " (attachDist=" << attachDist << ")\n";
+								}
+							}
+						}
+#endif
 				}
 					if (agentPrintLatch.consume(window, GLFW_KEY_G)) {
 						std::cout << "[AgentSphere] vc=" << (agentUseVC ? "1" : "0") << " fingers=" << kFingerCount << "\n";
@@ -4609,6 +5020,174 @@ int main(int argc, char** argv) {
 						}
 					}
 
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+					// Left-hand non-physical "stick": kinematically drag surface points (no collisions).
+					// Applied after agent contact/grip so the left hand can do large, reliable flips/deformations.
+					if (leftHandStickMode != LeftHandStickMode::Off && (leftHandWorldFresh || leftHandStickMode == LeftHandStickMode::Hold) && !agentContactTriangles.empty() &&
+					    agentContactTrianglePhysIds.size() == agentContactTriangles.size() &&
+					    !agentVerticesByPhysId.empty()) {
+						const float invDt = 1.0f / std::max(1e-8f, timeStep);
+						const float r = std::max(1e-6f, agentSphere.radius);
+						const float corr = 0.75f;           // [0..1] per-frame correction strength
+						const float maxStep = 3.0f * r;     // allow larger flips
+						const int iters = 3;                // stiffness without needing extreme maxStep
+						const float stickRadius = 3.5f * r; // grab patch radius (~larger area vs single triangle)
+						const float stickRadiusTri = 1.2f * stickRadius;
+
+						auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp) {
+							if (dp.squaredNorm() <= 1e-24f) return;
+							if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) return;
+							const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+							for (Vertex* v : list) {
+								if (!v || v->isFixed) continue;
+								v->x += dp.x();
+								v->y += dp.y();
+								v->z += dp.z();
+								v->velx += dp.x() * invDt;
+								v->vely += dp.y() * invDt;
+								v->velz += dp.z() * invDt;
+							}
+						};
+
+						bool leftHandMoved = false;
+						for (int it = 0; it < iters; ++it) {
+							for (int fi = 0; fi < kFingerCount; ++fi) {
+								const size_t idx = static_cast<size_t>(fi);
+								if (!leftHandStick[idx].active) continue;
+								const int ti = leftHandStick[idx].tri;
+								if (ti < 0 || ti >= static_cast<int>(agentContactTriangles.size())) {
+									leftHandStick[idx].active = false;
+									leftHandStick[idx].tri = -1;
+									continue;
+								}
+
+								const auto& tri = agentContactTriangles[static_cast<size_t>(ti)];
+								if (!tri.a || !tri.b || !tri.c) {
+									leftHandStick[idx].active = false;
+									leftHandStick[idx].tri = -1;
+									continue;
+								}
+
+								const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+								const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+								const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+
+								const Eigen::Vector3f bary = leftHandStick[idx].bary;
+								const Eigen::Vector3f anchor = a * bary.x() + b * bary.y() + c * bary.z();
+								const Eigen::Vector3f target = (leftHandStickMode == LeftHandStickMode::Hold)
+									? leftHandHoldTargetWorld[idx]
+									: (leapLeftWorldTips[idx] + leftHandStick[idx].tipToAnchorOffset);
+
+								Eigen::Vector3f dp = (target - anchor) * std::clamp(corr, 0.0f, 1.0f);
+								const float dpLen = dp.norm();
+								if (maxStep > 0.0f && dpLen > maxStep && dpLen > 1e-12f) {
+									dp *= (maxStep / dpLen);
+								}
+								if (dp.squaredNorm() <= 1e-24f) continue;
+
+								// Spread the motion to a surface patch around the anchor so it doesn't look like
+								// grabbing a single tetra/triangle.
+								std::vector<uint8_t> triVisited(agentContactTriangles.size(), 0);
+								std::vector<uint8_t> physVisited(agentVerticesByPhysId.size(), 0);
+								std::vector<int> queue;
+								queue.reserve(256);
+								queue.push_back(ti);
+								triVisited[static_cast<size_t>(ti)] = 1;
+
+								std::vector<int> physIds;
+								physIds.reserve(256);
+
+								const int maxTris = 400;
+								for (size_t qi = 0; qi < queue.size() && static_cast<int>(queue.size()) < maxTris; ++qi) {
+									const int t = queue[qi];
+									if (t < 0 || t >= static_cast<int>(agentContactTriangles.size())) continue;
+									const auto& tr = agentContactTriangles[static_cast<size_t>(t)];
+									if (!tr.a || !tr.b || !tr.c) continue;
+
+									const Eigen::Vector3f ta(tr.a->x, tr.a->y, tr.a->z);
+									const Eigen::Vector3f tb(tr.b->x, tr.b->y, tr.b->z);
+									const Eigen::Vector3f tc(tr.c->x, tr.c->y, tr.c->z);
+									const Eigen::Vector3f centroid = (ta + tb + tc) / 3.0f;
+									if ((centroid - anchor).norm() > stickRadiusTri) continue;
+
+									const auto& ids = agentContactTrianglePhysIds[static_cast<size_t>(t)];
+									for (int k = 0; k < 3; ++k) {
+										const int id = ids[static_cast<size_t>(k)];
+										if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+										if (physVisited[static_cast<size_t>(id)]) continue;
+										physVisited[static_cast<size_t>(id)] = 1;
+										physIds.push_back(id);
+									}
+
+									if (t >= 0 && t < static_cast<int>(agentContactTriangleNeighbors.size())) {
+										const auto& neigh = agentContactTriangleNeighbors[static_cast<size_t>(t)];
+										for (int nt : neigh) {
+											if (nt < 0 || nt >= static_cast<int>(agentContactTriangles.size())) continue;
+											if (triVisited[static_cast<size_t>(nt)]) continue;
+											triVisited[static_cast<size_t>(nt)] = 1;
+											queue.push_back(nt);
+											if (static_cast<int>(queue.size()) >= maxTris) break;
+										}
+									}
+								}
+
+								// Distance-weighted distribution over the patch.
+								float wSum = 0.0f;
+								std::vector<float> weights;
+								weights.reserve(physIds.size());
+								for (int id : physIds) {
+									if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) {
+										weights.push_back(0.0f);
+										continue;
+									}
+									const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+									const Vertex* v0 = (!list.empty()) ? list.front() : nullptr;
+									if (!v0) {
+										weights.push_back(0.0f);
+										continue;
+									}
+									const Eigen::Vector3f p(v0->x, v0->y, v0->z);
+									const float d = (p - anchor).norm();
+									if (d > stickRadius) {
+										weights.push_back(0.0f);
+										continue;
+									}
+									float w = 1.0f - (d / std::max(1e-6f, stickRadius));
+									w = w * w; // smooth falloff
+									weights.push_back(w);
+									wSum += w;
+								}
+								if (wSum > 1e-12f) {
+									for (size_t ii = 0; ii < physIds.size(); ++ii) {
+										const float w = weights[ii];
+										if (w <= 0.0f) continue;
+										applyDeltaToPhysId(physIds[ii], dp * (w / wSum));
+									}
+								}
+								leftHandMoved = true;
+							}
+						}
+
+						// Keep Group::groupVelocity consistent with Vertex::vel* for the next frame's primeVec.
+						if (leftHandMoved) {
+							for (int gi = 0; gi < object.groupNum; ++gi) {
+								Group& group = object.groups[gi];
+								for (const auto& vertexPair : group.verticesMap) {
+									Vertex* v = vertexPair.second;
+									if (!v) continue;
+									const int li = v->localIndex;
+									if (li < 0 || (3 * li + 2) >= group.groupVelocity.size()) continue;
+									if (v->isFixed) {
+										group.groupVelocity.segment<3>(3 * li) = Eigen::Vector3f::Zero();
+									} else {
+										group.groupVelocity.segment<3>(3 * li) = Eigen::Vector3f(v->velx, v->vely, v->velz);
+									}
+								}
+							}
+						}
+					}
+#endif
+
 					// Axis-aligned "walls" (Y±, X+) tight to the initial bbox.
 						if (wallEnabled && !agentVerticesByPhysId.empty()) {
 						const Eigen::Vector3f extents = bboxMax - bboxMin;
@@ -4792,6 +5371,51 @@ int main(int argc, char** argv) {
 						glPopMatrix();
 					}
 				}
+
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+				// Draw left-hand fingertips (visual only, smaller balls).
+				if (leftHandWorldFresh || leftHandStickMode == LeftHandStickMode::Hold) {
+					const float tipR = 0.35f * std::max(1e-6f, agentSphere.radius);
+					const float touchDist = 2.0f * std::max(1e-6f, agentSphere.radius);
+					glLineWidth(2.0f);
+					for (int fi = 0; fi < kFingerCount; ++fi) {
+						const size_t idx = static_cast<size_t>(fi);
+						const bool stuckFollow = (leftHandStickMode == LeftHandStickMode::Follow) && leftHandStick[idx].active;
+						const bool stuckHold = (leftHandStickMode == LeftHandStickMode::Hold) && leftHandStick[idx].active;
+						const bool stuck = stuckFollow || stuckHold;
+						const bool nearSurface = (!stuck) && leapLeftTipHasSurface[idx] && (leapLeftTipSurfaceDist[idx] <= touchDist);
+						Eigen::Vector3f c = stuckHold
+							? Eigen::Vector3f(1.00f, 0.85f, 0.15f)  // hold: yellow-ish
+							: (stuckFollow
+							? Eigen::Vector3f(0.95f, 0.20f, 0.15f)  // stuck: red-ish
+							: (nearSurface ? Eigen::Vector3f(0.20f, 0.95f, 0.35f)  // near: green-ish
+							               : Eigen::Vector3f(0.35f, 0.65f, 1.00f))); // free: blue-ish
+						if (whiteBackground) c *= 0.85f;
+
+						const Eigen::Vector3f& pos = (leftHandStickMode == LeftHandStickMode::Hold)
+							? leftHandHoldTipWorld[idx]
+							: leapLeftWorldTips[idx];
+						glPushMatrix();
+						glTranslatef(pos.x(), pos.y(), pos.z());
+						glColor3f(c.x(), c.y(), c.z());
+						drawWireSphereCircles(Eigen::Vector3f::Zero(), tipR, 24);
+						glPopMatrix();
+
+						// On a 2D monitor it's hard to judge contact depth; show a short segment to the surface.
+						if (leapLeftTipHasSurface[idx] && leapLeftTipSurfaceDist[idx] <= (4.0f * touchDist)) {
+							const Eigen::Vector3f& q = leapLeftTipClosest[idx];
+							const Eigen::Vector3f lc = whiteBackground
+								? Eigen::Vector3f(0.15f, 0.15f, 0.15f)
+								: Eigen::Vector3f(0.85f, 0.85f, 0.85f);
+							glBegin(GL_LINES);
+							glColor3f(lc.x(), lc.y(), lc.z());
+							glVertex3f(pos.x(), pos.y(), pos.z());
+							glVertex3f(q.x(), q.y(), q.z());
+							glEnd();
+						}
+					}
+				}
+#endif
 
 		// Draw constraint plane for volume preservation mode
 			if (showVolumePreservation && planeConstraintY > 0.0f) {
