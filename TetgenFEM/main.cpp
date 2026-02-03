@@ -2169,6 +2169,13 @@ int main(int argc, char** argv) {
 	}
 	const Eigen::Vector3f bboxCenter = 0.5f * (bboxMin + bboxMax);
 	const float bboxDiag = (bboxMax - bboxMin).norm();
+	const Eigen::Vector3f bboxExtents = bboxMax - bboxMin;
+	const Eigen::Vector3f wallMargin0 = std::max(0.0f, wallMarginBboxScale) * bboxExtents;
+	const float wallXMax0 = bboxMax.x() + wallMargin0.x();
+	const float wallYMin0 = bboxMin.y() - wallMargin0.y();
+	const float wallYMax0 = bboxMax.y() + wallMargin0.y();
+	const float wallZMin0 = bboxMin.z() - wallMargin0.z();
+	const float wallZMax0 = bboxMax.z() + wallMargin0.z();
 
 		static constexpr int kFingerCount = 5;
 		static constexpr int kIndexFinger = 1;
@@ -2455,7 +2462,12 @@ int main(int argc, char** argv) {
 			}
 
 			// Extract outer boundary triangles by counting faces in physId space.
-			if (agentUseSurfaceTriangles && !physRep.empty()) {
+			// We also build a surface-vertex mask used by agent surface-vertex contact and optional "suspension"
+			// ligaments (surface patch springs).
+			std::vector<char> isSurfacePhys;
+			isSurfacePhys.assign(physRep.size(), 0);
+			const bool buildSurfacePhys = (!physRep.empty()) && (agentUseSurfaceTriangles || agentUseSurfaceVertices || suspensionEnabled);
+			if (buildSurfacePhys) {
 				struct FaceKey {
 					int i0 = -1, i1 = -1, i2 = -1;
 				bool operator==(const FaceKey& o) const noexcept { return i0 == o.i0 && i1 == o.i1 && i2 == o.i2; }
@@ -2536,15 +2548,18 @@ int main(int argc, char** argv) {
 				}
 			}
 
-			std::vector<char> isSurfacePhys(physRep.size(), 0);
-			agentContactTriangles.reserve(faces.size());
-			agentContactTrianglePhysIds.reserve(faces.size());
+			if (agentUseSurfaceTriangles) {
+				agentContactTriangles.reserve(faces.size());
+				agentContactTrianglePhysIds.reserve(faces.size());
+			}
 				for (const auto& kv : faces) {
 					const FaceRec& rec = kv.second;
 					if (rec.count != 1) continue; // interior face (shared by two tets in phys space)
 					if (!rec.a || !rec.b || !rec.c) continue;
-					agentContactTriangles.push_back(AgentTriangle{rec.a, rec.b, rec.c, rec.opp});
-					agentContactTrianglePhysIds.push_back(rec.ids);
+					if (agentUseSurfaceTriangles) {
+						agentContactTriangles.push_back(AgentTriangle{rec.a, rec.b, rec.c, rec.opp});
+						agentContactTrianglePhysIds.push_back(rec.ids);
+					}
 					for (int k = 0; k < 3; ++k) {
 						const int id = rec.ids[k];
 						if (id >= 0 && id < static_cast<int>(isSurfacePhys.size())) {
@@ -2556,7 +2571,7 @@ int main(int argc, char** argv) {
 				// Build triangle adjacency (edge-sharing neighbors) in physical-id space for fast, stable contact manifold
 				// search (avoids per-frame O(Ntri) scans).
 				agentContactTriangleNeighbors.assign(agentContactTriangles.size(), {});
-				if (!agentContactTrianglePhysIds.empty()) {
+				if (agentUseSurfaceTriangles && !agentContactTrianglePhysIds.empty()) {
 					auto edgeKey = [](int a, int b) -> uint64_t {
 						const uint32_t lo = static_cast<uint32_t>(std::min(a, b));
 						const uint32_t hi = static_cast<uint32_t>(std::max(a, b));
@@ -2600,17 +2615,18 @@ int main(int argc, char** argv) {
 					}
 				}
 
-				if (agentUseSurfaceVertices) {
-					for (int id = 0; id < static_cast<int>(isSurfacePhys.size()); ++id) {
-						if (!isSurfacePhys[static_cast<size_t>(id)]) continue;
-						if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
-					Vertex* rep = physRep[static_cast<size_t>(id)];
-					if (!rep) continue;
-					agentContactVertices.push_back(rep);
-					agentContactVertexPhysIds.push_back(id);
 				}
-			}
-		}
+
+					if (agentUseSurfaceVertices && !isSurfacePhys.empty()) {
+						for (int id = 0; id < static_cast<int>(isSurfacePhys.size()); ++id) {
+							if (!isSurfacePhys[static_cast<size_t>(id)]) continue;
+						if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+						Vertex* rep = physRep[static_cast<size_t>(id)];
+						if (!rep) continue;
+						agentContactVertices.push_back(rep);
+						agentContactVertexPhysIds.push_back(id);
+					}
+				}
 
 		// Fallback: if we couldn't build a clean surface vertex set, use all physical vertices.
 				if (agentContactVertices.empty()) {
@@ -2702,6 +2718,215 @@ int main(int argc, char** argv) {
 				}
 			}
 			std::vector<Eigen::Vector3f> tetVolumePhysDp(agentVerticesByPhysId.size(), Eigen::Vector3f::Zero());
+
+			// ------------------ Optional: 3-point suspension ligaments (surface patches -> wall anchors)
+			struct SuspensionSpring {
+				bool enabled = false;
+				const char* name = "";
+				Eigen::Vector3f anchorWorld = Eigen::Vector3f::Zero();
+				Eigen::Vector3f centerRest = Eigen::Vector3f::Zero();
+				float radius = 0.0f;
+				float k = 0.0f;
+				float damping = 0.0f;
+				float maxAccel = 0.0f;
+				std::vector<int> physIds;
+				std::vector<Eigen::Vector3f> restOffsetFromAnchor; // desired = anchor + offset
+				std::vector<float> weights;                        // [0..1] falloff in patch
+			};
+			std::vector<SuspensionSpring> suspensions;
+			if (suspensionEnabled && !physRep.empty() && !agentVerticesByPhysId.empty()) {
+				auto initPosOf = [&](int id) -> Eigen::Vector3f {
+					if (id < 0 || id >= static_cast<int>(physRep.size())) return Eigen::Vector3f::Zero();
+					const Vertex* v = physRep[static_cast<size_t>(id)];
+					return v ? Eigen::Vector3f(v->initx, v->inity, v->initz) : Eigen::Vector3f::Zero();
+				};
+				auto avgInitOf = [&](const std::vector<int>& ids) -> Eigen::Vector3f {
+					Eigen::Vector3f c = Eigen::Vector3f::Zero();
+					int n = 0;
+					for (int id : ids) {
+						if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+						const Vertex* v = physRep[static_cast<size_t>(id)];
+						if (!v) continue;
+						c += Eigen::Vector3f(v->initx, v->inity, v->initz);
+						++n;
+					}
+					if (n > 0) c /= static_cast<float>(n);
+					return c;
+				};
+				auto selectWithinRadius = [&](const std::vector<int>& candidates, const Eigen::Vector3f& center, float radius) -> std::vector<int> {
+					std::vector<int> out;
+					const float r2 = radius * radius;
+					for (int id : candidates) {
+						if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+						const Vertex* v = physRep[static_cast<size_t>(id)];
+						if (!v) continue;
+						const Eigen::Vector3f p(v->initx, v->inity, v->initz);
+						if ((p - center).squaredNorm() <= r2) out.push_back(id);
+					}
+					return out;
+				};
+				auto makeWeights = [&](const std::vector<int>& ids, const Eigen::Vector3f& center, float radius) -> std::vector<float> {
+					std::vector<float> w;
+					w.reserve(ids.size());
+					const float invR = (radius > 1e-8f) ? (1.0f / radius) : 0.0f;
+					for (int id : ids) {
+						if (id < 0 || id >= static_cast<int>(physRep.size())) {
+							w.push_back(0.0f);
+							continue;
+						}
+						const Vertex* v = physRep[static_cast<size_t>(id)];
+						if (!v) {
+							w.push_back(0.0f);
+							continue;
+						}
+						const Eigen::Vector3f p(v->initx, v->inity, v->initz);
+						float t = invR > 0.0f ? (p - center).norm() * invR : 0.0f;
+						t = std::clamp(t, 0.0f, 1.0f);
+						float ww = 1.0f - t;
+						ww = ww * ww;
+						w.push_back(ww);
+					}
+					return w;
+				};
+
+				// Surface phys ids (fallback to all phys if surface is unavailable).
+				std::vector<int> surfaceIds;
+				surfaceIds.reserve(physRep.size());
+				if (!isSurfacePhys.empty()) {
+					for (int id = 0; id < static_cast<int>(isSurfacePhys.size()); ++id) {
+						if (isSurfacePhys[static_cast<size_t>(id)]) surfaceIds.push_back(id);
+					}
+				}
+				if (surfaceIds.empty()) {
+					surfaceIds.reserve(physRep.size());
+					for (int id = 0; id < static_cast<int>(physRep.size()); ++id) surfaceIds.push_back(id);
+				}
+
+				const float radius = std::max(1e-6f, std::max(0.0f, susp_patchRadiusBboxFrac) * bboxDiag);
+				const float topCut = bboxMax.y() - std::clamp(susp_topSliceFrac, 0.0f, 1.0f) * bboxExtents.y();
+				const float backCut = bboxMin.z() + std::clamp(susp1_backSliceFrac, 0.0f, 1.0f) * bboxExtents.z();
+				const float top1Cut = bboxMax.y() - std::clamp(susp1_topSliceFrac, 0.0f, 1.0f) * bboxExtents.y();
+				const float sideFracClamped = std::clamp(susp_sideFrac, 0.0f, 0.5f);
+
+				auto collect = [&](auto&& pred) -> std::vector<int> {
+					std::vector<int> ids;
+					for (int id : surfaceIds) {
+						if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+						const Vertex* v = physRep[static_cast<size_t>(id)];
+						if (!v) continue;
+						if (pred(*v)) ids.push_back(id);
+					}
+					return ids;
+				};
+
+				// Support 2/3: top slice, left/right endpoints.
+				const std::vector<int> candTop = collect([&](const Vertex& v) { return v.inity >= topCut; });
+				float topXMin = std::numeric_limits<float>::infinity();
+				float topXMax = -std::numeric_limits<float>::infinity();
+				for (int id : candTop) {
+					const Vertex* v = physRep[static_cast<size_t>(id)];
+					if (!v) continue;
+					topXMin = std::min(topXMin, v->initx);
+					topXMax = std::max(topXMax, v->initx);
+				}
+				const float sideCutLeft = bboxMin.x() + sideFracClamped * bboxExtents.x();
+				const float sideCutRight = bboxMax.x() - sideFracClamped * bboxExtents.x();
+				std::vector<int> seedLeft = collect([&](const Vertex& v) { return v.inity >= topCut && v.initx <= sideCutLeft; });
+				std::vector<int> seedRight = collect([&](const Vertex& v) { return v.inity >= topCut && v.initx >= sideCutRight; });
+				if (seedLeft.empty() && !candTop.empty()) {
+					seedLeft = candTop;
+					std::sort(seedLeft.begin(), seedLeft.end(), [&](int a, int b) { return initPosOf(a).x() < initPosOf(b).x(); });
+					if (seedLeft.size() > 64) seedLeft.resize(64);
+				}
+				if (seedRight.empty() && !candTop.empty()) {
+					seedRight = candTop;
+					std::sort(seedRight.begin(), seedRight.end(), [&](int a, int b) { return initPosOf(a).x() > initPosOf(b).x(); });
+					if (seedRight.size() > 64) seedRight.resize(64);
+				}
+				const Eigen::Vector3f center2 = avgInitOf(seedLeft);
+				const Eigen::Vector3f center3 = avgInitOf(seedRight);
+				std::vector<int> ids2 = selectWithinRadius(candTop.empty() ? seedLeft : candTop, center2, radius);
+				std::vector<int> ids3 = selectWithinRadius(candTop.empty() ? seedRight : candTop, center3, radius);
+				if (ids2.empty()) ids2 = seedLeft;
+				if (ids3.empty()) ids3 = seedRight;
+
+				// Support 1: posterior-superior patch (back + top), bias to one side if possible.
+				std::vector<int> cand1 = collect([&](const Vertex& v) { return v.inity >= top1Cut && v.initz <= backCut; });
+				if (cand1.empty()) {
+					// Relax in case the initial orientation differs.
+					cand1 = collect([&](const Vertex& v) { return v.initz <= backCut; });
+					if (cand1.empty()) cand1 = collect([&](const Vertex& v) { return v.inity >= top1Cut; });
+				}
+				float xMin1 = std::numeric_limits<float>::infinity();
+				float xMax1 = -std::numeric_limits<float>::infinity();
+				for (int id : cand1) {
+					const Vertex* v = physRep[static_cast<size_t>(id)];
+					if (!v) continue;
+					xMin1 = std::min(xMin1, v->initx);
+					xMax1 = std::max(xMax1, v->initx);
+				}
+				const float xMid1 = 0.5f * (xMin1 + xMax1);
+				std::vector<int> cand1Left;
+				cand1Left.reserve(cand1.size());
+				for (int id : cand1) {
+					const Vertex* v = physRep[static_cast<size_t>(id)];
+					if (!v) continue;
+					if (v->initx <= xMid1) cand1Left.push_back(id);
+				}
+				const std::vector<int>& seed1 = (cand1Left.size() >= 12) ? cand1Left : cand1;
+				const Eigen::Vector3f center1 = avgInitOf(seed1);
+				std::vector<int> ids1 = selectWithinRadius(seed1, center1, radius);
+				if (ids1.empty()) ids1 = seed1;
+
+				auto buildSusp = [&](const char* name,
+					bool enabled,
+					const Eigen::Vector3f& anchorWorld,
+					const Eigen::Vector3f& centerRest,
+					float k,
+					float damping,
+					float maxAccel,
+					const std::vector<int>& ids) -> SuspensionSpring {
+					SuspensionSpring s;
+					s.enabled = enabled;
+					s.name = name;
+					s.anchorWorld = anchorWorld;
+					s.centerRest = centerRest;
+					s.radius = radius;
+					s.k = std::max(0.0f, k);
+					s.damping = std::max(0.0f, damping);
+					s.maxAccel = maxAccel;
+					s.physIds = ids;
+					s.restOffsetFromAnchor.reserve(ids.size());
+					for (int id : ids) {
+						s.restOffsetFromAnchor.push_back(initPosOf(id) - anchorWorld);
+					}
+					s.weights = makeWeights(ids, centerRest, radius);
+					return s;
+				};
+
+				const Eigen::Vector3f anchor1(center1.x(), center1.y(), wallZMin0);         // project to back wall
+				const Eigen::Vector3f anchor2(center2.x(), wallYMax0, center2.z());         // project to top wall
+				const Eigen::Vector3f anchor3(center3.x(), wallYMax0, center3.z());         // project to top wall
+
+				suspensions.reserve(3);
+				suspensions.push_back(buildSusp("susp1_posterior_superior", susp1Enabled, anchor1, center1, susp1_k, susp1_damping, susp1_maxAccel, ids1));
+				suspensions.push_back(buildSusp("susp2_diaphragm_left", susp2Enabled, anchor2, center2, susp2_k, susp2_damping, susp2_maxAccel, ids2));
+				suspensions.push_back(buildSusp("susp3_diaphragm_right", susp3Enabled, anchor3, center3, susp3_k, susp3_damping, susp3_maxAccel, ids3));
+
+				for (const auto& s : suspensions) {
+					if (!s.enabled) continue;
+					std::cout << "[Suspension] " << s.name
+							  << " physIds=" << s.physIds.size()
+							  << " centerRest=" << s.centerRest.transpose()
+							  << " anchor=" << s.anchorWorld.transpose()
+							  << " r=" << s.radius
+							  << " k=" << s.k << " c=" << s.damping << " maxA=" << s.maxAccel
+							  << "\n";
+				}
+				if (!suspensions.empty()) {
+					std::cout << "[Suspension] Visual: press 'L' to toggle ligament lines, 'K' to toggle patch points.\n";
+				}
+			}
 
 			// [REMOVED] The previous custom export logic was causing "key not found" errors 
 			// because of vertex pointer mismatches after deduplication.
@@ -3844,6 +4069,66 @@ int main(int argc, char** argv) {
 					}
 				}
 				}
+
+			// Optional: 3-point suspension ligaments (surface patch springs -> wall anchors).
+			// Implemented as per-vertex acceleration contributions, similar to drag/anchor springs.
+			if (suspensionEnabled && !suspensions.empty() && !agentVerticesByPhysId.empty()) {
+				for (const auto& s : suspensions) {
+					if (!s.enabled) continue;
+					if (s.physIds.empty()) continue;
+					if (!(s.k > 0.0f) && !(s.damping > 0.0f)) continue;
+
+					for (size_t ii = 0; ii < s.physIds.size(); ++ii) {
+						const int id = s.physIds[ii];
+						if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+						const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+						if (list.empty()) continue;
+
+						bool anyFixed = false;
+						for (Vertex* v : list) {
+							if (v && v->isFixed) {
+								anyFixed = true;
+								break;
+							}
+						}
+						if (anyFixed) continue;
+
+						const float w = (ii < s.weights.size()) ? s.weights[ii] : 1.0f;
+						if (!(w > 0.0f)) continue;
+
+						Eigen::Vector3f pAvg = Eigen::Vector3f::Zero();
+						Eigen::Vector3f vAvg = Eigen::Vector3f::Zero();
+						int n = 0;
+						for (Vertex* v : list) {
+							if (!v) continue;
+							pAvg += Eigen::Vector3f(v->x, v->y, v->z);
+							vAvg += Eigen::Vector3f(v->velx, v->vely, v->velz);
+							++n;
+						}
+						if (n <= 0) continue;
+						pAvg /= static_cast<float>(n);
+						vAvg /= static_cast<float>(n);
+
+						const Eigen::Vector3f restOff = (ii < s.restOffsetFromAnchor.size()) ? s.restOffsetFromAnchor[ii] : Eigen::Vector3f::Zero();
+						const Eigen::Vector3f desired = s.anchorWorld + restOff;
+						Eigen::Vector3f accel = s.k * (desired - pAvg) - s.damping * vAvg;
+						accel *= w;
+
+						const float maxA = s.maxAccel;
+						const float aLen = accel.norm();
+						if (maxA > 0.0f && aLen > maxA) accel *= (maxA / aLen);
+						if (accel.squaredNorm() <= 1e-12f) continue;
+
+						for (Vertex* v : list) {
+							if (!v || v->isFixed) continue;
+							const int idx = v->index;
+							if (idx >= 0 && idx < static_cast<int>(dragForces.size())) {
+								dragForces[static_cast<size_t>(idx)] += accel;
+							}
+						}
+					}
+				}
+			}
 
 				// Remember previous proxy positions (used for collision substepping in direct/kinematic mode).
 				std::array<Eigen::Vector3f, kFingerCount> agentProxyStartPositions = agentProxyPositions;
@@ -5308,13 +5593,91 @@ int main(int argc, char** argv) {
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
-		mat = Eigen::Matrix4f::Identity();
-		mat.block<3, 3>(0, 0) = rotation.toRotationMatrix();
-		glMultMatrixf(mat.data());
+			mat = Eigen::Matrix4f::Identity();
+			mat.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+			glMultMatrixf(mat.data());
 
-				// Draw agent sphere ("finger") device/proxy.
-				if (agentSphere.enabled) {
-					glLineWidth(2.0f);
+					// Draw suspension ligaments (visual debug): line from patch center to wall anchor + endpoints.
+					static bool drawSuspension = true;
+					static bool drawSuspensionPatchPoints = false;
+					static KeyLatch suspVisLatch;
+					static KeyLatch suspPtsLatch;
+					if (suspVisLatch.consume(window, GLFW_KEY_L)) {
+						drawSuspension = !drawSuspension;
+					}
+					if (suspPtsLatch.consume(window, GLFW_KEY_K)) {
+						drawSuspensionPatchPoints = !drawSuspensionPatchPoints;
+					}
+					if (drawSuspension && suspensionEnabled && !suspensions.empty() && !agentVerticesByPhysId.empty()) {
+						const std::array<Eigen::Vector3f, 3> colors = {
+							Eigen::Vector3f(1.00f, 0.20f, 0.20f), // susp1 red
+							Eigen::Vector3f(0.20f, 1.00f, 0.20f), // susp2 green
+							Eigen::Vector3f(0.20f, 0.60f, 1.00f)  // susp3 blue
+						};
+
+						glDisable(GL_LIGHTING);
+						glLineWidth(3.0f);
+						glBegin(GL_LINES);
+						for (size_t si = 0; si < suspensions.size(); ++si) {
+							const auto& s = suspensions[si];
+							if (!s.enabled) continue;
+							if (s.physIds.empty()) continue;
+
+							Eigen::Vector3f c = Eigen::Vector3f::Zero();
+							int n = 0;
+							for (int id : s.physIds) {
+								if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+								const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+								const Vertex* v0 = (!list.empty()) ? list.front() : nullptr;
+								if (!v0) continue;
+								c += Eigen::Vector3f(v0->x, v0->y, v0->z);
+								++n;
+							}
+							if (n > 0) c /= static_cast<float>(n);
+							else c = s.centerRest;
+
+							const Eigen::Vector3f col = colors[std::min<size_t>(colors.size() - 1, si)];
+							glColor3f(col.x(), col.y(), col.z());
+							glVertex3f(s.anchorWorld.x(), s.anchorWorld.y(), s.anchorWorld.z());
+							glVertex3f(c.x(), c.y(), c.z());
+						}
+						glEnd();
+
+						glPointSize(10.0f);
+						glBegin(GL_POINTS);
+						for (size_t si = 0; si < suspensions.size(); ++si) {
+							const auto& s = suspensions[si];
+							if (!s.enabled) continue;
+							const Eigen::Vector3f col = colors[std::min<size_t>(colors.size() - 1, si)];
+							glColor3f(col.x(), col.y(), col.z());
+							glVertex3f(s.anchorWorld.x(), s.anchorWorld.y(), s.anchorWorld.z());
+							glVertex3f(s.centerRest.x(), s.centerRest.y(), s.centerRest.z());
+						}
+						glEnd();
+
+						if (drawSuspensionPatchPoints) {
+							glPointSize(3.0f);
+							glBegin(GL_POINTS);
+							for (size_t si = 0; si < suspensions.size(); ++si) {
+								const auto& s = suspensions[si];
+								if (!s.enabled) continue;
+								const Eigen::Vector3f col = colors[std::min<size_t>(colors.size() - 1, si)];
+								glColor3f(col.x(), col.y(), col.z());
+								for (int id : s.physIds) {
+									if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+									const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+									const Vertex* v0 = (!list.empty()) ? list.front() : nullptr;
+									if (!v0) continue;
+									glVertex3f(v0->x, v0->y, v0->z);
+								}
+							}
+							glEnd();
+						}
+					}
+
+					// Draw agent sphere ("finger") device/proxy.
+					if (agentSphere.enabled) {
+						glLineWidth(2.0f);
 
 					// Proxies (high-contrast palette + outline).
 					const std::array<Eigen::Vector3f, kFingerCount> proxyColors = {

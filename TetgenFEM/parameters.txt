@@ -35,6 +35,29 @@ anchor_springK=25
 anchor_springDamping=10
 anchor_springMaxAccel=5000
 
+# Optional: 3-point suspension ligaments (surface patches -> box walls)
+# Use this when you want "organ supports": 1 posterior-superior (hard) + 2 diaphragm hangers (soft).
+suspension_enabled=true
+susp1_enabled=true
+susp2_enabled=true
+susp3_enabled=true
+# Patch selection (fractions of initial bbox extents)
+susp1_backSliceFrac=0.12
+susp1_topSliceFrac=0.15
+susp_topSliceFrac=0.12
+susp_sideFrac=0.25
+susp_patchRadiusBboxFrac=0.12
+# Spring params (acceleration-space)
+susp1_k=160
+susp1_damping=25
+susp1_maxAccel=20000
+susp2_k=80
+susp2_damping=15
+susp2_maxAccel=12000
+susp3_k=80
+susp3_damping=15
+susp3_maxAccel=12000
+
 # Optional: volumetric stabilization (prevents extreme compression / inverted tets)
 tet_volumeConstraintEnabled=true
 tet_volumeConstraintCorrection=0.15

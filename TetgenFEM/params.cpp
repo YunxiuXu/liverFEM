@@ -22,6 +22,26 @@ float anchorCenterPushFrac = 0.02f;
 float anchorSpringK = 25.0f;
 float anchorSpringDamping = 10.0f;
 float anchorSpringMaxAccel = 5000.0f;
+
+bool suspensionEnabled = false;
+bool susp1Enabled = true;
+bool susp2Enabled = true;
+bool susp3Enabled = true;
+float susp1_backSliceFrac = 0.12f;
+float susp1_topSliceFrac = 0.15f;
+float susp_topSliceFrac = 0.12f;
+float susp_sideFrac = 0.25f;
+float susp_patchRadiusBboxFrac = 0.12f;
+float susp1_k = 160.0f;
+float susp1_damping = 25.0f;
+float susp1_maxAccel = 20000.0f;
+float susp2_k = 80.0f;
+float susp2_damping = 15.0f;
+float susp2_maxAccel = 12000.0f;
+float susp3_k = 80.0f;
+float susp3_damping = 15.0f;
+float susp3_maxAccel = 12000.0f;
+
 bool tetVolumeConstraintEnabled = false;
 float tetVolumeConstraintCorrection = 0.15f;
 int tetVolumeConstraintIterations = 2;
@@ -204,6 +224,20 @@ void loadParams(const std::string& filename) {
         {"anchor_springK", &anchorSpringK},
         {"anchor_springDamping", &anchorSpringDamping},
         {"anchor_springMaxAccel", &anchorSpringMaxAccel},
+        {"susp1_backSliceFrac", &susp1_backSliceFrac},
+        {"susp1_topSliceFrac", &susp1_topSliceFrac},
+        {"susp_topSliceFrac", &susp_topSliceFrac},
+        {"susp_sideFrac", &susp_sideFrac},
+        {"susp_patchRadiusBboxFrac", &susp_patchRadiusBboxFrac},
+        {"susp1_k", &susp1_k},
+        {"susp1_damping", &susp1_damping},
+        {"susp1_maxAccel", &susp1_maxAccel},
+        {"susp2_k", &susp2_k},
+        {"susp2_damping", &susp2_damping},
+        {"susp2_maxAccel", &susp2_maxAccel},
+        {"susp3_k", &susp3_k},
+        {"susp3_damping", &susp3_damping},
+        {"susp3_maxAccel", &susp3_maxAccel},
         {"tet_volumeConstraintCorrection", &tetVolumeConstraintCorrection},
         {"agent_radiusBboxScale", &agentRadiusBboxScale},
         {"agent_contactStiffness", &agentContactStiffness},
@@ -324,6 +358,10 @@ void loadParams(const std::string& filename) {
     std::unordered_map<std::string, bool*> boolParams = {
         {"useDirectLoading", &useDirectLoading},
         {"autoSaveMesh", &autoSaveMesh},
+        {"suspension_enabled", &suspensionEnabled},
+        {"susp1_enabled", &susp1Enabled},
+        {"susp2_enabled", &susp2Enabled},
+        {"susp3_enabled", &susp3Enabled},
         {"tet_volumeConstraintEnabled", &tetVolumeConstraintEnabled},
         {"agent_enabled", &agentEnabled},
         {"agent_useSurfaceVertices", &agentUseSurfaceVertices},

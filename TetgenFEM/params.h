@@ -23,6 +23,21 @@ extern float anchorSpringK;            // 1/s^2
 extern float anchorSpringDamping;      // 1/s
 extern float anchorSpringMaxAccel;     // clamp (<=0 disables)
 
+// Optional: 3-point "suspension" ligaments (springs from selected surface patches to box walls).
+// Intended for organ supports: 1 posterior-superior (hard) + 2 diaphragm hangers (soft).
+extern bool suspensionEnabled;
+extern bool susp1Enabled, susp2Enabled, susp3Enabled;
+// Patch selection (fractions of initial bbox extents).
+extern float susp1_backSliceFrac;    // [0..1] thickness from bboxMin.z (posterior)
+extern float susp1_topSliceFrac;     // [0..1] thickness from bboxMax.y (superior)
+extern float susp_topSliceFrac;      // [0..1] thickness from bboxMax.y (superior) for susp2/3
+extern float susp_sideFrac;          // [0..0.5] how far into left/right side to seed patches
+extern float susp_patchRadiusBboxFrac; // radius = bboxDiag * frac
+// Per-suspension spring parameters (acceleration-space, like drag/anchor springs).
+extern float susp1_k, susp1_damping, susp1_maxAccel;
+extern float susp2_k, susp2_damping, susp2_maxAccel;
+extern float susp3_k, susp3_damping, susp3_maxAccel;
+
 // Optional soft-body stabilization (helps avoid "hollow" compression / inverted tets).
 extern bool tetVolumeConstraintEnabled;
 // [0..1] position correction per iteration (smaller = safer/softer).
