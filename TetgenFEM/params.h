@@ -133,6 +133,28 @@ extern float leapFingerSpreadGain;
 // Exponential smoothing time constant in seconds (0 disables).
 extern float leapSmoothingTime;
 extern bool leapFlipX, leapFlipY, leapFlipZ;
+
+// Leap left-hand capsule collision (non-haptic, strong interaction).
+extern bool leftHandEnabled;
+extern float leftHandCapsuleRadiusBboxScale;
+extern float leftHandCapsuleLengthBboxScale;
+extern int leftHandCapsuleSamples;
+extern float leftHandExtraSmoothingTime;
+extern float leftHandProxyMassFracOfObject;
+extern float leftHandVcStiffnessNPerBbox;
+extern float leftHandVcDampingNsPerBbox;
+extern float leftHandVcMaxDistanceRadiusFrac;
+extern int leftHandVcSubsteps;
+extern int leftHandCollisionIterations;
+extern int leftHandContactManifoldTriangles;
+extern float leftHandMaxPenetrationFrac;
+extern float leftHandProxyPositionCorrection;
+extern float leftHandCollisionTangentialDamp;
+extern float leftHandContactProxyInvMassScale;
+extern float leftHandContactVelocityRelaxation;
+extern float leftHandContactVelocityRelaxationMin;
+extern float leftHandContactNormalDamp;
+extern float leftHandFrictionMu;
 // Experiment 3 (one-click) configuration (used only when EXP3 is started).
 extern int exp3SettleSteps, exp3DragSteps;
 extern float exp3ExOverEy;
@@ -174,6 +196,9 @@ extern bool autoSaveMesh;
 extern bool haptic_uart_enabled;
 extern std::string haptic_uart_port;
 extern int haptic_uart_motor_id;
+extern int haptic_uart_thumb_motor_id;
+extern int haptic_uart_middle_motor_id;
+extern int haptic_uart_ring_motor_id;
 extern float haptic_min_force_input;
 extern float haptic_max_force_input;
 extern float haptic_min_pwm_output;

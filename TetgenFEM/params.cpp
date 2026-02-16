@@ -103,6 +103,28 @@ float leapSmoothingTime = 0.03f;
 bool leapFlipX = false;
 bool leapFlipY = false;
 bool leapFlipZ = false;
+
+// Leap left-hand capsule collision (non-haptic, strong interaction).
+bool leftHandEnabled = true;
+float leftHandCapsuleRadiusBboxScale = 0.038f;
+float leftHandCapsuleLengthBboxScale = 0.075f;
+int leftHandCapsuleSamples = 7;
+float leftHandExtraSmoothingTime = 0.06f;
+float leftHandProxyMassFracOfObject = 0.04f;
+float leftHandVcStiffnessNPerBbox = 6000.0f;
+float leftHandVcDampingNsPerBbox = 600.0f;
+float leftHandVcMaxDistanceRadiusFrac = 3.0f;
+int leftHandVcSubsteps = 40;
+int leftHandCollisionIterations = 80;
+int leftHandContactManifoldTriangles = 6;
+float leftHandMaxPenetrationFrac = 0.0f;
+float leftHandProxyPositionCorrection = 1.0f;
+float leftHandCollisionTangentialDamp = 0.90f;
+float leftHandContactProxyInvMassScale = 0.0f;
+float leftHandContactVelocityRelaxation = 0.25f;
+float leftHandContactVelocityRelaxationMin = 0.10f;
+float leftHandContactNormalDamp = 0.90f;
+float leftHandFrictionMu = 2.0f;
 int exp3SettleSteps = 120;
 int exp3DragSteps = 240;
 float exp3ExOverEy = 5.0f;
@@ -164,6 +186,9 @@ bool autoSaveMesh = true;
 bool haptic_uart_enabled = false;
 std::string haptic_uart_port = "/dev/cu.usbserial-AUOK5THN";
 int haptic_uart_motor_id = 1;
+int haptic_uart_thumb_motor_id = 0;
+int haptic_uart_middle_motor_id = 2;
+int haptic_uart_ring_motor_id = 3;
 float haptic_min_force_input = 0.0f;
 float haptic_max_force_input = 10.0f;
 float haptic_min_pwm_output = 0.0f;
@@ -279,6 +304,21 @@ void loadParams(const std::string& filename) {
         {"leap_yOffsetBboxFrac", &leapYOffsetBboxFrac},
         {"leap_fingerSpreadGain", &leapFingerSpreadGain},
         {"leap_smoothingTime", &leapSmoothingTime},
+        {"left_hand_capsuleRadiusBboxScale", &leftHandCapsuleRadiusBboxScale},
+        {"left_hand_capsuleLengthBboxScale", &leftHandCapsuleLengthBboxScale},
+        {"left_hand_extraSmoothingTime", &leftHandExtraSmoothingTime},
+        {"left_hand_proxyMassFracOfObject", &leftHandProxyMassFracOfObject},
+        {"left_hand_vcStiffnessNPerBbox", &leftHandVcStiffnessNPerBbox},
+        {"left_hand_vcDampingNsPerBbox", &leftHandVcDampingNsPerBbox},
+        {"left_hand_vcMaxDistanceRadiusFrac", &leftHandVcMaxDistanceRadiusFrac},
+        {"left_hand_maxPenetrationFrac", &leftHandMaxPenetrationFrac},
+        {"left_hand_proxyPositionCorrection", &leftHandProxyPositionCorrection},
+        {"left_hand_collisionTangentialDamp", &leftHandCollisionTangentialDamp},
+        {"left_hand_contactProxyInvMassScale", &leftHandContactProxyInvMassScale},
+        {"left_hand_contactVelocityRelaxation", &leftHandContactVelocityRelaxation},
+        {"left_hand_contactVelocityRelaxationMin", &leftHandContactVelocityRelaxationMin},
+        {"left_hand_contactNormalDamp", &leftHandContactNormalDamp},
+        {"left_hand_frictionMu", &leftHandFrictionMu},
         {"exp3_exOverEy", &exp3ExOverEy},
         {"exp3_poissonOverride", &exp3PoissonOverride},
         {"exp3_dragDistanceBboxScale", &exp3DragDistanceBboxScale},
@@ -319,6 +359,10 @@ void loadParams(const std::string& filename) {
         {"agent_vcSubsteps", &agentVcSubsteps},
         {"agent_collisionIterations", &agentCollisionIterations},
         {"agent_contactManifoldTriangles", &agentContactManifoldTriangles},
+        {"left_hand_capsuleSamples", &leftHandCapsuleSamples},
+        {"left_hand_vcSubsteps", &leftHandVcSubsteps},
+        {"left_hand_collisionIterations", &leftHandCollisionIterations},
+        {"left_hand_contactManifoldTriangles", &leftHandContactManifoldTriangles},
         {"exp3_settleSteps", &exp3SettleSteps},
         {"exp3_dragSteps", &exp3DragSteps},
         {"exp1_settleSteps", &exp1SettleSteps},
@@ -344,7 +388,10 @@ void loadParams(const std::string& filename) {
         {"exp4_thread2", &exp4Thread2},
         {"exp4_thread3", &exp4Thread3},
         // Haptic params
-        {"haptic_uart_motor_id", &haptic_uart_motor_id}
+        {"haptic_uart_motor_id", &haptic_uart_motor_id},
+        {"haptic_uart_thumb_motor_id", &haptic_uart_thumb_motor_id},
+        {"haptic_uart_middle_motor_id", &haptic_uart_middle_motor_id},
+        {"haptic_uart_ring_motor_id", &haptic_uart_ring_motor_id}
     };
 
     std::unordered_map<std::string, std::string*> stringParams = {
@@ -375,6 +422,7 @@ void loadParams(const std::string& filename) {
         {"leap_flipX", &leapFlipX},
         {"leap_flipY", &leapFlipY},
         {"leap_flipZ", &leapFlipZ},
+        {"left_hand_enabled", &leftHandEnabled},
         {"exp3_overridePoisson", &exp3OverridePoisson},
         {"exp3_resetAfterFinish", &exp3ResetAfterFinish},
         {"exp1_resetAfterFinish", &exp1ResetAfterFinish},

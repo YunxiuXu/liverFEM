@@ -129,6 +129,29 @@ leap_flipX=false
 leap_flipY=false
 leap_flipZ=false
 
+# Leap left-hand capsule collision (non-haptic, strong interaction).
+# Toggle at runtime with key 'N' (see console output).
+left_hand_enabled=true
+left_hand_capsuleRadiusBboxScale=0.038
+left_hand_capsuleLengthBboxScale=0.075
+left_hand_capsuleSamples=7
+left_hand_extraSmoothingTime=0.06
+left_hand_proxyMassFracOfObject=0.04
+left_hand_vcStiffnessNPerBbox=6000
+left_hand_vcDampingNsPerBbox=600
+left_hand_vcMaxDistanceRadiusFrac=3.0
+left_hand_vcSubsteps=40
+left_hand_collisionIterations=80
+left_hand_contactManifoldTriangles=6
+left_hand_maxPenetrationFrac=0.0
+left_hand_proxyPositionCorrection=1.0
+left_hand_collisionTangentialDamp=0.9
+left_hand_contactProxyInvMassScale=0.0
+left_hand_contactVelocityRelaxation=0.25
+left_hand_contactVelocityRelaxationMin=0.10
+left_hand_contactNormalDamp=0.9
+left_hand_frictionMu=2.0
+
 # Experiment 3 (one-click) parameters (only used after pressing START EXP3)
 exp3_exOverEy=20
 exp3_overridePoisson=true
@@ -197,8 +220,11 @@ exp4_thread3=14
 haptic_uart_enabled=true
 haptic_uart_port=/dev/cu.usbserial-AUOK5THN
 haptic_uart_motor_id=1
+haptic_uart_thumb_motor_id=0
+haptic_uart_middle_motor_id=2
+haptic_uart_ring_motor_id=3
 haptic_min_force_input=0.0
-haptic_max_force_input=6.0
+haptic_max_force_input=150.0
 haptic_min_pwm_output=30.0
 haptic_max_pwm_output=180.0
 # Gamma correction for haptics (Power Law)
