@@ -437,15 +437,18 @@ void Object::PBDLOOP(int looptime) {
 					const auto& commonVerticesPair = currentGroup.commonVerticesInDirections[direction];
 
 					//Calculate bind force with damping
-					extern float youngs;
 					extern float constraintHardness;
 					extern float dampingConst; // 使用现有的阻尼常数作为Beta
+					const float Ecur = effectiveYoungsForGroup(groupIdx, youngs);
+					const float Eadj = effectiveYoungsForGroup(adjacentGroupIdx, youngs);
+					// Interface constraint stiffness should reflect both sides; harmonic mean biases toward the softer side.
+					const float Ebind = (Ecur > 1e-8f && Eadj > 1e-8f) ? (2.0f * Ecur * Eadj / (Ecur + Eadj)) : youngs;
 					
 						currentGroup.calFbind1(commonVerticesPair.first, commonVerticesPair.second,
 							currentGroup.currentPosition, adjacentGroup.currentPosition, 
 							currentGroup.groupVelocity, adjacentGroup.groupVelocity, 
 							currentGroup.massMatrix, adjacentGroup.massMatrix,
-							youngs, constraintHardness, dampingConst, adjacentGroupIdx);
+							Ebind, constraintHardness, dampingConst, adjacentGroupIdx);
 					//if (direction == 0 || direction == 1) {
 					//	currentGroup.distancesX = Eigen::VectorXf::Zero(commonVerticesPair.first.size() * 3);
 

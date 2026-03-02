@@ -1900,6 +1900,18 @@ int main(int argc, char** argv) {
 	object.groupNumX = groupNumX;
 	object.groupNumY = groupNumY;
 	object.groupNumZ = groupNumZ;
+
+	if (halfYoungsEnabled) {
+		int count = 0;
+		for (int gi = 0; gi < groupNum; ++gi) {
+			if (std::abs(effectiveYoungsForGroup(gi, youngs) - youngs) > 1e-3f) ++count;
+		}
+		std::cout << "[Material] half_youngs_enabled=true"
+		          << ", value=" << halfYoungsValue
+		          << ", axis=" << halfYoungsAxis
+		          << ", side=" << halfYoungsSide
+		          << ", groups=" << count << "/" << groupNum << "\n";
+	}
 	divideIntoGroups(out, object, groupNumX, groupNumY, groupNumZ); //convert tetgen to our data structure
 
 	// Use TetGen's native save function to save the initial mesh
@@ -2102,10 +2114,12 @@ int main(int argc, char** argv) {
 		// Check if anisotropic parameters are used (youngs1 != youngs2)
 		// Assuming youngs1, youngs2, youngs3 are global variables from params.h
 		if (std::abs(youngs1 - youngs2) > 1e-1f || std::abs(youngs1 - youngs3) > 1e-1f) {
-			object.groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
+			const float scale = effectiveYoungsScaleForGroup(i);
+			object.groups[i].calGroupKAni(youngs1 * scale, youngs2 * scale, youngs3 * scale, poisson);
 			if (i == 0) std::cout << "Using Anisotropic Stiffness Matrix (E1=" << youngs1 << ", E2=" << youngs2 << ", E3=" << youngs3 << ")\n";
 		} else {
-			object.groups[i].calGroupK(youngs, poisson);
+			const float E = effectiveYoungsForGroup(i, youngs);
+			object.groups[i].calGroupK(E, poisson);
 			if (i == 0) std::cout << "Using Isotropic Stiffness Matrix (E=" << youngs << ")\n";
 		}
 		
@@ -2179,6 +2193,30 @@ int main(int argc, char** argv) {
 	const float wallYMax0 = bboxMax.y() + wallMargin0.y();
 	const float wallZMin0 = bboxMin.z() - wallMargin0.z();
 	const float wallZMax0 = bboxMax.z() + wallMargin0.z();
+
+		// Material stiffness mapping in world space (for haptics + visualization).
+		auto groupIndexFromWorldPoint = [&](const Eigen::Vector3f& p) -> int {
+			const int nx = std::max(1, groupNumX);
+			const int ny = std::max(1, groupNumY);
+			const int nz = std::max(1, groupNumZ);
+
+			const float rx = (bboxExtents.x() > 1e-12f) ? (bboxExtents.x() / static_cast<float>(nx)) : 1.0f;
+			const float ry = (bboxExtents.y() > 1e-12f) ? (bboxExtents.y() / static_cast<float>(ny)) : 1.0f;
+			const float rz = (bboxExtents.z() > 1e-12f) ? (bboxExtents.z() / static_cast<float>(nz)) : 1.0f;
+
+			const int gx = std::clamp(static_cast<int>((p.x() - bboxMin.x()) / rx), 0, nx - 1);
+			const int gy = std::clamp(static_cast<int>((p.y() - bboxMin.y()) / ry), 0, ny - 1);
+			const int gz = std::clamp(static_cast<int>((p.z() - bboxMin.z()) / rz), 0, nz - 1);
+			return gz * nx * ny + gy * nx + gx;
+		};
+
+		auto materialScaleAtWorldPoint = [&](const Eigen::Vector3f& p) -> float {
+			const float base = youngs;
+			if (std::abs(base) < 1e-6f) return 1.0f;
+			const int gi = groupIndexFromWorldPoint(p);
+			const float eff = effectiveYoungsForGroup(gi, base);
+			return eff / base;
+		};
 
 		static constexpr int kFingerCount = 5;
 		static constexpr int kIndexFinger = 1;
@@ -3097,7 +3135,6 @@ int main(int argc, char** argv) {
 			// ------------------ Agent sphere controls
 					static KeyLatch agentToggleLatch;
 					static KeyLatch agentHomeLatch;
-					static KeyLatch agentPrintLatch;
 					static KeyLatch agentVcLatch;
 					static KeyLatch agentForceModeLatch;
 					static KeyLatch agentGripLatch;
@@ -3113,7 +3150,7 @@ int main(int argc, char** argv) {
 							agentSphere.enabled = !agentSphere.enabled;
 								std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
 								          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-							          << "  VirtualCoupling: V | Grip: Y | Home: T | Print force: G | Force graph: F | Print COM: M\n"
+							          << "  VirtualCoupling: V | Grip: Y | Home: T | Force graph: F | Print COM: M\n"
 			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 								          << "  Leap: toggle=B | recenter=R | gain: '['/']'\n"
 								          << "  Left hand (non-haptic): capsules toggle=N\n"
@@ -3566,60 +3603,6 @@ int main(int argc, char** argv) {
 						}
 #endif
 				}
-					if (agentPrintLatch.consume(window, GLFW_KEY_G)) {
-						std::cout << "[AgentSphere] vc=" << (agentUseVC ? "1" : "0") << " fingers=" << kFingerCount << "\n";
-						for (int fi = 0; fi < kFingerCount; ++fi) {
-					const Eigen::Vector3f& devPos = agentDevicePositions[static_cast<size_t>(fi)];
-					const Eigen::Vector3f& proxyPos = agentProxyPositions[static_cast<size_t>(fi)];
-					const Eigen::Vector3f& devForceN = agentLastDeviceForcesN[static_cast<size_t>(fi)];
-					const Eigen::Vector3f& contactForceN = agentFilteredContactForcesN[static_cast<size_t>(fi)];
-					const Eigen::Vector3f& contactForceRawN = agentLastContactForcesN[static_cast<size_t>(fi)];
-					const int contacts = agentLastContactCounts[static_cast<size_t>(fi)];
-
-					float proxySurfDist = -1.0f;
-					float proxySurfSN = 0.0f;
-					float proxyPen = 0.0f;
-					if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
-						const AgentSurfaceQueryResult q = queryAgentSurface(proxyPos, agentContactTriangles);
-						if (q.found && q.outwardNormal.squaredNorm() > 0.0f) {
-							proxySurfDist = q.distanceToSurface;
-							proxySurfSN = q.outwardNormal.dot(proxyPos - q.closestPoint);
-							proxyPen = std::max(0.0f, agentSphere.radius - q.distanceToSurface);
-						}
-					}
-
-					std::cout << "  " << kFingerNames[static_cast<size_t>(fi)]
-					          << " dev=(" << devPos.x() << "," << devPos.y() << "," << devPos.z() << ")"
-					          << " proxy=(" << proxyPos.x() << "," << proxyPos.y() << "," << proxyPos.z() << ")"
-					          << " devF=(" << devForceN.x() << "," << devForceN.y() << "," << devForceN.z() << ")"
-					          << " contactF=(" << contactForceN.x() << "," << contactForceN.y() << "," << contactForceN.z() << ")"
-					          << " contactFraw=(" << contactForceRawN.x() << "," << contactForceRawN.y() << "," << contactForceRawN.z() << ")"
-					          << " cnt=" << contacts
-					          << " surfDist=" << proxySurfDist
-					          << " surfSN=" << proxySurfSN
-						          << " pen=" << proxyPen
-						          << "\n";
-						}
-
-#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-					if (leapUseInput) {
-						std::cout << "  [LeapC] tipMm (thumb..pinky)\n";
-						for (int fi = 0; fi < kFingerCount; ++fi) {
-							const Eigen::Vector3f& t = leapLatestTipsMm[static_cast<size_t>(fi)];
-							std::cout << "    " << kFingerNames[static_cast<size_t>(fi)]
-							          << " mm=(" << t.x() << "," << t.y() << "," << t.z() << ")\n";
-						}
-						const auto dist = [&](int a, int b) -> float {
-							return (leapLatestTipsMm[static_cast<size_t>(a)] - leapLatestTipsMm[static_cast<size_t>(b)]).norm();
-						};
-						std::cout << "  [LeapC] tipDistMm TI " << dist(0, 1)
-						          << " IM " << dist(1, 2)
-						          << " MR " << dist(2, 3)
-						          << " RP " << dist(3, 4)
-						          << " TP " << dist(0, 4) << "\n";
-						}
-#endif
-					}
 					static KeyLatch comPrintLatch;
 					if (comPrintLatch.consume(window, GLFW_KEY_M)) {
 						Eigen::Vector3f com = Eigen::Vector3f::Zero();
@@ -4479,7 +4462,7 @@ int main(int argc, char** argv) {
 								const int iters = std::clamp(agentCollisionIterations, 1, 64);
 								const int manifoldK = std::clamp(agentContactManifoldTriangles, 1, 8);
 								const float maxStep = std::max(1e-6f, 0.25f * r);
-		
+
 								bool anyContact = (agentCcdHits > 0);
 								float maxPenetrationThisFrame = 0.0f;
 								for (int fi = 0; fi < kFingerCount; ++fi) {
@@ -4538,22 +4521,29 @@ int main(int argc, char** argv) {
 											}
 											const Eigen::Vector3f driveForceN = springForceN + dampingForceN;
 											const float sphereInvMass = 1.0f / agentProxyMassKg;
+											const float localScale = std::max(1e-6f, materialScaleAtWorldPoint(sphereCenter));
+											const float allowedPenLocal = std::clamp(allowedPen / localScale, 0.0f, 0.95f * r);
+											float proxyInvMassScaleLocal = contactProxyInvMassScale;
+											// Make the harder side push the proxy back slightly (bigger VC force -> "harder" feel).
+											if (localScale > 1.05f) proxyInvMassScaleLocal = std::max(proxyInvMassScaleLocal, 0.85f);
+											const float muLocal = std::clamp(agentFrictionMu * std::sqrt(std::clamp(localScale, 0.25f, 16.0f)), 0.0f, 10.0f);
+											const float tangentialDampLocal = std::clamp(tangentialDamp * std::sqrt(std::clamp(localScale, 0.25f, 16.0f)), 0.0f, 1.0f);
 											if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
 													contact = solveAgentSphereTriangleCollisionConstraint(
 														sphereCenter,
 														sphereVel,
 														sphereInvMass,
-														contactProxyInvMassScale,
+														proxyInvMassScaleLocal,
 														contactVelRelax,
 														contactVelRelaxMin,
 														contactNormalDamp,
 														r,
-														allowedPen,
+														allowedPenLocal,
 														eps,
 														timeStep,
 														corr,
-														tangentialDamp,
-														agentFrictionMu,
+														tangentialDampLocal,
+														muLocal,
 														iters,
 														manifoldK,
 														&agentLastActiveContactTriangle[static_cast<size_t>(fi)],
@@ -4561,30 +4551,37 @@ int main(int argc, char** argv) {
 														agentContactTriangles,
 														agentContactTrianglePhysIds,
 														agentContactTriangleNeighbors,
-														agentVerticesByPhysId,
+													agentVerticesByPhysId,
 														physMassSumKg);
 												} else if (!agentContactVertexPhysIds.empty()) {
-											contact = solveAgentSphereVertexCollisionConstraint(
-												sphereCenter,
-												sphereVel,
-												sphereInvMass,
-												contactProxyInvMassScale,
+												contact = solveAgentSphereVertexCollisionConstraint(
+													sphereCenter,
+													sphereVel,
+													sphereInvMass,
+													proxyInvMassScaleLocal,
 												contactVelRelax,
 												contactVelRelaxMin,
 												contactNormalDamp,
 												r,
-												allowedPen,
-												eps,
-												timeStep,
-												corr,
-												tangentialDamp,
-												agentFrictionMu,
-												iters,
-												driveForceN,
-												agentContactVertexPhysIds,
-												agentVerticesByPhysId,
+												allowedPenLocal,
+													eps,
+													timeStep,
+													corr,
+													tangentialDampLocal,
+													muLocal,
+													iters,
+													driveForceN,
+													agentContactVertexPhysIds,
+													agentVerticesByPhysId,
 												physMassSumKg);
 										}
+											{
+												// 1DOF haptics: make normal reaction scale with material stiffness so a "sampling"
+												// probe press produces a clear step when crossing soft->hard regions.
+												const float exp = std::clamp(agentContactForceMaterialExponent, 0.0f, 4.0f);
+												const float fScale = std::pow(localScale, exp);
+												contact.reactionForceN *= fScale;
+											}
 									} else {
 										// Kinematic drive: substep along the proxy motion to avoid tunneling when the user moves fast.
 										const Eigen::Vector3f p0 = agentProxyStartPositions[static_cast<size_t>(fi)];
@@ -4612,6 +4609,12 @@ int main(int argc, char** argv) {
 											const float a = static_cast<float>(si + 1) / static_cast<float>(substeps);
 											Eigen::Vector3f p = p0 + dp * a;
 											Eigen::Vector3f v = (p - prevP) / std::max(1e-8f, dtSub);
+											const float localScale = std::max(1e-6f, materialScaleAtWorldPoint(p));
+											const float allowedPenLocal = std::clamp(allowedPen / localScale, 0.0f, 0.95f * r);
+											float proxyInvMassScaleLocal = contactProxyInvMassScale;
+											if (localScale > 1.05f) proxyInvMassScaleLocal = std::max(proxyInvMassScaleLocal, 0.85f);
+											const float muLocal = std::clamp(agentFrictionMu * std::sqrt(std::clamp(localScale, 0.25f, 16.0f)), 0.0f, 10.0f);
+											const float tangentialDampLocal = std::clamp(tangentialDamp * std::sqrt(std::clamp(localScale, 0.25f, 16.0f)), 0.0f, 1.0f);
 
 											AgentContactResult c{};
 												if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
@@ -4619,17 +4622,17 @@ int main(int argc, char** argv) {
 															p,
 															v,
 															0.0f,
-															contactProxyInvMassScale,
+															proxyInvMassScaleLocal,
 															contactVelRelax,
 															contactVelRelaxMin,
 															contactNormalDamp,
 															r,
-															allowedPen,
+															allowedPenLocal,
 															eps,
 															dtSub,
 															corr,
-															tangentialDamp,
-															agentFrictionMu,
+															tangentialDampLocal,
+															muLocal,
 															itersSub,
 															manifoldK,
 															&agentLastActiveContactTriangle[static_cast<size_t>(fi)],
@@ -4644,17 +4647,17 @@ int main(int argc, char** argv) {
 													p,
 													v,
 													0.0f,
-													contactProxyInvMassScale,
+													proxyInvMassScaleLocal,
 													contactVelRelax,
 													contactVelRelaxMin,
 													contactNormalDamp,
 													r,
-													allowedPen,
+													allowedPenLocal,
 													eps,
 													dtSub,
 													corr,
-													tangentialDamp,
-													agentFrictionMu,
+													tangentialDampLocal,
+													muLocal,
 													itersSub,
 													Eigen::Vector3f::Zero(),
 													agentContactVertexPhysIds,
@@ -4662,6 +4665,11 @@ int main(int argc, char** argv) {
 													physMassSumKg);
 											}
 
+											{
+												const float exp = std::clamp(agentContactForceMaterialExponent, 0.0f, 4.0f);
+												const float fScale = std::pow(localScale, exp);
+												c.reactionForceN *= fScale;
+											}
 											impulseNsec += c.reactionForceN * dtSub;
 											contactVerts += c.contactVertexCount;
 											maxPen = std::max(maxPen, c.maxPenetration);
@@ -4764,23 +4772,29 @@ int main(int argc, char** argv) {
 
 												const Eigen::Vector3f driveForceN = springForceN + dampingForceN;
 												const float sphereInvMass = 1.0f / agentProxyMassKg;
+												const float localScale = std::max(1e-6f, materialScaleAtWorldPoint(sphereCenter));
+												const float allowedPenLocal = std::clamp(allowedPen / localScale, 0.0f, 0.95f * r);
+												float proxyInvMassScaleLocal = contactProxyInvMassScale;
+												if (localScale > 1.05f) proxyInvMassScaleLocal = std::max(proxyInvMassScaleLocal, 0.85f);
+												const float muLocal = std::clamp(agentFrictionMu * std::sqrt(std::clamp(localScale, 0.25f, 16.0f)), 0.0f, 10.0f);
+												const float tangentialDampLocal = std::clamp(tangentialDamp * std::sqrt(std::clamp(localScale, 0.25f, 16.0f)), 0.0f, 1.0f);
 
 												if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
 														contact2 = solveAgentSphereTriangleCollisionConstraint(
 															sphereCenter,
 															sphereVel,
 															sphereInvMass,
-															contactProxyInvMassScale,
+															proxyInvMassScaleLocal,
 															contactVelRelax,
 															contactVelRelaxMin,
 															contactNormalDamp,
 															r,
-															allowedPen,
+															allowedPenLocal,
 															eps,
 															timeStep,
 															corr,
-															tangentialDamp,
-															agentFrictionMu,
+															tangentialDampLocal,
+															muLocal,
 															iters2,
 															manifoldK,
 															&agentLastActiveContactTriangle[static_cast<size_t>(fi)],
@@ -4795,23 +4809,29 @@ int main(int argc, char** argv) {
 													sphereCenter,
 													sphereVel,
 													sphereInvMass,
-													contactProxyInvMassScale,
+													proxyInvMassScaleLocal,
 													contactVelRelax,
 													contactVelRelaxMin,
 													contactNormalDamp,
 													r,
-													allowedPen,
+													allowedPenLocal,
 													eps,
 													timeStep,
 													corr,
-													tangentialDamp,
-													agentFrictionMu,
+													tangentialDampLocal,
+													muLocal,
 													iters2,
 													driveForceN,
 													agentContactVertexPhysIds,
 													agentVerticesByPhysId,
 													physMassSumKg);
 											}
+
+												{
+													const float exp = std::clamp(agentContactForceMaterialExponent, 0.0f, 4.0f);
+													const float fScale = std::pow(localScale, exp);
+													contact2.reactionForceN *= fScale;
+												}
 
 												agentLastContactForcesN[static_cast<size_t>(fi)] = contact2.reactionForceN;
 												agentLastContactCounts[static_cast<size_t>(fi)] = contact2.contactVertexCount;
@@ -4845,13 +4865,15 @@ int main(int argc, char** argv) {
 										const size_t idx = static_cast<size_t>(fi);
 
 										// Force.
-										const Eigen::Vector3f rawF = agentLastContactForcesN[idx];
+										const bool inContact = (agentLastContactCounts[idx] > 0);
+										const Eigen::Vector3f rawF = inContact ? agentLastContactForcesN[idx] : Eigen::Vector3f::Zero();
 										Eigen::Vector3f& f = agentFilteredContactForcesN[idx];
 										if (tauF > 0.0f) f = f * aF + rawF * (1.0f - aF);
 										else f = rawF;
+										// For 1DOF haptics, eliminate "force tail" on release.
+										if (!inContact) f.setZero();
 
 										// Normal (unit, inward). Align sign for continuity before filtering.
-										const bool inContact = (agentLastContactCounts[idx] > 0);
 										const Eigen::Vector3f rawN0 = agentLastContactNormalsIn[idx];
 										Eigen::Vector3f& n = agentFilteredContactNormalsIn[idx];
 										if (!inContact || rawN0.squaredNorm() <= 1e-12f) {
@@ -5627,6 +5649,11 @@ int main(int argc, char** argv) {
 					for (int fi = 0; fi < kFingerCount; ++fi) {
 						Eigen::Vector3f c = proxyColors[static_cast<size_t>(fi)];
 						if (whiteBackground) c *= 0.80f;
+						const float matScale = materialScaleAtWorldPoint(agentProxyPositions[static_cast<size_t>(fi)]);
+						if (matScale > 1.05f) {
+							// Hard side: show as white proxy for quick confirmation when sliding.
+							c = whiteBackground ? Eigen::Vector3f(0.15f, 0.15f, 0.15f) : Eigen::Vector3f(0.98f, 0.98f, 0.98f);
+						}
 						
 						glPushMatrix();
 						const Eigen::Vector3f& pos = agentProxyPositions[static_cast<size_t>(fi)];
@@ -5640,7 +5667,9 @@ int main(int argc, char** argv) {
 						
 						// Draw sphere at local origin (so it rotates)
 						glLineWidth(proxyOutlineWidth);
-						glColor3f(proxyOutlineColor.x(), proxyOutlineColor.y(), proxyOutlineColor.z());
+						Eigen::Vector3f outline = proxyOutlineColor;
+						if (matScale > 1.05f) outline = whiteBackground ? Eigen::Vector3f(0.60f, 0.00f, 0.60f) : Eigen::Vector3f(1.00f, 0.30f, 1.00f);
+						glColor3f(outline.x(), outline.y(), outline.z());
 						drawWireSphereCircles(Eigen::Vector3f::Zero(), agentSphere.radius, 36);
 						glLineWidth(proxyLineWidth);
 						glColor3f(c.x(), c.y(), c.z());
@@ -5894,6 +5923,12 @@ int main(int argc, char** argv) {
 
 					auto setVertexColor = [&](Vertex* vert) {
 						float alpha = showFiberFlow ? 0.4f : 1.0f;
+						const bool hardGroup = (std::abs(effectiveYoungsForGroup(groupIdx, youngs) - youngs) > 1e-3f);
+						// Highlight any Young's modulus override region (e.g. "tumor" patch) in the default view.
+						if (hardGroup && !showStressCloud && !showVolumePreservation) {
+							glColor4f(1.0f, 1.0f, 1.0f, alpha);
+							return;
+						}
 						if (showVolumePreservation) {
 							// Color code based on volume preservation: green = good, red = volume loss
 							float volumeRatio = (initialVolume > 1e-6f) ? (currentVolume / initialVolume) : 1.0f;
@@ -5945,9 +5980,11 @@ int main(int argc, char** argv) {
 					setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
 					setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
 					setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
-				}
+					}
 			}
 			glEnd();
+
+			// (no debug split plane)
 			
 			// Draw initial outline for volume preservation comparison (wireframe of initial shape)
 			if (showVolumePreservation && !initialPositions.empty()) {
@@ -6220,12 +6257,35 @@ int main(int argc, char** argv) {
 						if (pair.motorId < 0) continue; // Skip if disabled (-1)
 						
 						Eigen::Vector3f contactF = agentFilteredContactForcesN[static_cast<size_t>(pair.fingerIdx)];
-						Eigen::Quaternionf fingerRot = agentDeviceRotations[static_cast<size_t>(pair.fingerIdx)];
-						
-						Eigen::Vector3f padNormal = fingerRot * Eigen::Vector3f(0.0f, -1.0f, 0.0f);
-						padNormal.normalize();
+						// 1DOF devices: output the NORMAL reaction magnitude.
+						// Using finger rotation to define "pad normal" is often wrong/noisy for 1DOF hardware.
+						Eigen::Vector3f nIn = agentFilteredContactNormalsIn[static_cast<size_t>(pair.fingerIdx)];
+						float forceMag = 0.0f;
+						if (nIn.squaredNorm() > 1e-12f) {
+							nIn.normalize();
+							// reactionForceN points opposite nIn (see solver); keep only compressive normal component.
+							forceMag = std::max(0.0f, (-contactF).dot(nIn));
+						} else {
+							forceMag = contactF.norm();
+						}
 
-						float forceMag = std::abs(contactF.dot(padNormal));
+						// Overall output gain (separate from simulation/contact).
+						forceMag *= std::max(0.0f, agentDeviceForceGain);
+
+						// Simple, brutal 1DOF effect: amplify output when sampling over a locally stiffer region.
+						{
+							const float matScale = materialScaleAtWorldPoint(agentProxyPositions[static_cast<size_t>(pair.fingerIdx)]);
+							const float hardGain = std::max(0.0f, agentDeviceForceHardGain);
+							if (matScale > 1.05f && hardGain != 1.0f) forceMag *= hardGain;
+						}
+
+						// Soft-clip to preserve dynamic range: avoids "touch -> max PWM" for both soft/hard.
+						if (haptic_softclip_enabled) {
+							const float maxF = std::max(1e-6f, haptic_max_force_input);
+							const float knee = std::max(1e-6f, haptic_softclip_knee);
+							const float f = std::max(0.0f, forceMag);
+							forceMag = maxF * (f / (f + knee));
+						}
 						haptic.sendForce(pair.motorId, forceMag);
 					}
 				}
@@ -6383,7 +6443,8 @@ int main(int argc, char** argv) {
 			// Update Physics
 			#pragma omp parallel for
 			for (int i = 0; i < object.groupNum; ++i) {
-				object.groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
+				const float scale = effectiveYoungsScaleForGroup(i);
+				object.groups[i].calGroupKAni(youngs1 * scale, youngs2 * scale, youngs3 * scale, poisson);
 				object.groups[i].calLHS();
 			}
 			}

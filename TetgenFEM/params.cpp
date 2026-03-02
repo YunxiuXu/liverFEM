@@ -5,9 +5,20 @@
 #include <algorithm>
 #include <cctype>
 #include <string>
+#include <cmath>
 
 // Define global variables
 float youngs, youngs1, youngs2, youngs3, poisson, density;
+bool halfYoungsEnabled = false;
+float halfYoungsValue = 0.0f;
+int halfYoungsAxis = 0;
+int halfYoungsSide = 0;
+bool tumorYoungsEnabled = false;
+float tumorYoungsValue = 0.0f;
+float tumorTopFrac = 0.12f;
+float tumorRadiusFrac = 0.22f;
+float tumorCenterXFrac = 0.5f;
+float tumorCenterZFrac = 0.5f;
 int groupNum, groupNumX, groupNumY, groupNumZ;
 const float PI = 3.1415926535f; // This can be hardcoded as it won't change
 float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
@@ -73,6 +84,7 @@ float agentContactVelocityRelaxation = 0.15f;
 float agentContactVelocityRelaxationMin = 0.02f;
 float agentContactNormalDamp = 0.8f;
 float agentFrictionMu = 1.0f;
+float agentContactForceMaterialExponent = 1.0f;
 bool agentGripEnabled = false;
 float agentGripTangentCorrection = 0.6f;
 float agentGripMaxTangentStepFrac = 0.25f;
@@ -82,6 +94,7 @@ float agentDeviceForceFilterTauSec = 0.0f;
 float agentContactForceFilterTauSec = 0.03f;
 float agentContactNormalFilterTauSec = 0.02f;
 float agentDeviceForceGain = 1.0f;
+float agentDeviceForceHardGain = 1.0f;
 float agentDeviceForceMaxN = 0.0f;
 bool agentWriteLiveFile = false;
 int agentLiveFileIntervalFrames = 2;
@@ -194,9 +207,72 @@ float haptic_max_force_input = 10.0f;
 float haptic_min_pwm_output = 0.0f;
 float haptic_max_pwm_output = 255.0f;
 float haptic_gamma = 1.0f;
+bool haptic_softclip_enabled = false;
+float haptic_softclip_knee = 200.0f;
 
 
 namespace {
+int clampInt(int v, int lo, int hi) {
+	if (v < lo) return lo;
+	if (v > hi) return hi;
+	return v;
+}
+
+bool isHalfYoungsGroup(int groupIdx) {
+	if (!halfYoungsEnabled) return false;
+
+	const int nx = std::max(1, groupNumX);
+	const int ny = std::max(1, groupNumY);
+	const int nz = std::max(1, groupNumZ);
+	const int axis = clampInt(halfYoungsAxis, 0, 2);
+	const int side = clampInt(halfYoungsSide, 0, 1);
+
+	int axisCount = nx;
+	int coord = groupIdx % nx;
+	if (axis == 1) {
+		axisCount = ny;
+		coord = (groupIdx / nx) % ny;
+	} else if (axis == 2) {
+		axisCount = nz;
+		coord = (groupIdx / (nx * ny));
+	}
+
+	if (axisCount <= 1) return true;
+
+	const int split = axisCount / 2;
+	if (split <= 0) return true;
+
+	if (side == 0) return coord < split;
+	return coord >= split;
+}
+
+bool isTumorYoungsGroup(int groupIdx) {
+	if (!tumorYoungsEnabled) return false;
+
+	const int nx = std::max(1, groupNumX);
+	const int ny = std::max(1, groupNumY);
+	const int nz = std::max(1, groupNumZ);
+	if (groupIdx < 0 || groupIdx >= nx * ny * nz) return false;
+
+	const int x = groupIdx % nx;
+	const int y = (groupIdx / nx) % ny;
+	const int z = (groupIdx / (nx * ny));
+
+	const float topFrac = std::clamp(tumorTopFrac, 0.0f, 1.0f);
+	const int topLayers = std::clamp(static_cast<int>(std::ceil(topFrac * static_cast<float>(ny))), 1, ny);
+	if (y < (ny - topLayers)) return false;
+
+	const int cx = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterXFrac, 0.0f, 1.0f) * static_cast<float>(nx - 1))), 0, nx - 1);
+	const int cz = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterZFrac, 0.0f, 1.0f) * static_cast<float>(nz - 1))), 0, nz - 1);
+
+	const int m = std::max(1, std::min(nx, nz));
+	const float rFrac = std::clamp(tumorRadiusFrac, 0.0f, 1.0f);
+	const int rCells = std::clamp(static_cast<int>(std::lround(rFrac * static_cast<float>(m))), 1, m);
+	const int dx = x - cx;
+	const int dz = z - cz;
+	return (dx * dx + dz * dz) <= (rCells * rCells);
+}
+
 std::string trim(std::string s) {
 	auto notSpace = [](unsigned char ch) { return !std::isspace(ch); };
 	s.erase(s.begin(), std::find_if(s.begin(), s.end(), notSpace));
@@ -226,6 +302,19 @@ void prefixModelDirIfNeeded(std::string& path, const std::string& dir) {
 }
 } // namespace
 
+float effectiveYoungsForGroup(int groupIdx, float baseYoungs) {
+	if (tumorYoungsEnabled && isTumorYoungsGroup(groupIdx)) return tumorYoungsValue;
+	if (halfYoungsEnabled && isHalfYoungsGroup(groupIdx)) return halfYoungsValue;
+	return baseYoungs;
+}
+
+float effectiveYoungsScaleForGroup(int groupIdx) {
+	const float base = youngs;
+	if (std::abs(base) < 1e-6f) return 1.0f;
+	const float eff = effectiveYoungsForGroup(groupIdx, base);
+	return eff / base;
+}
+
 void loadParams(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -236,6 +325,12 @@ void loadParams(const std::string& filename) {
     std::unordered_map<std::string, float*> floatParams = {
         {"youngs", &youngs}, {"youngs1", &youngs1}, {"youngs2", &youngs2},
         {"youngs3", &youngs3}, {"poisson", &poisson}, {"density", &density},
+        {"half_youngs_value", &halfYoungsValue},
+        {"tumor_youngs_value", &tumorYoungsValue},
+        {"tumor_topFrac", &tumorTopFrac},
+        {"tumor_radiusFrac", &tumorRadiusFrac},
+        {"tumor_centerXFrac", &tumorCenterXFrac},
+        {"tumor_centerZFrac", &tumorCenterZFrac},
         {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
         {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
         {"constraintHardness", &constraintHardness},
@@ -284,6 +379,7 @@ void loadParams(const std::string& filename) {
         {"agent_contactVelocityRelaxationMin", &agentContactVelocityRelaxationMin},
         {"agent_contactNormalDamp", &agentContactNormalDamp},
         {"agent_frictionMu", &agentFrictionMu},
+        {"agent_contactForceMaterialExponent", &agentContactForceMaterialExponent},
         {"agent_gripTangentCorrection", &agentGripTangentCorrection},
         {"agent_gripMaxTangentStepFrac", &agentGripMaxTangentStepFrac},
         {"agent_gripSlipDistanceFrac", &agentGripSlipDistanceFrac},
@@ -292,6 +388,7 @@ void loadParams(const std::string& filename) {
         {"agent_contactForceFilterTauSec", &agentContactForceFilterTauSec},
         {"agent_contactNormalFilterTauSec", &agentContactNormalFilterTauSec},
         {"agent_deviceForceGain", &agentDeviceForceGain},
+        {"agent_deviceForceHardGain", &agentDeviceForceHardGain},
         {"agent_deviceForceMaxN", &agentDeviceForceMaxN},
         {"wall_marginBboxScale", &wallMarginBboxScale},
         {"wall_restitution", &wallRestitution},
@@ -348,11 +445,14 @@ void loadParams(const std::string& filename) {
         {"haptic_max_force_input", &haptic_max_force_input},
         {"haptic_min_pwm_output", &haptic_min_pwm_output},
         {"haptic_max_pwm_output", &haptic_max_pwm_output},
-        {"haptic_gamma", &haptic_gamma}
+        {"haptic_gamma", &haptic_gamma},
+        {"haptic_softclip_knee", &haptic_softclip_knee}
     };
 
     std::unordered_map<std::string, int*> intParams = {
         {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
+        {"half_youngs_axis", &halfYoungsAxis},
+        {"half_youngs_side", &halfYoungsSide},
         {"anchor_mode", &anchorMode},
         {"tet_volumeConstraintIterations", &tetVolumeConstraintIterations},
         {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
@@ -405,6 +505,8 @@ void loadParams(const std::string& filename) {
     std::unordered_map<std::string, bool*> boolParams = {
         {"useDirectLoading", &useDirectLoading},
         {"autoSaveMesh", &autoSaveMesh},
+        {"half_youngs_enabled", &halfYoungsEnabled},
+        {"tumor_youngs_enabled", &tumorYoungsEnabled},
         {"suspension_enabled", &suspensionEnabled},
         {"susp1_enabled", &susp1Enabled},
         {"susp2_enabled", &susp2Enabled},
@@ -428,7 +530,8 @@ void loadParams(const std::string& filename) {
         {"exp1_resetAfterFinish", &exp1ResetAfterFinish},
         {"exp2_resetAfterFinish", &exp2ResetAfterFinish},
         // Haptic params
-        {"haptic_uart_enabled", &haptic_uart_enabled}
+        {"haptic_uart_enabled", &haptic_uart_enabled},
+        {"haptic_softclip_enabled", &haptic_softclip_enabled}
     };
 
     std::string line;

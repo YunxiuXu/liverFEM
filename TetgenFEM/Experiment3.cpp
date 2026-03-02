@@ -223,9 +223,11 @@ void Experiment3::applyMaterial(const RunSpec& spec) {
 #pragma omp parallel for
     for (int i = 0; i < object->groupNum; ++i) {
         if (spec.material == RunSpec::Material::Isotropic) {
-            object->groups[i].calGroupK(youngs, poisson);
+            const float E = effectiveYoungsForGroup(i, youngs);
+            object->groups[i].calGroupK(E, poisson);
         } else {
-            object->groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
+            const float scale = effectiveYoungsScaleForGroup(i);
+            object->groups[i].calGroupKAni(youngs1 * scale, youngs2 * scale, youngs3 * scale, poisson);
         }
         object->groups[i].calLHS();
     }
@@ -241,9 +243,11 @@ void Experiment3::restoreMaterial() {
 #pragma omp parallel for
     for (int i = 0; i < object->groupNum; ++i) {
         if (std::abs(youngs1 - youngs2) > 1e-1f || std::abs(youngs1 - youngs3) > 1e-1f) {
-            object->groups[i].calGroupKAni(youngs1, youngs2, youngs3, poisson);
+            const float scale = effectiveYoungsScaleForGroup(i);
+            object->groups[i].calGroupKAni(youngs1 * scale, youngs2 * scale, youngs3 * scale, poisson);
         } else {
-            object->groups[i].calGroupK(youngs, poisson);
+            const float E = effectiveYoungsForGroup(i, youngs);
+            object->groups[i].calGroupK(E, poisson);
         }
         object->groups[i].calLHS();
     }

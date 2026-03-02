@@ -263,7 +263,8 @@ static BuiltObject buildFromStlWithMaxVolume(const std::string& stlPath, const s
         built.object.groups[i].calCenterofMass();
         built.object.groups[i].calInitCOM();
         built.object.groups[i].calLocalPos();
-        built.object.groups[i].calGroupK(youngs, poisson);
+        const float E = effectiveYoungsForGroup(i, youngs);
+        built.object.groups[i].calGroupK(E, poisson);
         built.object.groups[i].setVertexMassesFromMassMatrix();
         built.object.groups[i].calMassGroup();
         built.object.groups[i].calMassDistributionMatrix();

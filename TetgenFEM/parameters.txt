@@ -2,6 +2,21 @@ youngs=7000
 youngs1=7000
 youngs2=7000
 youngs3=7000
+# Half-model Young's modulus override
+half_youngs_enabled=false
+half_youngs_value=30000
+# 0 = X, 1 = Y, 2 = Z
+half_youngs_axis=0
+# 0 = lower (min side), 1 = upper (max side)
+half_youngs_side=0
+# Localized "tumor" stiffness patch (small area on the top surface near center).
+tumor_youngs_enabled=true
+tumor_youngs_value=30000
+# Smaller, more "lump-like" patch on the top surface.
+tumor_topFrac=0.10
+tumor_radiusFrac=0.12
+tumor_centerXFrac=0.50
+tumor_centerZFrac=0.50
 poisson=0.49
 density=200
 groupNumX=8
@@ -84,26 +99,30 @@ agent_vcSubsteps=80
 agent_collisionIterations=50
 agent_contactManifoldTriangles=6
 agent_vcMaxDistanceRadiusFrac=2.5
-agent_maxPenetrationFrac=0.0
+# Allow a small penetration shell for a more "pressable" feel (fraction of proxy radius).
+agent_maxPenetrationFrac=0.06
 agent_proxyPositionCorrection=0.9
 agent_influenceRadiusFrac=4.0
 agent_collisionTangentialDamp=0.7
-agent_contactProxyInvMassScale=1.0
+# For deformable tissue interaction, let contact move the tissue (not the proxy mass).
+agent_contactProxyInvMassScale=0.0
 agent_contactVelocityRelaxation=0.25
 agent_contactVelocityRelaxationMin=0.1
 agent_contactNormalDamp=0.8
-agent_frictionMu=2.0
+agent_frictionMu=0.3
+agent_contactForceMaterialExponent=1.6
 # Grip/adhesion (tangential spring to help dragging/rolling)
-agent_gripEnabled=true
+agent_gripEnabled=false
 agent_gripTangentCorrection=0.6
 agent_gripMaxTangentStepFrac=0.25
 agent_gripSlipDistanceFrac=0.6
 agent_gripMinPenetrationFrac=0.03
-agent_deviceForceFilterTauSec=0.004
-agent_contactForceFilterTauSec=0.03
-agent_contactNormalFilterTauSec=0.02
+agent_deviceForceFilterTauSec=0.010
+agent_contactForceFilterTauSec=0.040
+agent_contactNormalFilterTauSec=0.040
 # Haptic output scaling/clamp (does NOT affect simulation/contact)
-agent_deviceForceGain=1.0
+agent_deviceForceGain=3.5
+agent_deviceForceHardGain=9.0
 agent_deviceForceMaxN=0
 agent_writeLiveFile=false
 agent_liveFileIntervalFrames=2
@@ -223,12 +242,17 @@ haptic_uart_motor_id=1
 haptic_uart_thumb_motor_id=0
 haptic_uart_middle_motor_id=2
 haptic_uart_ring_motor_id=3
-haptic_min_force_input=0.0
-haptic_max_force_input=150.0
+haptic_min_force_input=2.0
+haptic_max_force_input=100.0
 haptic_min_pwm_output=30.0
 haptic_max_pwm_output=180.0
 # Gamma correction for haptics (Power Law)
 # 1.0 = Linear
 # < 1.0 (e.g. 0.5-0.8) = Boosts small forces (Weber's Law / better sensitivity)
 # > 1.0 = Suppresses small forces
-haptic_gamma=1.0
+haptic_gamma=0.7
+# Output shaping: prevents immediate saturation ("touch -> max") by soft-clipping the force.
+# If enabled, the output force sent to the device is:
+#   f_out = max_force * (f_raw / (f_raw + knee))
+haptic_softclip_enabled=true
+haptic_softclip_knee=35.0

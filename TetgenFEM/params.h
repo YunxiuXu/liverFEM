@@ -6,6 +6,24 @@
 
 // Declare global variables
 extern float youngs, youngs1, youngs2, youngs3, poisson, density;
+// Optional: split the model into halves and override Young's modulus on one side.
+extern bool halfYoungsEnabled;
+extern float halfYoungsValue;
+// 0 = X, 1 = Y, 2 = Z
+extern int halfYoungsAxis;
+// 0 = lower (min side), 1 = upper (max side)
+extern int halfYoungsSide;
+
+// Local "tumor" stiffness patch (subset of groups).
+extern bool tumorYoungsEnabled;
+extern float tumorYoungsValue;
+// Top slice thickness as a fraction of groupNumY (0..1).
+extern float tumorTopFrac;
+// Radius in the XZ plane as a fraction of min(groupNumX, groupNumZ) (0..1).
+extern float tumorRadiusFrac;
+// Center in X/Z as a fraction of [0..1] across groups (0.5 = middle).
+extern float tumorCenterXFrac;
+extern float tumorCenterZFrac;
 extern int groupNum, groupNumX, groupNumY, groupNumZ;
 extern const float PI;
 extern float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
@@ -86,6 +104,9 @@ extern float agentContactVelocityRelaxationMin;
 extern float agentContactNormalDamp;
 // Coulomb friction coefficient between proxy sphere and surface (0 disables).
 extern float agentFrictionMu;
+// Optional: scale haptic contact force by local material stiffness ratio (E/youngs)^exp.
+// This affects only the contact force you output/record, not the collision resolution itself.
+extern float agentContactForceMaterialExponent;
 // Optional grip/stick mode (tangential spring) to help "grab" and drag the surface.
 extern bool agentGripEnabled;
 // Tangential correction fraction per frame (0..1).
@@ -107,6 +128,8 @@ extern float agentContactForceFilterTauSec;
 extern float agentContactNormalFilterTauSec;
 // Output scaling for haptic force (>=0). This does NOT affect simulation/contact, only the force you output.
 extern float agentDeviceForceGain;
+// Extra output gain applied when the proxy is over the "hard" half (Young's override side).
+extern float agentDeviceForceHardGain;
 // Optional magnitude clamp for haptic force output (N; <=0 disables).
 extern float agentDeviceForceMaxN;
 extern bool agentWriteLiveFile;
@@ -204,8 +227,14 @@ extern float haptic_max_force_input;
 extern float haptic_min_pwm_output;
 extern float haptic_max_pwm_output;
 extern float haptic_gamma;
+extern bool haptic_softclip_enabled;
+extern float haptic_softclip_knee;
 
 // Function to load parameters
 void loadParams(const std::string& filename);
+
+// Per-group effective Young's modulus helpers.
+float effectiveYoungsForGroup(int groupIdx, float baseYoungs);
+float effectiveYoungsScaleForGroup(int groupIdx);
 
 #endif // PARAMS_H

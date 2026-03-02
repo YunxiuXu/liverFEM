@@ -134,6 +134,20 @@ std::vector<uint8_t> HapticInterface::intToHexProtocol(int num) {
 void HapticInterface::sendForce(int motorId, float force) {
     if (!connected || motorId < 0 || motorId > 7) return;
 
+    // Important: if the requested force is zero (or below the input minimum),
+    // output a true "off" command (0 PWM), regardless of configured minPwmOutput.
+    // This prevents a lingering baseline force after the fingertip leaves contact.
+    if (force <= minForceInput + 1e-6f || maxForceInput <= minForceInput + 1e-6f) {
+        std::vector<uint8_t> bytes = intToHexProtocol(0);
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            motorValues[motorId * 2] = bytes[0];
+            motorValues[motorId * 2 + 1] = bytes[1];
+        }
+        sendPacket();
+        return;
+    }
+
     // Map force to output range
     // Clamp input
     float f = std::max(minForceInput, std::min(force, maxForceInput));
