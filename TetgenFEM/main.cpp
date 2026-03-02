@@ -3037,6 +3037,8 @@ int main(int argc, char** argv) {
 	static float anisoDemoRadius = 0.35f;    
 	static float explodedScale = 0.5f;
 	static bool whiteBackground = false;
+	// Visualization toggle: highlight locally stiffer material override regions (e.g. tumor patch) in white.
+	static bool showMaterialOverrideOverlay = true;
 	static bool isPaused = false; // Pause physics simulation
 	static float stressGain = 4.0f; // Added for interactive tuning (reduced to 2/3 of original 15.0)
 	
@@ -5650,7 +5652,7 @@ int main(int argc, char** argv) {
 						Eigen::Vector3f c = proxyColors[static_cast<size_t>(fi)];
 						if (whiteBackground) c *= 0.80f;
 						const float matScale = materialScaleAtWorldPoint(agentProxyPositions[static_cast<size_t>(fi)]);
-						if (matScale > 1.05f) {
+						if (showMaterialOverrideOverlay && matScale > 1.05f) {
 							// Hard side: show as white proxy for quick confirmation when sliding.
 							c = whiteBackground ? Eigen::Vector3f(0.15f, 0.15f, 0.15f) : Eigen::Vector3f(0.98f, 0.98f, 0.98f);
 						}
@@ -5668,7 +5670,7 @@ int main(int argc, char** argv) {
 						// Draw sphere at local origin (so it rotates)
 						glLineWidth(proxyOutlineWidth);
 						Eigen::Vector3f outline = proxyOutlineColor;
-						if (matScale > 1.05f) outline = whiteBackground ? Eigen::Vector3f(0.60f, 0.00f, 0.60f) : Eigen::Vector3f(1.00f, 0.30f, 1.00f);
+						if (showMaterialOverrideOverlay && matScale > 1.05f) outline = whiteBackground ? Eigen::Vector3f(0.60f, 0.00f, 0.60f) : Eigen::Vector3f(1.00f, 0.30f, 1.00f);
 						glColor3f(outline.x(), outline.y(), outline.z());
 						drawWireSphereCircles(Eigen::Vector3f::Zero(), agentSphere.radius, 36);
 						glLineWidth(proxyLineWidth);
@@ -5925,7 +5927,7 @@ int main(int argc, char** argv) {
 						float alpha = showFiberFlow ? 0.4f : 1.0f;
 						const bool hardGroup = (std::abs(effectiveYoungsForGroup(groupIdx, youngs) - youngs) > 1e-3f);
 						// Highlight any Young's modulus override region (e.g. "tumor" patch) in the default view.
-						if (hardGroup && !showStressCloud && !showVolumePreservation) {
+						if (showMaterialOverrideOverlay && hardGroup && !showStressCloud && !showVolumePreservation) {
 							glColor4f(1.0f, 1.0f, 1.0f, alpha);
 							return;
 						}
@@ -6323,7 +6325,12 @@ int main(int argc, char** argv) {
 			whiteBackground = !whiteBackground;
 		}
 
-		const SimpleUI::Rect uiStressRect{ rightMargin, uiMargin + uiH + 8.0f, uiW, uiH };
+		const SimpleUI::Rect uiMaterialOverlayRect{ rightMargin, uiMargin + uiH + 8.0f, uiW, uiH };
+		if (ui.button(uiMaterialOverlayRect, showMaterialOverrideOverlay ? "Hide Tumor" : "Show Tumor")) {
+			showMaterialOverrideOverlay = !showMaterialOverrideOverlay;
+		}
+
+		const SimpleUI::Rect uiStressRect{ rightMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiStressRect, showStressCloud ? "Show Groups" : "Show Stress")) {
 			showStressCloud = !showStressCloud;
 			if (showStressCloud) {
@@ -6333,19 +6340,19 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		const SimpleUI::Rect uiFiberRect{ rightMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiFiberRect{ rightMargin, uiMargin + 3.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiFiberRect, showFiberFlow ? "Hide Fiber" : "Show Fiber")) {
 			showFiberFlow = !showFiberFlow;
 			if (showFiberFlow) showStressCloud = false;
 		}
 
-		const SimpleUI::Rect uiGhostRect{ rightMargin, uiMargin + 3.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiGhostRect{ rightMargin, uiMargin + 4.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiGhostRect, showGhostLinks ? "Hide Coupling" : "Show Coupling")) {
 			showGhostLinks = !showGhostLinks;
 			if (showGhostLinks) showStressCloud = false;
 		}
 
-		const SimpleUI::Rect uiExplodedRect{ rightMargin, uiMargin + 4.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiExplodedRect{ rightMargin, uiMargin + 5.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiExplodedRect, showExplodedView ? "Show Integrated" : "Exploded View")) {
 			showExplodedView = !showExplodedView;
 			if (showExplodedView) {
@@ -6354,7 +6361,7 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		const SimpleUI::Rect uiVolumePreservationRect{ rightMargin, uiMargin + 5.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiVolumePreservationRect{ rightMargin, uiMargin + 6.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiVolumePreservationRect, showVolumePreservation ? "Hide Volume Test" : "Volume Test")) {
 			showVolumePreservation = !showVolumePreservation;
 			if (showVolumePreservation) {
