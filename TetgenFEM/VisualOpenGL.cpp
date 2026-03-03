@@ -1,5 +1,7 @@
 #include "VisualOpenGL.h"
 #include "SimpleUI.h"
+#include <algorithm>
+#include <cmath>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -82,24 +84,26 @@ float aspectRatio = 1.0f;
 float zoomFactor = 1.0f;
 
 Eigen::Matrix4f buildProjectionMatrix(float nearVal, float farVal) {
-	float left = -zoomFactor * aspectRatio;
-	float right = zoomFactor * aspectRatio;
-	float bottom = -zoomFactor;
-	float top = zoomFactor;
+	// Perspective projection (right-handed, OpenGL-style). Requires the model to be in front of the camera
+	// (negative Z in eye space). main.cpp applies a -Z translation based on bboxDiag.
+	const float nearZ = std::max(1e-4f, nearVal);
+	const float farZ = std::max(nearZ + 1e-3f, farVal);
+	const float fovyDeg = 45.0f;
+	const float fovyRad = fovyDeg * 3.14159265358979323846f / 180.0f;
+	const float f = 1.0f / std::tan(0.5f * fovyRad);
 
-	Eigen::Matrix4f projectionMatrix;
-	projectionMatrix <<
-		2.0f / (right - left), 0.0f, 0.0f, -(right + left) / (right - left),
-		0.0f, 2.0f / (top - bottom), 0.0f, -(top + bottom) / (top - bottom),
-		0.0f, 0.0f, -2.0f / (farVal - nearVal), -(farVal + nearVal) / (farVal - nearVal),
-		0.0f, 0.0f, 0.0f, 1.0f;
-
+	Eigen::Matrix4f projectionMatrix = Eigen::Matrix4f::Zero();
+	projectionMatrix(0, 0) = f / std::max(1e-6f, aspectRatio);
+	projectionMatrix(1, 1) = f;
+	projectionMatrix(2, 2) = (farZ + nearZ) / (nearZ - farZ);
+	projectionMatrix(2, 3) = (2.0f * farZ * nearZ) / (nearZ - farZ);
+	projectionMatrix(3, 2) = -1.0f;
 	return projectionMatrix;
 }
 
 void applyProjectionMatrix() {
-	const float nearVal = -3.0f;
-	const float farVal = 3.0f;
+	const float nearVal = 0.1f;
+	const float farVal = 10000.0f;
 	Eigen::Matrix4f projectionMatrix = buildProjectionMatrix(nearVal, farVal);
 
 	glMatrixMode(GL_PROJECTION);
@@ -115,6 +119,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	zoomFactor *= (1.0f + 0.1f * yoffset);  // Adjust zoom factor
+	zoomFactor = std::clamp(zoomFactor, 0.05f, 50.0f);
 
 	applyProjectionMatrix();
 }

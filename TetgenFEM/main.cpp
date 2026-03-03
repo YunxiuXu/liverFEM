@@ -13,6 +13,8 @@
 #include <filesystem>
 #include <chrono>
 #include <ctime>
+#include <sstream>
+#include <iomanip>
 #include "GL/glew.h" 
 #include "GLFW/glfw3.h"
 #include "params.h"
@@ -154,6 +156,13 @@ struct KeyLatch {
 			return true;
 		}
 
+		bool getRightHandDistalPrevMm(std::array<Eigen::Vector3f, 5>* outPrevMm) const
+		{
+			if (!hasRightHand_) return false;
+			if (outPrevMm) *outPrevMm = rightDistalPrevMm_;
+			return true;
+		}
+
 		bool getRightHandRotations(std::array<Eigen::Quaternionf, 5>* outRotations) const
 		{
 			if (!hasRightHand_) return false;
@@ -167,6 +176,13 @@ struct KeyLatch {
 			if (outTipsMm) *outTipsMm = leftTipsMm_;
 			if (outPalmMm) *outPalmMm = leftPalmMm_;
 			if (outTimeSec) *outTimeSec = leftTimeSec_;
+			return true;
+		}
+
+		bool getLeftHandDistalPrevMm(std::array<Eigen::Vector3f, 5>* outPrevMm) const
+		{
+			if (!hasLeftHand_) return false;
+			if (outPrevMm) *outPrevMm = leftDistalPrevMm_;
 			return true;
 		}
 
@@ -195,10 +211,14 @@ struct KeyLatch {
 
 				std::array<Eigen::Vector3f, 5> tipsMm;
 				std::array<Eigen::Quaternionf, 5> tipsRot;
+				std::array<Eigen::Vector3f, 5> prevMm;
 				// digits[0]=thumb, [1]=index, [2]=middle, [3]=ring, [4]=pinky
 				for (int fi = 0; fi < 5; ++fi) {
 					const LEAP_VECTOR tip = hand->digits[fi].distal.next_joint; // mm
 					tipsMm[static_cast<size_t>(fi)] = Eigen::Vector3f(tip.x, tip.y, tip.z);
+
+					const LEAP_VECTOR prev = hand->digits[fi].distal.prev_joint; // mm
+					prevMm[static_cast<size_t>(fi)] = Eigen::Vector3f(prev.x, prev.y, prev.z);
 
 					const LEAP_QUATERNION rot = hand->digits[fi].distal.rotation;
 					tipsRot[static_cast<size_t>(fi)] = Eigen::Quaternionf(rot.w, rot.x, rot.y, rot.z);
@@ -207,6 +227,7 @@ struct KeyLatch {
 				if (isRight) {
 					rightPalmMm_ = palmMm;
 					rightTipsMm_ = tipsMm;
+					rightDistalPrevMm_ = prevMm;
 					rightTipsRot_ = tipsRot;
 					rightTimeSec_ = nowSec;
 					sawRight = true;
@@ -214,6 +235,7 @@ struct KeyLatch {
 				if (isLeft) {
 					leftPalmMm_ = palmMm;
 					leftTipsMm_ = tipsMm;
+					leftDistalPrevMm_ = prevMm;
 					leftTipsRot_ = tipsRot;
 					leftTimeSec_ = nowSec;
 					sawLeft = true;
@@ -231,6 +253,8 @@ struct KeyLatch {
 		Eigen::Vector3f leftPalmMm_ = Eigen::Vector3f::Zero();
 		std::array<Eigen::Vector3f, 5> rightTipsMm_{};
 		std::array<Eigen::Vector3f, 5> leftTipsMm_{};
+		std::array<Eigen::Vector3f, 5> rightDistalPrevMm_{};
+		std::array<Eigen::Vector3f, 5> leftDistalPrevMm_{};
 		std::array<Eigen::Quaternionf, 5> rightTipsRot_{};
 		std::array<Eigen::Quaternionf, 5> leftTipsRot_{};
 		double rightTimeSec_ = -1.0;
@@ -2319,7 +2343,7 @@ int main(int argc, char** argv) {
 						agentGripTriangle.fill(-1);
 						agentGripBary.fill(Eigen::Vector3f::Zero());
 		
-	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 		LeapCTracker leapTracker;
 		// Start with Leap input enabled by default (can still be toggled with 'B').
 		bool leapUseInput = true;
@@ -2328,6 +2352,14 @@ int main(int argc, char** argv) {
 		// Keep the Leap->world mapping stable: anchor to the initial "home" pose.
 		// Recenter (if desired) is handled explicitly via the existing recenter action.
 		Eigen::Vector3f leapAnchorWorld = agentHomePositions[static_cast<size_t>(kIndexFinger)];
+		// User-tunable world-space translation offsets (for aligning real/virtual without changing the calibration math).
+		// Default offsets requested by user (printed from runtime).
+		// LEFT : (0.000000,-0.990932,0.990932)
+		// RIGHT: (0.990932,-0.495466,0.495466)
+		Eigen::Vector3f leapLeftWorldOffset(0.0f, -0.990932f, 0.990932f);
+		Eigen::Vector3f leapRightWorldOffset(0.990932f, -0.495466f, 0.495466f);
+		enum class LeapOffsetTarget { Right, Left };
+		LeapOffsetTarget leapOffsetTarget = LeapOffsetTarget::Right;
 		std::array<Eigen::Vector3f, kFingerCount> leapLatestTipsMm;
 		leapLatestTipsMm.fill(Eigen::Vector3f::Zero());
 		double leapLatestTimeSec = -1.0;
@@ -2342,19 +2374,27 @@ int main(int argc, char** argv) {
 		Eigen::Vector3f leapLeftAnchorWorld = leapLeftHomeAnchor;
 		std::array<Eigen::Vector3f, kFingerCount> leapLeftLatestTipsMm;
 		leapLeftLatestTipsMm.fill(Eigen::Vector3f::Zero());
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftLatestPrevMm;
+		leapLeftLatestPrevMm.fill(Eigen::Vector3f::Zero());
 		Eigen::Vector3f leapLeftLatestPalmMm = Eigen::Vector3f::Zero();
 		double leapLeftLatestTimeSec = -1.0;
 		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldTips;
 		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldPrevTips;
 		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldVelTips;
-		Eigen::Vector3f leapLeftWorldPalm = leapLeftHomeAnchor;
-		Eigen::Vector3f leapLeftWorldPrevPalm = leapLeftHomeAnchor;
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldPrevJoints;
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldPrevPrevJoints;
+		std::array<Eigen::Vector3f, kFingerCount> leapLeftWorldVelPrevJoints;
+		Eigen::Vector3f leapLeftWorldPalm = leapLeftHomeAnchor + leapLeftWorldOffset;
+		Eigen::Vector3f leapLeftWorldPrevPalm = leapLeftHomeAnchor + leapLeftWorldOffset;
 		Eigen::Vector3f leapLeftWorldVelPalm = Eigen::Vector3f::Zero();
 		for (int fi = 0; fi < kFingerCount; ++fi) {
-			const Eigen::Vector3f p = leapLeftHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)];
+			const Eigen::Vector3f p = leapLeftHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)] + leapLeftWorldOffset;
 			leapLeftWorldTips[static_cast<size_t>(fi)] = p;
 			leapLeftWorldPrevTips[static_cast<size_t>(fi)] = p;
 			leapLeftWorldVelTips[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
+			leapLeftWorldPrevJoints[static_cast<size_t>(fi)] = p;
+			leapLeftWorldPrevPrevJoints[static_cast<size_t>(fi)] = p;
+			leapLeftWorldVelPrevJoints[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
 		}
 		// Keep a "wanted" toggle so left hand comes back automatically after Leap is toggled back ON.
 		static bool leftHandCapsulesWanted = leftHandEnabled;
@@ -3122,12 +3162,16 @@ int main(int argc, char** argv) {
 						leapLatestTimeSec = timeSec;
 					}
 					std::array<Eigen::Vector3f, kFingerCount> leftTipsMm;
+					std::array<Eigen::Vector3f, kFingerCount> leftPrevMm;
 					Eigen::Vector3f leftPalmMm = Eigen::Vector3f::Zero();
 					double leftTimeSec = -1.0;
 					if (leapTracker.getLeftHandTipsMm(&leftTipsMm, &leftPalmMm, &leftTimeSec)) {
 						leapLeftLatestTipsMm = leftTipsMm;
 						leapLeftLatestPalmMm = leftPalmMm;
 						leapLeftLatestTimeSec = leftTimeSec;
+						if (leapTracker.getLeftHandDistalPrevMm(&leftPrevMm)) {
+							leapLeftLatestPrevMm = leftPrevMm;
+						}
 					}
 				}
 	#endif
@@ -3172,189 +3216,107 @@ int main(int argc, char** argv) {
 		const float uiH = 50.0f;
 		const SimpleUI::Rect uiRunRect{ uiMargin, uiMargin, uiW, uiH };
 
-			// ------------------ Agent sphere controls
-					static KeyLatch agentToggleLatch;
-					static KeyLatch agentHomeLatch;
-					static KeyLatch agentVcLatch;
-					static KeyLatch agentForceModeLatch;
-					static KeyLatch agentGripLatch;
-			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-						static KeyLatch leapToggleLatch;
-						static KeyLatch leapRecenterLatch;
-						static KeyLatch leapGainDownLatch;
-					static KeyLatch leapGainUpLatch;
-					static KeyLatch leftHandCapsulesLatch;
-	#endif
+		// ------------------ Minimal runtime controls (no "expert" hotkeys; prefer UI)
+		static bool agentUseVC = agentVirtualCoupling;
+		static int agentForceGraphMode = 1; // 0=CONTACT, 1=DEVICE (filtered)
+		static bool agentGripEnabledRuntime = agentGripEnabled;
 
-						if (agentToggleLatch.consume(window, GLFW_KEY_H)) {
-							agentSphere.enabled = !agentSphere.enabled;
-								std::cout << "[AgentSphere] " << (agentSphere.enabled ? "ENABLED" : "DISABLED") << "\n"
-								          << "  Move: I/K (Y), J/L (X), U/O (Z) | Hold SHIFT for faster\n"
-							          << "  VirtualCoupling: V | Grip: Y | Home: T | Force graph: F | Print COM: M\n"
-			#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-								          << "  Leap: toggle=B | recenter=R | gain: '['/']'\n"
-								          << "  Left hand (non-haptic): capsules toggle=N\n"
-			#endif
-							          << "  Contact: triangles=" << agentContactTriangles.size()
-							          << " vertices=" << agentContactVertices.size()
-							          << " fingers=" << kFingerCount << "\n";
-						}
-			static bool agentUseVC = agentVirtualCoupling;
-			static int agentForceGraphMode = 1; // 0=CONTACT, 1=DEVICE (filtered)
-			static bool agentGripEnabledRuntime = agentGripEnabled;
-				if (agentVcLatch.consume(window, GLFW_KEY_V)) {
-					agentUseVC = !agentUseVC;
-					std::cout << "[AgentSphere] VirtualCoupling " << (agentUseVC ? "ON" : "OFF") << "\n";
-				}
-				if (agentForceModeLatch.consume(window, GLFW_KEY_F)) {
-					agentForceGraphMode = 1 - agentForceGraphMode;
-					std::cout << "[AgentSphere] ForceGraph " << (agentForceGraphMode ? "DEVICE" : "CONTACT") << "\n";
-				}
-				if (agentGripLatch.consume(window, GLFW_KEY_Y)) {
-					agentGripEnabledRuntime = !agentGripEnabledRuntime;
-					if (!agentGripEnabledRuntime) {
-						agentGripActive.fill(false);
-						agentGripTriangle.fill(-1);
-						agentGripBary.fill(Eigen::Vector3f::Zero());
-					}
-					std::cout << "[AgentSphere] Grip " << (agentGripEnabledRuntime ? "ON" : "OFF") << "\n";
-				}
-						if (agentHomeLatch.consume(window, GLFW_KEY_T)) {
-							for (int fi = 0; fi < kFingerCount; ++fi) {
-								const Eigen::Vector3f p = agentHomePositions[static_cast<size_t>(fi)];
-								agentDevicePositions[static_cast<size_t>(fi)] = p;
-						agentDevicePrevPositions[static_cast<size_t>(fi)] = p;
-						agentDeviceVelocities[static_cast<size_t>(fi)].setZero();
-						agentProxyPositions[static_cast<size_t>(fi)] = p;
-						agentProxyVelocities[static_cast<size_t>(fi)].setZero();
-						agentLastDeviceForcesN[static_cast<size_t>(fi)].setZero();
-						agentLastContactForcesN[static_cast<size_t>(fi)].setZero();
-						agentLastCouplingForcesN[static_cast<size_t>(fi)].setZero();
-						agentFilteredDeviceForcesN[static_cast<size_t>(fi)].setZero();
-						agentFilteredContactForcesN[static_cast<size_t>(fi)].setZero();
-						agentLastContactCounts[static_cast<size_t>(fi)] = 0;
-						agentLastContactPenetrations[static_cast<size_t>(fi)] = 0.0f;
-						agentLastContactNormalsIn[static_cast<size_t>(fi)].setZero();
-						agentFilteredContactNormalsIn[static_cast<size_t>(fi)].setZero();
-						agentLastActiveContactTriangle[static_cast<size_t>(fi)] = -1;
-						agentGripActive[static_cast<size_t>(fi)] = false;
-						agentGripTriangle[static_cast<size_t>(fi)] = -1;
-						agentGripBary[static_cast<size_t>(fi)].setZero();
-					}
-	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-						// Do NOT auto-recalibrate Leap mapping on home; keep mapping stable unless the user
-						// explicitly requests recenter.
-						for (int fi = 0; fi < kFingerCount; ++fi) {
-							const Eigen::Vector3f p = leapLeftHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)];
-							leapLeftWorldTips[static_cast<size_t>(fi)] = p;
-							leapLeftWorldPrevTips[static_cast<size_t>(fi)] = p;
-							leapLeftWorldVelTips[static_cast<size_t>(fi)].setZero();
-						}
-						leapLeftWorldPalm = leapLeftHomeAnchor;
-						leapLeftWorldPrevPalm = leapLeftHomeAnchor;
-						leapLeftWorldVelPalm.setZero();
-						for (int fi = 0; fi < kFingerCount; ++fi) {
-							const Eigen::Vector3f tip = leapLeftWorldTips[static_cast<size_t>(fi)];
-							Eigen::Vector3f dir = tip - leapLeftWorldPalm;
-							const float dlen = dir.norm();
-							if (dlen > 1e-8f) dir /= dlen;
-							else dir = -Eigen::Vector3f::UnitY();
-							const Eigen::Vector3f base = tip - dir * leftHandCapsuleLength;
-							for (int si = 0; si < leftHandSamplesClamped; ++si) {
-								const float t = (leftHandSamplesClamped > 1) ? (static_cast<float>(si) / static_cast<float>(leftHandSamplesClamped - 1)) : 1.0f;
-								const Eigen::Vector3f p = base + t * (tip - base);
-								const size_t idx = static_cast<size_t>(fi * leftHandSamplesClamped + si);
-								if (idx >= leftHandDevicePositions.size()) continue;
-								leftHandDevicePositions[idx] = p;
-								leftHandDeviceVelocities[idx].setZero();
-								leftHandProxyPositions[idx] = p;
-								leftHandProxyVelocities[idx].setZero();
-								leftHandActiveContactTriangle[idx] = -1;
-							}
-						}
-	#endif
-					}
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+		auto printLeapOffset = [&](LeapOffsetTarget target) {
+			const Eigen::Vector3f& off = (target == LeapOffsetTarget::Right) ? leapRightWorldOffset : leapLeftWorldOffset;
+			std::ostringstream ss;
+			ss << std::fixed << std::setprecision(6);
+			ss << "[LeapOffset] target=" << ((target == LeapOffsetTarget::Right) ? "RIGHT" : "LEFT")
+			   << " off=(" << off.x() << "," << off.y() << "," << off.z() << ")\n";
+			std::cout << ss.str();
+		};
 
-	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-				if (leapToggleLatch.consume(window, GLFW_KEY_B)) {
-					// Treat 'B' as a "recenter / calibrate" action (not a toggle-off).
-					// If Leap input is currently OFF, try to turn it ON first.
-					if (!leapUseInput) {
-						leapUseInput = true;
-						if (!leapTracker.init()) {
-							std::cerr << "[LeapC] init failed; Leap input remains disabled.\n";
-							leapUseInput = false;
-						}
-					}
+		// QWEASD: adjust translation offset for the currently selected hand (world space).
+		//   A/D: X -/+
+		//   Q/E: Y -/+
+		//   W/S: Z +/-
+		{
+			static KeyLatch qLatch, wLatch, eLatch, aLatch, sLatch, dLatch;
+			const float step = 0.2f * bboxDiag;
+			Eigen::Vector3f* off = (leapOffsetTarget == LeapOffsetTarget::Right) ? &leapRightWorldOffset : &leapLeftWorldOffset;
+			bool changed = false;
 
-						leapMappingCalibrated = false;
-						leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
-						leapLeftMappingCalibrated = false;
-						leapLeftAnchorWorld = leapLeftHomeAnchor;
-						leapLeftCenterMm.setZero();
-						for (int fi = 0; fi < kFingerCount; ++fi) {
-							const Eigen::Vector3f p = leapLeftHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)];
-							leapLeftWorldTips[static_cast<size_t>(fi)] = p;
-							leapLeftWorldPrevTips[static_cast<size_t>(fi)] = p;
-							leapLeftWorldVelTips[static_cast<size_t>(fi)].setZero();
-						}
-						leapLeftWorldPalm = leapLeftHomeAnchor;
-						leapLeftWorldPrevPalm = leapLeftHomeAnchor;
-						leapLeftWorldVelPalm.setZero();
-						for (int fi = 0; fi < kFingerCount; ++fi) {
-							const Eigen::Vector3f tip = leapLeftWorldTips[static_cast<size_t>(fi)];
-							Eigen::Vector3f dir = tip - leapLeftWorldPalm;
-							const float dlen = dir.norm();
-							if (dlen > 1e-8f) dir /= dlen;
-							else dir = -Eigen::Vector3f::UnitY();
-							const Eigen::Vector3f base = tip - dir * leftHandCapsuleLength;
-							for (int si = 0; si < leftHandSamplesClamped; ++si) {
-								const float t = (leftHandSamplesClamped > 1) ? (static_cast<float>(si) / static_cast<float>(leftHandSamplesClamped - 1)) : 1.0f;
-								const Eigen::Vector3f p = base + t * (tip - base);
-								const size_t idx = static_cast<size_t>(fi * leftHandSamplesClamped + si);
-								if (idx >= leftHandDevicePositions.size()) continue;
-								leftHandDevicePositions[idx] = p;
-								leftHandDeviceVelocities[idx].setZero();
-								leftHandProxyPositions[idx] = p;
-								leftHandProxyVelocities[idx].setZero();
-								leftHandActiveContactTriangle[idx] = -1;
-							}
-						}
-						leftHandCapsulesEnabledRuntime = leftHandCapsulesWanted && leapUseInput;
-						std::cout << "[LeapC] Recenter (B)"
-						          << " | Input " << (leapUseInput ? "ON" : "OFF")
-					          << " | workspace(mm)=(" << leapWorkspaceXmm << "," << leapWorkspaceYmm << "," << leapWorkspaceZmm << ")"
-					          << " worldMargin=" << leapWorldMargin
-					          << " gain=" << leapGain
-					          << " yOffset=" << leapYOffsetBboxFrac
-					          << " spread=" << leapFingerSpreadGain
-					          << " smoothing=" << leapSmoothingTime
-					          << " flip=(" << (leapFlipX ? 1 : 0) << "," << (leapFlipY ? 1 : 0) << "," << (leapFlipZ ? 1 : 0) << ")"
-					          << "\n";
+			if (aLatch.consume(window, GLFW_KEY_A)) { off->x() -= step; changed = true; }
+			if (dLatch.consume(window, GLFW_KEY_D)) { off->x() += step; changed = true; }
+			if (qLatch.consume(window, GLFW_KEY_Q)) { off->y() -= step; changed = true; }
+			if (eLatch.consume(window, GLFW_KEY_E)) { off->y() += step; changed = true; }
+			if (wLatch.consume(window, GLFW_KEY_W)) { off->z() += step; changed = true; }
+			if (sLatch.consume(window, GLFW_KEY_S)) { off->z() -= step; changed = true; }
+
+			if (changed) printLeapOffset(leapOffsetTarget);
+		}
+
+		auto doLeapCalibrate = [&]() {
+			// Treat 'B' / UI action as a "recenter / calibrate" (not a toggle-off).
+			// If Leap input is currently OFF, try to turn it ON first.
+			if (!leapUseInput) {
+				leapUseInput = true;
+				if (!leapTracker.init()) {
+					std::cerr << "[LeapC] init failed; Leap input remains disabled.\n";
+					leapUseInput = false;
 				}
-					if (leapRecenterLatch.consume(window, GLFW_KEY_R)) {
-						leapMappingCalibrated = false;
-						leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
-						std::cout << "[LeapC] Recenter requested.\n";
-					}
-				if (leapGainDownLatch.consume(window, GLFW_KEY_LEFT_BRACKET)) {
-					leapGain = std::max(0.0f, leapGain / 1.1f);
-					std::cout << "[LeapC] gain=" << leapGain << "\n";
+			}
+
+			leapMappingCalibrated = false;
+			leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)] - leapRightWorldOffset;
+
+			leapLeftMappingCalibrated = false;
+			leapLeftAnchorWorld = leapLeftHomeAnchor;
+			leapLeftCenterMm.setZero();
+
+			// Reset the left-hand visualization to a stable "home" pose (including any manual offset).
+			for (int fi = 0; fi < kFingerCount; ++fi) {
+				const Eigen::Vector3f p = leapLeftHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)] + leapLeftWorldOffset;
+				leapLeftWorldTips[static_cast<size_t>(fi)] = p;
+				leapLeftWorldPrevTips[static_cast<size_t>(fi)] = p;
+				leapLeftWorldVelTips[static_cast<size_t>(fi)].setZero();
+			}
+			leapLeftWorldPalm = leapLeftHomeAnchor + leapLeftWorldOffset;
+			leapLeftWorldPrevPalm = leapLeftHomeAnchor + leapLeftWorldOffset;
+			leapLeftWorldVelPalm.setZero();
+			for (int fi = 0; fi < kFingerCount; ++fi) {
+				const Eigen::Vector3f tip = leapLeftWorldTips[static_cast<size_t>(fi)];
+				Eigen::Vector3f dir = tip - leapLeftWorldPalm;
+				const float dlen = dir.norm();
+				if (dlen > 1e-8f) dir /= dlen;
+				else dir = -Eigen::Vector3f::UnitY();
+				const Eigen::Vector3f base = tip - dir * leftHandCapsuleLength;
+				for (int si = 0; si < leftHandSamplesClamped; ++si) {
+					const float t = (leftHandSamplesClamped > 1) ? (static_cast<float>(si) / static_cast<float>(leftHandSamplesClamped - 1)) : 1.0f;
+					const Eigen::Vector3f p = base + t * (tip - base);
+					const size_t idx = static_cast<size_t>(fi * leftHandSamplesClamped + si);
+					if (idx >= leftHandDevicePositions.size()) continue;
+					leftHandDevicePositions[idx] = p;
+					leftHandDeviceVelocities[idx].setZero();
+					leftHandProxyPositions[idx] = p;
+					leftHandProxyVelocities[idx].setZero();
+					leftHandActiveContactTriangle[idx] = -1;
 				}
-				if (leapGainUpLatch.consume(window, GLFW_KEY_RIGHT_BRACKET)) {
-					leapGain = std::max(0.0f, leapGain * 1.1f);
-					std::cout << "[LeapC] gain=" << leapGain << "\n";
-				}
-				if (leftHandCapsulesLatch.consume(window, GLFW_KEY_N)) {
-					leftHandCapsulesWanted = !leftHandCapsulesWanted;
-					leftHandCapsulesEnabledRuntime = leftHandCapsulesWanted && leapUseInput;
-					if (!leapUseInput) {
-						std::cout << "[LeftHand] Capsules will be " << (leftHandCapsulesWanted ? "ON" : "OFF")
-						          << " when Leap input is ON (press B)\n";
-					}
-					std::cout << "[LeftHand] Capsules " << (leftHandCapsulesEnabledRuntime ? "ON" : "OFF") << " (N)\n";
-				}
-	#endif
+			}
+
+			leftHandCapsulesEnabledRuntime = leftHandCapsulesWanted && leapUseInput;
+			std::cout << "[LeapC] Calibrate"
+			          << " | Input " << (leapUseInput ? "ON" : "OFF")
+			          << " | workspace(mm)=(" << leapWorkspaceXmm << "," << leapWorkspaceYmm << "," << leapWorkspaceZmm << ")"
+			          << " worldMargin=" << leapWorldMargin
+			          << " gain=" << leapGain
+			          << " yOffset=" << leapYOffsetBboxFrac
+			          << " spread=" << leapFingerSpreadGain
+			          << " smoothing=" << leapSmoothingTime
+			          << " flip=(" << (leapFlipX ? 1 : 0) << "," << (leapFlipY ? 1 : 0) << "," << (leapFlipZ ? 1 : 0) << ")"
+			          << "\n";
+		};
+
+		static KeyLatch leapToggleLatch;
+		if (leapToggleLatch.consume(window, GLFW_KEY_B)) {
+			doLeapCalibrate();
+		}
+#endif
 
 #if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 				bool leftHandWorldFresh = false;
@@ -3408,12 +3370,12 @@ int main(int argc, char** argv) {
 									std::array<Eigen::Quaternionf, kFingerCount> rotations;
 									leapTracker.getRightHandRotations(&rotations);
 
-									Eigen::Vector3f clampMin = bboxMin - margin;
-										Eigen::Vector3f clampMax = bboxMax + margin;
-										clampMin = clampMin.cwiseMin(leapAnchorWorld - margin);
-										clampMax = clampMax.cwiseMax(leapAnchorWorld + margin);
+										// Keep the base mostly unconstrained (avoid "air walls").
+										// Only apply a very wide safety clamp to prevent runaway on tracking glitches.
+										const float safe = 5.0f * bboxDiag;
+										const Eigen::Vector3f clampMin = bboxCenter - Eigen::Vector3f::Ones() * safe;
+										const Eigen::Vector3f clampMax = bboxCenter + Eigen::Vector3f::Ones() * safe;
 
-										// Clamp only the hand base (index) to avoid all fingertips collapsing onto a clamp plane.
 										Eigen::Vector3f base = leapAnchorWorld;
 										base.y() += yOffset;
 										base = base.cwiseMax(clampMin).cwiseMin(clampMax);
@@ -3427,22 +3389,20 @@ int main(int argc, char** argv) {
 											const Eigen::Vector3f relMm = tipMm - indexTipMm;
 											Eigen::Vector3f relWorld = relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
 											relWorld = relWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
-											const Eigen::Vector3f target = base + relWorld;
+											const Eigen::Vector3f target = base + relWorld + leapRightWorldOffset;
 
 											agentDevicePositions[static_cast<size_t>(fi)] = target;
-											agentDeviceRotations[static_cast<size_t>(fi)] = rotations[static_cast<size_t>(fi)]; // Copy rotation
+											agentDeviceRotations[static_cast<size_t>(fi)] = rotations[static_cast<size_t>(fi)];
 											agentDevicePrevPositions[static_cast<size_t>(fi)] = target;
 											agentDeviceVelocities[static_cast<size_t>(fi)].setZero();
 										}
 										leapMappingCalibrated = true;
 									} else {
-										// Clamp to an expanded bbox to avoid "flying away".
-										Eigen::Vector3f clampMin = bboxMin - margin;
-										Eigen::Vector3f clampMax = bboxMax + margin;
-										clampMin = clampMin.cwiseMin(leapAnchorWorld - margin);
-										clampMax = clampMax.cwiseMax(leapAnchorWorld + margin);
+										// Keep the base mostly unconstrained (avoid "air walls").
+										const float safe = 5.0f * bboxDiag;
+										const Eigen::Vector3f clampMin = bboxCenter - Eigen::Vector3f::Ones() * safe;
+										const Eigen::Vector3f clampMax = bboxCenter + Eigen::Vector3f::Ones() * safe;
 
-										// Clamp only the hand base (index) to avoid all fingertips collapsing onto a clamp plane.
 										Eigen::Vector3f base = leapAnchorWorld + (indexTipMm - leapCenterMm).cwiseProduct(scale);
 										base.y() += yOffset;
 										base = base.cwiseMax(clampMin).cwiseMin(clampMax);
@@ -3459,14 +3419,14 @@ int main(int argc, char** argv) {
 											const Eigen::Vector3f relMm = tipMm - indexTipMm;
 											Eigen::Vector3f relWorld = relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
 											relWorld = relWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
-											const Eigen::Vector3f target = base + relWorld;
+											const Eigen::Vector3f target = base + relWorld + leapRightWorldOffset;
 
 											auto& p = agentDevicePositions[static_cast<size_t>(fi)];
 											auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
 											auto& v = agentDeviceVelocities[static_cast<size_t>(fi)];
 
 											p = p + alpha * (target - p);
-											agentDeviceRotations[static_cast<size_t>(fi)] = rotations[static_cast<size_t>(fi)]; // Copy rotation
+											agentDeviceRotations[static_cast<size_t>(fi)] = rotations[static_cast<size_t>(fi)];
 											v = (p - pPrev) / std::max(1e-8f, timeStep);
 											pPrev = p;
 										}
@@ -3479,39 +3439,13 @@ int main(int argc, char** argv) {
 						}
 	#endif
 						if (!usedLeap) {
-							bool keyboardDrive = true;
-#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-							// If Leap input is enabled but tracking is stale, DON'T fall back to keyboard.
-							// Keep last pose to avoid sudden jumps ("hand goes to keyboard").
-							if (leapUseInput) keyboardDrive = false;
-#endif
-							if (!keyboardDrive) {
-								for (int fi = 0; fi < kFingerCount; ++fi) {
-									auto& p = agentDevicePositions[static_cast<size_t>(fi)];
-									auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
-									auto& v = agentDeviceVelocities[static_cast<size_t>(fi)];
-									v.setZero();
-									pPrev = p;
-								}
-							} else {
-								const bool shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-								                   glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-								const float speed = agentMoveSpeedBboxPerSec * bboxDiag * (shift ? 4.0f : 1.0f);
-								Eigen::Vector3f delta = Eigen::Vector3f::Zero();
-								if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) delta.x() -= speed * timeStep;
-								if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) delta.x() += speed * timeStep;
-								if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) delta.y() += speed * timeStep;
-								if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) delta.y() -= speed * timeStep;
-								if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) delta.z() -= speed * timeStep;
-								if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) delta.z() += speed * timeStep;
-								for (int fi = 0; fi < kFingerCount; ++fi) {
-									auto& p = agentDevicePositions[static_cast<size_t>(fi)];
-									auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
-									auto& v = agentDeviceVelocities[static_cast<size_t>(fi)];
-									p += delta;
-									v = (p - pPrev) / std::max(1e-8f, timeStep);
-									pPrev = p;
-								}
+							// No keyboard driving; keep the last pose when Leap is unavailable/stale.
+							for (int fi = 0; fi < kFingerCount; ++fi) {
+								auto& p = agentDevicePositions[static_cast<size_t>(fi)];
+								auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
+								auto& v = agentDeviceVelocities[static_cast<size_t>(fi)];
+								v.setZero();
+								pPrev = p;
 							}
 						}
 
@@ -3580,19 +3514,28 @@ int main(int argc, char** argv) {
 
 									for (int fi = 0; fi < kFingerCount; ++fi) {
 										const Eigen::Vector3f tipMm = leapLeftLatestTipsMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
+										const Eigen::Vector3f prevMm = leapLeftLatestPrevMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
 										const Eigen::Vector3f relMm = tipMm - indexTipMm;
 										Eigen::Vector3f relWorld = relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
 										relWorld = relWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
-										const Eigen::Vector3f target = base + relWorld;
+										const Eigen::Vector3f target = base + relWorld + leapLeftWorldOffset;
 
 										leapLeftWorldTips[static_cast<size_t>(fi)] = target;
 										leapLeftWorldPrevTips[static_cast<size_t>(fi)] = target;
 										leapLeftWorldVelTips[static_cast<size_t>(fi)].setZero();
+
+										const Eigen::Vector3f relPrevMm = prevMm - indexTipMm;
+										Eigen::Vector3f relPrevWorld = relPrevMm.cwiseProduct(scale.cwiseProduct(spreadScale));
+										relPrevWorld = relPrevWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
+										const Eigen::Vector3f targetPrev = base + relPrevWorld + leapLeftWorldOffset;
+										leapLeftWorldPrevJoints[static_cast<size_t>(fi)] = targetPrev;
+										leapLeftWorldPrevPrevJoints[static_cast<size_t>(fi)] = targetPrev;
+										leapLeftWorldVelPrevJoints[static_cast<size_t>(fi)].setZero();
 									}
 									{
 										const Eigen::Vector3f palmMm = leapLeftLatestPalmMm.cwiseProduct(axisSign);
 										const Eigen::Vector3f relMm = palmMm - indexTipMm;
-										const Eigen::Vector3f targetPalm = base + relMm.cwiseProduct(scale);
+										const Eigen::Vector3f targetPalm = base + relMm.cwiseProduct(scale) + leapLeftWorldOffset;
 										leapLeftWorldPalm = targetPalm;
 										leapLeftWorldPrevPalm = targetPalm;
 										leapLeftWorldVelPalm.setZero();
@@ -3619,10 +3562,11 @@ int main(int argc, char** argv) {
 
 									for (int fi = 0; fi < kFingerCount; ++fi) {
 										const Eigen::Vector3f tipMm = leapLeftLatestTipsMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
+										const Eigen::Vector3f prevMm = leapLeftLatestPrevMm[static_cast<size_t>(fi)].cwiseProduct(axisSign);
 										const Eigen::Vector3f relMm = tipMm - indexTipMm;
 										Eigen::Vector3f relWorld = relMm.cwiseProduct(scale.cwiseProduct(spreadScale));
 										relWorld = relWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
-										const Eigen::Vector3f target = base + relWorld;
+										const Eigen::Vector3f target = base + relWorld + leapLeftWorldOffset;
 
 										auto& p = leapLeftWorldTips[static_cast<size_t>(fi)];
 										auto& pPrev = leapLeftWorldPrevTips[static_cast<size_t>(fi)];
@@ -3630,11 +3574,22 @@ int main(int argc, char** argv) {
 										p = p + alpha * (target - p);
 										v = (p - pPrev) / std::max(1e-8f, timeStep);
 										pPrev = p;
+
+										const Eigen::Vector3f relPrevMm = prevMm - indexTipMm;
+										Eigen::Vector3f relPrevWorld = relPrevMm.cwiseProduct(scale.cwiseProduct(spreadScale));
+										relPrevWorld = relPrevWorld.cwiseMax(-relClamp).cwiseMin(relClamp);
+										const Eigen::Vector3f targetPrev = base + relPrevWorld + leapLeftWorldOffset;
+										auto& pj = leapLeftWorldPrevJoints[static_cast<size_t>(fi)];
+										auto& pjPrev = leapLeftWorldPrevPrevJoints[static_cast<size_t>(fi)];
+										auto& vj = leapLeftWorldVelPrevJoints[static_cast<size_t>(fi)];
+										pj = pj + alpha * (targetPrev - pj);
+										vj = (pj - pjPrev) / std::max(1e-8f, timeStep);
+										pjPrev = pj;
 									}
 									{
 										const Eigen::Vector3f palmMm = leapLeftLatestPalmMm.cwiseProduct(axisSign);
 										const Eigen::Vector3f relMm = palmMm - indexTipMm;
-										const Eigen::Vector3f targetPalm = base + relMm.cwiseProduct(scale);
+										const Eigen::Vector3f targetPalm = base + relMm.cwiseProduct(scale) + leapLeftWorldOffset;
 										leapLeftWorldPalm = leapLeftWorldPalm + alpha * (targetPalm - leapLeftWorldPalm);
 										leapLeftWorldVelPalm = (leapLeftWorldPalm - leapLeftWorldPrevPalm) / std::max(1e-8f, timeStep);
 										leapLeftWorldPrevPalm = leapLeftWorldPalm;
@@ -3651,19 +3606,31 @@ int main(int argc, char** argv) {
 							for (int fi = 0; fi < kFingerCount; ++fi) {
 								const Eigen::Vector3f tip = leapLeftWorldTips[static_cast<size_t>(fi)];
 								const Eigen::Vector3f tipV = leapLeftWorldVelTips[static_cast<size_t>(fi)];
-								const Eigen::Vector3f palm = leapLeftWorldPalm;
-								const Eigen::Vector3f palmV = leapLeftWorldVelPalm;
+								const Eigen::Vector3f prev = leapLeftWorldPrevJoints[static_cast<size_t>(fi)];
+								const Eigen::Vector3f prevV = leapLeftWorldVelPrevJoints[static_cast<size_t>(fi)];
 
-								Eigen::Vector3f dir = tip - palm;
-								const float dlen = dir.norm();
-								if (dlen > 1e-8f) dir /= dlen;
-								else dir = -Eigen::Vector3f::UnitY();
+								Eigen::Vector3f base = prev;
+								Eigen::Vector3f baseV = prevV;
+								Eigen::Vector3f tip2 = tip;
+								Eigen::Vector3f tipV2 = tipV;
 
-								const Eigen::Vector3f base = tip - dir * leftHandCapsuleLength;
+								// If prev-joint data is missing/degenerate, fall back to a short segment towards the palm.
+								if ((tip2 - base).squaredNorm() < 1e-16f) {
+									const Eigen::Vector3f palm = leapLeftWorldPalm;
+									const Eigen::Vector3f palmV = leapLeftWorldVelPalm;
+
+									Eigen::Vector3f dir = tip2 - palm;
+									const float dlen = dir.norm();
+									if (dlen > 1e-8f) dir /= dlen;
+									else dir = -Eigen::Vector3f::UnitY();
+
+									base = tip2 - dir * leftHandCapsuleLength;
+									baseV = palmV;
+								}
 								for (int si = 0; si < leftHandSamplesClamped; ++si) {
 									const float t = (leftHandSamplesClamped > 1) ? (static_cast<float>(si) / static_cast<float>(leftHandSamplesClamped - 1)) : 1.0f;
-									const Eigen::Vector3f target = base + t * (tip - base);
-									const Eigen::Vector3f vTarget = palmV * (1.0f - t) + tipV * t;
+									const Eigen::Vector3f target = base + t * (tip2 - base);
+									const Eigen::Vector3f vTarget = baseV * (1.0f - t) + tipV2 * t;
 									const size_t idx = static_cast<size_t>(fi * leftHandSamplesClamped + si);
 									if (idx >= leftHandDevicePositions.size()) continue;
 									leftHandDevicePositions[idx] = target;
@@ -3675,26 +3642,6 @@ int main(int argc, char** argv) {
 						}
 #endif
 				}
-					static KeyLatch comPrintLatch;
-					if (comPrintLatch.consume(window, GLFW_KEY_M)) {
-						Eigen::Vector3f com = Eigen::Vector3f::Zero();
-						float totalMass = 0.0f;
-						int fixedCount = 0;
-						for (Vertex* v : objectUniqueVertices) {
-							if (!v) continue;
-							const float m = std::max(0.0f, v->vertexMass);
-							totalMass += m;
-							com += m * Eigen::Vector3f(v->x, v->y, v->z);
-							if (v->isFixed) ++fixedCount;
-						}
-						if (totalMass > 1e-12f) com /= totalMass;
-						std::cout << "[COM] (" << com.x() << "," << com.y() << "," << com.z() << ")"
-						          << " fixed=" << fixedCount << "/" << objectUniqueVertices.size()
-						          << " anchor_mode=" << anchorMode
-						          << " wall=" << (wallEnabled ? 1 : 0)
-						          << " tetVol=" << (tetVolumeConstraintEnabled ? 1 : 0)
-						          << "\n";
-					}
 
 		// UI button triggers deterministic Experiment 3 (one-click).
 
@@ -3711,21 +3658,6 @@ int main(int argc, char** argv) {
 		};
 		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
 
-		// Press 'E' to export current (possibly deformed) tet mesh to .node/.ele for XPBD/PBD.
-		static KeyLatch exportLatch;
-		if (exportLatch.consume(window, GLFW_KEY_E)) {
-			try {
-				const std::string exportDir = exportDirOverride.empty() ? "out/tetgenfem_exports" : exportDirOverride;
-				const auto paths = exportTetgenNodeEleSnapshot(object, objectUniqueVertices, exportDir, "latest");
-				std::cout << "[TetgenFEM] Exported current TetGen mesh (E)\n"
-						  << "  " << paths.nodePathAbs << "\n"
-						  << "  " << paths.elePathAbs << "\n";
-			}
-			catch (const std::exception& e) {
-				std::cerr << "[TetgenFEM] Export failed: " << e.what() << "\n";
-			}
-		}
-
 		if (!isAutoTestActive && !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive()) {
 			if (rightReleased) {
 				dragState.active = false;
@@ -3733,8 +3665,10 @@ int main(int argc, char** argv) {
 			}
 
 			if (rightPressed && !cursorInUiButton) {
+				const float cameraDist = std::max(1e-6f, 1.5f * bboxDiag * zoomFactor);
 				Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
 				model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+				model(2, 3) = -cameraDist;
 				const Eigen::Matrix4f projection = buildProjectionMatrix();
 
 				Vertex* picked = pickVertexAtCursor(
@@ -3931,8 +3865,10 @@ int main(int argc, char** argv) {
 					dragState.target = nullptr;
 				}
 				else {
+					const float cameraDist = std::max(1e-6f, 1.5f * bboxDiag * zoomFactor);
 					Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
 					model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+					model(2, 3) = -cameraDist;
 					const Eigen::Matrix4f projection = buildProjectionMatrix();
 					const Eigen::Matrix4f invProjectionModel = (projection * model).inverse();
 					desiredTargetPos = unprojectCursorToWorld(
@@ -5565,34 +5501,6 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		static KeyLatch cLatch;
-		// Replaced SAVE button with Benchmark, so allow saving via Key C only or re-map
-		if (cLatch.consume(window, GLFW_KEY_C)) {
-			std::ofstream file("vbdcomp_our.txt", std::ios::out | std::ios::trunc);
-			if (!file.is_open()) {
-				std::cerr << "Failed to open file." << std::endl;
-				return 0;
-			}
-			for (int i = 0; i < objectUniqueVertices.size(); i++) {
-				file << i + 1 << " " << objectUniqueVertices[i]->x << " " << objectUniqueVertices[i]->y << " " << objectUniqueVertices[i]->z << std::endl;
-			}
-			file.close();
-			std::cout << "Data has been written to the file." << std::endl;
-		}
-
-		
-
-
-		// Handle stress gain tuning via keyboard
-		if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS) stressGain *= 1.02f; // '+' key
-		if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) stressGain *= 0.98f; // '-' key
-
-		// Handle pause/resume via keyboard (P key)
-		static KeyLatch pauseLatch;
-		if (pauseLatch.consume(window, GLFW_KEY_P)) {
-			isPaused = !isPaused;
-		}
-
 		// Render here
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
@@ -5619,21 +5527,15 @@ int main(int argc, char** argv) {
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
+		const float cameraDist = std::max(1e-6f, 1.5f * bboxDiag * zoomFactor);
 			mat = Eigen::Matrix4f::Identity();
 			mat.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+			mat(2, 3) = -cameraDist;
 			glMultMatrixf(mat.data());
 
 					// Draw suspension ligaments (visual debug): line from patch center to wall anchor + endpoints.
 					static bool drawSuspension = true;
 					static bool drawSuspensionPatchPoints = false;
-					static KeyLatch suspVisLatch;
-					static KeyLatch suspPtsLatch;
-					if (suspVisLatch.consume(window, GLFW_KEY_L)) {
-						drawSuspension = !drawSuspension;
-					}
-					if (suspPtsLatch.consume(window, GLFW_KEY_K)) {
-						drawSuspensionPatchPoints = !drawSuspensionPatchPoints;
-					}
 					if (drawSuspension && suspensionEnabled && !suspensions.empty() && !agentVerticesByPhysId.empty()) {
 						const std::array<Eigen::Vector3f, 3> colors = {
 							Eigen::Vector3f(1.00f, 0.20f, 0.20f), // susp1 red
@@ -6390,6 +6292,15 @@ int main(int argc, char** argv) {
 			experiment4.requestStart();
 		}
 
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+		// Leap alignment: choose which hand QWEASD affects.
+		const SimpleUI::Rect uiLeapOffsetTargetRect{ uiMargin, uiMargin + 4.0f * (uiH + 8.0f), uiW, uiH };
+		const char* offsetLabel = (leapOffsetTarget == LeapOffsetTarget::Right) ? "Offset Hand: RIGHT" : "Offset Hand: LEFT";
+		if (ui.button(uiLeapOffsetTargetRect, offsetLabel)) {
+			leapOffsetTarget = (leapOffsetTarget == LeapOffsetTarget::Right) ? LeapOffsetTarget::Left : LeapOffsetTarget::Right;
+		}
+#endif
+
 		// Right side buttons
 		const float rightMargin = ui.state().windowWidth - uiW - uiMargin;
 		const SimpleUI::Rect uiBgColorRect{ rightMargin, uiMargin, uiW, uiH };
@@ -6474,7 +6385,7 @@ int main(int argc, char** argv) {
 		}
 
 		const SimpleUI::Rect uiPauseRect{ rightMargin, uiMargin + 6.0f * (uiH + 8.0f), uiW, uiH };
-		if (ui.button(uiPauseRect, isPaused ? "Resume(P)" : "Pause(P)")) {
+		if (ui.button(uiPauseRect, isPaused ? "Resume" : "Pause")) {
 			isPaused = !isPaused;
 		}
 
@@ -6654,7 +6565,7 @@ int main(int argc, char** argv) {
 						" CNT " + std::to_string(contacts);
 					ui.drawLabel(agentLabelRect, label, sizePx);
 				} else {
-				ui.drawLabel(agentLabelRect, "AGENT OFF  PRESS H", sizePx);
+				ui.drawLabel(agentLabelRect, "AGENT OFF", sizePx);
 			}
 		}
 
