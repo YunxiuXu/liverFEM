@@ -17,8 +17,10 @@ bool tumorYoungsEnabled = false;
 float tumorYoungsValue = 0.0f;
 float tumorTopFrac = 0.12f;
 float tumorRadiusFrac = 0.22f;
-float tumorCenterXFrac = 0.5f;
-float tumorCenterZFrac = 0.5f;
+float tumorCenterXFrac = 0.144398f;
+float tumorCenterYFrac = 0.795854f;
+float tumorCenterZFrac = 0.922562f;
+bool tumorUse3D = true;
 int groupNum, groupNumX, groupNumY, groupNumZ;
 const float PI = 3.1415926535f; // This can be hardcoded as it won't change
 float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
@@ -104,6 +106,9 @@ bool wallEnabled = true;
 float wallMarginBboxScale = 0.05f;
 float wallRestitution = 0.0f;
 float wallTangentialDamp = 0.2f;
+bool cavity_enabled = false;
+float cavity_gap_bboxScale = 0.06f;
+float cavity_open_frac = 0.18f;
 
 bool leapEnabled = false;
 float leapWorkspaceXmm = 260.0f;
@@ -211,6 +216,13 @@ float haptic_max_pwm_output = 255.0f;
 float haptic_gamma = 1.0f;
 bool haptic_softclip_enabled = false;
 float haptic_softclip_knee = 200.0f;
+bool haptic_slew_enabled = true;
+float haptic_slew_up_pwm_per_sec = 600.0f;
+float haptic_slew_down_pwm_per_sec = 2400.0f;
+bool haptic_tumor_vib_enabled = false;
+float haptic_tumor_vib_freq_hz = 70.0f;
+float haptic_tumor_vib_amp = 12.0f;
+float haptic_tumor_vib_duration_sec = 0.15f;
 
 
 namespace {
@@ -260,18 +272,24 @@ bool isTumorYoungsGroup(int groupIdx) {
 	const int y = (groupIdx / nx) % ny;
 	const int z = (groupIdx / (nx * ny));
 
-	const float topFrac = std::clamp(tumorTopFrac, 0.0f, 1.0f);
-	const int topLayers = std::clamp(static_cast<int>(std::ceil(topFrac * static_cast<float>(ny))), 1, ny);
-	if (y < (ny - topLayers)) return false;
-
 	const int cx = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterXFrac, 0.0f, 1.0f) * static_cast<float>(nx - 1))), 0, nx - 1);
+	const int cy = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterYFrac, 0.0f, 1.0f) * static_cast<float>(ny - 1))), 0, ny - 1);
 	const int cz = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterZFrac, 0.0f, 1.0f) * static_cast<float>(nz - 1))), 0, nz - 1);
 
-	const int m = std::max(1, std::min(nx, nz));
+	const int m = std::max(1, tumorUse3D ? std::min(nx, std::min(ny, nz)) : std::min(nx, nz));
 	const float rFrac = std::clamp(tumorRadiusFrac, 0.0f, 1.0f);
 	const int rCells = std::clamp(static_cast<int>(std::lround(rFrac * static_cast<float>(m))), 1, m);
 	const int dx = x - cx;
+	const int dy = y - cy;
 	const int dz = z - cz;
+	if (tumorUse3D) {
+		return (dx * dx + dy * dy + dz * dz) <= (rCells * rCells);
+	}
+
+	// Legacy mode: restrict to the top slice and apply radius in XZ only.
+	const float topFrac = std::clamp(tumorTopFrac, 0.0f, 1.0f);
+	const int topLayers = std::clamp(static_cast<int>(std::ceil(topFrac * static_cast<float>(ny))), 1, ny);
+	if (y < (ny - topLayers)) return false;
 	return (dx * dx + dz * dz) <= (rCells * rCells);
 }
 
@@ -332,6 +350,7 @@ void loadParams(const std::string& filename) {
         {"tumor_topFrac", &tumorTopFrac},
         {"tumor_radiusFrac", &tumorRadiusFrac},
         {"tumor_centerXFrac", &tumorCenterXFrac},
+        {"tumor_centerYFrac", &tumorCenterYFrac},
         {"tumor_centerZFrac", &tumorCenterZFrac},
         {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
         {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
@@ -396,6 +415,10 @@ void loadParams(const std::string& filename) {
         {"wall_marginBboxScale", &wallMarginBboxScale},
         {"wall_restitution", &wallRestitution},
         {"wall_tangentialDamp", &wallTangentialDamp},
+        {"cavity_gap_bboxScale", &cavity_gap_bboxScale},
+        {"cavity_open_frac", &cavity_open_frac},
+        // Backwards-compat key (older configs).
+        {"cavity_open_xFrac", &cavity_open_frac},
         {"leap_workspaceXmm", &leapWorkspaceXmm},
         {"leap_workspaceYmm", &leapWorkspaceYmm},
         {"leap_workspaceZmm", &leapWorkspaceZmm},
@@ -450,7 +473,12 @@ void loadParams(const std::string& filename) {
         {"haptic_min_pwm_output", &haptic_min_pwm_output},
         {"haptic_max_pwm_output", &haptic_max_pwm_output},
         {"haptic_gamma", &haptic_gamma},
-        {"haptic_softclip_knee", &haptic_softclip_knee}
+        {"haptic_softclip_knee", &haptic_softclip_knee},
+        {"haptic_slew_up_pwm_per_sec", &haptic_slew_up_pwm_per_sec},
+        {"haptic_slew_down_pwm_per_sec", &haptic_slew_down_pwm_per_sec},
+        {"haptic_tumor_vib_freq_hz", &haptic_tumor_vib_freq_hz},
+        {"haptic_tumor_vib_amp", &haptic_tumor_vib_amp},
+        {"haptic_tumor_vib_duration_sec", &haptic_tumor_vib_duration_sec}
     };
 
     std::unordered_map<std::string, int*> intParams = {
@@ -511,6 +539,7 @@ void loadParams(const std::string& filename) {
         {"autoSaveMesh", &autoSaveMesh},
         {"half_youngs_enabled", &halfYoungsEnabled},
         {"tumor_youngs_enabled", &tumorYoungsEnabled},
+        {"tumor_use3d", &tumorUse3D},
         {"suspension_enabled", &suspensionEnabled},
         {"susp1_enabled", &susp1Enabled},
         {"susp2_enabled", &susp2Enabled},
@@ -524,6 +553,7 @@ void loadParams(const std::string& filename) {
         {"agent_gripEnabled", &agentGripEnabled},
         {"agent_writeLiveFile", &agentWriteLiveFile},
         {"wall_enabled", &wallEnabled},
+        {"cavity_enabled", &cavity_enabled},
         {"leap_enabled", &leapEnabled},
         {"leap_flipX", &leapFlipX},
         {"leap_flipY", &leapFlipY},
@@ -535,7 +565,9 @@ void loadParams(const std::string& filename) {
         {"exp2_resetAfterFinish", &exp2ResetAfterFinish},
         // Haptic params
         {"haptic_uart_enabled", &haptic_uart_enabled},
-        {"haptic_softclip_enabled", &haptic_softclip_enabled}
+        {"haptic_softclip_enabled", &haptic_softclip_enabled},
+        {"haptic_slew_enabled", &haptic_slew_enabled},
+        {"haptic_tumor_vib_enabled", &haptic_tumor_vib_enabled}
     };
 
     std::string line;

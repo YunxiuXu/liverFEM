@@ -13,10 +13,12 @@ half_youngs_side=0
 tumor_youngs_enabled=true
 tumor_youngs_value=30000
 # Smaller, more "lump-like" patch on the top surface.
+tumor_use3d=true
 tumor_topFrac=0.10
 tumor_radiusFrac=0.12
-tumor_centerXFrac=0.50
-tumor_centerZFrac=0.50
+tumor_centerXFrac=0.144398
+tumor_centerYFrac=0.795854
+tumor_centerZFrac=0.922562
 poisson=0.49
 density=200
 groupNumX=8
@@ -137,6 +139,11 @@ wall_enabled=true
 wall_marginBboxScale=0.05
 wall_restitution=0.0
 wall_tangentialDamp=0.2
+# Abdominal cavity: liver-shaped wall (rest-pose surface inflated outward by a gap).
+# Exposed side is -X (no wall there).
+cavity_enabled=true
+cavity_gap_bboxScale=0.06
+cavity_open_xFrac=0.18
 
 # Ultraleap Leap Motion (LeapC) right-hand fingertips (thumb..pinky) -> agent spheres mapping
 leap_enabled=true
@@ -260,3 +267,11 @@ haptic_gamma=0.7
 #   f_out = max_force * (f_raw / (f_raw + knee))
 haptic_softclip_enabled=true
 haptic_softclip_knee=35.0
+haptic_slew_enabled=true
+haptic_slew_up_pwm_per_sec=600.0
+haptic_slew_down_pwm_per_sec=2400.0
+# Tumor "impact" vibration burst (only when touching tumor region).
+haptic_tumor_vib_enabled=true
+haptic_tumor_vib_freq_hz=70.0
+haptic_tumor_vib_amp=12.0
+haptic_tumor_vib_duration_sec=0.15

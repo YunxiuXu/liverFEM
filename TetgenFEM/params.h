@@ -23,7 +23,12 @@ extern float tumorTopFrac;
 extern float tumorRadiusFrac;
 // Center in X/Z as a fraction of [0..1] across groups (0.5 = middle).
 extern float tumorCenterXFrac;
+// Center in Y as a fraction of [0..1] across groups (0.5 = middle).
+extern float tumorCenterYFrac;
 extern float tumorCenterZFrac;
+// If true, use a 3D spherical tumor region (centerX/Y/Z + radiusFrac). If false, use legacy "top slice"
+// XZ-cylinder (tumorTopFrac + centerX/Z + radiusFrac).
+extern bool tumorUse3D;
 extern int groupNum, groupNumX, groupNumY, groupNumZ;
 extern const float PI;
 extern float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
@@ -144,6 +149,12 @@ extern float wallMarginBboxScale;
 extern float wallRestitution;
 extern float wallTangentialDamp;
 
+// "Abdominal cavity" wall: a static, liver-shaped boundary derived from the liver surface (rest pose),
+// inflated outward by a small gap. The exposed (-X) side is left open.
+extern bool cavity_enabled;
+extern float cavity_gap_bboxScale; // outward offset distance = bboxDiag * this
+extern float cavity_open_frac;     // open window thickness near bboxMin.x as a fraction of bbox X extent
+
 // Ultraleap Leap Motion (LeapC) input.
 extern bool leapEnabled;
 extern float leapWorkspaceXmm, leapWorkspaceYmm, leapWorkspaceZmm;
@@ -234,6 +245,14 @@ extern float haptic_max_pwm_output;
 extern float haptic_gamma;
 extern bool haptic_softclip_enabled;
 extern float haptic_softclip_knee;
+extern bool haptic_slew_enabled;
+extern float haptic_slew_up_pwm_per_sec;
+extern float haptic_slew_down_pwm_per_sec;
+// Tumor-specific "impact" vibration on contact (for 1DOF devices).
+extern bool haptic_tumor_vib_enabled;
+extern float haptic_tumor_vib_freq_hz;
+extern float haptic_tumor_vib_amp;          // in force units (same units passed to sendForce)
+extern float haptic_tumor_vib_duration_sec; // seconds
 
 // Function to load parameters
 void loadParams(const std::string& filename);

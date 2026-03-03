@@ -6,6 +6,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 
 #if defined(__APPLE__)
 #include <sys/ioctl.h>
@@ -102,6 +103,16 @@ void HapticInterface::setParameters(float minF, float maxF, float minP, float ma
     gamma = g;
 }
 
+void HapticInterface::setSlewLimiter(bool enabled, float upPwmPerSec, float downPwmPerSec) {
+    slewEnabled = enabled;
+    slewUpPwmPerSec = std::max(0.0f, upPwmPerSec);
+    slewDownPwmPerSec = std::max(0.0f, downPwmPerSec);
+    // Reset state so the next command takes effect deterministically.
+    lastPwm_.fill(0);
+    lastPwmValid_.fill(false);
+    lastTimeValid_.fill(false);
+}
+
 // Exactly from original code
 std::vector<uint8_t> HapticInterface::intToHexProtocol(int num) {
     std::vector<uint8_t> result(2);
@@ -132,12 +143,24 @@ std::vector<uint8_t> HapticInterface::intToHexProtocol(int num) {
 }
 
 void HapticInterface::sendForce(int motorId, float force) {
+    sendForce(motorId, force, false);
+}
+
+void HapticInterface::sendForce(int motorId, float force, bool bypassSlew) {
     if (!connected || motorId < 0 || motorId > 7) return;
+
+    const auto now = std::chrono::steady_clock::now();
 
     // Important: if the requested force is zero (or below the input minimum),
     // output a true "off" command (0 PWM), regardless of configured minPwmOutput.
     // This prevents a lingering baseline force after the fingertip leaves contact.
     if (force <= minForceInput + 1e-6f || maxForceInput <= minForceInput + 1e-6f) {
+        if (slewEnabled) {
+            lastPwm_[motorId] = 0;
+            lastPwmValid_[motorId] = true;
+            lastTime_[motorId] = now;
+            lastTimeValid_[motorId] = true;
+        }
         std::vector<uint8_t> bytes = intToHexProtocol(0);
         {
             std::lock_guard<std::mutex> lock(mutex);
@@ -168,6 +191,36 @@ void HapticInterface::sendForce(int motorId, float force) {
     // Map to output
     float outVal = minPwmOutput + t * (maxPwmOutput - minPwmOutput);
     int intVal = static_cast<int>(outVal);
+
+    if (slewEnabled && !bypassSlew) {
+        float dt = 0.0f;
+        if (lastTimeValid_[motorId]) {
+            dt = std::chrono::duration<float>(now - lastTime_[motorId]).count();
+        }
+        lastTime_[motorId] = now;
+        lastTimeValid_[motorId] = true;
+
+        const int prev = lastPwmValid_[motorId] ? lastPwm_[motorId] : intVal;
+        const float maxUp = slewUpPwmPerSec * dt;
+        const float maxDown = slewDownPwmPerSec * dt;
+        int limited = intVal;
+        if (limited > prev) {
+            const int cap = prev + static_cast<int>(std::ceil(maxUp));
+            if (maxUp > 0.0f) limited = std::min(limited, cap);
+        } else if (limited < prev) {
+            const int cap = prev - static_cast<int>(std::ceil(maxDown));
+            if (maxDown > 0.0f) limited = std::max(limited, cap);
+        }
+        intVal = limited;
+        lastPwm_[motorId] = intVal;
+        lastPwmValid_[motorId] = true;
+    } else if (slewEnabled) {
+        // Keep state consistent even when bypassing.
+        lastTime_[motorId] = now;
+        lastTimeValid_[motorId] = true;
+        lastPwm_[motorId] = intVal;
+        lastPwmValid_[motorId] = true;
+    }
 
     // Convert to protocol bytes
     std::vector<uint8_t> bytes = intToHexProtocol(intVal);

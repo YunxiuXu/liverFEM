@@ -630,6 +630,240 @@ static int applyAxisAlignedWallConstraints(
 	return hitCount;
 }
 
+static Eigen::Vector3f closestPointOnTriangleRTCD(
+	const Eigen::Vector3f& p,
+	const Eigen::Vector3f& a,
+	const Eigen::Vector3f& b,
+	const Eigen::Vector3f& c)
+{
+	// Real-Time Collision Detection (Christer Ericson), closest point on triangle.
+	const Eigen::Vector3f ab = b - a;
+	const Eigen::Vector3f ac = c - a;
+	const Eigen::Vector3f ap = p - a;
+	const float d1 = ab.dot(ap);
+	const float d2 = ac.dot(ap);
+	if (d1 <= 0.0f && d2 <= 0.0f) return a;
+
+	const Eigen::Vector3f bp = p - b;
+	const float d3 = ab.dot(bp);
+	const float d4 = ac.dot(bp);
+	if (d3 >= 0.0f && d4 <= d3) return b;
+
+	const float vc = d1 * d4 - d3 * d2;
+	if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f) {
+		const float v = d1 / (d1 - d3);
+		return a + v * ab;
+	}
+
+	const Eigen::Vector3f cp = p - c;
+	const float d5 = ab.dot(cp);
+	const float d6 = ac.dot(cp);
+	if (d6 >= 0.0f && d5 <= d6) return c;
+
+	const float vb = d5 * d2 - d1 * d6;
+	if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f) {
+		const float w = d2 / (d2 - d6);
+		return a + w * ac;
+	}
+
+	const float va = d3 * d6 - d5 * d4;
+	if (va <= 0.0f && (d4 - d3) >= 0.0f && (d5 - d6) >= 0.0f) {
+		const float w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+		return b + w * (c - b);
+	}
+
+	const float denom = 1.0f / (va + vb + vc);
+	const float v = vb * denom;
+	const float w = vc * denom;
+	return a + ab * v + ac * w;
+}
+
+static bool outwardNormalForTriangleInit(
+	const AgentTriangle& tri,
+	const Eigen::Vector3f& a,
+	const Eigen::Vector3f& b,
+	const Eigen::Vector3f& c,
+	Eigen::Vector3f* outwardUnitOut)
+{
+	const Eigen::Vector3f nRaw = (b - a).cross(c - a);
+	const float n2 = nRaw.squaredNorm();
+	if (n2 <= 1e-24f) return false;
+
+	Eigen::Vector3f n = nRaw;
+	if (tri.opp) {
+		const Eigen::Vector3f opp(tri.opp->initx, tri.opp->inity, tri.opp->initz);
+		const float sOpp = nRaw.dot(opp - a);
+		if (std::abs(sOpp) > 1e-18f) {
+			if (sOpp > 0.0f) n = -nRaw;
+			else n = nRaw;
+		}
+	}
+	*outwardUnitOut = n.normalized();
+	return true;
+}
+
+static int applyLiverCavityConstraints(
+	const std::vector<std::vector<Vertex*>>& verticesByPhysId,
+	const std::vector<AgentTriangle>& surfaceTriangles,
+	const std::vector<std::vector<int>>& surfaceTriangleNeighbors,
+	const std::vector<char>& cavityTriangleEnabled,
+	const std::vector<int>& surfacePhysIds,
+	std::vector<int>& activeTriangleByPhysIdInOut,
+	float cavityGap,
+	float cavityOpenX,
+	float dt,
+	float restitution,
+	float tangentialDamp)
+{
+	if (verticesByPhysId.empty() || surfaceTriangles.empty() || surfacePhysIds.empty()) return 0;
+	if (!surfaceTriangleNeighbors.empty() && surfaceTriangleNeighbors.size() != surfaceTriangles.size()) return 0;
+	if (!cavityTriangleEnabled.empty() && cavityTriangleEnabled.size() != surfaceTriangles.size()) return 0;
+
+	const float gap = std::max(0.0f, cavityGap);
+	const float openX = cavityOpenX;
+	const float invDt = 1.0f / std::max(1e-8f, dt);
+	const float rest = std::clamp(restitution, 0.0f, 1.0f);
+	const float tanD = std::clamp(tangentialDamp, 0.0f, 1.0f);
+
+	auto triIsEnabled = [&](int ti) -> bool {
+		if (ti < 0 || ti >= static_cast<int>(surfaceTriangles.size())) return false;
+		if (cavityTriangleEnabled.empty()) return true;
+		return cavityTriangleEnabled[static_cast<size_t>(ti)] != 0;
+	};
+
+	auto firstEnabledTri = [&]() -> int {
+		for (int ti = 0; ti < static_cast<int>(surfaceTriangles.size()); ++ti) {
+			if (triIsEnabled(ti)) return ti;
+		}
+		return -1;
+	};
+
+	const int defaultTri = firstEnabledTri();
+	if (defaultTri < 0) return 0;
+
+	auto dist2ToTri = [&](int ti, const Eigen::Vector3f& p, Eigen::Vector3f* outwardNOut, Eigen::Vector3f* aOut, float* signedPlaneOut) -> float {
+		if (ti < 0 || ti >= static_cast<int>(surfaceTriangles.size())) return std::numeric_limits<float>::infinity();
+		if (!triIsEnabled(ti)) return std::numeric_limits<float>::infinity();
+		const AgentTriangle& tri = surfaceTriangles[static_cast<size_t>(ti)];
+		if (!tri.a || !tri.b || !tri.c) return std::numeric_limits<float>::infinity();
+
+		const Eigen::Vector3f a(tri.a->initx, tri.a->inity, tri.a->initz);
+		const Eigen::Vector3f b(tri.b->initx, tri.b->inity, tri.b->initz);
+		const Eigen::Vector3f c(tri.c->initx, tri.c->inity, tri.c->initz);
+		Eigen::Vector3f outwardN = Eigen::Vector3f::Zero();
+		if (!outwardNormalForTriangleInit(tri, a, b, c, &outwardN)) return std::numeric_limits<float>::infinity();
+
+		const Eigen::Vector3f q = closestPointOnTriangleRTCD(p, a, b, c);
+		if (outwardNOut) *outwardNOut = outwardN;
+		if (aOut) *aOut = a;
+		if (signedPlaneOut) *signedPlaneOut = outwardN.dot(p - a);
+		return (q - p).squaredNorm();
+	};
+
+	int hitCount = 0;
+	const int maxWalkSteps = 12;
+
+	for (int pid : surfacePhysIds) {
+		if (pid < 0 || pid >= static_cast<int>(verticesByPhysId.size())) continue;
+		const auto& list = verticesByPhysId[static_cast<size_t>(pid)];
+		if (list.empty()) continue;
+
+		bool anyFixed = false;
+		for (Vertex* v : list) {
+			if (v && v->isFixed) { anyFixed = true; break; }
+		}
+		if (anyFixed) continue;
+
+		Eigen::Vector3f pAvg = Eigen::Vector3f::Zero();
+		Eigen::Vector3f vAvg = Eigen::Vector3f::Zero();
+		int n = 0;
+		for (Vertex* v : list) {
+			if (!v) continue;
+			pAvg += Eigen::Vector3f(v->x, v->y, v->z);
+			vAvg += Eigen::Vector3f(v->velx, v->vely, v->velz);
+			++n;
+		}
+		if (n <= 0) continue;
+		pAvg /= static_cast<float>(n);
+		vAvg /= static_cast<float>(n);
+
+		// Exposed side (surgeon access): leave the -X side open.
+		if (pAvg.x() <= openX) continue;
+
+		int ti = defaultTri;
+		if (pid >= 0 && pid < static_cast<int>(activeTriangleByPhysIdInOut.size())) {
+			ti = activeTriangleByPhysIdInOut[static_cast<size_t>(pid)];
+			if (!triIsEnabled(ti)) ti = defaultTri;
+		}
+
+		// Local neighbor-walk: find a nearby closer triangle without scanning all triangles.
+		float bestD2 = std::numeric_limits<float>::infinity();
+		Eigen::Vector3f bestN = Eigen::Vector3f::Zero();
+		Eigen::Vector3f bestA = Eigen::Vector3f::Zero();
+		float bestSignedPlane = 0.0f;
+		for (int step = 0; step < maxWalkSteps; ++step) {
+			int bestTi = ti;
+			Eigen::Vector3f nCand, aCand;
+			float signedCand = 0.0f;
+			const float d2Here = dist2ToTri(ti, pAvg, &nCand, &aCand, &signedCand);
+			bestD2 = d2Here;
+			bestN = nCand;
+			bestA = aCand;
+			bestSignedPlane = signedCand;
+
+			if (!surfaceTriangleNeighbors.empty()) {
+				const auto& nbrs = surfaceTriangleNeighbors[static_cast<size_t>(ti)];
+				for (int nb : nbrs) {
+					Eigen::Vector3f n2, a2;
+					float s2 = 0.0f;
+					const float d2 = dist2ToTri(nb, pAvg, &n2, &a2, &s2);
+					if (d2 < bestD2) {
+						bestD2 = d2;
+						bestTi = nb;
+						bestN = n2;
+						bestA = a2;
+						bestSignedPlane = s2;
+					}
+				}
+			}
+
+			if (bestTi == ti) break;
+			ti = bestTi;
+		}
+
+		if (!std::isfinite(bestD2) || bestN.squaredNorm() < 1e-12f) continue;
+		if (pid >= 0 && pid < static_cast<int>(activeTriangleByPhysIdInOut.size())) {
+			activeTriangleByPhysIdInOut[static_cast<size_t>(pid)] = ti;
+		}
+
+		// For an outward-facing surface, plane distance > gap means we've pushed outside the inflated cavity.
+		const float penetration = bestSignedPlane - gap;
+		if (penetration <= 0.0f) continue;
+
+		const Eigen::Vector3f pNew = pAvg - bestN * penetration;
+		Eigen::Vector3f vNew = vAvg + (pNew - pAvg) * invDt;
+
+		// Velocity response (like a plane collision), using the cavity outward normal.
+		const float vn = vNew.dot(bestN);
+		if (vn > 0.0f) vNew -= bestN * ((1.0f + rest) * vn);
+		const Eigen::Vector3f vt = vNew - bestN * vNew.dot(bestN);
+		vNew -= vt * tanD;
+
+		for (Vertex* v : list) {
+			if (!v || v->isFixed) continue;
+			v->x = pNew.x();
+			v->y = pNew.y();
+			v->z = pNew.z();
+			v->velx = vNew.x();
+			v->vely = vNew.y();
+			v->velz = vNew.z();
+		}
+		++hitCount;
+	}
+
+	return hitCount;
+}
+
 // Add helper function for normal consistency
 static bool outwardNormalForTriangle(
 	const AgentTriangle& tri,
@@ -2081,8 +2315,13 @@ int main(int argc, char** argv) {
 		std::cout << "  Force range: " << haptic_min_force_input << " - " << haptic_max_force_input << " N" << std::endl;
 		std::cout << "  PWM range: " << haptic_min_pwm_output << " - " << haptic_max_pwm_output << std::endl;
 		std::cout << "  Gamma: " << haptic_gamma << " (Power Law Mapping)" << std::endl;
+		std::cout << "  SlewLimiter: enabled=" << (haptic_slew_enabled ? 1 : 0)
+		          << " upPWM/s=" << haptic_slew_up_pwm_per_sec
+		          << " downPWM/s=" << haptic_slew_down_pwm_per_sec
+		          << std::endl;
 		
 		haptic.setParameters(haptic_min_force_input, haptic_max_force_input, haptic_min_pwm_output, haptic_max_pwm_output, haptic_gamma);
+		haptic.setSlewLimiter(haptic_slew_enabled, haptic_slew_up_pwm_per_sec, haptic_slew_down_pwm_per_sec);
 		if (haptic.init(selectedPort)) {
 			std::cout << "✓ Haptic interface initialized successfully!" << std::endl;
 		} else {
@@ -2251,19 +2490,69 @@ int main(int argc, char** argv) {
 	const float wallZMax0 = bboxMax.z() + wallMargin0.z();
 
 		// Material stiffness mapping in world space (for haptics + visualization).
+		//
+		// IMPORTANT: group division uses *adaptive quantile edges* (see divideIntoGroups in Object.cpp),
+		// not uniform voxel spacing. If we use uniform bins here, the "white tumor overlay" will not
+		// match where haptics thinks the hard region is.
+		const int groupNx = std::max(1, groupNumX);
+		const int groupNy = std::max(1, groupNumY);
+		const int groupNz = std::max(1, groupNumZ);
+
+		auto makeEdges = [](std::vector<float>& values, int bins, float minVal, float maxVal) {
+			std::vector<float> edges;
+			edges.reserve(static_cast<size_t>(bins) + 1);
+			if (values.empty() || bins <= 0) return edges;
+			std::sort(values.begin(), values.end());
+
+			edges.push_back(minVal - 1e-4f);
+			for (int i = 1; i < bins; ++i) {
+				int idx = static_cast<int>(std::round(static_cast<float>(i) * static_cast<float>(values.size()) / static_cast<float>(bins)));
+				idx = std::max(0, std::min(static_cast<int>(values.size()) - 1, idx));
+				edges.push_back(values[static_cast<size_t>(idx)]);
+			}
+			edges.push_back(maxVal + 1e-4f);
+
+			// Ensure strictly increasing to avoid upper_bound degeneracy.
+			const float step = std::max(1e-5f, (maxVal - minVal) * 1e-5f);
+			for (size_t i = 1; i < edges.size(); ++i) {
+				if (edges[i] <= edges[i - 1]) edges[i] = edges[i - 1] + step;
+			}
+			return edges;
+		};
+
+		auto findBin = [](float v, const std::vector<float>& edges, int fallbackBins) {
+			if (edges.size() < 2) return std::max(0, fallbackBins - 1);
+			auto it = std::upper_bound(edges.begin(), edges.end(), v);
+			int idx = static_cast<int>(it - edges.begin()) - 1;
+			idx = std::max(0, std::min(static_cast<int>(edges.size()) - 2, idx));
+			return idx;
+		};
+
+		// Recompute the adaptive edges from tetra centroids (rest/initial coordinates).
+		std::vector<float> xVals, yVals, zVals;
+		xVals.reserve(static_cast<size_t>(out.numberoftetrahedra));
+		yVals.reserve(static_cast<size_t>(out.numberoftetrahedra));
+		zVals.reserve(static_cast<size_t>(out.numberoftetrahedra));
+		for (int gi = 0; gi < groupNum; ++gi) {
+			Group& g = object.getGroup(gi);
+			for (Tetrahedron* tet : g.tetrahedra) {
+				const float cx = (tet->vertices[0]->initx + tet->vertices[1]->initx + tet->vertices[2]->initx + tet->vertices[3]->initx) * 0.25f;
+				const float cy = (tet->vertices[0]->inity + tet->vertices[1]->inity + tet->vertices[2]->inity + tet->vertices[3]->inity) * 0.25f;
+				const float cz = (tet->vertices[0]->initz + tet->vertices[1]->initz + tet->vertices[2]->initz + tet->vertices[3]->initz) * 0.25f;
+				xVals.push_back(cx);
+				yVals.push_back(cy);
+				zVals.push_back(cz);
+			}
+		}
+		const std::vector<float> groupXEdges = makeEdges(xVals, groupNx, bboxMin.x(), bboxMax.x());
+		const std::vector<float> groupYEdges = makeEdges(yVals, groupNy, bboxMin.y(), bboxMax.y());
+		const std::vector<float> groupZEdges = makeEdges(zVals, groupNz, bboxMin.z(), bboxMax.z());
+
 		auto groupIndexFromWorldPoint = [&](const Eigen::Vector3f& p) -> int {
-			const int nx = std::max(1, groupNumX);
-			const int ny = std::max(1, groupNumY);
-			const int nz = std::max(1, groupNumZ);
-
-			const float rx = (bboxExtents.x() > 1e-12f) ? (bboxExtents.x() / static_cast<float>(nx)) : 1.0f;
-			const float ry = (bboxExtents.y() > 1e-12f) ? (bboxExtents.y() / static_cast<float>(ny)) : 1.0f;
-			const float rz = (bboxExtents.z() > 1e-12f) ? (bboxExtents.z() / static_cast<float>(nz)) : 1.0f;
-
-			const int gx = std::clamp(static_cast<int>((p.x() - bboxMin.x()) / rx), 0, nx - 1);
-			const int gy = std::clamp(static_cast<int>((p.y() - bboxMin.y()) / ry), 0, ny - 1);
-			const int gz = std::clamp(static_cast<int>((p.z() - bboxMin.z()) / rz), 0, nz - 1);
-			return gz * nx * ny + gy * nx + gx;
+			const int gx = findBin(p.x(), groupXEdges, groupNx);
+			const int gy = findBin(p.y(), groupYEdges, groupNy);
+			const int gz = findBin(p.z(), groupZEdges, groupNz);
+			return gz * groupNx * groupNy + gy * groupNx + gx;
 		};
 
 		auto materialScaleAtWorldPoint = [&](const Eigen::Vector3f& p) -> float {
@@ -2355,9 +2644,9 @@ int main(int argc, char** argv) {
 		// User-tunable world-space translation offsets (for aligning real/virtual without changing the calibration math).
 		// Default offsets requested by user (printed from runtime).
 		// LEFT : (0.000000,-0.990932,0.990932)
-		// RIGHT: (0.990932,-0.495466,0.495466)
-		Eigen::Vector3f leapLeftWorldOffset(0.0f, -0.990932f, 0.990932f);
-		Eigen::Vector3f leapRightWorldOffset(0.990932f, -0.495466f, 0.495466f);
+		// RIGHT: (0.495466,-0.000000,0.990932)
+		Eigen::Vector3f leapLeftWorldOffset(0.0f, -0.195466f, 0.790932f);
+		Eigen::Vector3f leapRightWorldOffset(0.495466f, 0.0f, 0.990932f);
 		enum class LeapOffsetTarget { Right, Left };
 		LeapOffsetTarget leapOffsetTarget = LeapOffsetTarget::Right;
 		std::array<Eigen::Vector3f, kFingerCount> leapLatestTipsMm;
@@ -2480,6 +2769,12 @@ int main(int argc, char** argv) {
 			std::vector<std::vector<int>> agentContactTriangleNeighbors;
 			std::vector<int> agentContactVertexPhysIds;
 			std::vector<std::vector<Vertex*>> agentVerticesByPhysId;
+			// Abdominal cavity wall data (built from rest-pose surface triangles; used later in the sim loop + rendering).
+			std::vector<char> cavityTriangleEnabled;
+			std::vector<int> cavitySurfacePhysIds;
+			std::vector<int> cavityActiveTriangleByPhysId;
+			float cavityGapWorld = 0.0f;
+			float cavityOpenXWorld = bboxMin.x();
 		agentContactVertices.reserve(objectUniqueVertices.size());
 		agentContactTrianglePhysIds.reserve(objectUniqueVertices.size());
 		agentContactVertexPhysIds.reserve(objectUniqueVertices.size());
@@ -2753,6 +3048,79 @@ int main(int argc, char** argv) {
 								addUnique(agentContactTriangleNeighbors[static_cast<size_t>(b)], a);
 							}
 						}
+					}
+				}
+
+				// ------------------------------------------------------------
+				// Abdominal cavity wall (static, rest-pose liver-shaped boundary)
+				// ------------------------------------------------------------
+				// We derive a cavity boundary from the *rest pose* surface triangles, inflated outward by a small
+				// gap. The surgeon-access side is -X, so we leave that side open by disabling those triangles.
+				{
+					cavityGapWorld = std::max(0.0f, cavity_gap_bboxScale) * bboxDiag;
+					const float xExtent = std::max(1e-6f, bboxMax.x() - bboxMin.x());
+					const float openFrac = std::clamp(cavity_open_frac, 0.0f, 1.0f);
+					// Open a band near -X: [bboxMin.x, openX].
+					cavityOpenXWorld = bboxMin.x() + openFrac * xExtent;
+
+					// Surface phys ids (only these vertices can collide with the cavity).
+					cavitySurfacePhysIds.reserve(isSurfacePhys.size());
+					for (int id = 0; id < static_cast<int>(isSurfacePhys.size()); ++id) {
+						if (!isSurfacePhys[static_cast<size_t>(id)]) continue;
+						cavitySurfacePhysIds.push_back(id);
+					}
+
+					// Triangle enable mask: disable the open (-X) side triangles so there's no "front wall".
+					cavityTriangleEnabled.assign(agentContactTriangles.size(), 1);
+					const float openXDisable = cavityOpenXWorld + 0.02f * xExtent; // slightly bigger opening than the vertex gate
+					for (int ti = 0; ti < static_cast<int>(agentContactTriangles.size()); ++ti) {
+						const AgentTriangle& tri = agentContactTriangles[static_cast<size_t>(ti)];
+						if (!tri.a || !tri.b || !tri.c) { cavityTriangleEnabled[static_cast<size_t>(ti)] = 0; continue; }
+						const Eigen::Vector3f a(tri.a->initx, tri.a->inity, tri.a->initz);
+						const Eigen::Vector3f b(tri.b->initx, tri.b->inity, tri.b->initz);
+						const Eigen::Vector3f c(tri.c->initx, tri.c->inity, tri.c->initz);
+						Eigen::Vector3f n = Eigen::Vector3f::Zero();
+						if (!outwardNormalForTriangleInit(tri, a, b, c, &n)) { cavityTriangleEnabled[static_cast<size_t>(ti)] = 0; continue; }
+						const Eigen::Vector3f centroid = (a + b + c) * (1.0f / 3.0f);
+						// Disable triangles on the exposed (-X) side (by position only).
+						if (centroid.x() <= openXDisable) { cavityTriangleEnabled[static_cast<size_t>(ti)] = 0; continue; }
+					}
+
+					// Active triangle cache per physical vertex id (for fast local neighbor walk).
+					cavityActiveTriangleByPhysId.assign(agentVerticesByPhysId.size(), 0);
+					int firstEnabled = -1;
+					for (int ti = 0; ti < static_cast<int>(cavityTriangleEnabled.size()); ++ti) {
+						if (cavityTriangleEnabled[static_cast<size_t>(ti)]) { firstEnabled = ti; break; }
+					}
+					if (firstEnabled < 0) firstEnabled = 0;
+					for (size_t i = 0; i < cavityActiveTriangleByPhysId.size(); ++i) cavityActiveTriangleByPhysId[i] = firstEnabled;
+
+					// Better initialization: for each surface vertex id, seed its active triangle with an incident triangle
+					// on the surface so the neighbor-walk starts locally (prevents "no collision" due to a bad seed).
+					if (!agentContactTrianglePhysIds.empty() && agentContactTrianglePhysIds.size() == agentContactTriangles.size()) {
+						std::vector<int> incident(static_cast<size_t>(agentVerticesByPhysId.size()), -1);
+						for (int ti = 0; ti < static_cast<int>(agentContactTrianglePhysIds.size()); ++ti) {
+							if (!cavityTriangleEnabled.empty() && !cavityTriangleEnabled[static_cast<size_t>(ti)]) continue;
+							const auto& ids = agentContactTrianglePhysIds[static_cast<size_t>(ti)];
+							for (int k = 0; k < 3; ++k) {
+								const int pid = ids[static_cast<size_t>(k)];
+								if (pid < 0 || pid >= static_cast<int>(incident.size())) continue;
+								if (incident[static_cast<size_t>(pid)] == -1) incident[static_cast<size_t>(pid)] = ti;
+							}
+						}
+						for (int pid : cavitySurfacePhysIds) {
+							if (pid < 0 || pid >= static_cast<int>(incident.size())) continue;
+							const int ti = incident[static_cast<size_t>(pid)];
+							if (ti >= 0) cavityActiveTriangleByPhysId[static_cast<size_t>(pid)] = ti;
+						}
+					}
+
+					if (cavity_enabled) {
+						std::cout << "[Cavity] enabled=1 gap=" << cavityGapWorld
+						          << " openX=" << cavityOpenXWorld
+						          << " surfaceVerts=" << cavitySurfacePhysIds.size()
+						          << " tris=" << agentContactTriangles.size()
+						          << std::endl;
 					}
 				}
 
@@ -5033,7 +5401,7 @@ int main(int argc, char** argv) {
 									// Proxy anti-tunneling (rare): if the proxy CENTER ended up fully inside the closed surface
 									// *and* we had no contact constraints this frame, project it back to just outside the closest
 									// surface point. This is intentionally gated to avoid per-frame ray casting (perf + haptics).
-										if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
+									if (agentUseSurfaceTriangles && !agentContactTriangles.empty()) {
 											const float rProxy = std::max(1e-6f, agentSphere.radius);
 											const float slop = std::max(1e-4f * bboxDiag, 0.02f * rProxy);
 											const float rayEps = 1e-5f * bboxDiag;
@@ -5435,22 +5803,42 @@ int main(int argc, char** argv) {
 					}
 #endif
 
-					// Axis-aligned "walls" (Y±, X+) tight to the initial bbox.
-						if (wallEnabled && !agentVerticesByPhysId.empty()) {
-						const Eigen::Vector3f extents = bboxMax - bboxMin;
-						const Eigen::Vector3f margin = std::max(0.0f, wallMarginBboxScale) * extents;
-						const float wallXMax = bboxMax.x() + margin.x();
-						const float wallYMin = bboxMin.y() - margin.y();
-						const float wallYMax = bboxMax.y() + margin.y();
+					// "Walls" around the organ:
+					// - Default: simple axis-aligned planes (Y±, X+).
+					// - Optional: a static liver-shaped "abdominal cavity" boundary (rest pose surface inflated by a gap),
+					//   leaving the exposed -X side open.
+					if ((wallEnabled || cavity_enabled) && !agentVerticesByPhysId.empty()) {
+						int wallHits = 0;
 
-						const int wallHits = applyAxisAlignedWallConstraints(
-							agentVerticesByPhysId,
-							wallXMax,
-							wallYMin,
-							wallYMax,
-							timeStep,
-							wallRestitution,
-							wallTangentialDamp);
+						if (cavity_enabled && !agentContactTriangles.empty() && !cavitySurfacePhysIds.empty()) {
+							wallHits = applyLiverCavityConstraints(
+								agentVerticesByPhysId,
+								agentContactTriangles,
+								agentContactTriangleNeighbors,
+								cavityTriangleEnabled,
+								cavitySurfacePhysIds,
+								cavityActiveTriangleByPhysId,
+								cavityGapWorld,
+								cavityOpenXWorld,
+								timeStep,
+								wallRestitution,
+								wallTangentialDamp);
+						} else if (wallEnabled) {
+							const Eigen::Vector3f extents = bboxMax - bboxMin;
+							const Eigen::Vector3f margin = std::max(0.0f, wallMarginBboxScale) * extents;
+							const float wallXMax = bboxMax.x() + margin.x();
+							const float wallYMin = bboxMin.y() - margin.y();
+							const float wallYMax = bboxMax.y() + margin.y();
+
+							wallHits = applyAxisAlignedWallConstraints(
+								agentVerticesByPhysId,
+								wallXMax,
+								wallYMin,
+								wallYMax,
+								timeStep,
+								wallRestitution,
+								wallTangentialDamp);
+						}
 
 						// Keep Group::groupVelocity consistent with Vertex::vel* for the next frame's primeVec.
 						if (wallHits > 0) {
@@ -5468,8 +5856,8 @@ int main(int argc, char** argv) {
 									}
 								}
 							}
-							}
 						}
+					}
 
 						// Update previous physical positions for the next frame's CCD.
 						if (!physPrevPositions.empty()) {
@@ -5733,8 +6121,43 @@ int main(int argc, char** argv) {
 				glEnable(GL_DEPTH_TEST);
 			}
 
-			// Draw axis-aligned walls (Y±, X+) around the initial bbox.
-			if (wallEnabled) {
+			// Draw walls around the organ.
+			if (cavity_enabled && !agentContactTriangles.empty() && !cavityTriangleEnabled.empty()) {
+				const bool blendWasEnabled = (glIsEnabled(GL_BLEND) == GL_TRUE);
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				glDepthMask(GL_FALSE);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+				if (whiteBackground) glColor4f(0.1f, 0.2f, 0.6f, 0.18f);
+				else glColor4f(0.6f, 0.7f, 1.0f, 0.18f);
+
+				glBegin(GL_TRIANGLES);
+				const float gap = std::max(0.0f, cavityGapWorld);
+				for (int ti = 0; ti < static_cast<int>(agentContactTriangles.size()); ++ti) {
+					if (!cavityTriangleEnabled[static_cast<size_t>(ti)]) continue;
+					const AgentTriangle& tri = agentContactTriangles[static_cast<size_t>(ti)];
+					if (!tri.a || !tri.b || !tri.c) continue;
+					const Eigen::Vector3f a(tri.a->initx, tri.a->inity, tri.a->initz);
+					const Eigen::Vector3f b(tri.b->initx, tri.b->inity, tri.b->initz);
+					const Eigen::Vector3f c(tri.c->initx, tri.c->inity, tri.c->initz);
+					Eigen::Vector3f n = Eigen::Vector3f::Zero();
+					if (!outwardNormalForTriangleInit(tri, a, b, c, &n)) continue;
+					const Eigen::Vector3f ao = a + n * gap;
+					const Eigen::Vector3f bo = b + n * gap;
+					const Eigen::Vector3f co = c + n * gap;
+					glVertex3f(ao.x(), ao.y(), ao.z());
+					glVertex3f(bo.x(), bo.y(), bo.z());
+					glVertex3f(co.x(), co.y(), co.z());
+				}
+				glEnd();
+
+				glDepthMask(GL_TRUE);
+				if (!blendWasEnabled) glDisable(GL_BLEND);
+				if (!showVolumePreservation) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+			// Fallback: simple axis-aligned walls (Y±, X+) around the initial bbox.
+			else if (wallEnabled) {
 				const Eigen::Vector3f extents = bboxMax - bboxMin;
 				const Eigen::Vector3f margin = std::max(0.0f, wallMarginBboxScale) * extents;
 				const float x0 = bboxMin.x() - margin.x();
@@ -6219,6 +6642,20 @@ int main(int argc, char** argv) {
 				}
 
 				if (haptic_uart_enabled) {
+					// Tumor-specific "impact" vibration: a short burst when entering contact on a hard region.
+					// This makes stiffness differences perceptible even for 1DOF devices (no lateral force).
+					static double lastHapticTimeSec = 0.0;
+					const double nowHapticTimeSec = glfwGetTime();
+					float hapticDtSec = 0.0f;
+					if (lastHapticTimeSec > 0.0) hapticDtSec = static_cast<float>(nowHapticTimeSec - lastHapticTimeSec);
+					lastHapticTimeSec = nowHapticTimeSec;
+					hapticDtSec = std::clamp(hapticDtSec, 0.0f, 0.05f);
+					static std::array<float, 5> vibTimeLeftSec{}; // 0=thumb..4=pinky
+					static std::array<float, 5> vibPhaseRad{};
+					static std::array<bool, 5> prevInContact{};
+					static std::array<bool, 5> prevHardRegion{};
+					constexpr float kTwoPi = 6.28318530718f;
+
 					// Send force for each configured finger->motor pair
 					// Finger 0 = Thumb  -> Motor 0
 					// Finger 1 = Index  -> Motor 1
@@ -6236,23 +6673,35 @@ int main(int argc, char** argv) {
 						// 1DOF devices: output the NORMAL reaction magnitude.
 						// Using finger rotation to define "pad normal" is often wrong/noisy for 1DOF hardware.
 						Eigen::Vector3f nIn = agentFilteredContactNormalsIn[static_cast<size_t>(pair.fingerIdx)];
+						// Filtered normals can briefly go to zero; fall back to the most recent raw normal.
+						if (nIn.squaredNorm() < 1e-12f) nIn = agentLastContactNormalsIn[static_cast<size_t>(pair.fingerIdx)];
 						float forceMag = 0.0f;
-						if (nIn.squaredNorm() > 1e-12f) {
-							nIn.normalize();
-							// reactionForceN points opposite nIn (see solver); keep only compressive normal component.
-							forceMag = std::max(0.0f, (-contactF).dot(nIn));
-						} else {
-							forceMag = contactF.norm();
+						const float pen = agentLastContactPenetrations[static_cast<size_t>(pair.fingerIdx)];
+						const bool inContact = (pen > 0.0f);
+						if (inContact) {
+							// Some contact cases can flip the normal sign; for 1DOF magnitude output we want the
+							// normal-component magnitude, not a signed value that can clamp to 0 ("no force")
+							// when pressing at an angle.
+							if (nIn.squaredNorm() > 1e-12f) {
+								nIn.normalize();
+								const float dotAbs = std::abs(contactF.dot(nIn));
+								const float fNorm = contactF.norm();
+								// If the normal is degenerate/misaligned, fall back to magnitude.
+								forceMag = (dotAbs > 1e-6f * fNorm) ? dotAbs : fNorm;
+							} else {
+								forceMag = contactF.norm();
+							}
 						}
 
 						// Overall output gain (separate from simulation/contact).
 						forceMag *= std::max(0.0f, agentDeviceForceGain);
 
 						// Simple, brutal 1DOF effect: amplify output when sampling over a locally stiffer region.
+						const float matScale = materialScaleAtWorldPoint(agentProxyPositions[static_cast<size_t>(pair.fingerIdx)]);
+						const bool hardRegion = (matScale > 1.05f);
 						{
-							const float matScale = materialScaleAtWorldPoint(agentProxyPositions[static_cast<size_t>(pair.fingerIdx)]);
 							const float hardGain = std::max(0.0f, agentDeviceForceHardGain);
-							if (matScale > 1.05f && hardGain != 1.0f) forceMag *= hardGain;
+							if (hardRegion && hardGain != 1.0f) forceMag *= hardGain;
 						}
 
 						// Soft-clip to preserve dynamic range: avoids "touch -> max PWM" for both soft/hard.
@@ -6262,7 +6711,52 @@ int main(int argc, char** argv) {
 							const float f = std::max(0.0f, forceMag);
 							forceMag = maxF * (f / (f + knee));
 						}
-						haptic.sendForce(pair.motorId, forceMag);
+
+						// Tumor "impact" vibration burst on contact start/entry into hard region.
+						// Modulate after soft-clip so the vibration isn't crushed by the nonlinearity.
+						if (haptic_tumor_vib_enabled) {
+							const int fi = pair.fingerIdx;
+							if (!inContact) {
+								vibTimeLeftSec[static_cast<size_t>(fi)] = 0.0f;
+								vibPhaseRad[static_cast<size_t>(fi)] = 0.0f;
+							} else {
+								const bool startBurst = hardRegion && (!prevInContact[static_cast<size_t>(fi)] || !prevHardRegion[static_cast<size_t>(fi)]);
+								if (startBurst) {
+									if (vibTimeLeftSec[static_cast<size_t>(fi)] <= 0.0f) {
+										vibTimeLeftSec[static_cast<size_t>(fi)] = std::max(0.0f, haptic_tumor_vib_duration_sec);
+										vibPhaseRad[static_cast<size_t>(fi)] = 0.0f;
+									}
+								}
+
+								float& tLeft = vibTimeLeftSec[static_cast<size_t>(fi)];
+								float& phase = vibPhaseRad[static_cast<size_t>(fi)];
+								if (tLeft > 0.0f && hapticDtSec > 0.0f) {
+									const float dur = std::max(1e-4f, haptic_tumor_vib_duration_sec);
+									const float elapsed = std::max(0.0f, dur - tLeft);
+									// Cosine fade from 1->0 over the burst.
+									const float u = std::clamp(elapsed / dur, 0.0f, 1.0f);
+									const float env = 0.5f * (1.0f + std::cos(PI * u));
+									const float freq = std::max(0.0f, haptic_tumor_vib_freq_hz);
+									const float amp = std::max(0.0f, haptic_tumor_vib_amp);
+									const float s = std::sin(phase);
+									// 1DOF cable devices usually only "pull". Use a unipolar modulation.
+									const float vib = amp * env * (0.5f * (1.0f + s));
+									forceMag = std::max(0.0f, forceMag + vib);
+									phase += kTwoPi * freq * hapticDtSec;
+									if (phase > kTwoPi) phase = std::fmod(phase, kTwoPi);
+									tLeft = std::max(0.0f, tLeft - hapticDtSec);
+								}
+							}
+
+							prevInContact[static_cast<size_t>(fi)] = inContact;
+							prevHardRegion[static_cast<size_t>(fi)] = hardRegion;
+						}
+
+						// Clamp to configured range before mapping->PWM.
+						forceMag = std::min(forceMag, std::max(0.0f, haptic_max_force_input));
+						// "Pop" (fast cable tightening) feels like hardness. Suppress it on soft tissue by
+						// applying the slew limiter only on soft regions; allow hard regions to respond fast.
+						haptic.sendForce(pair.motorId, forceMag, /*bypassSlew=*/hardRegion);
 					}
 				}
 
