@@ -1891,6 +1891,38 @@ int main(int argc, char** argv) {
 		tetrahedralize(&behavior, &in, &out);
 	}
 	
+	// Optional: rotate the loaded TetGen mesh around Y (about its bbox center).
+	// This is applied before group division so material/group mapping stays consistent.
+	if (std::abs(model_rotateY_deg) > 1e-6f && out.pointlist && out.numberofpoints > 0) {
+		double minx = std::numeric_limits<double>::infinity();
+		double miny = std::numeric_limits<double>::infinity();
+		double minz = std::numeric_limits<double>::infinity();
+		double maxx = -std::numeric_limits<double>::infinity();
+		double maxy = -std::numeric_limits<double>::infinity();
+		double maxz = -std::numeric_limits<double>::infinity();
+		for (int i = 0; i < out.numberofpoints; ++i) {
+			const double x = static_cast<double>(out.pointlist[3 * i + 0]);
+			const double y = static_cast<double>(out.pointlist[3 * i + 1]);
+			const double z = static_cast<double>(out.pointlist[3 * i + 2]);
+			minx = std::min(minx, x); miny = std::min(miny, y); minz = std::min(minz, z);
+			maxx = std::max(maxx, x); maxy = std::max(maxy, y); maxz = std::max(maxz, z);
+		}
+		const double cx = 0.5 * (minx + maxx);
+		const double cz = 0.5 * (minz + maxz);
+		const double rad = static_cast<double>(model_rotateY_deg) * (3.14159265358979323846 / 180.0);
+		const double c = std::cos(rad);
+		const double s = std::sin(rad);
+		for (int i = 0; i < out.numberofpoints; ++i) {
+			const double x0 = static_cast<double>(out.pointlist[3 * i + 0]) - cx;
+			const double z0 = static_cast<double>(out.pointlist[3 * i + 2]) - cz;
+			const double x1 = c * x0 + s * z0;
+			const double z1 = -s * x0 + c * z0;
+			out.pointlist[3 * i + 0] = static_cast<REAL>(x1 + cx);
+			out.pointlist[3 * i + 2] = static_cast<REAL>(z1 + cz);
+		}
+		std::cout << "[Model] rotateY(deg)=" << model_rotateY_deg << " applied (about bbox center).\n";
+	}
+	
 
 
 
@@ -2293,7 +2325,9 @@ int main(int argc, char** argv) {
 		bool leapUseInput = true;
 		bool leapMappingCalibrated = false;
 		Eigen::Vector3f leapCenterMm = Eigen::Vector3f::Zero();
-		Eigen::Vector3f leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
+		// Keep the Leap->world mapping stable: anchor to the initial "home" pose.
+		// Recenter (if desired) is handled explicitly via the existing recenter action.
+		Eigen::Vector3f leapAnchorWorld = agentHomePositions[static_cast<size_t>(kIndexFinger)];
 		std::array<Eigen::Vector3f, kFingerCount> leapLatestTipsMm;
 		leapLatestTipsMm.fill(Eigen::Vector3f::Zero());
 		double leapLatestTimeSec = -1.0;
@@ -2322,10 +2356,14 @@ int main(int argc, char** argv) {
 			leapLeftWorldPrevTips[static_cast<size_t>(fi)] = p;
 			leapLeftWorldVelTips[static_cast<size_t>(fi)] = Eigen::Vector3f::Zero();
 		}
+		// Keep a "wanted" toggle so left hand comes back automatically after Leap is toggled back ON.
+		static bool leftHandCapsulesWanted = leftHandEnabled;
 		static bool leftHandCapsulesEnabledRuntime = leftHandEnabled;
+		leftHandCapsulesEnabledRuntime = leftHandCapsulesWanted && leapUseInput;
 		if (leapUseInput && !leapTracker.init()) {
 			std::cerr << "[LeapC] init failed; disabling Leap input.\n";
 			leapUseInput = false;
+			leftHandCapsulesEnabledRuntime = false;
 		}
 	#endif
 
@@ -3204,11 +3242,8 @@ int main(int argc, char** argv) {
 						agentGripBary[static_cast<size_t>(fi)].setZero();
 					}
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-						leapMappingCalibrated = false;
-						leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
-						leapLeftMappingCalibrated = false;
-						leapLeftCenterMm.setZero();
-						leapLeftAnchorWorld = leapLeftHomeAnchor;
+						// Do NOT auto-recalibrate Leap mapping on home; keep mapping stable unless the user
+						// explicitly requests recenter.
 						for (int fi = 0; fi < kFingerCount; ++fi) {
 							const Eigen::Vector3f p = leapLeftHomeAnchor + agentHandFingerOffsets[static_cast<size_t>(fi)];
 							leapLeftWorldTips[static_cast<size_t>(fi)] = p;
@@ -3242,10 +3277,14 @@ int main(int argc, char** argv) {
 
 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 				if (leapToggleLatch.consume(window, GLFW_KEY_B)) {
-					leapUseInput = !leapUseInput;
-					if (leapUseInput && !leapTracker.init()) {
-						std::cerr << "[LeapC] init failed; Leap input remains disabled.\n";
-						leapUseInput = false;
+					// Treat 'B' as a "recenter / calibrate" action (not a toggle-off).
+					// If Leap input is currently OFF, try to turn it ON first.
+					if (!leapUseInput) {
+						leapUseInput = true;
+						if (!leapTracker.init()) {
+							std::cerr << "[LeapC] init failed; Leap input remains disabled.\n";
+							leapUseInput = false;
+						}
 					}
 
 						leapMappingCalibrated = false;
@@ -3281,8 +3320,9 @@ int main(int argc, char** argv) {
 								leftHandActiveContactTriangle[idx] = -1;
 							}
 						}
-						if (!leapUseInput) leftHandCapsulesEnabledRuntime = false;
-						std::cout << "[LeapC] Input " << (leapUseInput ? "ON" : "OFF")
+						leftHandCapsulesEnabledRuntime = leftHandCapsulesWanted && leapUseInput;
+						std::cout << "[LeapC] Recenter (B)"
+						          << " | Input " << (leapUseInput ? "ON" : "OFF")
 					          << " | workspace(mm)=(" << leapWorkspaceXmm << "," << leapWorkspaceYmm << "," << leapWorkspaceZmm << ")"
 					          << " worldMargin=" << leapWorldMargin
 					          << " gain=" << leapGain
@@ -3306,11 +3346,11 @@ int main(int argc, char** argv) {
 					std::cout << "[LeapC] gain=" << leapGain << "\n";
 				}
 				if (leftHandCapsulesLatch.consume(window, GLFW_KEY_N)) {
+					leftHandCapsulesWanted = !leftHandCapsulesWanted;
+					leftHandCapsulesEnabledRuntime = leftHandCapsulesWanted && leapUseInput;
 					if (!leapUseInput) {
-						leftHandCapsulesEnabledRuntime = false;
-						std::cout << "[LeftHand] Capsules require Leap input ON (press B)\n";
-					} else {
-						leftHandCapsulesEnabledRuntime = !leftHandCapsulesEnabledRuntime;
+						std::cout << "[LeftHand] Capsules will be " << (leftHandCapsulesWanted ? "ON" : "OFF")
+						          << " when Leap input is ON (press B)\n";
 					}
 					std::cout << "[LeftHand] Capsules " << (leftHandCapsulesEnabledRuntime ? "ON" : "OFF") << " (N)\n";
 				}
@@ -3362,7 +3402,7 @@ int main(int argc, char** argv) {
 									if (!leapMappingCalibrated) {
 							// Keep the original 1-finger behavior: recenter on INDEX fingertip.
 									leapCenterMm = indexTipMm;
-									leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
+									// Keep leapAnchorWorld stable. (Recenter is an explicit user action.)
 
 									// Get rotations
 									std::array<Eigen::Quaternionf, kFingerCount> rotations;
@@ -3433,30 +3473,45 @@ int main(int argc, char** argv) {
 									}
 									usedLeap = true;
 								} else {
-									// If tracking is stale, let keyboard drive and re-calibrate on resume.
-									leapMappingCalibrated = false;
-									leapAnchorWorld = agentDevicePositions[static_cast<size_t>(kIndexFinger)];
+									// If tracking is stale, let keyboard drive. Keep the last calibration so the
+									// mapping doesn't jump when tracking resumes.
 								}
 						}
 	#endif
 						if (!usedLeap) {
-						const bool shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-						                   glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-						const float speed = agentMoveSpeedBboxPerSec * bboxDiag * (shift ? 4.0f : 1.0f);
-						Eigen::Vector3f delta = Eigen::Vector3f::Zero();
-						if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) delta.x() -= speed * timeStep;
-						if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) delta.x() += speed * timeStep;
-						if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) delta.y() += speed * timeStep;
-							if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) delta.y() -= speed * timeStep;
-							if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) delta.z() -= speed * timeStep;
-							if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) delta.z() += speed * timeStep;
-							for (int fi = 0; fi < kFingerCount; ++fi) {
-								auto& p = agentDevicePositions[static_cast<size_t>(fi)];
-								auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
-								auto& v = agentDeviceVelocities[static_cast<size_t>(fi)];
-								p += delta;
-								v = (p - pPrev) / std::max(1e-8f, timeStep);
-								pPrev = p;
+							bool keyboardDrive = true;
+#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+							// If Leap input is enabled but tracking is stale, DON'T fall back to keyboard.
+							// Keep last pose to avoid sudden jumps ("hand goes to keyboard").
+							if (leapUseInput) keyboardDrive = false;
+#endif
+							if (!keyboardDrive) {
+								for (int fi = 0; fi < kFingerCount; ++fi) {
+									auto& p = agentDevicePositions[static_cast<size_t>(fi)];
+									auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
+									auto& v = agentDeviceVelocities[static_cast<size_t>(fi)];
+									v.setZero();
+									pPrev = p;
+								}
+							} else {
+								const bool shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+								                   glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+								const float speed = agentMoveSpeedBboxPerSec * bboxDiag * (shift ? 4.0f : 1.0f);
+								Eigen::Vector3f delta = Eigen::Vector3f::Zero();
+								if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) delta.x() -= speed * timeStep;
+								if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) delta.x() += speed * timeStep;
+								if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) delta.y() += speed * timeStep;
+								if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) delta.y() -= speed * timeStep;
+								if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) delta.z() -= speed * timeStep;
+								if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) delta.z() += speed * timeStep;
+								for (int fi = 0; fi < kFingerCount; ++fi) {
+									auto& p = agentDevicePositions[static_cast<size_t>(fi)];
+									auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
+									auto& v = agentDeviceVelocities[static_cast<size_t>(fi)];
+									p += delta;
+									v = (p - pPrev) / std::max(1e-8f, timeStep);
+									pPrev = p;
+								}
 							}
 						}
 
@@ -3508,7 +3563,17 @@ int main(int argc, char** argv) {
 
 									Eigen::Vector3f base = leapLeftAnchorWorld;
 									base.y() += yOffset;
-									base = base.cwiseMax(clampMin).cwiseMin(clampMax);
+									// Important: don't tightly clamp the left-hand Y range to bbox extents.
+									// Otherwise the hand can feel "stuck" on a horizontal plane when the user
+									// moves below the model. Keep X/Z clamped, but let Y move freely (with a
+									// very wide safety clamp to avoid flying away on tracking glitches).
+									base.x() = std::clamp(base.x(), clampMin.x(), clampMax.x());
+									base.z() = std::clamp(base.z(), clampMin.z(), clampMax.z());
+									{
+										const float yMin = bboxCenter.y() - 5.0f * bboxDiag;
+										const float yMax = bboxCenter.y() + 5.0f * bboxDiag;
+										base.y() = std::clamp(base.y(), yMin, yMax);
+									}
 
 									const float maxRel = 0.5f * bboxDiag;
 									const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
@@ -3541,7 +3606,13 @@ int main(int argc, char** argv) {
 
 									Eigen::Vector3f base = leapLeftAnchorWorld + (indexTipMm - leapLeftCenterMm).cwiseProduct(scale);
 									base.y() += yOffset;
-									base = base.cwiseMax(clampMin).cwiseMin(clampMax);
+									base.x() = std::clamp(base.x(), clampMin.x(), clampMax.x());
+									base.z() = std::clamp(base.z(), clampMin.z(), clampMax.z());
+									{
+										const float yMin = bboxCenter.y() - 5.0f * bboxDiag;
+										const float yMax = bboxCenter.y() + 5.0f * bboxDiag;
+										base.y() = std::clamp(base.y(), yMin, yMax);
+									}
 
 									const float maxRel = 0.5f * bboxDiag;
 									const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
@@ -3572,8 +3643,7 @@ int main(int argc, char** argv) {
 
 								leftHandWorldFresh = true;
 							} else {
-								leapLeftMappingCalibrated = false;
-								leapLeftAnchorWorld = leapLeftWorldTips[static_cast<size_t>(kIndexFinger)];
+								// Keep the last calibration so the left hand doesn't jump when tracking resumes.
 							}
 						}
 						// Update capsule sample points (device) from the mapped tips+palm.
@@ -5700,7 +5770,9 @@ int main(int argc, char** argv) {
 
 #if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 				// Draw left-hand capsules (proxy spheres) for visualization.
-				if (leftHandCapsulesEnabledRuntime && leftHandWorldFresh && !leftHandProxyPositions.empty()) {
+				// NOTE: draw even if this frame's Leap data is stale; otherwise the hand "disappears" on brief occlusion
+				// or immediately after toggling Leap input. Collision still requires fresh data elsewhere.
+				if (leftHandCapsulesEnabledRuntime && !leftHandProxyPositions.empty()) {
 					glLineWidth(2.0f);
 					const float r = std::max(1e-6f, leftHandSphereRadius);
 					const std::array<Eigen::Vector3f, kFingerCount> colors = {

@@ -6,6 +6,8 @@
 #include <climits>
 #include <cmath>
 #include <iterator>
+#include <limits>
+#include <unordered_map>
 
 
 
@@ -407,6 +409,47 @@ void Object::PBDLOOP(int looptime) {
 
 	}
 
+	// Precompute duplicate-count per physical vertex (by quantized init position).
+	// Multi-group junctions (3+ duplicates) are prone to "knot"/twitch artifacts when using pairwise
+	// group-to-group bind constraints.
+	struct PhysKey {
+		long long x = 0, y = 0, z = 0;
+		bool operator==(const PhysKey& o) const noexcept { return x == o.x && y == o.y && z == o.z; }
+	};
+	struct PhysKeyHash {
+		size_t operator()(const PhysKey& k) const noexcept
+		{
+			const size_t h0 = std::hash<long long>{}(k.x);
+			const size_t h1 = std::hash<long long>{}(k.y);
+			const size_t h2 = std::hash<long long>{}(k.z);
+			size_t h = h0;
+			h ^= (h1 + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
+			h ^= (h2 + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2));
+			return h;
+		}
+	};
+	constexpr double kQuant = 1000000.0; // 1e-6 resolution
+	const auto makeKey = [&](const Vertex* v) -> PhysKey {
+		const auto q = [](float x) -> long long { return static_cast<long long>(std::llround(static_cast<double>(x) * kQuant)); };
+		if (!v) return PhysKey{};
+		return PhysKey{ q(v->initx), q(v->inity), q(v->initz) };
+	};
+
+	std::unordered_map<PhysKey, int, PhysKeyHash> dupCount;
+	{
+		size_t estimate = 0;
+		for (int gi = 0; gi < groupNum; ++gi) estimate += groups[gi].verticesMap.size();
+		dupCount.reserve(std::max<size_t>(estimate, 1024));
+		for (int gi = 0; gi < groupNum; ++gi) {
+			Group& g = groups[gi];
+			for (const auto& vertexPair : g.verticesMap) {
+				Vertex* v = vertexPair.second;
+				if (!v) continue;
+				++dupCount[makeKey(v)];
+			}
+		}
+	}
+
 	
 
 	for (int iter = 0; iter < looptime; ++iter) {
@@ -444,11 +487,34 @@ void Object::PBDLOOP(int looptime) {
 					// Interface constraint stiffness should reflect both sides; harmonic mean biases toward the softer side.
 					const float Ebind = (Ecur > 1e-8f && Eadj > 1e-8f) ? (2.0f * Ecur * Eadj / (Ecur + Eadj)) : youngs;
 					
-						currentGroup.calFbind1(commonVerticesPair.first, commonVerticesPair.second,
-							currentGroup.currentPosition, adjacentGroup.currentPosition, 
-							currentGroup.groupVelocity, adjacentGroup.groupVelocity, 
-							currentGroup.massMatrix, adjacentGroup.massMatrix,
-							Ebind, constraintHardness, dampingConst, adjacentGroupIdx);
+					// Skip bind constraints on multi-group junction vertices (3+ duplicates). These are
+					// over-constrained by pairwise constraints and can create a localized "knot"/twitch.
+					const auto& vA = commonVerticesPair.first;
+					const auto& vB = commonVerticesPair.second;
+					if (!vA.empty() && vA.size() == vB.size()) {
+						std::vector<Vertex*> aFiltered;
+						std::vector<Vertex*> bFiltered;
+						aFiltered.reserve(vA.size());
+						bFiltered.reserve(vA.size());
+						for (size_t vi = 0; vi < vA.size(); ++vi) {
+							Vertex* va = vA[vi];
+							Vertex* vb = vB[vi];
+							if (!va || !vb) continue;
+							const auto it = dupCount.find(makeKey(va));
+							const int ndup = (it != dupCount.end()) ? it->second : 1;
+							if (ndup <= 2) {
+								aFiltered.push_back(va);
+								bFiltered.push_back(vb);
+							}
+						}
+						if (!aFiltered.empty()) {
+							currentGroup.calFbind1(aFiltered, bFiltered,
+								currentGroup.currentPosition, adjacentGroup.currentPosition,
+								currentGroup.groupVelocity, adjacentGroup.groupVelocity,
+								currentGroup.massMatrix, adjacentGroup.massMatrix,
+								Ebind, constraintHardness, dampingConst, adjacentGroupIdx);
+						}
+					}
 					//if (direction == 0 || direction == 1) {
 					//	currentGroup.distancesX = Eigen::VectorXf::Zero(commonVerticesPair.first.size() * 3);
 
@@ -493,52 +559,76 @@ void Object::PBDLOOP(int looptime) {
 		g.prevFbind = g.Fbind;
 	}
 
-	// 方案 1：硬平均同步策略 (Visual Hack)
-	// 在所有 PBD 迭代和位置更新完成后，强制同步相邻组的界面顶点位置
-	// 这能 100% 消除因数值误差导致的接缝裂开
-	for (int i = 0; i < groupNum; ++i) {
-		for (int direction = 0; direction < 6; ++direction) {
-			int adjacentGroupIdx = groups[i].adjacentGroupIDs[direction];
-			// 只处理索引比自己大的邻居，避免重复计算
-			if (adjacentGroupIdx != -1 && adjacentGroupIdx > i) {
-				const auto& commonVerticesPair = groups[i].commonVerticesInDirections[direction];
-				const auto& vList1 = commonVerticesPair.first;
-				const auto& vList2 = commonVerticesPair.second;
+	// Robust interface vertex synchronization (multi-group junction safe):
+	// The old pairwise averaging across adjacent groups is order-dependent when 3+ groups share the same
+	// physical vertex (corners / T-junctions), which can inject energy and create localized twitching.
+	// Here we synchronize ALL duplicates by quantized init-position key in one shot.
+	struct Accum {
+		Eigen::Vector3f sumPos = Eigen::Vector3f::Zero();
+		Eigen::Vector3f sumVel = Eigen::Vector3f::Zero();
+		int count = 0;
+		bool anyFixed = false;
+		Eigen::Vector3f fixedInit = Eigen::Vector3f::Zero();
+	};
 
-				for (size_t k = 0; k < vList1.size(); ++k) {
-					Vertex* v1 = vList1[k];
-					Vertex* v2 = vList2[k];
-					
-					// 计算两个物理相同顶点的平均位置
-					float avgX = (v1->x + v2->x) * 0.5f;
-					float avgY = (v1->y + v2->y) * 0.5f;
-					float avgZ = (v1->z + v2->z) * 0.5f;
+	size_t estimate = 0;
+	for (int gi = 0; gi < groupNum; ++gi) estimate += groups[gi].verticesMap.size();
+	std::unordered_map<PhysKey, Accum, PhysKeyHash> acc;
+	acc.reserve(std::max<size_t>(estimate, 1024));
 
-					// 强制设为一致
-					v1->x = v2->x = avgX;
-					v1->y = v2->y = avgY;
-					v1->z = v2->z = avgZ;
+	for (int gi = 0; gi < groupNum; ++gi) {
+		Group& g = groups[gi];
+		for (const auto& vertexPair : g.verticesMap) {
+			Vertex* v = vertexPair.second;
+			if (!v) continue;
+			Accum& a = acc[makeKey(v)];
+			if (v->isFixed) {
+				a.anyFixed = true;
+				a.fixedInit = Eigen::Vector3f(v->initx, v->inity, v->initz);
+			} else {
+				a.sumPos += Eigen::Vector3f(v->x, v->y, v->z);
+				a.sumVel += Eigen::Vector3f(v->velx, v->vely, v->velz);
+				++a.count;
+			}
+		}
+	}
 
-					// 同步速度（非常重要）：否则下一帧 primeVec 使用旧速度 + 新位置，会注入能量导致抖动/爆炸。
-					float avgVx = (v1->velx + v2->velx) * 0.5f;
-					float avgVy = (v1->vely + v2->vely) * 0.5f;
-					float avgVz = (v1->velz + v2->velz) * 0.5f;
-					v1->velx = v2->velx = avgVx;
-					v1->vely = v2->vely = avgVy;
-					v1->velz = v2->velz = avgVz;
+	for (int gi = 0; gi < groupNum; ++gi) {
+		Group& g = groups[gi];
+		for (const auto& vertexPair : g.verticesMap) {
+			Vertex* v = vertexPair.second;
+			if (!v) continue;
+			const auto it = acc.find(makeKey(v));
+			if (it == acc.end()) continue;
+			const Accum& a = it->second;
+			if (a.anyFixed) {
+				v->x = a.fixedInit.x();
+				v->y = a.fixedInit.y();
+				v->z = a.fixedInit.z();
+				v->velx = 0.0f;
+				v->vely = 0.0f;
+				v->velz = 0.0f;
+			} else if (a.count > 1) {
+				const Eigen::Vector3f p = a.sumPos / static_cast<float>(a.count);
+				const Eigen::Vector3f vv = a.sumVel / static_cast<float>(a.count);
+				v->x = p.x(); v->y = p.y(); v->z = p.z();
+				v->velx = vv.x(); v->vely = vv.y(); v->velz = vv.z();
+			}
+		}
+	}
 
-					// 保持 Group::groupVelocity 与 Vertex::vel* 一致（primeVec 会用到 groupVelocity）。
-					{
-						const int li1 = v1->localIndex;
-						if (li1 >= 0 && (3 * li1 + 2) < groups[i].groupVelocity.size()) {
-							groups[i].groupVelocity.segment<3>(3 * li1) = Eigen::Vector3f(avgVx, avgVy, avgVz);
-						}
-						const int li2 = v2->localIndex;
-						if (li2 >= 0 && (3 * li2 + 2) < groups[adjacentGroupIdx].groupVelocity.size()) {
-							groups[adjacentGroupIdx].groupVelocity.segment<3>(3 * li2) = Eigen::Vector3f(avgVx, avgVy, avgVz);
-						}
-					}
-				}
+	// Keep Group::groupVelocity consistent with Vertex::vel* (primeVec uses groupVelocity).
+	for (int gi = 0; gi < groupNum; ++gi) {
+		Group& g = groups[gi];
+		for (const auto& vertexPair : g.verticesMap) {
+			Vertex* v = vertexPair.second;
+			if (!v) continue;
+			const int li = v->localIndex;
+			if (li < 0 || (3 * li + 2) >= g.groupVelocity.size()) continue;
+			if (v->isFixed) {
+				g.groupVelocity.segment<3>(3 * li) = Eigen::Vector3f::Zero();
+			} else {
+				g.groupVelocity.segment<3>(3 * li) = Eigen::Vector3f(v->velx, v->vely, v->velz);
 			}
 		}
 	}

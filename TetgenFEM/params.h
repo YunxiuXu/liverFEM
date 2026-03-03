@@ -27,6 +27,8 @@ extern float tumorCenterZFrac;
 extern int groupNum, groupNumX, groupNumY, groupNumZ;
 extern const float PI;
 extern float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
+// Interface binding constraint stabilization: clamp per-constraint acceleration (<=0 disables).
+extern float bind_maxAccel;
 extern float dragInfluenceRadius, dragStiffness, dragMaxAccel, dragMaxDisplacement;
 
 // Object anchoring (prevents whole-body drift; disable for full-body motion).
@@ -214,6 +216,9 @@ extern std::string modelDir;
 extern std::string stlFile, tetgenArgs, nodeFile, eleFile;
 extern bool useDirectLoading;
 extern bool autoSaveMesh;
+// Rotate the loaded TetGen mesh around the Y axis (degrees, applied about the mesh bbox center).
+// Use -90 for "clockwise 90 deg" when looking down +Y.
+extern float model_rotateY_deg;
 
 // Haptic UART Interface
 extern bool haptic_uart_enabled;

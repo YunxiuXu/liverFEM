@@ -1119,7 +1119,10 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		Eigen::Matrix3f W_sum = M_j.inverse() + M_k.inverse();  // W = M^(-1)
 		
 		// Alpha matrix (diagonal compliance) - α = 1/(E·hardness) * I
-		Eigen::Matrix3f alpha = Eigen::Matrix3f::Identity() * (1.0f / (youngs * hardness));
+		const float hSafe = std::max(1e-6f, hardness);
+		const float eSafe = std::max(1e-6f, youngs);
+		const float alphaVal = (1.0f / (eSafe * hSafe));
+		Eigen::Matrix3f alpha = Eigen::Matrix3f::Identity() * alphaVal;
 		
 		// Beta matrix (diagonal damping parameter) - β * I
 		Eigen::Matrix3f beta = Eigen::Matrix3f::Identity() * M_j * dampingBeta;
@@ -1127,7 +1130,7 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		// Gamma matrix (diagonal): γ = α * β
 		Eigen::Matrix3f gamma = alpha * beta / timeStep;
 		
-		// α/Δt² matrix
+		// α/Δt² matrix (keep physics compliance based on the actual local stiffness).
 		Eigen::Matrix3f alphaDivDt2 = alpha / (timeStep * timeStep);
 		
 		// Lambda（XPBD累计项），性能优先时可跳过
@@ -1176,6 +1179,19 @@ void Group::calFbind1(const std::vector<Vertex*>& commonVerticesGroup1,
 		
 		// Position correction: Δx_j = M_j^(-1) * Δλ
 		Eigen::Vector3f deltaX_j = M_j.inverse() * deltaLambda;
+
+		// Stability clamp: limit per-constraint acceleration to avoid high-frequency twitching
+		// at corners/interfaces (especially when material stiffness differs across groups).
+		// Since deltaX_j is a position correction applied over dt, accel ~= deltaX_j / dt^2.
+		extern float bind_maxAccel;
+		const float maxA = bind_maxAccel;
+		if (maxA > 0.0f) {
+			const float maxDx = maxA * (timeStep * timeStep);
+			const float dxLen = deltaX_j.norm();
+			if (dxLen > maxDx && dxLen > 1e-12f) {
+				deltaX_j *= (maxDx / dxLen);
+			}
+		}
 		
 		// Convert to force: F = M * Δx / Δt²
 		Eigen::Vector3f forceJ = M_j * deltaX_j / (timeStep * timeStep);

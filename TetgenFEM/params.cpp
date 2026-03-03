@@ -22,6 +22,7 @@ float tumorCenterZFrac = 0.5f;
 int groupNum, groupNumX, groupNumY, groupNumZ;
 const float PI = 3.1415926535f; // This can be hardcoded as it won't change
 float timeStep, dampingConst, Gravity, bindForce, bindVelocity, constraintHardness;
+float bind_maxAccel = 0.0f;
 float dragInfluenceRadius = 0.6f;
 float dragStiffness = 2500.0f;
 float dragMaxAccel = 50000.0f;
@@ -194,6 +195,7 @@ std::string modelDir;
 std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
 bool autoSaveMesh = true;
+float model_rotateY_deg = 0.0f;
 
 // Haptic UART Interface
 bool haptic_uart_enabled = false;
@@ -334,6 +336,7 @@ void loadParams(const std::string& filename) {
         {"timeStep", &timeStep}, {"dampingConst", &dampingConst},
         {"Gravity", &Gravity}, {"bindForce", &bindForce}, {"bindVelocity", &bindVelocity},
         {"constraintHardness", &constraintHardness},
+        {"bind_maxAccel", &bind_maxAccel},
         {"dragInfluenceRadius", &dragInfluenceRadius},
         {"dragStiffness", &dragStiffness},
         {"dragMaxAccel", &dragMaxAccel},
@@ -401,6 +404,7 @@ void loadParams(const std::string& filename) {
         {"leap_yOffsetBboxFrac", &leapYOffsetBboxFrac},
         {"leap_fingerSpreadGain", &leapFingerSpreadGain},
         {"leap_smoothingTime", &leapSmoothingTime},
+        {"model_rotateY_deg", &model_rotateY_deg},
         {"left_hand_capsuleRadiusBboxScale", &leftHandCapsuleRadiusBboxScale},
         {"left_hand_capsuleLengthBboxScale", &leftHandCapsuleLengthBboxScale},
         {"left_hand_extraSmoothingTime", &leftHandExtraSmoothingTime},
