@@ -710,7 +710,9 @@ static int applyLiverCavityConstraints(
 	const std::vector<int>& surfacePhysIds,
 	std::vector<int>& activeTriangleByPhysIdInOut,
 	float cavityGap,
-	float cavityOpenX,
+	int openAxis,
+	float openLo,
+	float openHi,
 	float dt,
 	float restitution,
 	float tangentialDamp)
@@ -720,7 +722,9 @@ static int applyLiverCavityConstraints(
 	if (!cavityTriangleEnabled.empty() && cavityTriangleEnabled.size() != surfaceTriangles.size()) return 0;
 
 	const float gap = std::max(0.0f, cavityGap);
-	const float openX = cavityOpenX;
+	const int axis = std::clamp(openAxis, 0, 2);
+	const float lo = std::min(openLo, openHi);
+	const float hi = std::max(openLo, openHi);
 	const float invDt = 1.0f / std::max(1e-8f, dt);
 	const float rest = std::clamp(restitution, 0.0f, 1.0f);
 	const float tanD = std::clamp(tangentialDamp, 0.0f, 1.0f);
@@ -787,8 +791,8 @@ static int applyLiverCavityConstraints(
 		pAvg /= static_cast<float>(n);
 		vAvg /= static_cast<float>(n);
 
-		// Exposed side (surgeon access): leave the -X side open.
-		if (pAvg.x() <= openX) continue;
+		// Exposed side (surgeon access): leave the selected side open.
+		if (pAvg[axis] >= lo && pAvg[axis] <= hi) continue;
 
 		int ti = defaultTri;
 		if (pid >= 0 && pid < static_cast<int>(activeTriangleByPhysIdInOut.size())) {
@@ -840,7 +844,12 @@ static int applyLiverCavityConstraints(
 		const float penetration = bestSignedPlane - gap;
 		if (penetration <= 0.0f) continue;
 
-		const Eigen::Vector3f pNew = pAvg - bestN * penetration;
+		// Limit per-step correction to avoid startup "ghost pull" when initial pose slightly intersects
+		// the cavity (e.g., after model reorientation / discretization mismatch).
+		// Keep cavity push-back gentle and bounded to avoid startup/occasional ghost-force snaps.
+		const float maxCorrection = std::max(0.001f, 0.15f * std::max(0.0f, gap));
+		const float usedPenetration = std::min(penetration, maxCorrection);
+		const Eigen::Vector3f pNew = pAvg - bestN * usedPenetration;
 		Eigen::Vector3f vNew = vAvg + (pNew - pAvg) * invDt;
 
 		// Velocity response (like a plane collision), using the cavity outward normal.
@@ -2149,9 +2158,9 @@ int main(int argc, char** argv) {
 		tetrahedralize(&behavior, &in, &out);
 	}
 	
-	// Optional: rotate the loaded TetGen mesh around Y (about its bbox center).
+	// Optional: rotate the loaded TetGen mesh (about its bbox center).
 	// This is applied before group division so material/group mapping stays consistent.
-	if (std::abs(model_rotateY_deg) > 1e-6f && out.pointlist && out.numberofpoints > 0) {
+	if ((std::abs(model_rotateX_deg) > 1e-6f || std::abs(model_rotateY_deg) > 1e-6f || std::abs(model_rotateZ_deg) > 1e-6f) && out.pointlist && out.numberofpoints > 0) {
 		double minx = std::numeric_limits<double>::infinity();
 		double miny = std::numeric_limits<double>::infinity();
 		double minz = std::numeric_limits<double>::infinity();
@@ -2167,18 +2176,48 @@ int main(int argc, char** argv) {
 		}
 		const double cx = 0.5 * (minx + maxx);
 		const double cz = 0.5 * (minz + maxz);
-		const double rad = static_cast<double>(model_rotateY_deg) * (3.14159265358979323846 / 180.0);
-		const double c = std::cos(rad);
-		const double s = std::sin(rad);
+		const double cy = 0.5 * (miny + maxy);
+		const double radX = static_cast<double>(model_rotateX_deg) * (3.14159265358979323846 / 180.0);
+		const double radY = static_cast<double>(model_rotateY_deg) * (3.14159265358979323846 / 180.0);
+		const double radZ = static_cast<double>(model_rotateZ_deg) * (3.14159265358979323846 / 180.0);
+		const double cX = std::cos(radX), sX = std::sin(radX);
+		const double cY = std::cos(radY), sY = std::sin(radY);
+		const double cZ = std::cos(radZ), sZ = std::sin(radZ);
 		for (int i = 0; i < out.numberofpoints; ++i) {
-			const double x0 = static_cast<double>(out.pointlist[3 * i + 0]) - cx;
-			const double z0 = static_cast<double>(out.pointlist[3 * i + 2]) - cz;
-			const double x1 = c * x0 + s * z0;
-			const double z1 = -s * x0 + c * z0;
-			out.pointlist[3 * i + 0] = static_cast<REAL>(x1 + cx);
-			out.pointlist[3 * i + 2] = static_cast<REAL>(z1 + cz);
+			double x = static_cast<double>(out.pointlist[3 * i + 0]) - cx;
+			double y = static_cast<double>(out.pointlist[3 * i + 1]) - cy;
+			double z = static_cast<double>(out.pointlist[3 * i + 2]) - cz;
+
+			// X rotation
+			if (std::abs(model_rotateX_deg) > 1e-6f) {
+				const double y1 = cX * y - sX * z;
+				const double z1 = sX * y + cX * z;
+				y = y1;
+				z = z1;
+			}
+			// Y rotation
+			if (std::abs(model_rotateY_deg) > 1e-6f) {
+				const double x1 = cY * x + sY * z;
+				const double z1 = -sY * x + cY * z;
+				x = x1;
+				z = z1;
+			}
+			// Z rotation
+			if (std::abs(model_rotateZ_deg) > 1e-6f) {
+				const double x1 = cZ * x - sZ * y;
+				const double y1 = sZ * x + cZ * y;
+				x = x1;
+				y = y1;
+			}
+
+			out.pointlist[3 * i + 0] = static_cast<REAL>(x + cx);
+			out.pointlist[3 * i + 1] = static_cast<REAL>(y + cy);
+			out.pointlist[3 * i + 2] = static_cast<REAL>(z + cz);
 		}
-		std::cout << "[Model] rotateY(deg)=" << model_rotateY_deg << " applied (about bbox center).\n";
+		std::cout << "[Model] rotateX(deg)=" << model_rotateX_deg
+		          << " rotateY(deg)=" << model_rotateY_deg
+		          << " rotateZ(deg)=" << model_rotateZ_deg
+		          << " applied (about bbox center).\n";
 	}
 	
 
@@ -2482,6 +2521,16 @@ int main(int argc, char** argv) {
 	const Eigen::Vector3f bboxCenter = 0.5f * (bboxMin + bboxMax);
 	const float bboxDiag = (bboxMax - bboxMin).norm();
 	const Eigen::Vector3f bboxExtents = bboxMax - bboxMin;
+	// Move tumor center to the latest picked INIT coordinate.
+	{
+		const Eigen::Vector3f pickedInit(-0.260092f, 0.549064f, 0.830963f);
+		const float invX = 1.0f / std::max(1e-8f, bboxExtents.x());
+		const float invY = 1.0f / std::max(1e-8f, bboxExtents.y());
+		const float invZ = 1.0f / std::max(1e-8f, bboxExtents.z());
+		tumorCenterXFrac = std::clamp((pickedInit.x() - bboxMin.x()) * invX, 0.0f, 1.0f);
+		tumorCenterYFrac = std::clamp((pickedInit.y() - bboxMin.y()) * invY, 0.0f, 1.0f);
+		tumorCenterZFrac = std::clamp((pickedInit.z() - bboxMin.z()) * invZ, 0.0f, 1.0f);
+	}
 	const Eigen::Vector3f wallMargin0 = std::max(0.0f, wallMarginBboxScale) * bboxExtents;
 	const float wallXMax0 = bboxMax.x() + wallMargin0.x();
 	const float wallYMin0 = bboxMin.y() - wallMargin0.y();
@@ -2646,7 +2695,7 @@ int main(int argc, char** argv) {
 		// LEFT : (0.000000,-0.990932,0.990932)
 		// RIGHT: (0.495466,-0.000000,0.990932)
 		Eigen::Vector3f leapLeftWorldOffset(0.0f, -0.195466f, 0.790932f);
-		Eigen::Vector3f leapRightWorldOffset(0.495466f, 0.0f, 0.990932f);
+		Eigen::Vector3f leapRightWorldOffset(0.495466f, -0.1f, 0.990932f);
 		enum class LeapOffsetTarget { Right, Left };
 		LeapOffsetTarget leapOffsetTarget = LeapOffsetTarget::Right;
 		std::array<Eigen::Vector3f, kFingerCount> leapLatestTipsMm;
@@ -2773,8 +2822,11 @@ int main(int argc, char** argv) {
 			std::vector<char> cavityTriangleEnabled;
 			std::vector<int> cavitySurfacePhysIds;
 			std::vector<int> cavityActiveTriangleByPhysId;
+			std::vector<Eigen::Vector3f> cavityVertexNormalByPhysId;
 			float cavityGapWorld = 0.0f;
-			float cavityOpenXWorld = bboxMin.x();
+			int cavityOpenAxis = 1;
+			float cavityOpenLoWorld = bboxMax.y();
+			float cavityOpenHiWorld = bboxMax.y();
 		agentContactVertices.reserve(objectUniqueVertices.size());
 		agentContactTrianglePhysIds.reserve(objectUniqueVertices.size());
 		agentContactVertexPhysIds.reserve(objectUniqueVertices.size());
@@ -3055,13 +3107,27 @@ int main(int argc, char** argv) {
 				// Abdominal cavity wall (static, rest-pose liver-shaped boundary)
 				// ------------------------------------------------------------
 				// We derive a cavity boundary from the *rest pose* surface triangles, inflated outward by a small
-				// gap. The surgeon-access side is -X, so we leave that side open by disabling those triangles.
+				// gap. One side is left open by disabling those triangles (models the surgical exposure).
 				{
 					cavityGapWorld = std::max(0.0f, cavity_gap_bboxScale) * bboxDiag;
-					const float xExtent = std::max(1e-6f, bboxMax.x() - bboxMin.x());
+					cavityOpenAxis = std::clamp(cavity_open_axis, 0, 2);
+					const int openSide = (cavity_open_side >= 0) ? 1 : -1;
+
+					const Eigen::Vector3f extents = bboxMax - bboxMin;
+					const float axisExtent = std::max(1e-6f, extents[cavityOpenAxis]);
 					const float openFrac = std::clamp(cavity_open_frac, 0.0f, 1.0f);
-					// Open a band near -X: [bboxMin.x, openX].
-					cavityOpenXWorld = bboxMin.x() + openFrac * xExtent;
+
+					const float axisMin = bboxMin[cavityOpenAxis];
+					const float axisMax = bboxMax[cavityOpenAxis];
+					if (openSide > 0) {
+						// Open near bboxMax: [openLo, axisMax]
+						cavityOpenLoWorld = axisMax - openFrac * axisExtent;
+						cavityOpenHiWorld = axisMax + 1e-6f;
+					} else {
+						// Open near bboxMin: [axisMin, openHi]
+						cavityOpenLoWorld = axisMin - 1e-6f;
+						cavityOpenHiWorld = axisMin + openFrac * axisExtent;
+					}
 
 					// Surface phys ids (only these vertices can collide with the cavity).
 					cavitySurfacePhysIds.reserve(isSurfacePhys.size());
@@ -3070,9 +3136,42 @@ int main(int argc, char** argv) {
 						cavitySurfacePhysIds.push_back(id);
 					}
 
-					// Triangle enable mask: disable the open (-X) side triangles so there's no "front wall".
+					// Smoothed per-vertex outward normals (rest pose) for cavity visualization.
+					// This avoids a faceted "broken triangles" look from per-face normal offsets.
+					cavityVertexNormalByPhysId.assign(agentVerticesByPhysId.size(), Eigen::Vector3f::Zero());
+					if (!agentContactTrianglePhysIds.empty() &&
+					    agentContactTrianglePhysIds.size() == agentContactTriangles.size()) {
+						for (int ti = 0; ti < static_cast<int>(agentContactTriangles.size()); ++ti) {
+							const AgentTriangle& tri = agentContactTriangles[static_cast<size_t>(ti)];
+							if (!tri.a || !tri.b || !tri.c) continue;
+							const Eigen::Vector3f a(tri.a->initx, tri.a->inity, tri.a->initz);
+							const Eigen::Vector3f b(tri.b->initx, tri.b->inity, tri.b->initz);
+							const Eigen::Vector3f c(tri.c->initx, tri.c->inity, tri.c->initz);
+							Eigen::Vector3f n = Eigen::Vector3f::Zero();
+							if (!outwardNormalForTriangleInit(tri, a, b, c, &n)) continue;
+							const float area = 0.5f * ((b - a).cross(c - a)).norm();
+							const Eigen::Vector3f nw = n * std::max(1e-8f, area);
+							const auto& ids = agentContactTrianglePhysIds[static_cast<size_t>(ti)];
+							for (int k = 0; k < 3; ++k) {
+								const int pid = ids[static_cast<size_t>(k)];
+								if (pid < 0 || pid >= static_cast<int>(cavityVertexNormalByPhysId.size())) continue;
+								cavityVertexNormalByPhysId[static_cast<size_t>(pid)] += nw;
+							}
+						}
+						for (size_t pid = 0; pid < cavityVertexNormalByPhysId.size(); ++pid) {
+							Eigen::Vector3f& n = cavityVertexNormalByPhysId[pid];
+							const float l2 = n.squaredNorm();
+							if (l2 > 1e-20f) n /= std::sqrt(l2);
+						}
+					}
+
+					// Triangle enable mask: disable the open side triangles so there's no "front wall".
 					cavityTriangleEnabled.assign(agentContactTriangles.size(), 1);
-					const float openXDisable = cavityOpenXWorld + 0.02f * xExtent; // slightly bigger opening than the vertex gate
+					const float margin = 0.02f * axisExtent; // slightly bigger opening than the vertex gate
+					float disableLo = cavityOpenLoWorld;
+					float disableHi = cavityOpenHiWorld;
+					if (openSide > 0) disableLo -= margin;
+					else disableHi += margin;
 					for (int ti = 0; ti < static_cast<int>(agentContactTriangles.size()); ++ti) {
 						const AgentTriangle& tri = agentContactTriangles[static_cast<size_t>(ti)];
 						if (!tri.a || !tri.b || !tri.c) { cavityTriangleEnabled[static_cast<size_t>(ti)] = 0; continue; }
@@ -3082,8 +3181,12 @@ int main(int argc, char** argv) {
 						Eigen::Vector3f n = Eigen::Vector3f::Zero();
 						if (!outwardNormalForTriangleInit(tri, a, b, c, &n)) { cavityTriangleEnabled[static_cast<size_t>(ti)] = 0; continue; }
 						const Eigen::Vector3f centroid = (a + b + c) * (1.0f / 3.0f);
-						// Disable triangles on the exposed (-X) side (by position only).
-						if (centroid.x() <= openXDisable) { cavityTriangleEnabled[static_cast<size_t>(ti)] = 0; continue; }
+						// Disable triangles on the open side (by position only).
+						const float v = centroid[cavityOpenAxis];
+						if (v >= std::min(disableLo, disableHi) && v <= std::max(disableLo, disableHi)) {
+							cavityTriangleEnabled[static_cast<size_t>(ti)] = 0;
+							continue;
+						}
 					}
 
 					// Active triangle cache per physical vertex id (for fast local neighbor walk).
@@ -3117,7 +3220,9 @@ int main(int argc, char** argv) {
 
 					if (cavity_enabled) {
 						std::cout << "[Cavity] enabled=1 gap=" << cavityGapWorld
-						          << " openX=" << cavityOpenXWorld
+						          << " openAxis=" << cavityOpenAxis
+						          << " openLo=" << cavityOpenLoWorld
+						          << " openHi=" << cavityOpenHiWorld
 						          << " surfaceVerts=" << cavitySurfacePhysIds.size()
 						          << " tris=" << agentContactTriangles.size()
 						          << std::endl;
@@ -3243,6 +3348,7 @@ int main(int argc, char** argv) {
 				std::vector<float> weights;                        // [0..1] falloff in patch
 			};
 			std::vector<SuspensionSpring> suspensions;
+			std::vector<int> customFixedPhysIds;
 			if (suspensionEnabled && !physRep.empty() && !agentVerticesByPhysId.empty()) {
 				auto initPosOf = [&](int id) -> Eigen::Vector3f {
 					if (id < 0 || id >= static_cast<int>(physRep.size())) return Eigen::Vector3f::Zero();
@@ -3437,6 +3543,155 @@ int main(int argc, char** argv) {
 				}
 			}
 
+			// Custom fixed points (from picked init coords): hard pin directly, no spring.
+			if (!physRep.empty() && !agentVerticesByPhysId.empty()) {
+				auto initPosOf = [&](int id) -> Eigen::Vector3f {
+					if (id < 0 || id >= static_cast<int>(physRep.size())) return Eigen::Vector3f::Zero();
+					const Vertex* v = physRep[static_cast<size_t>(id)];
+					return v ? Eigen::Vector3f(v->initx, v->inity, v->initz) : Eigen::Vector3f::Zero();
+				};
+				std::vector<int> surfaceIds;
+				if (!isSurfacePhys.empty()) {
+					for (int id = 0; id < static_cast<int>(isSurfacePhys.size()); ++id) {
+						if (isSurfacePhys[static_cast<size_t>(id)]) surfaceIds.push_back(id);
+					}
+				}
+				if (surfaceIds.empty()) {
+					for (int id = 0; id < static_cast<int>(physRep.size()); ++id) surfaceIds.push_back(id);
+				}
+
+				const char* customPickedLog = R"PICK(
+[PickSurface] world=(-0.0965648,0.00278592,0.492334) init=(-0.0967717,0.000205548,0.498429)
+[PickSurface] world=(-0.144759,-0.0313461,0.505293) init=(-0.142718,-0.0267483,0.493113)
+[PickSurface] world=(-0.155409,-0.0545921,0.531068) init=(-0.152867,-0.0453267,0.523024)
+[PickSurface] world=(-0.157127,-0.0722063,0.574474) init=(-0.144172,-0.0485627,0.581415)
+[PickSurface] world=(-0.134041,-0.0429761,0.574446) init=(-0.144172,-0.0485627,0.581415)
+[PickSurface] world=(-0.0871722,-0.0576382,0.56918) init=(-0.0929277,-0.0516177,0.568762)
+[PickSurface] world=(-0.09034,-0.0666273,0.625679) init=(-0.0983166,-0.0550954,0.611615)
+[PickSurface] world=(-0.130429,-0.0562255,0.647734) init=(-0.144543,-0.0560426,0.663617)
+[PickSurface] world=(-0.160635,-0.0824554,0.646754) init=(-0.16342,-0.0860656,0.624649)
+[PickSurface] world=(-0.169628,-0.0983841,0.647553) init=(-0.174348,-0.107358,0.649195)
+[PickSurface] world=(-0.168719,-0.0907674,0.699559) init=(-0.173357,-0.0967337,0.694634)
+[PickSurface] world=(-0.158396,-0.0792155,0.705177) init=(-0.159584,-0.0844945,0.687114)
+[PickSurface] world=(-0.125207,-0.0612001,0.708542) init=(-0.144821,-0.0616311,0.725033)
+[PickSurface] world=(-0.108326,-0.0608027,0.703454) init=(-0.106505,-0.0603796,0.676726)
+[PickSurface] world=(-0.109067,-0.0610399,0.749351) init=(-0.0959499,-0.0608781,0.737485)
+[PickSurface] world=(-0.146307,-0.0610757,0.766037) init=(-0.149353,-0.0604804,0.788854)
+[PickSurface] world=(-0.164372,-0.0761411,0.766496) init=(-0.164747,-0.0750121,0.785856)
+[PickSurface] world=(-0.176329,-0.0900517,0.767721) init=(-0.174418,-0.080652,0.787438)
+[PickSurface] world=(-0.176541,-0.0816708,0.803502) init=(-0.17546,-0.0780926,0.810396)
+[PickSurface] world=(-0.150915,-0.0605419,0.804738) init=(-0.151336,-0.059977,0.816778)
+[PickSurface] world=(-0.13804,-0.0602634,0.815112) init=(-0.144894,-0.0595607,0.817867)
+[PickSurface] world=(-0.143056,-0.0562246,0.864294) init=(-0.153716,-0.0593725,0.850302)
+[PickSurface] world=(-0.186098,-0.118672,0.843675) init=(-0.18462,-0.119593,0.833234)
+[PickSurface] world=(-0.0380273,0.241718,0.710116) init=(-0.029371,0.246951,0.710334)
+[PickSurface] world=(-0.0516275,0.206,0.712046) init=(-0.083719,0.200556,0.710326)
+[PickSurface] world=(-0.0836784,0.167434,0.730461) init=(-0.083719,0.200556,0.710326)
+[PickSurface] world=(-0.128665,0.148411,0.742483) init=(-0.150843,0.124165,0.757786)
+[PickSurface] world=(-0.144542,0.156734,0.744863) init=(-0.150843,0.124165,0.757786)
+[PickSurface] world=(-0.201608,0.170656,0.757085) init=(-0.207854,0.143176,0.758615)
+[PickSurface] world=(-0.245601,0.182722,0.767915) init=(-0.213423,0.22121,0.766726)
+[PickSurface] world=(-0.231164,0.139107,0.762225) init=(-0.207854,0.143176,0.758615)
+[PickSurface] world=(-0.185699,0.10646,0.774855) init=(-0.200858,0.0839479,0.787144)
+[PickSurface] world=(-0.0716804,0.277443,0.707074) init=(-0.0385488,0.273562,0.707462)
+[PickSurface] world=(-0.111013,0.258481,0.709598) init=(-0.123586,0.259053,0.711175)
+[PickSurface] world=(-0.141946,0.240347,0.730652) init=(-0.123586,0.259053,0.711175)
+[PickSurface] world=(-0.15871,0.257845,0.74473) init=(-0.179991,0.250408,0.754452)
+[PickSurface] world=(-0.0254398,0.303754,0.750137) init=(-0.0109793,0.314519,0.764445)
+[PickSurface] world=(-0.0459595,0.345244,0.790106) init=(-0.0368805,0.34058,0.790013)
+[PickSurface] world=(-0.0716858,0.362113,0.790257) init=(-0.104639,0.351918,0.784955)
+[PickSurface] world=(-0.0968835,0.402296,0.758248) init=(-0.0978991,0.410127,0.760405)
+[PickSurface] world=(-0.117338,0.402114,0.780374) init=(-0.10678,0.390714,0.77517)
+[PickSurface] world=(-0.187215,0.420419,0.823067) init=(-0.187393,0.428378,0.823521)
+[PickSurface] world=(-0.228547,0.389417,0.809667) init=(-0.222362,0.383717,0.81033)
+[PickSurface] world=(-0.285574,0.360058,0.798928) init=(-0.310133,0.347925,0.794222)
+[PickSurface] world=(-0.300073,0.344516,0.796817) init=(-0.310133,0.347925,0.794222)
+[PickSurface] world=(-0.34755,0.284494,0.800716) init=(-0.366672,0.276287,0.803379)
+[PickSurface] world=(-0.336042,0.188297,0.786716) init=(-0.312663,0.202983,0.785249)
+[PickSurface] world=(-0.265086,0.155889,0.768274) init=(-0.29347,0.131763,0.7702)
+[PickSurface] world=(-0.188096,0.281936,0.785407) init=(-0.197622,0.28437,0.796499)
+[PickSurface] world=(-0.174257,0.323106,0.803493) init=(-0.147171,0.34107,0.796577)
+[PickSurface] world=(-0.109982,0.330848,0.743016) init=(-0.103671,0.343732,0.745723)
+[PickSurface] world=(-0.104868,0.238812,0.710171) init=(-0.123586,0.259053,0.711175)
+[PickSurface] world=(-0.170239,-0.411634,0.686305) init=(-0.16182,-0.382352,0.66472)
+[PickSurface] world=(-0.226804,-0.521128,0.679728) init=(-0.231647,-0.5304,0.682336)
+[PickSurface] world=(-0.298225,-0.586407,0.704004) init=(-0.317237,-0.597732,0.710456)
+[PickSurface] world=(-0.3833,-0.620514,0.706566) init=(-0.381766,-0.621774,0.713375)
+[PickSurface] world=(-0.42783,-0.633272,0.728507) init=(-0.419691,-0.634447,0.748363)
+[PickSurface] world=(-0.477496,-0.644376,0.758929) init=(-0.479892,-0.63987,0.72466)
+[PickSurface] world=(-0.471416,-0.645746,0.775855) init=(-0.478945,-0.649746,0.800979)
+[PickSurface] world=(-0.451451,-0.645689,0.796979) init=(-0.478945,-0.649746,0.800979)
+[PickSurface] world=(-0.403847,-0.635889,0.782479) init=(-0.419691,-0.634447,0.748363)
+[PickSurface] world=(-0.232089,-0.523223,0.769985) init=(-0.234396,-0.534477,0.738218)
+[PickSurface] world=(-0.169304,-0.390207,0.763167) init=(-0.161948,-0.370739,0.752697)
+[PickSurface] world=(-0.169769,-0.370532,0.795784) init=(-0.179492,-0.407064,0.806969)
+[PickSurface] world=(-0.193388,-0.41763,0.838631) init=(-0.198699,-0.422339,0.850319)
+[PickSurface] world=(-0.267204,-0.544191,0.850239) init=(-0.277363,-0.54856,0.872278)
+[PickSurface] world=(-0.33657,-0.612446,0.851767) init=(-0.343037,-0.620687,0.829255)
+[PickSurface] world=(-0.396694,-0.636685,0.845324) init=(-0.418744,-0.644323,0.824682)
+[PickSurface] world=(-0.514902,-0.655584,0.834044) init=(-0.475162,-0.652105,0.860653)
+[PickSurface] world=(-0.508068,-0.656726,0.873939) init=(-0.531581,-0.659887,0.896623)
+[PickSurface] world=(-0.478133,-0.651997,0.886072) init=(-0.475162,-0.652105,0.860653)
+[PickSurface] world=(-0.226805,-0.460008,0.880441) init=(-0.217907,-0.437614,0.893669)
+)PICK";
+				std::vector<Eigen::Vector3f> customPickedInit;
+				{
+					const std::string s(customPickedLog);
+					size_t p = 0;
+					while (true) {
+						size_t k = s.find("init=(", p);
+						if (k == std::string::npos) break;
+						k += 6;
+						size_t e = s.find(")", k);
+						if (e == std::string::npos) break;
+						std::string t = s.substr(k, e - k);
+						for (char& c : t) if (c == ',') c = ' ';
+						std::stringstream ss(t);
+						float x = 0.0f, y = 0.0f, z = 0.0f;
+						if (ss >> x >> y >> z) customPickedInit.emplace_back(x, y, z);
+						p = e + 1;
+					}
+				}
+
+				std::vector<char> used(static_cast<size_t>(physRep.size()), 0);
+				const float tol2 = std::pow(std::max(1e-6f, 0.03f * bboxDiag), 2.0f);
+				for (const auto& p : customPickedInit) {
+					int bestId = -1;
+					float bestD2 = std::numeric_limits<float>::infinity();
+					for (int id : surfaceIds) {
+						if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+						if (used[static_cast<size_t>(id)]) continue;
+						const float d2 = (initPosOf(id) - p).squaredNorm();
+						if (d2 < bestD2) { bestD2 = d2; bestId = id; }
+					}
+					if (bestId >= 0 && bestD2 <= tol2) {
+						used[static_cast<size_t>(bestId)] = 1;
+						customFixedPhysIds.push_back(bestId);
+					}
+				}
+
+				// Clear any previous hard-fixed flags, then apply only this curated set.
+				for (auto& list : agentVerticesByPhysId) {
+					for (Vertex* v : list) {
+						if (!v) continue;
+						v->isFixed = false;
+					}
+				}
+
+				// We use these points as soft spring constraints (not hard-fixed) to avoid contact blow-ups.
+				for (int id : customFixedPhysIds) {
+					if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+					for (Vertex* v : agentVerticesByPhysId[static_cast<size_t>(id)]) {
+						if (!v) continue;
+						v->isFixed = false;
+					}
+				}
+
+				std::cout << "[FixedPointsSpring] requested=" << customPickedInit.size()
+				          << " matched=" << customFixedPhysIds.size()
+				          << " tol=" << std::sqrt(tol2) << std::endl;
+			}
+
 			// [REMOVED] The previous custom export logic was causing "key not found" errors 
 			// because of vertex pointer mismatches after deduplication.
 			// We now use TetGen's native save functions immediately after meshing (see above).
@@ -3477,6 +3732,8 @@ int main(int argc, char** argv) {
 	static bool showFiberFlow = false;
 	static bool showGhostLinks = false;
 	static bool showVolumePreservation = false; // Volume preservation visualization mode
+	static bool showCavityWallVisual = true;
+	static bool showFixedPointVisual = true;
 	static int anisoDemoState = 0; // 0: Off, 1: Isotropic Demo, 2: Anisotropic Demo
 	static Vertex* anisoDemoVertex = nullptr;
 	static float anisoDemoForceMag = 2700.0f; 
@@ -3847,7 +4104,6 @@ int main(int argc, char** argv) {
 								const float smooth = std::max(std::max(0.0f, leapSmoothingTime), std::max(0.0f, leftHandExtraSmoothingTime));
 								const float alpha = (smooth > 1e-6f) ? (1.0f - std::exp(-timeStep / smooth)) : 1.0f;
 								const float yOffset = leapYOffsetBboxFrac * extents.y();
-								const Eigen::Vector3f margin = extents * m;
 
 								const float spreadGain = std::max(0.0f, leapFingerSpreadGain);
 								const Eigen::Vector3f spreadScale(spreadGain, 1.0f, spreadGain);
@@ -3858,24 +4114,13 @@ int main(int argc, char** argv) {
 									leapLeftCenterMm = indexTipMm;
 									leapLeftAnchorWorld = leapLeftHomeAnchor;
 
-									Eigen::Vector3f clampMin = bboxMin - margin;
-									Eigen::Vector3f clampMax = bboxMax + margin;
-									clampMin = clampMin.cwiseMin(leapLeftAnchorWorld - margin);
-									clampMax = clampMax.cwiseMax(leapLeftAnchorWorld + margin);
-
+									// Keep left-hand base mostly unconstrained, same as right hand, to avoid "air walls".
+									const float safe = 5.0f * bboxDiag;
+									const Eigen::Vector3f clampMin = bboxCenter - Eigen::Vector3f::Ones() * safe;
+									const Eigen::Vector3f clampMax = bboxCenter + Eigen::Vector3f::Ones() * safe;
 									Eigen::Vector3f base = leapLeftAnchorWorld;
 									base.y() += yOffset;
-									// Important: don't tightly clamp the left-hand Y range to bbox extents.
-									// Otherwise the hand can feel "stuck" on a horizontal plane when the user
-									// moves below the model. Keep X/Z clamped, but let Y move freely (with a
-									// very wide safety clamp to avoid flying away on tracking glitches).
-									base.x() = std::clamp(base.x(), clampMin.x(), clampMax.x());
-									base.z() = std::clamp(base.z(), clampMin.z(), clampMax.z());
-									{
-										const float yMin = bboxCenter.y() - 5.0f * bboxDiag;
-										const float yMax = bboxCenter.y() + 5.0f * bboxDiag;
-										base.y() = std::clamp(base.y(), yMin, yMax);
-									}
+									base = base.cwiseMax(clampMin).cwiseMin(clampMax);
 
 									const float maxRel = 0.5f * bboxDiag;
 									const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
@@ -3910,20 +4155,12 @@ int main(int argc, char** argv) {
 									}
 									leapLeftMappingCalibrated = true;
 								} else {
-									Eigen::Vector3f clampMin = bboxMin - margin;
-									Eigen::Vector3f clampMax = bboxMax + margin;
-									clampMin = clampMin.cwiseMin(leapLeftAnchorWorld - margin);
-									clampMax = clampMax.cwiseMax(leapLeftAnchorWorld + margin);
-
+									const float safe = 5.0f * bboxDiag;
+									const Eigen::Vector3f clampMin = bboxCenter - Eigen::Vector3f::Ones() * safe;
+									const Eigen::Vector3f clampMax = bboxCenter + Eigen::Vector3f::Ones() * safe;
 									Eigen::Vector3f base = leapLeftAnchorWorld + (indexTipMm - leapLeftCenterMm).cwiseProduct(scale);
 									base.y() += yOffset;
-									base.x() = std::clamp(base.x(), clampMin.x(), clampMax.x());
-									base.z() = std::clamp(base.z(), clampMin.z(), clampMax.z());
-									{
-										const float yMin = bboxCenter.y() - 5.0f * bboxDiag;
-										const float yMax = bboxCenter.y() + 5.0f * bboxDiag;
-										base.y() = std::clamp(base.y(), yMin, yMax);
-									}
+									base = base.cwiseMax(clampMin).cwiseMin(clampMax);
 
 									const float maxRel = 0.5f * bboxDiag;
 									const Eigen::Vector3f relClamp(maxRel, maxRel, maxRel);
@@ -4020,11 +4257,88 @@ int main(int argc, char** argv) {
 		const bool rightPressed = rightDown && !prevRightDown;
 		const bool rightReleased = !rightDown && prevRightDown;
 		prevRightDown = rightDown;
+		static bool prevLeftDown = false;
+		const bool leftDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+		const bool leftPressed = leftDown && !prevLeftDown;
+		const bool leftReleased = !leftDown && prevLeftDown;
+		prevLeftDown = leftDown;
 
 		auto pointInRect = [](double x, double y, const SimpleUI::Rect& r) {
 			return x >= r.x && x <= (r.x + r.w) && y >= r.y && y <= (r.y + r.h);
 		};
 		const bool cursorInUiButton = pointInRect(ui.state().mouseXWindow, ui.state().mouseYWindow, uiRunRect);
+
+		// Temporary picking helper: print only on a real click (press+release without drag).
+		static bool leftPickCandidate = false;
+		static double leftPickPressX = 0.0;
+		static double leftPickPressY = 0.0;
+		static double leftPickPressT = 0.0;
+		if (leftPressed) {
+			leftPickCandidate = !cursorInUiButton;
+			leftPickPressX = ui.state().mouseXWindow;
+			leftPickPressY = ui.state().mouseYWindow;
+			leftPickPressT = glfwGetTime();
+		}
+		if (leftDown && leftPickCandidate) {
+			const double dx = ui.state().mouseXWindow - leftPickPressX;
+			const double dy = ui.state().mouseYWindow - leftPickPressY;
+			const double drag2 = dx * dx + dy * dy;
+			if (drag2 > 25.0) leftPickCandidate = false; // >5 px movement => drag, do not print
+		}
+		if (leftReleased && leftPickCandidate) {
+			leftPickCandidate = false;
+			const double clickDt = glfwGetTime() - leftPickPressT;
+			if (clickDt <= 0.40) {
+				const float cameraDist = std::max(1e-6f, 1.5f * bboxDiag * zoomFactor);
+				Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+				model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+				model(2, 3) = -cameraDist;
+				const Eigen::Matrix4f projection = buildProjectionMatrix();
+				const Eigen::Matrix4f invProjectionModel = (projection * model).inverse();
+				const Eigen::Vector3f rayNear = unprojectCursorToWorld(
+					ui.state().mouseXFramebuffer, ui.state().mouseYFramebuffer, -1.0f,
+					invProjectionModel, ui.state().framebufferWidth, ui.state().framebufferHeight);
+				const Eigen::Vector3f rayFar = unprojectCursorToWorld(
+					ui.state().mouseXFramebuffer, ui.state().mouseYFramebuffer, 1.0f,
+					invProjectionModel, ui.state().framebufferWidth, ui.state().framebufferHeight);
+				Eigen::Vector3f rayDir = rayFar - rayNear;
+				const float rayLen = rayDir.norm();
+				if (rayLen > 1e-8f) rayDir /= rayLen;
+
+				float bestT = std::numeric_limits<float>::infinity();
+				Vertex* bestV = nullptr;
+				Eigen::Vector3f bestHit = Eigen::Vector3f::Zero();
+				for (const auto& tri : agentContactTriangles) {
+					if (!tri.a || !tri.b || !tri.c) continue;
+					const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+					const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+					const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+					float t = 0.0f;
+					if (!rayIntersectsTriangle(rayNear, rayDir, a, b, c, &t)) continue;
+					if (t >= bestT) continue;
+					const Eigen::Vector3f hit = rayNear + rayDir * t;
+					bestT = t;
+					bestHit = hit;
+					const float da2 = (a - hit).squaredNorm();
+					const float db2 = (b - hit).squaredNorm();
+					const float dc2 = (c - hit).squaredNorm();
+					if (da2 <= db2 && da2 <= dc2) bestV = tri.a;
+					else if (db2 <= da2 && db2 <= dc2) bestV = tri.b;
+					else bestV = tri.c;
+				}
+
+				if (bestV) {
+					std::cout << "[PickSurface] world=("
+					          << bestHit.x() << ","
+					          << bestHit.y() << ","
+					          << bestHit.z() << ") init=("
+					          << bestV->initx << ","
+					          << bestV->inity << ","
+					          << bestV->initz << ")"
+					          << std::endl;
+				}
+			}
+		}
 
 		if (!isAutoTestActive && !experiment3.isActive() && !experiment1.isActive() && !experiment2.isActive() && !experiment4.isActive()) {
 			if (rightReleased) {
@@ -4419,6 +4733,61 @@ int main(int argc, char** argv) {
 				}
 			}
 
+			// Custom picked points as soft "ligament-like" springs to their init positions.
+			// This replaces hard pinning to keep interaction stable under left-hand contact.
+			if (!customFixedPhysIds.empty() && !agentVerticesByPhysId.empty()) {
+				const float k = 800.0f;
+				const float c = 55.0f;
+				const float maxA = 12000.0f;
+				const float leashBeta = 0.20f; // per-frame positional leash toward rest
+				const float leashMaxStep = 0.008f;
+				for (int id : customFixedPhysIds) {
+					if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+					if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+					const Vertex* rep = physRep[static_cast<size_t>(id)];
+					if (!rep) continue;
+					const Eigen::Vector3f rest(rep->initx, rep->inity, rep->initz);
+					const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+					if (list.empty()) continue;
+
+					Eigen::Vector3f pAvg = Eigen::Vector3f::Zero();
+					Eigen::Vector3f vAvg = Eigen::Vector3f::Zero();
+					int n = 0;
+					for (Vertex* v : list) {
+						if (!v) continue;
+						pAvg += Eigen::Vector3f(v->x, v->y, v->z);
+						vAvg += Eigen::Vector3f(v->velx, v->vely, v->velz);
+						++n;
+					}
+					if (n <= 0) continue;
+					pAvg /= static_cast<float>(n);
+					vAvg /= static_cast<float>(n);
+
+					Eigen::Vector3f accel = k * (rest - pAvg) - c * vAvg;
+					const float aLen = accel.norm();
+					if (aLen > maxA && aLen > 1e-12f) accel *= (maxA / aLen);
+					if (accel.squaredNorm() <= 1e-12f) continue;
+
+					for (Vertex* v : list) {
+						if (!v || v->isFixed) continue;
+						const int idx = v->index;
+						if (idx >= 0 && idx < static_cast<int>(dragForces.size())) {
+							dragForces[static_cast<size_t>(idx)] += accel;
+						}
+						// Extra "bind" without hard-fixing: small direct correction each frame.
+						Eigen::Vector3f dp = leashBeta * (rest - Eigen::Vector3f(v->x, v->y, v->z));
+						const float dplen = dp.norm();
+						if (dplen > leashMaxStep && dplen > 1e-12f) dp *= (leashMaxStep / dplen);
+						v->x += dp.x();
+						v->y += dp.y();
+						v->z += dp.z();
+						v->velx *= 0.5f;
+						v->vely *= 0.5f;
+						v->velz *= 0.5f;
+					}
+				}
+			}
+
 				// Remember previous proxy positions (used for collision substepping in direct/kinematic mode).
 				std::array<Eigen::Vector3f, kFingerCount> agentProxyStartPositions = agentProxyPositions;
 
@@ -4569,7 +4938,7 @@ int main(int argc, char** argv) {
 
 
 		static bool drawFaces = true;
-		static bool drawEdges = true;
+		static bool drawEdges = false;
 		
 		// Physics update only when not paused
 		if (!isPaused) {
@@ -5810,7 +6179,10 @@ int main(int argc, char** argv) {
 					if ((wallEnabled || cavity_enabled) && !agentVerticesByPhysId.empty()) {
 						int wallHits = 0;
 
-						if (cavity_enabled && !agentContactTriangles.empty() && !cavitySurfacePhysIds.empty()) {
+						// Collision mode selection:
+						// 1) If cavity is enabled, use cavity collision only (or none if cavity collision is disabled).
+						// 2) Legacy axis-aligned wall collision is used only when cavity is disabled.
+						if (cavity_enabled && cavity_collision_enabled && !agentContactTriangles.empty() && !cavitySurfacePhysIds.empty()) {
 							wallHits = applyLiverCavityConstraints(
 								agentVerticesByPhysId,
 								agentContactTriangles,
@@ -5819,11 +6191,13 @@ int main(int argc, char** argv) {
 								cavitySurfacePhysIds,
 								cavityActiveTriangleByPhysId,
 								cavityGapWorld,
-								cavityOpenXWorld,
+								cavityOpenAxis,
+								cavityOpenLoWorld,
+								cavityOpenHiWorld,
 								timeStep,
 								wallRestitution,
 								wallTangentialDamp);
-						} else if (wallEnabled) {
+						} else if (!cavity_enabled && wallEnabled) {
 							const Eigen::Vector3f extents = bboxMax - bboxMin;
 							const Eigen::Vector3f margin = std::max(0.0f, wallMarginBboxScale) * extents;
 							const float wallXMax = bboxMax.x() + margin.x();
@@ -5991,6 +6365,51 @@ int main(int argc, char** argv) {
 						}
 					}
 
+					// Visualize custom hard-fixed points clearly.
+					if (showFixedPointVisual && !customFixedPhysIds.empty()) {
+						glDisable(GL_LIGHTING);
+						glEnable(GL_DEPTH_TEST);
+						glDepthMask(GL_TRUE);
+						glLineWidth(2.5f);
+						glBegin(GL_LINES);
+						glColor3f(1.0f, 0.2f, 0.2f);
+						for (int id : customFixedPhysIds) {
+							if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+							if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+							const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+							const Vertex* v0 = (!list.empty()) ? list.front() : nullptr;
+							const Vertex* vr = physRep[static_cast<size_t>(id)];
+							if (!v0 || !vr) continue;
+							glVertex3f(v0->x, v0->y, v0->z);
+							glVertex3f(vr->initx, vr->inity, vr->initz);
+						}
+						glEnd();
+
+						glPointSize(14.0f);
+						glBegin(GL_POINTS);
+						glColor3f(1.0f, 0.0f, 0.0f);
+						for (int id : customFixedPhysIds) {
+							if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+							const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+							const Vertex* v0 = (!list.empty()) ? list.front() : nullptr;
+							if (!v0) continue;
+							glVertex3f(v0->x, v0->y, v0->z);
+						}
+						glEnd();
+
+						// Rest anchors (init positions) of the custom ligament points.
+						glPointSize(8.0f);
+						glBegin(GL_POINTS);
+						glColor3f(1.0f, 1.0f, 0.2f);
+						for (int id : customFixedPhysIds) {
+							if (id < 0 || id >= static_cast<int>(physRep.size())) continue;
+							const Vertex* vr = physRep[static_cast<size_t>(id)];
+							if (!vr) continue;
+							glVertex3f(vr->initx, vr->inity, vr->initz);
+						}
+						glEnd();
+					}
+
 					// Draw agent sphere ("finger") device/proxy.
 					if (agentSphere.enabled) {
 						glLineWidth(2.0f);
@@ -6122,18 +6541,26 @@ int main(int argc, char** argv) {
 			}
 
 			// Draw walls around the organ.
-			if (cavity_enabled && !agentContactTriangles.empty() && !cavityTriangleEnabled.empty()) {
+			if (showCavityWallVisual && cavity_enabled && !agentContactTriangles.empty() && !cavityTriangleEnabled.empty()) {
 				const bool blendWasEnabled = (glIsEnabled(GL_BLEND) == GL_TRUE);
+				const bool depthWasEnabled = (glIsEnabled(GL_DEPTH_TEST) == GL_TRUE);
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				glDepthMask(GL_FALSE);
+				glEnable(GL_DEPTH_TEST);
+				glDisable(GL_CULL_FACE);
+				// Write depth so the cavity shell can correctly occlude liver parts behind it.
+				glDepthMask(GL_TRUE);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-				if (whiteBackground) glColor4f(0.1f, 0.2f, 0.6f, 0.18f);
-				else glColor4f(0.6f, 0.7f, 1.0f, 0.18f);
+				// Keep cavity shell subtle: ~20% visibility for cleaner surgical-view aesthetics.
+				if (whiteBackground) glColor4f(0.16f, 0.28f, 0.62f, 0.20f);
+				else glColor4f(0.58f, 0.72f, 0.98f, 0.20f);
 
 				glBegin(GL_TRIANGLES);
 				const float gap = std::max(0.0f, cavityGapWorld);
+				// Visual-only extra offset so the cavity shell reads as a continuous outer wall
+				// instead of fragmented patches caused by near-overlap with the liver surface.
+				const float visualGap = gap + std::max(0.015f * bboxDiag, 0.0f);
 				for (int ti = 0; ti < static_cast<int>(agentContactTriangles.size()); ++ti) {
 					if (!cavityTriangleEnabled[static_cast<size_t>(ti)]) continue;
 					const AgentTriangle& tri = agentContactTriangles[static_cast<size_t>(ti)];
@@ -6141,11 +6568,34 @@ int main(int argc, char** argv) {
 					const Eigen::Vector3f a(tri.a->initx, tri.a->inity, tri.a->initz);
 					const Eigen::Vector3f b(tri.b->initx, tri.b->inity, tri.b->initz);
 					const Eigen::Vector3f c(tri.c->initx, tri.c->inity, tri.c->initz);
-					Eigen::Vector3f n = Eigen::Vector3f::Zero();
-					if (!outwardNormalForTriangleInit(tri, a, b, c, &n)) continue;
-					const Eigen::Vector3f ao = a + n * gap;
-					const Eigen::Vector3f bo = b + n * gap;
-					const Eigen::Vector3f co = c + n * gap;
+					Eigen::Vector3f nFace = Eigen::Vector3f::Zero();
+					if (!outwardNormalForTriangleInit(tri, a, b, c, &nFace)) continue;
+
+					Eigen::Vector3f na = nFace;
+					Eigen::Vector3f nb = nFace;
+					Eigen::Vector3f nc = nFace;
+					if (!agentContactTrianglePhysIds.empty() &&
+					    agentContactTrianglePhysIds.size() == agentContactTriangles.size() &&
+					    !cavityVertexNormalByPhysId.empty()) {
+						const auto& ids = agentContactTrianglePhysIds[static_cast<size_t>(ti)];
+						const int ia = ids[0], ib = ids[1], ic = ids[2];
+						if (ia >= 0 && ia < static_cast<int>(cavityVertexNormalByPhysId.size()) &&
+						    cavityVertexNormalByPhysId[static_cast<size_t>(ia)].squaredNorm() > 1e-12f) {
+							na = cavityVertexNormalByPhysId[static_cast<size_t>(ia)];
+						}
+						if (ib >= 0 && ib < static_cast<int>(cavityVertexNormalByPhysId.size()) &&
+						    cavityVertexNormalByPhysId[static_cast<size_t>(ib)].squaredNorm() > 1e-12f) {
+							nb = cavityVertexNormalByPhysId[static_cast<size_t>(ib)];
+						}
+						if (ic >= 0 && ic < static_cast<int>(cavityVertexNormalByPhysId.size()) &&
+						    cavityVertexNormalByPhysId[static_cast<size_t>(ic)].squaredNorm() > 1e-12f) {
+							nc = cavityVertexNormalByPhysId[static_cast<size_t>(ic)];
+						}
+					}
+
+					const Eigen::Vector3f ao = a + na * visualGap;
+					const Eigen::Vector3f bo = b + nb * visualGap;
+					const Eigen::Vector3f co = c + nc * visualGap;
 					glVertex3f(ao.x(), ao.y(), ao.z());
 					glVertex3f(bo.x(), bo.y(), bo.z());
 					glVertex3f(co.x(), co.y(), co.z());
@@ -6153,11 +6603,13 @@ int main(int argc, char** argv) {
 				glEnd();
 
 				glDepthMask(GL_TRUE);
+				if (!depthWasEnabled) glDisable(GL_DEPTH_TEST);
 				if (!blendWasEnabled) glDisable(GL_BLEND);
 				if (!showVolumePreservation) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			}
 			// Fallback: simple axis-aligned walls (Y±, X+) around the initial bbox.
-			else if (wallEnabled) {
+			// Use only when cavity mode is disabled.
+			else if (!cavity_enabled && wallEnabled) {
 				const Eigen::Vector3f extents = bboxMax - bboxMin;
 				const Eigen::Vector3f margin = std::max(0.0f, wallMarginBboxScale) * extents;
 				const float x0 = bboxMin.x() - margin.x();
@@ -6168,15 +6620,17 @@ int main(int argc, char** argv) {
 				const float z1 = bboxMax.z() + margin.z();
 
 				const bool blendWasEnabled = (glIsEnabled(GL_BLEND) == GL_TRUE);
+				const bool depthWasEnabled = (glIsEnabled(GL_DEPTH_TEST) == GL_TRUE);
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				glDisable(GL_DEPTH_TEST);
 				glDepthMask(GL_FALSE);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 				if (whiteBackground) {
-					glColor4f(0.1f, 0.2f, 0.6f, 0.18f);
+					glColor4f(0.1f, 0.2f, 0.6f, 0.24f);
 				} else {
-					glColor4f(0.6f, 0.7f, 1.0f, 0.18f);
+					glColor4f(0.6f, 0.7f, 1.0f, 0.24f);
 				}
 
 				glBegin(GL_QUADS);
@@ -6198,6 +6652,7 @@ int main(int argc, char** argv) {
 				glEnd();
 
 				glDepthMask(GL_TRUE);
+				if (depthWasEnabled) glEnable(GL_DEPTH_TEST);
 				if (!blendWasEnabled) glDisable(GL_BLEND);
 				if (!showVolumePreservation) {
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -6932,6 +7387,16 @@ int main(int argc, char** argv) {
 				object.groups[i].calLHS();
 			}
 			}
+
+		const SimpleUI::Rect uiCavityWallRect{ rightMargin, uiMargin + 8.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiCavityWallRect, showCavityWallVisual ? "Hide Cavity Wall" : "Show Cavity Wall")) {
+			showCavityWallVisual = !showCavityWallVisual;
+		}
+
+		const SimpleUI::Rect uiFixedPointsRect{ rightMargin, uiMargin + 9.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiFixedPointsRect, showFixedPointVisual ? "Hide Fixed Points" : "Show Fixed Points")) {
+			showFixedPointVisual = !showFixedPointVisual;
+		}
 
 			// Agent force mini graph (bottom-left, above the status label).
 			if (agentSphere.enabled) {

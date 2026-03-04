@@ -150,10 +150,16 @@ extern float wallRestitution;
 extern float wallTangentialDamp;
 
 // "Abdominal cavity" wall: a static, liver-shaped boundary derived from the liver surface (rest pose),
-// inflated outward by a small gap. The exposed (-X) side is left open.
+// inflated outward by a small gap. One side is left open (to model the surgical exposure).
 extern bool cavity_enabled;
+// If false: cavity is visual-only (no collision constraints applied to tissue).
+extern bool cavity_collision_enabled;
 extern float cavity_gap_bboxScale; // outward offset distance = bboxDiag * this
-extern float cavity_open_frac;     // open window thickness near bboxMin.x as a fraction of bbox X extent
+extern float cavity_open_frac;     // thickness as a fraction of bbox extent along cavity_open_axis
+// 0=X, 1=Y, 2=Z
+extern int cavity_open_axis;
+// -1 = open near bboxMin[axis], +1 = open near bboxMax[axis]
+extern int cavity_open_side;
 
 // Ultraleap Leap Motion (LeapC) input.
 extern bool leapEnabled;
@@ -230,6 +236,12 @@ extern bool autoSaveMesh;
 // Rotate the loaded TetGen mesh around the Y axis (degrees, applied about the mesh bbox center).
 // Use -90 for "clockwise 90 deg" when looking down +Y.
 extern float model_rotateY_deg;
+// Rotate the loaded TetGen mesh around the X axis (degrees, applied about the mesh bbox center).
+// Positive uses the right-hand rule (Y->Z).
+extern float model_rotateX_deg;
+// Rotate the loaded TetGen mesh around the Z axis (degrees, applied about the mesh bbox center).
+// Use -90 to map model -X to world +Y.
+extern float model_rotateZ_deg;
 
 // Haptic UART Interface
 extern bool haptic_uart_enabled;

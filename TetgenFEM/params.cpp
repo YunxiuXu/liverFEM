@@ -107,8 +107,11 @@ float wallMarginBboxScale = 0.05f;
 float wallRestitution = 0.0f;
 float wallTangentialDamp = 0.2f;
 bool cavity_enabled = false;
+bool cavity_collision_enabled = false;
 float cavity_gap_bboxScale = 0.06f;
 float cavity_open_frac = 0.18f;
+int cavity_open_axis = 0;
+int cavity_open_side = -1;
 
 bool leapEnabled = false;
 float leapWorkspaceXmm = 260.0f;
@@ -201,6 +204,8 @@ std::string stlFile, tetgenArgs, nodeFile, eleFile;
 bool useDirectLoading;
 bool autoSaveMesh = true;
 float model_rotateY_deg = 0.0f;
+float model_rotateX_deg = 0.0f;
+float model_rotateZ_deg = 0.0f;
 
 // Haptic UART Interface
 bool haptic_uart_enabled = false;
@@ -428,6 +433,8 @@ void loadParams(const std::string& filename) {
         {"leap_fingerSpreadGain", &leapFingerSpreadGain},
         {"leap_smoothingTime", &leapSmoothingTime},
         {"model_rotateY_deg", &model_rotateY_deg},
+        {"model_rotateX_deg", &model_rotateX_deg},
+        {"model_rotateZ_deg", &model_rotateZ_deg},
         {"left_hand_capsuleRadiusBboxScale", &leftHandCapsuleRadiusBboxScale},
         {"left_hand_capsuleLengthBboxScale", &leftHandCapsuleLengthBboxScale},
         {"left_hand_extraSmoothingTime", &leftHandExtraSmoothingTime},
@@ -485,6 +492,8 @@ void loadParams(const std::string& filename) {
         {"groupNumX", &groupNumX}, {"groupNumY", &groupNumY}, {"groupNumZ", &groupNumZ},
         {"half_youngs_axis", &halfYoungsAxis},
         {"half_youngs_side", &halfYoungsSide},
+        {"cavity_open_axis", &cavity_open_axis},
+        {"cavity_open_side", &cavity_open_side},
         {"anchor_mode", &anchorMode},
         {"tet_volumeConstraintIterations", &tetVolumeConstraintIterations},
         {"agent_liveFileIntervalFrames", &agentLiveFileIntervalFrames},
@@ -554,6 +563,7 @@ void loadParams(const std::string& filename) {
         {"agent_writeLiveFile", &agentWriteLiveFile},
         {"wall_enabled", &wallEnabled},
         {"cavity_enabled", &cavity_enabled},
+        {"cavity_collision_enabled", &cavity_collision_enabled},
         {"leap_enabled", &leapEnabled},
         {"leap_flipX", &leapFlipX},
         {"leap_flipY", &leapFlipY},

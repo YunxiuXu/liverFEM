@@ -35,8 +35,11 @@ bind_maxAccel=15000
 modelDir=models
 stlFile=liver_HD_Low.stl
 tetgenArgs=pq20a0.000083
-# Rotate the model around +Y (degrees). -90 = clockwise 90deg when looking down +Y.
-model_rotateY_deg=-90
+# Model re-orientation (world axes, right-hand rule):
+# 1) from current pose: looking towards +X, rotate 180
+# 2) then looking towards -Y, CCW 90 (equivalent to +Y -90)
+model_rotateX_deg=90
+model_rotateY_deg=180
 nodeFile=armadillo_4k.node
 eleFile=armadillo_4k.ele
 useDirectLoading=false
@@ -58,10 +61,10 @@ anchor_springMaxAccel=5000
 
 # Optional: 3-point suspension ligaments (surface patches -> box walls)
 # Use this when you want "organ supports": 1 posterior-superior (hard) + 2 diaphragm hangers (soft).
-suspension_enabled=true
-susp1_enabled=true
-susp2_enabled=true
-susp3_enabled=true
+suspension_enabled=false
+susp1_enabled=false
+susp2_enabled=false
+susp3_enabled=false
 # Patch selection (fractions of initial bbox extents)
 susp1_backSliceFrac=0.12
 susp1_topSliceFrac=0.15
@@ -140,10 +143,13 @@ wall_marginBboxScale=0.05
 wall_restitution=0.0
 wall_tangentialDamp=0.2
 # Abdominal cavity: liver-shaped wall (rest-pose surface inflated outward by a gap).
-# Exposed side is -X (no wall there).
+# Exposed side is +Y (no wall there).
 cavity_enabled=true
-cavity_gap_bboxScale=0.06
-cavity_open_xFrac=0.18
+cavity_collision_enabled=true
+cavity_gap_bboxScale=0.065
+cavity_open_frac=0.45
+cavity_open_axis=1
+cavity_open_side=+1
 
 # Ultraleap Leap Motion (LeapC) right-hand fingertips (thumb..pinky) -> agent spheres mapping
 leap_enabled=true
@@ -275,3 +281,4 @@ haptic_tumor_vib_enabled=true
 haptic_tumor_vib_freq_hz=70.0
 haptic_tumor_vib_amp=12.0
 haptic_tumor_vib_duration_sec=0.15
+model_rotateZ_deg=180
