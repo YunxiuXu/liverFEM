@@ -20,6 +20,10 @@ float tumorRadiusFrac = 0.22f;
 float tumorCenterXFrac = 0.144398f;
 float tumorCenterYFrac = 0.795854f;
 float tumorCenterZFrac = 0.922562f;
+bool tumorCenterGroupOverrideEnabled = false;
+int tumorCenterGroupX = 0;
+int tumorCenterGroupY = 0;
+int tumorCenterGroupZ = 0;
 bool tumorUse3D = true;
 int groupNum, groupNumX, groupNumY, groupNumZ;
 const float PI = 3.1415926535f; // This can be hardcoded as it won't change
@@ -277,9 +281,14 @@ bool isTumorYoungsGroup(int groupIdx) {
 	const int y = (groupIdx / nx) % ny;
 	const int z = (groupIdx / (nx * ny));
 
-	const int cx = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterXFrac, 0.0f, 1.0f) * static_cast<float>(nx - 1))), 0, nx - 1);
-	const int cy = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterYFrac, 0.0f, 1.0f) * static_cast<float>(ny - 1))), 0, ny - 1);
-	const int cz = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterZFrac, 0.0f, 1.0f) * static_cast<float>(nz - 1))), 0, nz - 1);
+	int cx = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterXFrac, 0.0f, 1.0f) * static_cast<float>(nx - 1))), 0, nx - 1);
+	int cy = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterYFrac, 0.0f, 1.0f) * static_cast<float>(ny - 1))), 0, ny - 1);
+	int cz = std::clamp(static_cast<int>(std::lround(std::clamp(tumorCenterZFrac, 0.0f, 1.0f) * static_cast<float>(nz - 1))), 0, nz - 1);
+	if (tumorCenterGroupOverrideEnabled) {
+		cx = std::clamp(tumorCenterGroupX, 0, nx - 1);
+		cy = std::clamp(tumorCenterGroupY, 0, ny - 1);
+		cz = std::clamp(tumorCenterGroupZ, 0, nz - 1);
+	}
 
 	const int m = std::max(1, tumorUse3D ? std::min(nx, std::min(ny, nz)) : std::min(nx, nz));
 	const float rFrac = std::clamp(tumorRadiusFrac, 0.0f, 1.0f);
@@ -291,10 +300,12 @@ bool isTumorYoungsGroup(int groupIdx) {
 		return (dx * dx + dy * dy + dz * dz) <= (rCells * rCells);
 	}
 
-	// Legacy mode: restrict to the top slice and apply radius in XZ only.
-	const float topFrac = std::clamp(tumorTopFrac, 0.0f, 1.0f);
-	const int topLayers = std::clamp(static_cast<int>(std::ceil(topFrac * static_cast<float>(ny))), 1, ny);
-	if (y < (ny - topLayers)) return false;
+	// Surface-patch mode: centered around picked group center in XZ, with a thin Y band
+	// around the picked center (instead of forcing "top layers"), so the patch follows
+	// the clicked surface location and avoids leaking to the opposite side.
+	const float bandFrac = std::clamp(tumorTopFrac, 0.0f, 1.0f);
+	const int yBand = std::clamp(static_cast<int>(std::ceil(bandFrac * static_cast<float>(ny))), 1, ny);
+	if (std::abs(dy) > yBand) return false;
 	return (dx * dx + dz * dz) <= (rCells * rCells);
 }
 

@@ -2521,15 +2521,15 @@ int main(int argc, char** argv) {
 	const Eigen::Vector3f bboxCenter = 0.5f * (bboxMin + bboxMax);
 	const float bboxDiag = (bboxMax - bboxMin).norm();
 	const Eigen::Vector3f bboxExtents = bboxMax - bboxMin;
+	const Eigen::Vector3f tumorPickedInit(-0.0228788f, 0.2075f, 0.714083f);
 	// Move tumor center to the latest picked INIT coordinate.
 	{
-		const Eigen::Vector3f pickedInit(-0.260092f, 0.549064f, 0.830963f);
 		const float invX = 1.0f / std::max(1e-8f, bboxExtents.x());
 		const float invY = 1.0f / std::max(1e-8f, bboxExtents.y());
 		const float invZ = 1.0f / std::max(1e-8f, bboxExtents.z());
-		tumorCenterXFrac = std::clamp((pickedInit.x() - bboxMin.x()) * invX, 0.0f, 1.0f);
-		tumorCenterYFrac = std::clamp((pickedInit.y() - bboxMin.y()) * invY, 0.0f, 1.0f);
-		tumorCenterZFrac = std::clamp((pickedInit.z() - bboxMin.z()) * invZ, 0.0f, 1.0f);
+		tumorCenterXFrac = std::clamp((tumorPickedInit.x() - bboxMin.x()) * invX, 0.0f, 1.0f);
+		tumorCenterYFrac = std::clamp((tumorPickedInit.y() - bboxMin.y()) * invY, 0.0f, 1.0f);
+		tumorCenterZFrac = std::clamp((tumorPickedInit.z() - bboxMin.z()) * invZ, 0.0f, 1.0f);
 	}
 	const Eigen::Vector3f wallMargin0 = std::max(0.0f, wallMarginBboxScale) * bboxExtents;
 	const float wallXMax0 = bboxMax.x() + wallMargin0.x();
@@ -2603,6 +2603,12 @@ int main(int argc, char** argv) {
 			const int gz = findBin(p.z(), groupZEdges, groupNz);
 			return gz * groupNx * groupNy + gy * groupNx + gx;
 		};
+		{
+			tumorCenterGroupOverrideEnabled = true;
+			tumorCenterGroupX = findBin(tumorPickedInit.x(), groupXEdges, groupNx);
+			tumorCenterGroupY = findBin(tumorPickedInit.y(), groupYEdges, groupNy);
+			tumorCenterGroupZ = findBin(tumorPickedInit.z(), groupZEdges, groupNz);
+		}
 
 		auto materialScaleAtWorldPoint = [&](const Eigen::Vector3f& p) -> float {
 			const float base = youngs;
@@ -2611,6 +2617,28 @@ int main(int argc, char** argv) {
 			const float eff = effectiveYoungsForGroup(gi, base);
 			return eff / base;
 		};
+		{
+			static bool printedTumorMapping = false;
+			if (!printedTumorMapping && tumorYoungsEnabled) {
+				const Eigen::Vector3f tumorInit(
+					bboxMin.x() + tumorCenterXFrac * bboxExtents.x(),
+					bboxMin.y() + tumorCenterYFrac * bboxExtents.y(),
+					bboxMin.z() + tumorCenterZFrac * bboxExtents.z());
+				const int gi = groupIndexFromWorldPoint(tumorInit);
+				const int gx = gi % groupNx;
+				const int gy = (gi / groupNx) % groupNy;
+				const int gz = (gi / (groupNx * groupNy));
+				const int ogi = tumorCenterGroupZ * groupNx * groupNy + tumorCenterGroupY * groupNx + tumorCenterGroupX;
+				const bool centerGroupHard = (std::abs(effectiveYoungsForGroup(ogi, youngs) - youngs) > 1e-3f);
+				std::cout << "[TumorMap] init=(" << tumorInit.x() << "," << tumorInit.y() << "," << tumorInit.z()
+				          << ") frac=(" << tumorCenterXFrac << "," << tumorCenterYFrac << "," << tumorCenterZFrac
+				          << ") group=(" << gx << "," << gy << "," << gz << ")"
+				          << " overrideGroup=(" << tumorCenterGroupX << "," << tumorCenterGroupY << "," << tumorCenterGroupZ << ")"
+				          << " centerHard=" << (centerGroupHard ? 1 : 0)
+				          << " rFrac=" << tumorRadiusFrac << "\n";
+				printedTumorMapping = true;
+			}
+		}
 
 		static constexpr int kFingerCount = 5;
 		static constexpr int kIndexFinger = 1;
@@ -4307,6 +4335,9 @@ int main(int argc, char** argv) {
 
 				float bestT = std::numeric_limits<float>::infinity();
 				Vertex* bestV = nullptr;
+				Vertex* bestA = nullptr;
+				Vertex* bestB = nullptr;
+				Vertex* bestC = nullptr;
 				Eigen::Vector3f bestHit = Eigen::Vector3f::Zero();
 				for (const auto& tri : agentContactTriangles) {
 					if (!tri.a || !tri.b || !tri.c) continue;
@@ -4325,16 +4356,43 @@ int main(int argc, char** argv) {
 					if (da2 <= db2 && da2 <= dc2) bestV = tri.a;
 					else if (db2 <= da2 && db2 <= dc2) bestV = tri.b;
 					else bestV = tri.c;
+					bestA = tri.a;
+					bestB = tri.b;
+					bestC = tri.c;
 				}
 
 				if (bestV) {
+					Eigen::Vector3f pickedInit(bestV->initx, bestV->inity, bestV->initz);
+					if (bestA && bestB && bestC) {
+						const Eigen::Vector3f wa(bestA->x, bestA->y, bestA->z);
+						const Eigen::Vector3f wb(bestB->x, bestB->y, bestB->z);
+						const Eigen::Vector3f wc(bestC->x, bestC->y, bestC->z);
+						const Eigen::Vector3f v0 = wb - wa;
+						const Eigen::Vector3f v1 = wc - wa;
+						const Eigen::Vector3f v2 = bestHit - wa;
+						const float d00 = v0.dot(v0);
+						const float d01 = v0.dot(v1);
+						const float d11 = v1.dot(v1);
+						const float d20 = v2.dot(v0);
+						const float d21 = v2.dot(v1);
+						const float denom = d00 * d11 - d01 * d01;
+						if (std::abs(denom) > 1e-12f) {
+							const float vb = (d11 * d20 - d01 * d21) / denom;
+							const float vc = (d00 * d21 - d01 * d20) / denom;
+							const float va = 1.0f - vb - vc;
+							const Eigen::Vector3f ia(bestA->initx, bestA->inity, bestA->initz);
+							const Eigen::Vector3f ib(bestB->initx, bestB->inity, bestB->initz);
+							const Eigen::Vector3f ic(bestC->initx, bestC->inity, bestC->initz);
+							pickedInit = ia * va + ib * vb + ic * vc;
+						}
+					}
 					std::cout << "[PickSurface] world=("
 					          << bestHit.x() << ","
 					          << bestHit.y() << ","
 					          << bestHit.z() << ") init=("
-					          << bestV->initx << ","
-					          << bestV->inity << ","
-					          << bestV->initz << ")"
+					          << pickedInit.x() << ","
+					          << pickedInit.y() << ","
+					          << pickedInit.z() << ")"
 					          << std::endl;
 				}
 			}

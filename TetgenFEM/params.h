@@ -26,6 +26,11 @@ extern float tumorCenterXFrac;
 // Center in Y as a fraction of [0..1] across groups (0.5 = middle).
 extern float tumorCenterYFrac;
 extern float tumorCenterZFrac;
+// Optional exact tumor center group override (set at runtime from picked point).
+extern bool tumorCenterGroupOverrideEnabled;
+extern int tumorCenterGroupX;
+extern int tumorCenterGroupY;
+extern int tumorCenterGroupZ;
 // If true, use a 3D spherical tumor region (centerX/Y/Z + radiusFrac). If false, use legacy "top slice"
 // XZ-cylinder (tumorTopFrac + centerX/Z + radiusFrac).
 extern bool tumorUse3D;
