@@ -906,6 +906,7 @@ static bool outwardNormalForTriangle(
 				float contactVelocityRelaxation,
 				float contactVelocityRelaxationMin,
 				float contactNormalDamp,
+				bool injectVelocityFromPositionCorrection,
 				float sphereRadius,
 					float allowedPenetration,
 					float eps,
@@ -960,6 +961,7 @@ static bool outwardNormalForTriangle(
 				const float velRelaxBase = std::clamp(contactVelocityRelaxation, 0.0f, 1.0f);
 				const float velRelaxMin = std::clamp(contactVelocityRelaxationMin, 0.0f, velRelaxBase);
 				const float nDamp = std::clamp(contactNormalDamp, 0.0f, 1.0f);
+				const bool injectVel = injectVelocityFromPositionCorrection;
 
 				auto applyDeltaToPhysId = [&](int id, const Eigen::Vector3f& dp, const Eigen::Vector3f& n) {
 				if (dp.squaredNorm() <= 1e-24f) return;
@@ -973,17 +975,14 @@ static bool outwardNormalForTriangle(
 				v->z += dp.z();
 
 					Eigen::Vector3f vv(v->velx, v->vely, v->velz);
-					// Apply velocity correction with relaxation to prevent oscillation.
-					// Adaptive relaxation: if correction is large (fast impact), use LESS velocity feedback
-					// to avoid adding huge energy to the system.
-					float velocityRelaxation = velRelaxBase;
-					const float corrLen = dp.norm();
-					if (corrLen > 1e-4f) {
-						// Reduce relaxation for large corrections, but less aggressively (100 -> 20)
-						// to allow better penetration response without oscillation.
-						velocityRelaxation = std::max(velRelaxMin, velRelaxBase / (1.0f + 20.0f * corrLen));
+					if (injectVel) {
+						float velocityRelaxation = velRelaxBase;
+						const float corrLen = dp.norm();
+						if (corrLen > 1e-4f) {
+							velocityRelaxation = std::max(velRelaxMin, velRelaxBase / (1.0f + 20.0f * corrLen));
+						}
+						vv += dp * invDt * velocityRelaxation;
 					}
-					vv += dp * invDt * velocityRelaxation;
 
 					Eigen::Vector3f relV = vv - sphereVel;
 					float dvN = std::max(0.0f, dp.dot(n) * invDt);
@@ -2801,10 +2800,6 @@ int main(int argc, char** argv) {
 	const int leftHandTotalSpheres = kFingerCount * leftHandSamplesClamped;
 	const float leftHandSphereRadius = std::max(1e-6f, leftHandCapsuleRadiusBboxScale * bboxDiag);
 	const float leftHandCapsuleLength = std::max(0.0f, leftHandCapsuleLengthBboxScale * bboxDiag);
-	const float leftHandProxyMassKgTotal = std::max(1e-6f, std::abs(leftHandProxyMassFracOfObject) * std::max(1e-6f, objectMassKg));
-	const float leftHandProxyMassKg = std::max(1e-6f, leftHandProxyMassKgTotal / static_cast<float>(std::max(1, leftHandTotalSpheres)));
-	const float leftHandVcKLen = std::max(0.0f, leftHandVcStiffnessNPerBbox) * invBboxDiag;   // N per unit length
-	const float leftHandVcCLen = std::max(0.0f, leftHandVcDampingNsPerBbox) * invBboxDiag;     // N*s per unit length
 
 	std::vector<Eigen::Vector3f> leftHandDevicePositions(static_cast<size_t>(leftHandTotalSpheres), Eigen::Vector3f::Zero());
 	std::vector<Eigen::Vector3f> leftHandDeviceVelocities(static_cast<size_t>(leftHandTotalSpheres), Eigen::Vector3f::Zero());
@@ -3761,7 +3756,7 @@ int main(int argc, char** argv) {
 	static bool showGhostLinks = false;
 	static bool showVolumePreservation = false; // Volume preservation visualization mode
 	static bool showCavityWallVisual = true;
-	static bool showFixedPointVisual = true;
+	static bool showFixedPointVisual = false;
 	static int anisoDemoState = 0; // 0: Off, 1: Isotropic Demo, 2: Anisotropic Demo
 	static Vertex* anisoDemoVertex = nullptr;
 	static float anisoDemoForceMag = 2700.0f; 
@@ -3769,7 +3764,8 @@ int main(int argc, char** argv) {
 	static float explodedScale = 0.5f;
 	static bool whiteBackground = false;
 	// Visualization toggle: highlight locally stiffer material override regions (e.g. tumor patch) in white.
-	static bool showMaterialOverrideOverlay = true;
+	static bool showMaterialOverrideOverlay = false;
+	static bool showAgentForceGraph = false;
 	static bool isPaused = false; // Pause physics simulation
 	static float stressGain = 4.0f; // Added for interactive tuning (reduced to 2/3 of original 15.0)
 	
@@ -4129,7 +4125,8 @@ int main(int argc, char** argv) {
 									leapFlipY ? -1.0f : 1.0f,
 									leapFlipZ ? -1.0f : 1.0f);
 
-								const float smooth = std::max(std::max(0.0f, leapSmoothingTime), std::max(0.0f, leftHandExtraSmoothingTime));
+								// Left hand: keep smoothing independent from the right-hand haptic proxy.
+								const float smooth = std::max(0.0f, leftHandExtraSmoothingTime);
 								const float alpha = (smooth > 1e-6f) ? (1.0f - std::exp(-timeStep / smooth)) : 1.0f;
 								const float yOffset = leapYOffsetBboxFrac * extents.y();
 
@@ -5340,6 +5337,7 @@ int main(int argc, char** argv) {
 														contactVelRelax,
 														contactVelRelaxMin,
 														contactNormalDamp,
+														/*injectVelocityFromPositionCorrection=*/true,
 														r,
 														allowedPenLocal,
 														eps,
@@ -5429,6 +5427,7 @@ int main(int argc, char** argv) {
 															contactVelRelax,
 															contactVelRelaxMin,
 															contactNormalDamp,
+															/*injectVelocityFromPositionCorrection=*/true,
 															r,
 															allowedPenLocal,
 															eps,
@@ -5591,6 +5590,7 @@ int main(int argc, char** argv) {
 															contactVelRelax,
 															contactVelRelaxMin,
 															contactNormalDamp,
+															/*injectVelocityFromPositionCorrection=*/true,
 															r,
 															allowedPenLocal,
 															eps,
@@ -6074,17 +6074,14 @@ int main(int argc, char** argv) {
 						const float allowedPen = maxPenFrac * r;
 						const float corr = std::clamp(leftHandProxyPositionCorrection, 0.0f, 1.0f);
 						const float tangentialDamp = std::clamp(leftHandCollisionTangentialDamp, 0.0f, 1.0f);
-						const float contactProxyInvMassScale = std::clamp(leftHandContactProxyInvMassScale, 0.0f, 1.0f);
 						const float contactVelRelax = std::clamp(leftHandContactVelocityRelaxation, 0.0f, 1.0f);
 						const float contactVelRelaxMin = std::clamp(leftHandContactVelocityRelaxationMin, 0.0f, contactVelRelax);
 						const float contactNormalDamp = std::clamp(leftHandContactNormalDamp, 0.0f, 1.0f);
 						const int iters = std::clamp(leftHandCollisionIterations, 1, 64);
 						const int manifoldK = std::clamp(leftHandContactManifoldTriangles, 1, 8);
-						const int substeps = std::clamp(leftHandVcSubsteps, 1, 200);
-
-						const float invMass = 1.0f / std::max(1e-6f, leftHandProxyMassKg);
-						const float maxVcDist = std::max(0.0f, leftHandVcMaxDistanceRadiusFrac) * r;
-						const float dtSub = timeStep / static_cast<float>(substeps);
+						// Left hand is non-haptic: drive proxies kinematically (no VC integration) to avoid
+						// laggy "fist opening" and collision-induced buzzing/spiraling.
+						const float sphereInvMass = 0.0f;
 
 						const std::vector<Eigen::Vector3f> proxyStart = leftHandProxyPositions;
 						float maxProxyStep = 0.0f;
@@ -6107,26 +6104,21 @@ int main(int argc, char** argv) {
 							const Eigen::Vector3f& devPos = leftHandDevicePositions[si];
 							const Eigen::Vector3f& devVel = leftHandDeviceVelocities[si];
 
-							Eigen::Vector3f driveForceN = Eigen::Vector3f::Zero();
-							for (int sub = 0; sub < substeps; ++sub) {
-								Eigen::Vector3f disp = devPos - sphereCenter;
-								const float dispLen = disp.norm();
-								if (maxVcDist > 1e-6f && dispLen > maxVcDist) disp *= (maxVcDist / dispLen);
-								driveForceN = leftHandVcKLen * disp + leftHandVcCLen * (devVel - sphereVel);
-								const Eigen::Vector3f a = driveForceN * invMass;
-								sphereVel += a * dtSub;
-								sphereCenter += sphereVel * dtSub;
-							}
+							const Eigen::Vector3f prev = sphereCenter;
+							sphereCenter = devPos;
+							sphereVel = devVel;
+							(void)prev;
 
 							AgentContactResult contact{};
 							contact = solveAgentSphereTriangleCollisionConstraint(
 								sphereCenter,
 								sphereVel,
-								invMass,
-								contactProxyInvMassScale,
+								sphereInvMass,
+								/*proxyInvMassScale=*/0.0f,
 								contactVelRelax,
 								contactVelRelaxMin,
 								contactNormalDamp,
+								/*injectVelocityFromPositionCorrection=*/false,
 								r,
 								allowedPen,
 								eps,
@@ -6137,7 +6129,7 @@ int main(int argc, char** argv) {
 								iters,
 								manifoldK,
 								&leftHandActiveContactTriangle[si],
-								driveForceN,
+								Eigen::Vector3f::Zero(),
 								agentContactTriangles,
 								agentContactTrianglePhysIds,
 								agentContactTriangleNeighbors,
@@ -6176,20 +6168,18 @@ int main(int argc, char** argv) {
 									Eigen::Vector3f& sphereVel = leftHandProxyVelocities[si];
 									const Eigen::Vector3f& devPos = leftHandDevicePositions[si];
 									const Eigen::Vector3f& devVel = leftHandDeviceVelocities[si];
-
-									Eigen::Vector3f disp = devPos - sphereCenter;
-									const float dispLen = disp.norm();
-									if (maxVcDist > 1e-6f && dispLen > maxVcDist) disp *= (maxVcDist / dispLen);
-									const Eigen::Vector3f driveForceN = leftHandVcKLen * disp + leftHandVcCLen * (devVel - sphereVel);
+									sphereCenter = devPos;
+									sphereVel = devVel;
 
 									(void)solveAgentSphereTriangleCollisionConstraint(
 										sphereCenter,
 										sphereVel,
-										invMass,
-										contactProxyInvMassScale,
+										sphereInvMass,
+										/*proxyInvMassScale=*/0.0f,
 										contactVelRelax,
 										contactVelRelaxMin,
 										contactNormalDamp,
+										/*injectVelocityFromPositionCorrection=*/false,
 										r,
 										allowedPen,
 										eps,
@@ -6200,7 +6190,7 @@ int main(int argc, char** argv) {
 										iters2,
 										manifoldK,
 										&leftHandActiveContactTriangle[si],
-										driveForceN,
+										Eigen::Vector3f::Zero(),
 										agentContactTriangles,
 										agentContactTrianglePhysIds,
 										agentContactTriangleNeighbors,
@@ -6480,11 +6470,11 @@ int main(int argc, char** argv) {
 						Eigen::Vector3f(0.20f, 1.00f, 0.30f), // ring (lime)
 						Eigen::Vector3f(1.00f, 0.50f, 0.10f)  // pinky (orange)
 					};
-					const Eigen::Vector3f proxyOutlineColor = whiteBackground
-						? Eigen::Vector3f(0.08f, 0.08f, 0.08f)
-						: Eigen::Vector3f(0.96f, 0.96f, 0.96f);
-					const float proxyOutlineWidth = 4.0f;
-					const float proxyLineWidth = 2.0f;
+					// Visual-only: draw right-hand proxies as capsules with the SAME radius/length style
+					// as left-hand capsules. Physics/contact algorithm for the right hand is unchanged.
+					const int rightVisSamples = std::clamp(leftHandCapsuleSamples, 2, 12);
+					const float rightVisRadius = std::max(1e-6f, leftHandCapsuleRadiusBboxScale * bboxDiag);
+					const float rightVisCapsuleLen = std::max(0.0f, leftHandCapsuleLengthBboxScale * bboxDiag);
 					for (int fi = 0; fi < kFingerCount; ++fi) {
 						Eigen::Vector3f c = proxyColors[static_cast<size_t>(fi)];
 						if (whiteBackground) c *= 0.80f;
@@ -6494,49 +6484,39 @@ int main(int argc, char** argv) {
 							c = whiteBackground ? Eigen::Vector3f(0.15f, 0.15f, 0.15f) : Eigen::Vector3f(0.98f, 0.98f, 0.98f);
 						}
 						
-						glPushMatrix();
 						const Eigen::Vector3f& pos = agentProxyPositions[static_cast<size_t>(fi)];
-						// Translate to proxy position
-						glTranslatef(pos.x(), pos.y(), pos.z());
-						
-						// Apply finger rotation
 						const Eigen::Quaternionf& rot = agentDeviceRotations[static_cast<size_t>(fi)];
-						Eigen::AngleAxisf aa(rot);
-						glRotatef(aa.angle() * 180.0f / 3.14159265f, aa.axis().x(), aa.axis().y(), aa.axis().z());
-						
-						// Draw sphere at local origin (so it rotates)
-						glLineWidth(proxyOutlineWidth);
-						Eigen::Vector3f outline = proxyOutlineColor;
-						if (showMaterialOverrideOverlay && matScale > 1.05f) outline = whiteBackground ? Eigen::Vector3f(0.60f, 0.00f, 0.60f) : Eigen::Vector3f(1.00f, 0.30f, 1.00f);
-						glColor3f(outline.x(), outline.y(), outline.z());
-						drawWireSphereCircles(Eigen::Vector3f::Zero(), agentSphere.radius, 36);
-						glLineWidth(proxyLineWidth);
+						// Align right-hand visual capsule axis with fingertip distal direction.
+						// Using -Z here matches the left-hand capsule orientation in current Leap frame convention.
+						Eigen::Vector3f dir = rot * (-Eigen::Vector3f::UnitZ());
+						const float dlen = dir.norm();
+						if (dlen > 1e-8f) dir /= dlen;
+						else dir = -Eigen::Vector3f::UnitY();
+						const Eigen::Vector3f base = pos - dir * rightVisCapsuleLen;
+
+						glBegin(GL_LINE_STRIP);
 						glColor3f(c.x(), c.y(), c.z());
-						drawWireSphereCircles(Eigen::Vector3f::Zero(), agentSphere.radius, 36);
-						
-						// Draw local axes (length = radius)
-						// Draw manually to avoid offset in drawAxis()
-						glBegin(GL_LINES);
-						// X (Red)
-						glColor3f(1.0f, 0.0f, 0.0f);
-						glVertex3f(0.0f, 0.0f, 0.0f);
-						glVertex3f(agentSphere.radius, 0.0f, 0.0f);
-						// Y (Green)
-						glColor3f(0.0f, 1.0f, 0.0f);
-						glVertex3f(0.0f, 0.0f, 0.0f);
-						glVertex3f(0.0f, agentSphere.radius, 0.0f);
-						// Z (Blue)
-						glColor3f(0.0f, 0.0f, 1.0f);
-						glVertex3f(0.0f, 0.0f, 0.0f);
-						glVertex3f(0.0f, 0.0f, agentSphere.radius);
+						for (int si = 0; si < rightVisSamples; ++si) {
+							const float t = (rightVisSamples > 1) ? (static_cast<float>(si) / static_cast<float>(rightVisSamples - 1)) : 1.0f;
+							const Eigen::Vector3f p = base + t * (pos - base);
+							glVertex3f(p.x(), p.y(), p.z());
+						}
 						glEnd();
-						
-						glPopMatrix();
+
+						for (int si = 0; si < rightVisSamples; ++si) {
+							const float t = (rightVisSamples > 1) ? (static_cast<float>(si) / static_cast<float>(rightVisSamples - 1)) : 1.0f;
+							const Eigen::Vector3f p = base + t * (pos - base);
+							glPushMatrix();
+							glTranslatef(p.x(), p.y(), p.z());
+							glColor3f(c.x(), c.y(), c.z());
+							drawWireSphereCircles(Eigen::Vector3f::Zero(), rightVisRadius, 18);
+							glPopMatrix();
+						}
 					}
 				}
 
 #if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
-				// Draw left-hand capsules (proxy spheres) for visualization.
+				// Draw left-hand capsules using PHYSICS PROXIES, so what you see is what collides.
 				// NOTE: draw even if this frame's Leap data is stale; otherwise the hand "disappears" on brief occlusion
 				// or immediately after toggling Leap input. Collision still requires fresh data elsewhere.
 				if (leftHandCapsulesEnabledRuntime && !leftHandProxyPositions.empty()) {
@@ -7457,7 +7437,7 @@ int main(int argc, char** argv) {
 		}
 
 			// Agent force mini graph (bottom-left, above the status label).
-			if (agentSphere.enabled) {
+			if (showAgentForceGraph && agentSphere.enabled) {
 				const float labelH = 28.0f;
 				const float graphW = 420.0f;
 				const float graphH = 120.0f;
