@@ -2721,8 +2721,8 @@ int main(int argc, char** argv) {
 		// Default offsets requested by user (printed from runtime).
 		// LEFT : (0.000000,-0.990932,0.990932)
 		// RIGHT: (0.495466,-0.000000,0.990932)
-		Eigen::Vector3f leapLeftWorldOffset(0.0f, -0.195466f, 0.790932f);
-		Eigen::Vector3f leapRightWorldOffset(0.495466f, -0.1f, 0.990932f);
+		Eigen::Vector3f leapLeftWorldOffset(0.0f, -0.195466f, 0.590932f);
+		Eigen::Vector3f leapRightWorldOffset(0.495466f, -0.1f, 0.790932f);
 		enum class LeapOffsetTarget { Right, Left };
 		LeapOffsetTarget leapOffsetTarget = LeapOffsetTarget::Right;
 		std::array<Eigen::Vector3f, kFingerCount> leapLatestTipsMm;
@@ -3757,6 +3757,7 @@ int main(int argc, char** argv) {
 	static bool showVolumePreservation = false; // Volume preservation visualization mode
 	static bool showCavityWallVisual = true;
 	static bool showFixedPointVisual = false;
+	static bool showLiverSmoothRender = true;
 	static int anisoDemoState = 0; // 0: Off, 1: Isotropic Demo, 2: Anisotropic Demo
 	static Vertex* anisoDemoVertex = nullptr;
 	static float anisoDemoForceMag = 2700.0f; 
@@ -6697,8 +6698,8 @@ int main(int argc, char** argv) {
 				}
 			}
 			
-			// Draw vertices (skip in stress/volume preservation modes for cleaner visualization)
-			if (!showStressCloud && !showVolumePreservation) {
+			// Draw vertices (debug). Skip in smooth render + stress/volume modes for cleaner visualization.
+			if (!showLiverSmoothRender && !showStressCloud && !showVolumePreservation) {
 				glPointSize(5.0f);
 
 			if (whiteBackground) {
@@ -6803,78 +6804,163 @@ int main(int argc, char** argv) {
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			}
 
-			glBegin(GL_TRIANGLES);
-			for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
-				Group& group = object.getGroup(groupIdx);
-				Eigen::Vector3f offset = Eigen::Vector3f::Zero();
-				if (showExplodedView) {
-					offset = (group.initCOM - globalInitCOM) * explodedScale;
-				}
-				for (Tetrahedron* tet : group.tetrahedra) {
-					Vertex* v[4] = { tet->vertices[0], tet->vertices[1], tet->vertices[2], tet->vertices[3] };
+			const bool canSmoothRender =
+				showLiverSmoothRender &&
+				!showStressCloud && !showExplodedView && !showFiberFlow && !showGhostLinks && !showVolumePreservation &&
+				!agentContactTriangles.empty() &&
+				agentContactTrianglePhysIds.size() == agentContactTriangles.size() &&
+				!physRep.empty();
 
-					auto setVertexColor = [&](Vertex* vert) {
-						float alpha = showFiberFlow ? 0.4f : 1.0f;
-						const bool hardGroup = (std::abs(effectiveYoungsForGroup(groupIdx, youngs) - youngs) > 1e-3f);
-						// Highlight any Young's modulus override region (e.g. "tumor" patch) in the default view.
-						if (showMaterialOverrideOverlay && hardGroup && !showStressCloud && !showVolumePreservation) {
-							glColor4f(1.0f, 1.0f, 1.0f, alpha);
-							return;
-						}
-						if (showVolumePreservation) {
-							// Color code based on volume preservation: green = good, red = volume loss
-							float volumeRatio = (initialVolume > 1e-6f) ? (currentVolume / initialVolume) : 1.0f;
-							// Map volume ratio to color: 1.0 = green, < 0.95 = red
-							float r = std::max(0.0f, std::min(1.0f, 2.0f * (1.0f - volumeRatio)));
-							float g = std::max(0.0f, std::min(1.0f, 2.0f * (volumeRatio - 0.5f)));
-							float b = 0.2f;
-							glColor4f(r, g, b, alpha);
-						} else if (showStressCloud) {
-							float avgStress = vert->connectedTets > 0 ? vert->lastStress / vert->connectedTets : 0.0f;
-							float v = std::min(1.0f, avgStress * stressGain); 
-							float r = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 3.0f)));
-							float g = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 2.0f)));
-							float b = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 1.0f)));
-							glColor4f(r, g, b, alpha);
-						} else if (showExplodedView) {
-							float hue = (360.0f * groupIdx) / groupNum;
-							float saturation = 0.45f; 
-							float value = 0.95f;
-							float red, green, blue;
-							hsvToRgb(hue, saturation, value, red, green, blue);
-							glColor4f(red, green, blue, alpha);
-						} else {
-							float hue = (360.0f * groupIdx) / groupNum;
-							float saturation = 1.0f; 
-							float value = 1.0f;
-							float red, green, blue;
-							hsvToRgb(hue, saturation, value, red, green, blue);
-							glColor4f(red, green, blue, alpha);
-						}
-					};
-
-					// Face 1
-					setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
-					setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
-					setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
-
-					// Face 2
-					setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
-					setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
-					setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
-
-					// Face 3
-					setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
-					setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
-					setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
-
-					// Face 4
-					setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
-					setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
-					setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
+			if (canSmoothRender) {
+				// Smooth shaded surface rendering from extracted outer surface triangles.
+				std::vector<Eigen::Vector3f> nByPhys(static_cast<size_t>(physRep.size()), Eigen::Vector3f::Zero());
+				for (size_t ti = 0; ti < agentContactTriangles.size(); ++ti) {
+					const auto& tri = agentContactTriangles[ti];
+					const auto& ids = agentContactTrianglePhysIds[ti];
+					if (!tri.a || !tri.b || !tri.c) continue;
+					const Eigen::Vector3f a(tri.a->x, tri.a->y, tri.a->z);
+					const Eigen::Vector3f b(tri.b->x, tri.b->y, tri.b->z);
+					const Eigen::Vector3f c(tri.c->x, tri.c->y, tri.c->z);
+					Eigen::Vector3f nRaw = (b - a).cross(c - a);
+					if (nRaw.squaredNorm() <= 1e-18f) continue;
+					Eigen::Vector3f outN = Eigen::Vector3f::Zero();
+					if (outwardNormalForTriangle(tri, a, b, c, &outN)) {
+						if (outN.dot(nRaw) < 0.0f) nRaw = -nRaw;
 					}
+					for (int k = 0; k < 3; ++k) {
+						const int pid = ids[static_cast<size_t>(k)];
+						if (pid < 0 || pid >= static_cast<int>(nByPhys.size())) continue;
+						nByPhys[static_cast<size_t>(pid)] += nRaw;
+					}
+				}
+				for (auto& n : nByPhys) {
+					const float l2 = n.squaredNorm();
+					if (l2 > 1e-18f) n /= std::sqrt(l2);
+				}
+
+				glDisable(GL_BLEND);
+				glEnable(GL_LIGHTING);
+				glEnable(GL_LIGHT0);
+				glEnable(GL_COLOR_MATERIAL);
+				glShadeModel(GL_SMOOTH);
+				glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+				const GLfloat lightAmbient[] = { 0.20f, 0.20f, 0.22f, 1.0f };
+				const GLfloat lightDiffuse[] = { 0.92f, 0.92f, 0.95f, 1.0f };
+				const GLfloat lightSpecular[] = { 0.35f, 0.35f, 0.35f, 1.0f };
+				const GLfloat lightPos[] = { 0.35f, 0.90f, 0.55f, 0.0f }; // directional (view space)
+				glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
+				glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+				glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
+				glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+				const GLfloat matSpec[] = { 0.18f, 0.18f, 0.18f, 1.0f };
+				glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
+				glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 18.0f);
+
+				const Eigen::Vector3f baseCol = whiteBackground ? Eigen::Vector3f(0.60f, 0.22f, 0.18f) : Eigen::Vector3f(0.72f, 0.28f, 0.22f);
+				glBegin(GL_TRIANGLES);
+				for (size_t ti = 0; ti < agentContactTriangles.size(); ++ti) {
+					const auto& tri = agentContactTriangles[ti];
+					const auto& ids = agentContactTrianglePhysIds[ti];
+					if (!tri.a || !tri.b || !tri.c) continue;
+					const Vertex* vs[3] = { tri.a, tri.b, tri.c };
+					for (int k = 0; k < 3; ++k) {
+						const int pid = ids[static_cast<size_t>(k)];
+						Eigen::Vector3f n = Eigen::Vector3f::Zero();
+						if (pid >= 0 && pid < static_cast<int>(nByPhys.size())) n = nByPhys[static_cast<size_t>(pid)];
+						if (n.squaredNorm() <= 1e-12f) {
+							const Eigen::Vector3f a(vs[0]->x, vs[0]->y, vs[0]->z);
+							const Eigen::Vector3f b(vs[1]->x, vs[1]->y, vs[1]->z);
+							const Eigen::Vector3f c(vs[2]->x, vs[2]->y, vs[2]->z);
+							Eigen::Vector3f outN = Eigen::Vector3f::Zero();
+							if (outwardNormalForTriangle(tri, a, b, c, &outN)) n = outN;
+						}
+						if (n.squaredNorm() > 1e-12f) glNormal3f(n.x(), n.y(), n.z());
+
+						Eigen::Vector3f col = baseCol;
+						if (showMaterialOverrideOverlay) {
+							const Eigen::Vector3f p(vs[k]->x, vs[k]->y, vs[k]->z);
+							const float matScale = materialScaleAtWorldPoint(p);
+							if (matScale > 1.05f) col = whiteBackground ? Eigen::Vector3f(0.20f, 0.20f, 0.20f) : Eigen::Vector3f(0.98f, 0.98f, 0.98f);
+						}
+						glColor3f(col.x(), col.y(), col.z());
+						glVertex3f(vs[k]->x, vs[k]->y, vs[k]->z);
+					}
+				}
+				glEnd();
+
+				glDisable(GL_COLOR_MATERIAL);
+				glDisable(GL_LIGHT0);
+				glDisable(GL_LIGHTING);
+			} else {
+				glBegin(GL_TRIANGLES);
+				for (int groupIdx = 0; groupIdx < groupNum; ++groupIdx) {
+					Group& group = object.getGroup(groupIdx);
+					Eigen::Vector3f offset = Eigen::Vector3f::Zero();
+					if (showExplodedView) {
+						offset = (group.initCOM - globalInitCOM) * explodedScale;
+					}
+					for (Tetrahedron* tet : group.tetrahedra) {
+						Vertex* v[4] = { tet->vertices[0], tet->vertices[1], tet->vertices[2], tet->vertices[3] };
+
+						auto setVertexColor = [&](Vertex* vert) {
+							float alpha = showFiberFlow ? 0.4f : 1.0f;
+							const bool hardGroup = (std::abs(effectiveYoungsForGroup(groupIdx, youngs) - youngs) > 1e-3f);
+							// Highlight any Young's modulus override region (e.g. "tumor" patch) in the default view.
+							if (showMaterialOverrideOverlay && hardGroup && !showStressCloud && !showVolumePreservation) {
+								glColor4f(1.0f, 1.0f, 1.0f, alpha);
+								return;
+							}
+							if (showVolumePreservation) {
+								float volumeRatio = (initialVolume > 1e-6f) ? (currentVolume / initialVolume) : 1.0f;
+								float r = std::max(0.0f, std::min(1.0f, 2.0f * (1.0f - volumeRatio)));
+								float g = std::max(0.0f, std::min(1.0f, 2.0f * (volumeRatio - 0.5f)));
+								float b = 0.2f;
+								glColor4f(r, g, b, alpha);
+							} else if (showStressCloud) {
+								float avgStress = vert->connectedTets > 0 ? vert->lastStress / vert->connectedTets : 0.0f;
+								float v = std::min(1.0f, avgStress * stressGain);
+								float r = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 3.0f)));
+								float g = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 2.0f)));
+								float b = std::max(0.0f, std::min(1.0f, 1.5f - std::abs(v * 4.0f - 1.0f)));
+								glColor4f(r, g, b, alpha);
+							} else if (showExplodedView) {
+								float hue = (360.0f * groupIdx) / groupNum;
+								float saturation = 0.45f;
+								float value = 0.95f;
+								float red, green, blue;
+								hsvToRgb(hue, saturation, value, red, green, blue);
+								glColor4f(red, green, blue, alpha);
+							} else {
+								float hue = (360.0f * groupIdx) / groupNum;
+								float saturation = 1.0f;
+								float value = 1.0f;
+								float red, green, blue;
+								hsvToRgb(hue, saturation, value, red, green, blue);
+								glColor4f(red, green, blue, alpha);
+							}
+						};
+
+						setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
+						setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
+						setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
+
+						setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
+						setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
+						setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
+
+						setVertexColor(v[0]); glVertex3f(v[0]->x + offset.x(), v[0]->y + offset.y(), v[0]->z + offset.z());
+						setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
+						setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
+
+						setVertexColor(v[1]); glVertex3f(v[1]->x + offset.x(), v[1]->y + offset.y(), v[1]->z + offset.z());
+						setVertexColor(v[2]); glVertex3f(v[2]->x + offset.x(), v[2]->y + offset.y(), v[2]->z + offset.z());
+						setVertexColor(v[3]); glVertex3f(v[3]->x + offset.x(), v[3]->y + offset.y(), v[3]->z + offset.z());
+					}
+				}
+				glEnd();
 			}
-			glEnd();
 
 			// (no debug split plane)
 			
@@ -7434,6 +7520,11 @@ int main(int argc, char** argv) {
 		const SimpleUI::Rect uiFixedPointsRect{ rightMargin, uiMargin + 9.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiFixedPointsRect, showFixedPointVisual ? "Hide Fixed Points" : "Show Fixed Points")) {
 			showFixedPointVisual = !showFixedPointVisual;
+		}
+
+		const SimpleUI::Rect uiRenderModeRect{ rightMargin, uiMargin + 10.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiRenderModeRect, showLiverSmoothRender ? "Render: Smooth" : "Render: Groups")) {
+			showLiverSmoothRender = !showLiverSmoothRender;
 		}
 
 			// Agent force mini graph (bottom-left, above the status label).
