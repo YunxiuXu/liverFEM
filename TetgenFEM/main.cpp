@@ -2520,16 +2520,13 @@ int main(int argc, char** argv) {
 	const Eigen::Vector3f bboxCenter = 0.5f * (bboxMin + bboxMax);
 	const float bboxDiag = (bboxMax - bboxMin).norm();
 	const Eigen::Vector3f bboxExtents = bboxMax - bboxMin;
-	const Eigen::Vector3f tumorPickedInit(-0.0228788f, 0.2075f, 0.714083f);
-	// Move tumor center to the latest picked INIT coordinate.
-	{
-		const float invX = 1.0f / std::max(1e-8f, bboxExtents.x());
-		const float invY = 1.0f / std::max(1e-8f, bboxExtents.y());
-		const float invZ = 1.0f / std::max(1e-8f, bboxExtents.z());
-		tumorCenterXFrac = std::clamp((tumorPickedInit.x() - bboxMin.x()) * invX, 0.0f, 1.0f);
-		tumorCenterYFrac = std::clamp((tumorPickedInit.y() - bboxMin.y()) * invY, 0.0f, 1.0f);
-		tumorCenterZFrac = std::clamp((tumorPickedInit.z() - bboxMin.z()) * invZ, 0.0f, 1.0f);
-	}
+	const std::array<Eigen::Vector3f, 3> tumorPresetInits = {
+		Eigen::Vector3f(-0.0228788f, 0.2075f, 0.714083f),
+		Eigen::Vector3f(-0.676255f, 0.302103f, 1.0287f),
+		Eigen::Vector3f(-0.629456f, 0.573538f, 0.531963f)
+	};
+	int tumorModeIndex = 0; // 0=OFF, 1..3 = preset index
+	Eigen::Vector3f tumorPickedInit = tumorPresetInits[0];
 	const Eigen::Vector3f wallMargin0 = std::max(0.0f, wallMarginBboxScale) * bboxExtents;
 	const float wallXMax0 = bboxMax.x() + wallMargin0.x();
 	const float wallYMin0 = bboxMin.y() - wallMargin0.y();
@@ -2602,12 +2599,39 @@ int main(int argc, char** argv) {
 			const int gz = findBin(p.z(), groupZEdges, groupNz);
 			return gz * groupNx * groupNy + gy * groupNx + gx;
 		};
-		{
+		auto applyTumorMode = [&](int modeIdx, bool printLog) {
+			if (tumorPresetInits.empty()) return;
+			const int modeCount = static_cast<int>(tumorPresetInits.size()) + 1; // + OFF
+			tumorModeIndex = ((modeIdx % modeCount) + modeCount) % modeCount;
+			tumorYoungsEnabled = (tumorModeIndex != 0);
+			if (tumorModeIndex == 0) {
+				if (printLog) std::cout << "[TumorPreset] mode=OFF\n";
+				return;
+			}
+			const int presetIdx = tumorModeIndex - 1;
+			tumorPickedInit = tumorPresetInits[static_cast<size_t>(presetIdx)];
+
+			const float invX = 1.0f / std::max(1e-8f, bboxExtents.x());
+			const float invY = 1.0f / std::max(1e-8f, bboxExtents.y());
+			const float invZ = 1.0f / std::max(1e-8f, bboxExtents.z());
+			tumorCenterXFrac = std::clamp((tumorPickedInit.x() - bboxMin.x()) * invX, 0.0f, 1.0f);
+			tumorCenterYFrac = std::clamp((tumorPickedInit.y() - bboxMin.y()) * invY, 0.0f, 1.0f);
+			tumorCenterZFrac = std::clamp((tumorPickedInit.z() - bboxMin.z()) * invZ, 0.0f, 1.0f);
+
 			tumorCenterGroupOverrideEnabled = true;
 			tumorCenterGroupX = findBin(tumorPickedInit.x(), groupXEdges, groupNx);
 			tumorCenterGroupY = findBin(tumorPickedInit.y(), groupYEdges, groupNy);
 			tumorCenterGroupZ = findBin(tumorPickedInit.z(), groupZEdges, groupNz);
-		}
+
+			if (printLog) {
+				std::cout << "[TumorPreset] mode=" << tumorModeIndex
+				          << " idx=" << presetIdx
+				          << " init=(" << tumorPickedInit.x() << "," << tumorPickedInit.y() << "," << tumorPickedInit.z() << ")"
+				          << " frac=(" << tumorCenterXFrac << "," << tumorCenterYFrac << "," << tumorCenterZFrac << ")"
+				          << " overrideGroup=(" << tumorCenterGroupX << "," << tumorCenterGroupY << "," << tumorCenterGroupZ << ")\n";
+			}
+		};
+		applyTumorMode(0, true); // startup default: OFF
 
 		auto materialScaleAtWorldPoint = [&](const Eigen::Vector3f& p) -> float {
 			const float base = youngs;
@@ -6583,17 +6607,47 @@ int main(int argc, char** argv) {
 			if (showCavityWallVisual && cavity_enabled && !agentContactTriangles.empty() && !cavityTriangleEnabled.empty()) {
 				const bool blendWasEnabled = (glIsEnabled(GL_BLEND) == GL_TRUE);
 				const bool depthWasEnabled = (glIsEnabled(GL_DEPTH_TEST) == GL_TRUE);
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				const bool lightingWasEnabled = (glIsEnabled(GL_LIGHTING) == GL_TRUE);
+				const bool light0WasEnabled = (glIsEnabled(GL_LIGHT0) == GL_TRUE);
+				const bool colorMatWasEnabled = (glIsEnabled(GL_COLOR_MATERIAL) == GL_TRUE);
+				GLint lightModelTwoSideWas = GL_FALSE;
+				glGetIntegerv(GL_LIGHT_MODEL_TWO_SIDE, &lightModelTwoSideWas);
 				glEnable(GL_DEPTH_TEST);
-				glDisable(GL_CULL_FACE);
 				// Write depth so the cavity shell can correctly occlude liver parts behind it.
 				glDepthMask(GL_TRUE);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-				// Keep cavity shell subtle: ~20% visibility for cleaner surgical-view aesthetics.
-				if (whiteBackground) glColor4f(0.16f, 0.28f, 0.62f, 0.20f);
-				else glColor4f(0.58f, 0.72f, 0.98f, 0.20f);
+				const bool cavitySmoothLit = showLiverSmoothRender;
+				if (cavitySmoothLit) {
+					// Smooth mode: render cavity as an opaque two-sided lit shell.
+					glDisable(GL_BLEND);
+					glDisable(GL_CULL_FACE);
+					glEnable(GL_LIGHTING);
+					glEnable(GL_LIGHT0);
+					glEnable(GL_COLOR_MATERIAL);
+					glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+					glShadeModel(GL_SMOOTH);
+					glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+					const GLfloat lightAmbient[] = { 0.18f, 0.18f, 0.20f, 1.0f };
+					const GLfloat lightDiffuse[] = { 0.88f, 0.90f, 0.94f, 1.0f };
+					const GLfloat lightSpecular[] = { 0.28f, 0.28f, 0.30f, 1.0f };
+					const GLfloat lightPos[] = { 0.35f, 0.90f, 0.55f, 0.0f };
+					glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
+					glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+					glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
+					glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+					const GLfloat matSpec[] = { 0.15f, 0.15f, 0.18f, 1.0f };
+					glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
+					glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 14.0f);
+					if (whiteBackground) glColor4f(0.62f, 0.76f, 0.96f, 1.0f);
+					else glColor4f(0.54f, 0.68f, 0.94f, 1.0f);
+				} else {
+					glEnable(GL_BLEND);
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+					glDisable(GL_CULL_FACE);
+					// Keep cavity shell subtle: ~20% visibility for cleaner surgical-view aesthetics.
+					if (whiteBackground) glColor4f(0.16f, 0.28f, 0.62f, 0.20f);
+					else glColor4f(0.58f, 0.72f, 0.98f, 0.20f);
+				}
 
 				glBegin(GL_TRIANGLES);
 				const float gap = std::max(0.0f, cavityGapWorld);
@@ -6632,15 +6686,33 @@ int main(int argc, char** argv) {
 						}
 					}
 
-					const Eigen::Vector3f ao = a + na * visualGap;
-					const Eigen::Vector3f bo = b + nb * visualGap;
-					const Eigen::Vector3f co = c + nc * visualGap;
+					Eigen::Vector3f ao = a + na * visualGap;
+					Eigen::Vector3f bo = b + nb * visualGap;
+					Eigen::Vector3f co = c + nc * visualGap;
+					// Enforce consistent winding for stable back-face culling in smooth mode.
+					if (cavitySmoothLit) {
+						const Eigen::Vector3f faceGeom = (bo - ao).cross(co - ao);
+						if (faceGeom.dot(nFace) < 0.0f) {
+							std::swap(bo, co);
+							std::swap(nb, nc);
+						}
+					}
+					if (cavitySmoothLit) glNormal3f(na.x(), na.y(), na.z());
 					glVertex3f(ao.x(), ao.y(), ao.z());
+					if (cavitySmoothLit) glNormal3f(nb.x(), nb.y(), nb.z());
 					glVertex3f(bo.x(), bo.y(), bo.z());
+					if (cavitySmoothLit) glNormal3f(nc.x(), nc.y(), nc.z());
 					glVertex3f(co.x(), co.y(), co.z());
 				}
 				glEnd();
 
+				if (cavitySmoothLit) {
+					if (!colorMatWasEnabled) glDisable(GL_COLOR_MATERIAL);
+					if (!light0WasEnabled) glDisable(GL_LIGHT0);
+					if (!lightingWasEnabled) glDisable(GL_LIGHTING);
+					glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, lightModelTwoSideWas);
+				}
+				glDisable(GL_CULL_FACE);
 				glDepthMask(GL_TRUE);
 				if (!depthWasEnabled) glDisable(GL_DEPTH_TEST);
 				if (!blendWasEnabled) glDisable(GL_BLEND);
@@ -6880,7 +6952,11 @@ int main(int argc, char** argv) {
 
 						Eigen::Vector3f col = baseCol;
 						if (showMaterialOverrideOverlay) {
-							const Eigen::Vector3f p(vs[k]->x, vs[k]->y, vs[k]->z);
+							Eigen::Vector3f p(vs[k]->x, vs[k]->y, vs[k]->z);
+							if (pid >= 0 && pid < static_cast<int>(physRep.size())) {
+								const Vertex* vInit = physRep[static_cast<size_t>(pid)];
+								if (vInit) p = Eigen::Vector3f(vInit->initx, vInit->inity, vInit->initz);
+							}
 							const float matScale = materialScaleAtWorldPoint(p);
 							if (matScale > 1.05f) col = whiteBackground ? Eigen::Vector3f(0.20f, 0.20f, 0.20f) : Eigen::Vector3f(0.98f, 0.98f, 0.98f);
 						}
@@ -7384,6 +7460,27 @@ int main(int argc, char** argv) {
 		const SimpleUI::Rect uiMaterialOverlayRect{ rightMargin, uiMargin + uiH + 8.0f, uiW, uiH };
 		if (ui.button(uiMaterialOverlayRect, showMaterialOverrideOverlay ? "Hide Tumor" : "Show Tumor")) {
 			showMaterialOverrideOverlay = !showMaterialOverrideOverlay;
+		}
+
+		const SimpleUI::Rect uiTumorPosRect{ rightMargin, uiMargin + 11.0f * (uiH + 8.0f), uiW, uiH };
+		const char* tumorModeLabel = "Tumor: OFF";
+		if (tumorModeIndex == 1) tumorModeLabel = "Tumor: POS 1";
+		else if (tumorModeIndex == 2) tumorModeLabel = "Tumor: POS 2";
+		else if (tumorModeIndex == 3) tumorModeLabel = "Tumor: POS 3";
+		if (ui.button(uiTumorPosRect, tumorModeLabel)) {
+			applyTumorMode(tumorModeIndex + 1, true);
+			const bool anisNow = (std::abs(youngs1 - youngs2) > 1e-1f || std::abs(youngs1 - youngs3) > 1e-1f);
+			#pragma omp parallel for
+			for (int i = 0; i < object.groupNum; ++i) {
+				const float scale = effectiveYoungsScaleForGroup(i);
+				if (anisNow) {
+					object.groups[i].calGroupKAni(youngs1 * scale, youngs2 * scale, youngs3 * scale, poisson);
+				} else {
+					const float E = effectiveYoungsForGroup(i, youngs);
+					object.groups[i].calGroupK(E, poisson);
+				}
+				object.groups[i].calLHS();
+			}
 		}
 
 		const SimpleUI::Rect uiStressRect{ rightMargin, uiMargin + 2.0f * (uiH + 8.0f), uiW, uiH };
