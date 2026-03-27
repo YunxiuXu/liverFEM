@@ -3586,7 +3586,9 @@ int main(int argc, char** argv) {
 							  << "\n";
 				}
 				if (!suspensions.empty()) {
-					std::cout << "[Suspension] Visual: press 'L' to toggle ligament lines, 'K' to toggle patch points.\n";
+					std::cout << "[Suspension] Visual: press 'L' to toggle ligament lines, 'K' to toggle patch points, or use UI buttons.\n";
+				} else if (!suspensionEnabled) {
+					std::cout << "[Suspension] Disabled by parameters (suspension_enabled=false).\n";
 				}
 			}
 
@@ -3737,6 +3739,9 @@ int main(int argc, char** argv) {
 				std::cout << "[FixedPointsSpring] requested=" << customPickedInit.size()
 				          << " matched=" << customFixedPhysIds.size()
 				          << " tol=" << std::sqrt(tol2) << std::endl;
+				if (customFixedPhysIds.empty()) {
+					std::cout << "[FixedPointsSpring] No fixed points matched current mesh; nothing to visualize.\n";
+				}
 			}
 
 			// [REMOVED] The previous custom export logic was causing "key not found" errors 
@@ -3781,6 +3786,8 @@ int main(int argc, char** argv) {
 	static bool showVolumePreservation = false; // Volume preservation visualization mode
 	static bool showCavityWallVisual = true;
 	static bool showFixedPointVisual = false;
+	static bool showSuspensionVisual = true;
+	static bool showSuspensionPatchPoints = false;
 	static bool showLiverSmoothRender = true;
 	static int anisoDemoState = 0; // 0: Off, 1: Isotropic Demo, 2: Anisotropic Demo
 	static Vertex* anisoDemoVertex = nullptr;
@@ -3894,6 +3901,15 @@ int main(int argc, char** argv) {
 		static bool agentUseVC = agentVirtualCoupling;
 		static int agentForceGraphMode = 1; // 0=CONTACT, 1=DEVICE (filtered)
 		static bool agentGripEnabledRuntime = agentGripEnabled;
+		static KeyLatch suspensionVisualLatch;
+		static KeyLatch suspensionPatchLatch;
+
+		if (suspensionVisualLatch.consume(window, GLFW_KEY_L)) {
+			showSuspensionVisual = !showSuspensionVisual;
+		}
+		if (suspensionPatchLatch.consume(window, GLFW_KEY_K)) {
+			showSuspensionPatchPoints = !showSuspensionPatchPoints;
+		}
 
 #if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 		auto printLeapOffset = [&](LeapOffsetTarget target) {
@@ -4340,9 +4356,13 @@ int main(int argc, char** argv) {
 			const double clickDt = glfwGetTime() - leftPickPressT;
 			if (clickDt <= 0.40) {
 				const float cameraDist = std::max(1e-6f, 1.5f * bboxDiag * zoomFactor);
+				const float cameraLift = 0.0f;
 				Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
-				model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
-				model(2, 3) = -cameraDist;
+				const Eigen::Matrix3f viewRotation = rotation.toRotationMatrix();
+				model.block<3, 3>(0, 0) = viewRotation;
+				const Eigen::Vector3f viewTranslation =
+					Eigen::Vector3f(0.0f, cameraLift, -cameraDist) - viewRotation * bboxCenter;
+				model.block<3, 1>(0, 3) = viewTranslation;
 				const Eigen::Matrix4f projection = buildProjectionMatrix();
 				const Eigen::Matrix4f invProjectionModel = (projection * model).inverse();
 				const Eigen::Vector3f rayNear = unprojectCursorToWorld(
@@ -4428,9 +4448,13 @@ int main(int argc, char** argv) {
 
 			if (rightPressed && !cursorInUiButton) {
 				const float cameraDist = std::max(1e-6f, 1.5f * bboxDiag * zoomFactor);
+				const float cameraLift = 0.0f;
 				Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
-				model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
-				model(2, 3) = -cameraDist;
+				const Eigen::Matrix3f viewRotation = rotation.toRotationMatrix();
+				model.block<3, 3>(0, 0) = viewRotation;
+				const Eigen::Vector3f viewTranslation =
+					Eigen::Vector3f(0.0f, cameraLift, -cameraDist) - viewRotation * bboxCenter;
+				model.block<3, 1>(0, 3) = viewTranslation;
 				const Eigen::Matrix4f projection = buildProjectionMatrix();
 
 				Vertex* picked = pickVertexAtCursor(
@@ -4628,9 +4652,13 @@ int main(int argc, char** argv) {
 				}
 				else {
 					const float cameraDist = std::max(1e-6f, 1.5f * bboxDiag * zoomFactor);
+					const float cameraLift = 0.0f;
 					Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
-					model.block<3, 3>(0, 0) = rotation.toRotationMatrix();
-					model(2, 3) = -cameraDist;
+					const Eigen::Matrix3f viewRotation = rotation.toRotationMatrix();
+					model.block<3, 3>(0, 0) = viewRotation;
+					const Eigen::Vector3f viewTranslation =
+						Eigen::Vector3f(0.0f, cameraLift, -cameraDist) - viewRotation * bboxCenter;
+					model.block<3, 1>(0, 3) = viewTranslation;
 					const Eigen::Matrix4f projection = buildProjectionMatrix();
 					const Eigen::Matrix4f invProjectionModel = (projection * model).inverse();
 					desiredTargetPos = unprojectCursorToWorld(
@@ -6363,15 +6391,17 @@ int main(int argc, char** argv) {
 		glLoadIdentity();
 
 		const float cameraDist = std::max(1e-6f, 1.5f * bboxDiag * zoomFactor);
+		const float cameraLift = 0.0f;
 			mat = Eigen::Matrix4f::Identity();
-			mat.block<3, 3>(0, 0) = rotation.toRotationMatrix();
-			mat(2, 3) = -cameraDist;
+			const Eigen::Matrix3f viewRotation = rotation.toRotationMatrix();
+			mat.block<3, 3>(0, 0) = viewRotation;
+			const Eigen::Vector3f viewTranslation =
+				Eigen::Vector3f(0.0f, cameraLift, -cameraDist) - viewRotation * bboxCenter;
+			mat.block<3, 1>(0, 3) = viewTranslation;
 			glMultMatrixf(mat.data());
 
 					// Draw suspension ligaments (visual debug): line from patch center to wall anchor + endpoints.
-					static bool drawSuspension = true;
-					static bool drawSuspensionPatchPoints = false;
-					if (drawSuspension && suspensionEnabled && !suspensions.empty() && !agentVerticesByPhysId.empty()) {
+					if (showSuspensionVisual && suspensionEnabled && !suspensions.empty() && !agentVerticesByPhysId.empty()) {
 						const std::array<Eigen::Vector3f, 3> colors = {
 							Eigen::Vector3f(1.00f, 0.20f, 0.20f), // susp1 red
 							Eigen::Vector3f(0.20f, 1.00f, 0.20f), // susp2 green
@@ -6418,7 +6448,7 @@ int main(int argc, char** argv) {
 						}
 						glEnd();
 
-						if (drawSuspensionPatchPoints) {
+						if (showSuspensionPatchPoints) {
 							glPointSize(3.0f);
 							glBegin(GL_POINTS);
 							for (size_t si = 0; si < suspensions.size(); ++si) {
@@ -7418,6 +7448,52 @@ int main(int argc, char** argv) {
 				agentForceHistory.push(Eigen::Vector4f(fN.x(), fN.y(), fN.z(), fN.norm()));
 			}
 
+			// Draw suspension overlays again as a foreground pass so they are not hidden by the liver surface.
+			// Fixed-point markers are intentionally excluded here: they are already drawn once with depth
+			// testing enabled above, and redrawing them in screen-space overlay makes them incorrectly float
+			// on top of the liver even when they should be occluded.
+			if (showSuspensionVisual && !agentVerticesByPhysId.empty()) {
+				const bool depthWasEnabled = (glIsEnabled(GL_DEPTH_TEST) == GL_TRUE);
+				const bool lightingWasEnabled = (glIsEnabled(GL_LIGHTING) == GL_TRUE);
+				glDisable(GL_DEPTH_TEST);
+				glDisable(GL_LIGHTING);
+				glDepthMask(GL_FALSE);
+
+				if (showSuspensionVisual && suspensionEnabled && !suspensions.empty()) {
+					const std::array<Eigen::Vector3f, 3> colors = {
+						Eigen::Vector3f(1.00f, 0.20f, 0.20f),
+						Eigen::Vector3f(0.20f, 1.00f, 0.20f),
+						Eigen::Vector3f(0.20f, 0.60f, 1.00f)
+					};
+					glLineWidth(3.5f);
+					glBegin(GL_LINES);
+					for (size_t si = 0; si < suspensions.size(); ++si) {
+						const auto& s = suspensions[si];
+						if (!s.enabled || s.physIds.empty()) continue;
+						Eigen::Vector3f c = Eigen::Vector3f::Zero();
+						int n = 0;
+						for (int id : s.physIds) {
+							if (id < 0 || id >= static_cast<int>(agentVerticesByPhysId.size())) continue;
+							const auto& list = agentVerticesByPhysId[static_cast<size_t>(id)];
+							const Vertex* v0 = (!list.empty()) ? list.front() : nullptr;
+							if (!v0) continue;
+							c += Eigen::Vector3f(v0->x, v0->y, v0->z);
+							++n;
+						}
+						c = (n > 0) ? (c / static_cast<float>(n)) : s.centerRest;
+						const Eigen::Vector3f col = colors[std::min<size_t>(colors.size() - 1, si)];
+						glColor3f(col.x(), col.y(), col.z());
+						glVertex3f(s.anchorWorld.x(), s.anchorWorld.y(), s.anchorWorld.z());
+						glVertex3f(c.x(), c.y(), c.z());
+					}
+					glEnd();
+				}
+
+				glDepthMask(GL_TRUE);
+				if (depthWasEnabled) glEnable(GL_DEPTH_TEST);
+				if (lightingWasEnabled) glEnable(GL_LIGHTING);
+			}
+
 			ui.beginDraw2D();
 			// Left side buttons
 			// ui.drawPanelBackground(uiPanelRect); // removed
@@ -7614,12 +7690,24 @@ int main(int argc, char** argv) {
 			showCavityWallVisual = !showCavityWallVisual;
 		}
 
-		const SimpleUI::Rect uiFixedPointsRect{ rightMargin, uiMargin + 9.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiAnatomyRect{ rightMargin, uiMargin + 9.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiAnatomyRect, (showSuspensionVisual || showFixedPointVisual) ? "Hide Lig+Fixed" : "Show Lig+Fixed")) {
+			const bool next = !(showSuspensionVisual || showFixedPointVisual);
+			showSuspensionVisual = next;
+			showFixedPointVisual = next;
+		}
+
+		const SimpleUI::Rect uiFixedPointsRect{ rightMargin, uiMargin + 10.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiFixedPointsRect, showFixedPointVisual ? "Hide Fixed Points" : "Show Fixed Points")) {
 			showFixedPointVisual = !showFixedPointVisual;
 		}
 
-		const SimpleUI::Rect uiRenderModeRect{ rightMargin, uiMargin + 10.0f * (uiH + 8.0f), uiW, uiH };
+		const SimpleUI::Rect uiLigamentRect{ rightMargin, uiMargin + 11.0f * (uiH + 8.0f), uiW, uiH };
+		if (ui.button(uiLigamentRect, showSuspensionVisual ? "Hide Ligaments" : "Show Ligaments")) {
+			showSuspensionVisual = !showSuspensionVisual;
+		}
+
+		const SimpleUI::Rect uiRenderModeRect{ rightMargin, uiMargin + 12.0f * (uiH + 8.0f), uiW, uiH };
 		if (ui.button(uiRenderModeRect, showLiverSmoothRender ? "Render: Smooth" : "Render: Groups")) {
 			showLiverSmoothRender = !showLiverSmoothRender;
 		}

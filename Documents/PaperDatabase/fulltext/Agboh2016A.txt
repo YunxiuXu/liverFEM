@@ -1,0 +1,811 @@
+A Six Degrees of Freedom Haptic Interface for Laparoscopic Training
+Wisdom C. Agboh
+Mustafa Yalcin
+Volkan Patoglu
+Abstract— We present the novel kinematics, workspace char-
+acterization, functional prototype and impedance control of
+a six degrees of freedom haptic interface designed to train
+surgeons for laparoscopic procedures, through virtual reality
+simulations. The parallel kinematics of the device is constructed
+by connecting a 3RRP planar parallel mechanism to a linearly
+actuated modiﬁed delta mechanism with a connecting link. The
+conﬁguration level forward and inverse kinematics of the device
+assume analytic solutions, while its workspace can be shaped to
+enable large end-effector translations and rotations, making it
+well-suited for laparoscopy operations. Furthermore, the haptic
+interface features a low apparent inertia with high structural
+stiffness, thanks to its parallel kinematics with grounded ac-
+tuators. A model-based open-loop impedance controller with
+feed-forward gravity compensation has been implemented for
+the device and various virtual tissue/organ stiffness levels have
+been rendered.
+I. INTRODUCTION
+Laparoscopy, a commonly used minimally invasive sur-
+gical procedure, utilizes slender surgical tools and cameras
+inserted into the abdomen of a patient through small ports
+(typically, 5–15 mm in diameter) on the skin, enabling
+the surgeon to perform numerous procedures without large
+incisions, as is the case with conventional open surgery. In
+the recent years, the number of minimally invasive surgi-
+cal procedures has increased greatly and this approach is
+currently considered as the preferable surgical procedure
+for a large number of treatments [16], [24]. In comparison
+with traditional open surgical procedures, laparoscopy offers
+reductions in trauma, post-operative pain, recovery time,
+scarring and blood loss for the patient and is more cost-
+effective due to the reduced risk of complications, shorter
+hospital stays and less medication requirements [10], [12].
+Despite numerous advantages laparoscopy presents for
+patients, it is quite difﬁcult to master for surgeons. Unlike the
+traditional open surgery, during laparoscopy, the surgeon’s
+hand motions are reﬂected about the incision point, known as
+the fulcrum effect, access to the patient’s body is restricted,
+and only 2D visual feedback is available resulting in a loss of
+vital depth perception. Furthermore, laparoscopy instruments
+have a limited range of motion and haptic/touch information
+is reduced while using these devices [11], [15].
+Due to the difﬁculty in mastering laparoscopy, surgical
+training is indispensable and effective training approaches are
+crucial. Conventionally training involves the use of patients,
+cadavers and animals. This approach is disadvantageous,
+since a cadaver neither breathes nor bleeds, animal and
+This work has been partially supported by TUBITAK Grant 115M698.
+W. C. Agboh, M. Yalcin and V. Patoglu are with the Faculty of
+Engineering and Natural Sciences at Sabancı University, Istanbul, Turkey.
+{wisdomagboh,myalcin,vpatoglu}@sabanciuniv.edu
+human tissues do not possess the same properties and the
+availability of animals or human cadavers is quite limited
+for surgical training. In addition, the conventional training
+does not provide a means to precisely evaluate a surgeon’s
+skill or level of experience [8].
+Virtual reality (VR) simulation, where a trainee virtually
+interacts with human tissue, is a viable alternative to the
+conventional laparoscopic surgical training, bridging the gap
+between the learning process and actually carrying out the
+in vivo surgery. VR simulation not only reduces the training
+costs and number of animal/cadaver experiments, but also
+makes it possible for the surgical tasks to be repeated as
+much as required [23].
+Even though all VR simulation involve realistic visual
+feedback, force feedback may not be available. VR simu-
+lations without force feedback is disadvantageous, since the
+surgeon can only acquire skills related to the tool motion
+without establishing an understanding of the forces required
+to accomplish such motions in the human body with minimal
+injury to surrounding tissue. VR surgical trainers without
+force feedback include the surgeon consoles of daVinci
+Surgical System [12] and Zeus Surgical System [25].
+The incorporation of force feedback into VR simulation
+enhances the surgeon’s perception of pulling and grasping
+maneuvers, such that surgeons can grasp tissues with less
+force and without causing scars. Consequently, this improves
+the trainee’s overall performance [22], [26]. In the literature,
+[1], [3], [13], [20], [29] present master devices with force
+feedback. These devices possess up to 4 degrees of freedom
+(DoF) and are considered sufﬁcient under the assumption that
+the laparoscopic tool is tightly constrained in the abdomen.
+Even though constraining the trocar after the initial in-
+sertion to only 4 DoF is meaningful for many laparoscopic
+procedures, the ability to move the trocar location is neces-
+sary for the initial tool insertion, as well as to simulate tissue
+stiffness around the trocar. In particular, during laparoscopy,
+the trocar is inserted through the incision point which should
+be at least 50% larger than the trocar diameter [6]. During the
+initial tool insertion, the trocar is moved within the incision
+as required to avoid damage to the internal organs. Given
+that half of the major injuries related to laparoscopy take
+place due to the initial tool insertion [17], it is crucial for
+laparoscopic training devices to allow for the translational
+DoF of the trocar to train surgeons about its placement to
+minimize insertion related complications. Furthermore, the
+trocar translations also introduce some ﬂexibility when the
+incision points are wrongly placed on the abdomen, as small
+tool translations in these ports can save the surgeon from
+making extra incisions on the patient’s body and increasing
+2016 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)
+Daejeon Convention Center
+October 9-14, 2016, Daejeon, Korea
+978-1-5090-3762-9/16/$31.00 ©2016 IEEE
+1107
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:48:54 UTC from IEEE Xplore.  Restrictions apply. 
+the risk of complications. In addition to training proper
+trocar placement, the translational degrees of freedom at the
+incision point can be used to render various tissue stiffness
+at this interaction point and to estimate the stresses that take
+place at the incision. Proper control of interaction forces
+at the incision is important to ensure precise tool control
+without inducing scaring of the surrounding tissue.
+Several six DoF haptic interfaces with serial kinematics,
+such as Phantom [21] and Virtuose 6D [2], have been em-
+ployed for laparoscopic training. Even though these devices
+possess relatively large workspace, they suffer from low
+stiffness and force output capacity. In particular, the mean
+and maximum force requirements during laparoscopy are
+reported as 8.5 N and 68 N, respectively [7], while abdominal
+wall stiffness can be up to 2.2 N/mm [27]. On the other
+hand, 6 DoF parallel haptic devices, such as [14], [18],
+[19], [30], feature small footprint, high force bandwidths,
+high stiffness, passive backdrivability and low inertia, since
+their actuators can be grounded. However, none of these
+haptic interfaces possess a workspace that is well-suited for
+laparoscopic training.
+We present a 6 DoF haptic interface for laparoscopic
+training. The device features novel parallel kinematics that
+not only allows for high force control bandwidth through
+the grounding of all of its actuators, but also possesses a
+workspace that is well-suited for laparoscopy. In particular,
+the device has large translation workspace relative to the
+tool’s axis, while it is also capable of performing virtually
+unlimited roll rotations about this axis. Large stroke is useful
+for surgical training, since a long tool insertion across the
+abdomen is required in many cases, such as in hernia repair.
+Large roll workspace is also crucial, since a 270◦roll rotation
+is needed for driving a needle through a tissue in just a single
+movement. Eliminating the need for re-grabbing lessens the
+burden on the surgeon to pay attention to the initial tool
+conﬁguration during these maneuvers. Furthermore, after the
+laproscope has been introduced into the abdomen, it needs to
+be rotated by 360◦about its axis, to visually check for bowel
+injuries by inspecting the tool for any adherent bowels [5].
+II. MECHANISM TYPE SELECTION
+Surgical training requires multiple DoF: 4 DoF (for pitch,
+yaw, roll and tool insertion) are required when the trocar
+location is ﬁxed and extra two DoF are required for locating
+the trocar and/or allowing tissue deformations at the incision
+point. Along these lines, we design a 6 DoF haptic interface,
+which allows for a large tool translation along and an
+unlimited rotation about the tool axis.
+A fully parallel mechanism is preferred, since these
+mechanisms possess some inherent advantages over serial
+mechanisms in satisfying requirements of force feedback
+applications. In particular, parallel mechanisms offer com-
+pact designs with high stiffness and have low effective
+inertia, since their actuators can be grounded. In terms of
+dynamic performance, high position and force bandwidths
+are achievable with parallel mechanisms thanks to their light
+weight but stiff structure. Furthermore, parallel mechanisms
+2-Axis Gimball
+           +
+Prismatic Joint
+N
+(Base)
+Spherical
+    Joint
+R
+(Tool)
+D
+T
+E
+Fig. 1: Kinematics of the device: a linear modiﬁed delta
+mechanism, a 3RRP planar parallel mechanism, and the tool
+connecting them.
+do not superimpose position errors at joints; hence, can
+achieve higher precision.
+The novel kinematics of the device, is constructed by
+connecting two 3 DoF parallel mechanisms to achieve the
+desired tool workspace. In particular, a 3RRP planar parallel
+mechanisms is connected to a linear modiﬁed delta mecha-
+nism with the tool, as shown in Figure 1. The end-effector of
+the delta mechanism can perform 3 DoF translations in space,
+while the 3RRP mechanism can perform 2 DoF translations
+and 1 DoF rotation in plane. None of these mechanisms
+have singularities within their regular workspace. For the
+underlying kinematics, a linear delta mechanism is chosen,
+since large tool insertion/retraction can be easily achieved
+by modifying the linear stroke of the actuators of this
+mechanism. Similarly, a 3RRP mechanism is preferred, since
+it can provide virtually unlimited translations in plane, which
+can be easily mapped to the rotation of the laparoscopic tool
+about its axis.
+To construct the haptic interface in Figure 1, the 3RRP
+and linear modiﬁed delta mechanisms are grounded such that
+their end-effectors face each other. One end of the tool is
+attached to the end-effector of the delta mechanism with a
+spherical joint, such that the location of this end of the tool
+can be controlled by the delta mechanism. Then, a two axis
+gimbal in series with a prismatic joint is attached to the end-
+effector of the 3RRP mechanism, such that the tool can pass
+through the prismatic joint. This way, the 3RRP mechanism
+can directly control where the tool intersects the plane of its
+end-effector, as well as the rotation of the tool about its axis.
+1108
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:48:54 UTC from IEEE Xplore.  Restrictions apply. 
+β
+α
+θ
+x
+y
+z
+Fig. 2: 6 DoF (x, y, z, roll (θ), pitch (β), yaw (α))
+movements of the laparoscopic tool
+Figure 2 depicts the 6 DoF movements of the laparoscopic
+tool. The left/right and forward/backward motions of the
+tool (trocar) can be controlled by moving both the 3RRP
+and delta mechanisms with an equal amount in parallel
+planes, while the insertion of the tool can be controlled by
+translating the delta mechanism in a direction normal to these
+planes. The rotation of the tool about its own axis (roll) is
+directly controlled by the rotation of the 3RRP, while the left-
+right (yaw) and forward-backward (pitch) rotations of the
+tool about the incision point can be controlled by relative
+movements of the two mechanisms in parallel planes, as
+depicted in Figure 3.
+III. KINEMATIC ANALYSIS
+The kinematics of the haptic device can be derived by
+studying each of its three main components: the linear mod-
+iﬁed delta mechanism, the 3RRP mechanism and the tool.
+Each of these components has analytical conﬁguration level
+forward and inverse kinematics. In particular, the conﬁgura-
+tion level inverse and forward kinematics of linear delta and
+3RRP mechanism assume analytical solutions as documented
+in [4] and [28], respectively. Given the kinematics of these
+two mechanisms, the inverse and forward kinematics of the
+proposed device can be analytically derived as follows:
+A. Conﬁguration Level Forward Kinematics
+For the forward kinematics, the position (xd, yd, zd) of the
+end-effector of the delta mechanism and the position (xt, yt)
+and orientation (θt) of the 3RRP mechanism are provided
+and the orientation of the tool and the position of the tool
+tip need to be determined. A schematic representation of the
+tool, together with relevant reference frames and points are
+presented in Figure 3. Bodies R, T, D, and N represent the
+tool, the end-effector of 3RRP mechanism, the end-effector
+of the linear delta mechanism and the Newtonian reference
+frame, respectively. A vector basis is attached to each of
+these bodies. Point O is ﬁxed in N, while Point A denotes
+the location where the spherical joint is attached at the end-
+effector of linear delta mechanism. The tool tip is represented
+by Point E.
+n1
+n2
+R
+T
+D
+R
+T
+D
+R
+T
+D
+α
+θ
+β
+zt
+zt
+O
+O
+N
+N
+E
+B
+A
+n1
+n3
+n2
+n3
+E
+A
+B
+Fig. 3: The relevant bodies and points for kinematic analysis
+of the connecting link
+Let the position vectors from O to A and B be deﬁned as
+rOA
+=
+xd n1 +yd n2 −zd n3
+(1)
+rOB
+=
+xt n1 +yt n2 +zt n3
+(2)
+respectively. A unit vector ˆt along the tool axis can be
+obtained by normalizing rAB = rOB −rOA, while the position
+vector form O to E is given by rOE = rAE −rAO with rAE = l ˆt,
+where l denotes the length of the tool. Then,
+rOE = xen1 +yen2 +zen3
+(3)
+where
+xe
+=
+l(xt −xd)
+M
++xd
+(4)
+ye
+=
+l(yt −yd)
+M
++yd
+(5)
+ze
+=
+l(zt +zd)
+M
+−zd
+(6)
+and M =
+ (xt −xd)2 +(yt −yd)2 +(zt +zd)2 1
+2 .
+Let the orientation of the tool R with respect to N be
+deﬁned by the roll (θ), yaw (α) and pitch (β) rotations as
+depicted in Figure 2. The roll rotation of the device end-
+effector is equal to the in plane rotation (θt) of the 3RRP
+mechanism. Other rotations can be calculated as
+θ
+=
+θt
+(7)
+α
+=
+atan2((xt −xd),(zt +zd))
+(8)
+β
+=
+atan2((yt −yd),(zt +zd))
+(9)
+B. Conﬁguration Level Inverse Kinematics
+Given the tip position (xe, ye, ze) and orientation (α, β,
+θ) of the tool, the end-effector position of the delta (xd, yd,
+zd) and the end-effector position (xt, yt) and orientation (θt)
+1109
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:48:54 UTC from IEEE Xplore.  Restrictions apply. 
+JR
+=
+
+
+1+ l(xd −xt)2
+M3
+−1
+M
+l(xd −xt)(yd −yt)
+M3
+l(zt +zd)(xd −xt)
+M3
+l((zt +zd)2 +(yd −yt)2)
+M3
+−l(xd −xt)(yd −yt)
+M3
+0
+l(xd −xt)(yd −yt)
+M3
+1+l(yd −yt)2
+M3
+−1
+M
+l(zt +zd)(yd −yt)
+M3
+−l(xd −xt)(yd −yt)
+M3
+l((zt +zd)2 +(xd −xt)2)
+M3
+0
+−l(zt +zd)(xd −xt)
+M3
+−l(zt +zd)(yd −yt)
+M3
+−1+ 1
+M −l(zt +zd)2
+M3
+l(zt +zd)(xd −xt)
+M3
+l(zt +zd)(yd −yt)
+M3
+0
+0
+−(zt +zd)cos(α)
+k2
+yd −yt
+k2
+0
+zt +zd
+k2
+−sin(α)
+−(zt +zd)cos(β)
+k1
+0
+(xd −xt)cos(β)
+k1
+(zt +zd)cos(β)k1
+0
+sin(β)cos(α)
+(zt +zd)sin(β)
+k1
+0
+−(xd −xt)sin(β)
+k1
+−(zt +zd)sin(β)
+k1
+0
+cos(α)cos(β)
+
+
+where k1 = (zt +zd)2 +(xd −xt)2 and k2 = (zt +zd)2 +(yd −yt)2.
+of the 3RRP mechanism can be calculated as
+θt
+=
+θ
+(10)
+xt
+=
+xe +tan(α)(zt −ze)
+(11)
+yt
+=
+ye +tan(β)(zt −ze)
+(12)
+xd
+=
+l(c5)tan(α)
+c1(ze −zt) −c2
+(13)
+yd
+=
+l(c5)tan(β)
+c1(ze −zt) −c3
+(14)
+zd
+=
+c4 −
+l(c5)
+c1(ze −zt)
+(15)
+where
+c1
+=
+tan2(α)+tan2(β)+1
+c2
+=
+l2 tan(α)
+c1(ze −zt) −xe
+c3
+=
+l2 tan(β)
+c1(ze −zt) −ye
+c4
+=
+l2
+c1(ze −zt) −ze
+c5
+=
+l +√c1(zt −ze)
+C. Motion Level Kinematics
+Let the angular velocity of the tool R with respect to
+N be given as NωR = ωexn1 +ωeyn2 +ωezn3, while the tip
+velocity in N is deﬁned as NvE = ˙xen1 + ˙yen2 + ˙zen3. The
+kinematic Jacobian JR relating end-effector velocities of
+linear delta and 3RRP mechanisms to tool velocities can be
+derived as
+
+˙xe ˙ye ˙ze ωex ωey ωez
+T = JR
+
+˙xd ˙yd ˙zd ˙xt ˙yt ˙θt
+T
+(16)
+where JR is presented at the top of the page. If JT and
+JD respectively denote the Jacobian of the 3RRP and the
+linear delta mechanisms, relating their end-effector velocities
+to their actuator velocities, the kinematic Jacobian J of the
+device, characterizing the map between the tool velocities to
+actuator velocities of linear delta and 3RRP mechanisms can
+be derived as
+J = JR
+
+JD
+0
+0
+JT
+
+(17)
+IV. WORKSPACE ANALYSIS
+Figure 4 presents the reachable workspace of the haptic
+interface for a tool length of 150 mm, a 3RRP workspace of
+60 mm radius and a modiﬁed linear delta mechanism with
+120 mm stroke. The workspace characterization considers
+the physical limits of the spherical joint and self collisions
+of the device.
+The workspace of the device can be easily adjusted for
+a given laparoscopic procedure by performing an optimal
+dimensional synthesis, where the radius of the 3RRP mech-
+anism, the stroke and the distal link lengths of the linear delta
+mechanism are considered as design variables. In particular,
+the yaw and pitch rotations of the tool can be increased by
+increasing the radius of 3RRP and/or modifying the stroke of
+the linear delta mechanism, as can be deduced from Eqns. (8)
+and (9).
+Fig. 4: The reachable workspace of the prototype
+V. IMPLEMENTATION
+Figure 5 presents a prototype of the laparoscopic haptic
+interface. The 3RRP mechanism is constructed utilizing three
+large diameter, slim, concentric ball bearings. These rings
+are actuated by grounded, direct drive coreless DC motors
+coupled to a capstan transmission to achieve low friction
+and backlash. The large ring diameters help to achieve a
+large transmission ratio. The mechanism is grounded by a
+hollow cylinder rigidly attached to the inner rings of the
+1110
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:48:54 UTC from IEEE Xplore.  Restrictions apply. 
+Tool handle
+Tool
+2-axis gimball
+            +
+Prismatic joint
+3RRP mechanism
+Fixed base
+Linear
+delta
+Tool
+3RRP Mechanism
+Tool
+Linear Delta
+Spherical
+Joint
+Tool
+Fig. 5: The force feedback laparoscopic training robot
+concentric ball bearings. Even though 3RRP mechanism can
+provide virtually unlimited rotations, a 480◦limit is imposed
+by the thickness of the rings and the routing of the capstan
+cables. The center of the mechanism is hollow, which allows
+the tool to pass through. The symmetric end-effector of the
+3RRP mechanism is constructed using three aluminum shafts
+rigidly connected at their center with a 120◦angle between
+the shafts. A two axis gimbal in series with a prismatic joint
+is attached to the center of this end-effector.
+The linear modiﬁed delta mechanism is constructed using
+carbon ﬁber links that feature high strength to weight ratio.
+The delta mechanism is actuated using three direct drive
+linear motors with embedded encoders. Direct drive actuation
+minimizes transmission related frictional loss and backlash.
+All three linear actuators are grounded. A high precision
+spherical joint is attached to the end-effector of the delta
+mechanism, which is connected to one end of the tool. The
+tool is chosen as a slender aluminum rod with a square cross
+section.
+VI. CONTROL AND EXPERIMENTAL EVALUATION
+The prototype is built as an impedance-type device, fea-
+turing grounded actuators, high stiffness components, low
+apparent inertia, and with minimal hard to model parasitic
+effects, such as friction and backlash. Consequently, an
+open loop impedance controller with feed-forward gravity
+compensation is implemented for real-time control of the
+device.
+To evaluate the control performance of the device, several
+virtual ﬁxtures along x and y directions of the tool have
+been rendered as linear springs with stiffness ranging from
+that of a typical soft tissue to a cartilage type tissue in
+the human body. Figure 6 presents force-deﬂection data
+measured for these renderings, by applying known forces
+to the laparoscopic tool at the virtual incision point and
+measuring its displacement. Best linear ﬁts on the data are
+also presented.
+0
+1
+2
+3
+4
+5
+6
+7
+0
+5
+10
+15
+20
+25
+30
+35
+Displacement [mm]
+Force [N]
+x 5 N/mm data
+x 5 N/mm fit
+x 15 N/mm data
+x 15 N/mm fit
+y 6 N/mm data
+y 6 N/mm fit
+y 18 N/mm data
+y 18 N/mm fit
+Fig. 6: Virtual ﬁxtures along x and y directions
+Table I presents R2 value characterizing the quality of the
+line ﬁt, the slope of these lines, and the rendering error. These
+results indicate that even under open loop impedance control
+(without force feedback), the device can achieve high ﬁdelity
+impedance renderings with RMS errors less than 4%.
+To evaluate the trajectory tracking performance of the de-
+vice, a chirp signal with a 40 mm amplitude and frequencies
+increasing up to 1 Hz is applied as the reference motion
+along the axis of the tool. Figure 7 presents a sample plot
+1111
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:48:54 UTC from IEEE Xplore.  Restrictions apply. 
+TABLE I: Spring rendering results for the device
+Axis
+Desired
+stiffness
+[N/mm]
+Slope of
+ﬁtted line
+[N/mm]
+Rendering
+error [%]
+Quality of
+ﬁt (R2)
+x
+5
+4.9
+3.0
+0.993
+x
+15
+14.4
+3.8
+0.974
+y
+6
+5.8
+3.7
+0.992
+y
+18
+17.5
+3.0
+0.988
+demonstrating the chirp signal tracking performance of the
+device. The RMS error for this trajectory tracking task is
+calculated as 0.3%, indicating that the impedance controller
+can also achieve good motion tracking performance.
+0
+1
+2
+3
+4
+5
+140
+150
+160
+170
+180
+190
+200
+210
+220
+Time [s]
+Z [mm]
+ 
+Measured
+Reference signal
+Fig. 7: Trajectory tacking performance of the device under
+impedance control
+VII. CONCLUSION AND FUTURE WORK
+We have presented the kinematics, workspace characteri-
+zation, functional prototype and real-time impedance control
+of a novel 6 DoF haptic interface designed for laparoscopic
+training. The device features parallel kinematics that assume
+analytical solutions. The kinematics also allows of all actua-
+tors to be grounded to archive low apparent inertia at the tool.
+An impedance-type device has been implemented through
+use of direct drive actuation and capstan transmission to
+ensure low friction and backlash, and open loop impedance
+control performance of the device has been shown to be
+adequate for haptic simulations.
+Ongoing studies include optimal dimensional synthesis of
+the device [9] and experimental evaluation of the effective-
+ness of the device during laparoscopic training, especially to
+investigate the importance of stiffness rendering around the
+incision point for training trocar placement procedures.
+REFERENCES
+[1] Force Dimension Inc.
+http://www.forcedimension.com.
+Accessed
+2015.
+[2] Haption. http://www.haption.com. Accessed 2015.
+[3] Novint. http://www.novint.com. Accessed 2015.
+[4] R.L.
+Williams
+II,
+“The
+Delta
+Parallel
+Robot:
+Kinematics
+Solutions”,
+Internet
+Publication.
+www.ohio.edu/people/williar4/html/pdf/DeltaKin.pdf. 2015.
+[5] Royal
+College
+of
+Obstetricians
+and
+Gynacologists:
+Pre-
+venting
+entry-related
+gynaecological
+laparoscopic
+injuries.
+http://bsge.org.uk/guidelines.php. Accessed 2015.
+[6] R. Alberto, B. Renaud, and E. C. Baldo. Manual of Laparoscopic
+Urology. Springer-Verlag Berlin Heidelberg, 2008.
+[7] J. Brown, J. Rosen, L. Chang, M. Sinanan, and B. Hannaford.
+Quantifying Surgeon Grasping Mechanics in Laparoscopy Using the
+Blue Dragon System. Stud Health Technol Inform., 98:34–36, 2004.
+[8] J. Dankelman, M. Chmarra, E. Verdaasdonk, L. Stassen, and C. Grim-
+bergen. Fundamental aspects of learning minimally invasive surgical
+skills. Minim Invasive Ther Allied Technol, 14(4):247–56, 2005.
+[9] A. Erdogan, B. Celebi, A. C. Satici, and V. Patoglu. AssistOn-Ankle:
+A reconﬁgurable ankle exoskeleton with series-elastic actuation. Au-
+tonomous Robotics, 2016.
+[10] T. Frank, G. Hanna, and A. Cuschieri.
+Technological aspects of
+minimal access surgery.
+Proc. of the Institution of Mechanical
+Engineers, Part H: Journal of Engineering in Medicine, 211(2):129–
+144, 1997.
+[11] A. Gallagher, N. McClure, J. McGuigan, K. Ritchie, and N. Sheehy.
+An ergonomic analysis of the fulcrum effect in the acquisition of
+endoscopic skills. Endoscopy, 30(7):617–20, 1998.
+[12] G. Guthart and J. Salisbury, J. The IntuitiveTM telesurgery system:
+overview and application.
+In IEEE International Conference on
+Robotics and Automation, volume 1, pages 618–621 vol.1, 2000.
+[13] R. Hendrix, N. Rosielle, and H. Nijmeijer.
+Design of a haptic
+master interface for robotically assisted vitreo-retinal eye surgery. In
+International Conference on Advanced Robotics, pages 1–6, 2009.
+[14] V. M. Hung and U. J. Na. Tele-operation of a 6-DOF serial robot using
+a new 6-DOF haptic interface. In IEEE International Symposium on
+Haptic Audio-Visual Environments and Games, pages 1–6, 2010.
+[15] D. Jones, J. Brewer, and N. Soper. The inﬂuence of three-dimensional
+video systems on laparoscopic task performance.
+Surg Laparosc
+Endosc, 6(3):191–7, 1996.
+[16] M. W. Khan and M. M. Aziz. Experience in laparoscopic cholecys-
+tectomy. Mymensingh Medical Journal: MMJ, 19(01):77–84, 2010.
+[17] S. Krishnakumar and P. Tambe. Entry Complications in Laparoscopic
+Surgery. J Gynecol Endosc Surg, 1(1):4–11, 2009.
+[18] S. U. Lee and S. Kim. Analysis and Optimal Design of a New 6 DOF
+Parallel Type Haptic Device. In IEEE/RSJ International Conference
+on Intelligent Robots and Systems, pages 460–465, 2006.
+[19] G. Long and C. Collins. A pantograph linkage parallel platform master
+hand controller for force-reﬂection. In IEEE International Conference
+on Robotics and Automation, pages 390–395 vol.1, 1992.
+[20] A. Ma and S. Payandeh.
+Analysis and Experimentation of a 4-
+DOF Haptic Device. In Symposium on haptic interfaces for virtual
+environment and teleoperator systems, pages 351–356, 2008.
+[21] T. H. Massie and J. K. Salisbury. The PHANToM haptic interface:
+A device for probing virtual objects. In ASME Dynamic Systems and
+Control Division, pages 295–301, 1994.
+[22] G. Picod, A. Jambon, D. Vinatier, and P. Dubois. What can the operator
+actually feel when performing a laparoscopy? Surg Endosc, 19(1):95–
+100, 2005.
+[23] L. Rifat.
+Establishing telemedicine in developing countries: From
+inception to implementation. IOS Press, Amsterdam, 2004.
+[24] T. N. Robinson and G. V. Stiegmann. Minimally Invasive Surgery.
+Endoscopy, 36(01):48–51, 2004.
+[25] Russel A. Faust.
+Robotics in surgery : history, current and future
+applications. Nova Science Publishers, New York, 2007.
+[26] G. Tholey, J. Desai, and A. Castellanos.
+Force Feedback Plays a
+Signiﬁcant Role in Minimally Invasive Surgery - Results and Analysis.
+Ann Surg, 241(1):102–109, 2005.
+[27] D. Tran, F. Podwojewski, P. Beillas, M. Ottenio, D. Voirin, F. Turquier,
+and D. Mitton. Abdominal wall muscle elasticity and abdomen local
+stiffness on healthy volunteers during various physiological activities.
+Journal of the Mechanical Behavior of Biomedical Materials, 60:451
+– 459, 2016.
+[28] M. Yalcin and V. Patoglu. Kinematics and design of AssistOn-SE:
+A self-adjusting shoulder-elbow exoskeleton. In IEEE/RAS/EMBS In-
+ternational Conference on Biomedical Robotics and Biomechatronics,
+pages 1579–1585, 2012.
+[29] T. Yang, J. Liu, W. Huang, L. Yang, C. K. Chui, M. H. Ang, Y. Su,
+and S. K. Y. Chang.
+Frontiers of Intelligent Autonomous Systems,
+chapter Mechanism of a Learning Robot Manipulator for Laparoscopic
+Surgical Training, pages 297–308. Springer Berlin Heidelberg, 2013.
+[30] J. Yoon and J. Ryu.
+Design, fabrication, and evaluation of a new
+haptic device using a parallel mechanism. IEEE/ASME Transactions
+on Mechatronics, 6(3):221–233, 2001.
+1112
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:48:54 UTC from IEEE Xplore.  Restrictions apply. 

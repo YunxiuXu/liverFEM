@@ -166,7 +166,7 @@ extern int cavity_open_axis;
 // -1 = open near bboxMin[axis], +1 = open near bboxMax[axis]
 extern int cavity_open_side;
 
-// Ultraleap Leap Motion (LeapC) input.
+// Ultraleap Stereo IR-170 (LeapC) input.
 extern bool leapEnabled;
 extern float leapWorkspaceXmm, leapWorkspaceYmm, leapWorkspaceZmm;
 // Expands the bbox range used for mapping/clamping (fraction of bbox extents).

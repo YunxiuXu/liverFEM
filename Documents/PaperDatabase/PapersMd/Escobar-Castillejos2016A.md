@@ -1,0 +1,20 @@
+---
+tags:
+  - topic/haptics-overview
+  - topic/modeling
+  - method/simulation
+---
+
+![[Escobar-Castillejos2016A.png|640]]
+
+## 摘要
+摘要 医疗程序通常需要通过使用专用工具来操作器官或组织时依赖触觉感知。医生在成功执行这些操作前需要大量准备；例如，研究显示至少需要750次手术才能获得足够经验以正确完成医疗程序。触觉设备已成为重要的培训替代方案，它们通过在仿真中增加触觉来帮助使用者与虚拟环境互动，因此被认为可以改善医疗培训。该领域的先前研究表明，与目前医学院使用的培训环境（尸体、动物或人造皮肤与器官）相比，触觉设备能够提高外科医生的学习效果。因此，虚拟环境使用触觉设备以提高真实感。本文的目标是对最近使用触觉设备的医学模拟器进行现状综述。特别是，我们关注缝合、触诊、牙科程序、内窥镜检查、腹腔镜手术和正畸手术等领域。这篇文章是教育与培训专题集的一部分。
+
+# A Review of Simulators with Haptic Devices for Medical Training
+
+**作者:** David Escobar-Castillejos, Julieta Noguez, Luis Neri, Alejandra Magana, Bedrich Benes
+
+## Abstract
+Abstract Medical procedures often involve the use of the tactile sense to manipulate organs or tissues by using special tools. Doctors require extensive preparation in order to perform them successfully; for example, research shows that a minimum of 750 operations are needed to acquire sufficient experience to perform medical procedures correctly. Haptic devices have become an important training alternative and they have been considered to improve medical training because they let users interact with virtual environments by adding the sense of touch to the simulation. Previous articles in the field state that haptic devices enhance the learning of surgeons compared to current training environments used in medical schools (corpses, animals, or synthetic skin and organs). Consequently, virtual environments use haptic devices to improve realism. The goal of this paper is to provide a state of the art review of recent medical simulators that use haptic devices. In particular we focus on stitching, palpation, dental procedures, endoscopy, laparoscopy, and orthopaedics. These simulators are reviewed and compared from the viewpoint of used technology, the number of degrees of freedom, degrees of force feedback, perceived realism, immersion, and feedback provided to the user. In the conclusion, several observations per area and suggestions for future work are provided.
+
+[阅读原文](../Pdf/Escobar-Castillejos2016A.pdf)

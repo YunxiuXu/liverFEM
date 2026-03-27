@@ -1,0 +1,121 @@
+# Related Works
+
+## 触觉神经生理学基础
+
+理解指尖的触觉感知神经机制是设计触觉反馈设备的重要基础。Johnson[1]的研究表明，支配手部的四种机械感受器系统——SA1（慢适应I型，对应Merkel细胞）、RA（快速适应I型，对应Meissner小体）、PC（Pacinian小体）和SA2（慢适应II型，对应Ruffini末梢）——各自具有不同的感知功能。SA1感受器的感受野较小，对空间细节和边缘轮廓敏感，是形状和纹理感知的主要贡献者；RA感受器对低频振动（8-64 Hz）和皮肤运动敏感，参与抓握控制和滑动检测；PC感受器对高频振动（>64 Hz）高度敏感；SA2感受器的感受野较大，对皮肤拉伸和切向力敏感[2,3]。
+
+Johansson[2]通过微神经记录技术研究了这些机械感受器对正弦皮肤位移的响应特性，发现不同类型的感受器在不同频率和振幅范围内具有不同的响应模式。这些发现为触觉设备的频率选择和刺激强度提供了神经生理学依据。Birznieks等人[4]进一步研究了触觉感受器如何编码指尖力的方向，通过记录196个触觉感受器在施加五个不同方向力时的反应，发现几乎所有感受器都对施加的力量做出反应，且大多数SA-I、SA-II和FA-I感受器在特定力方向上具有广泛的调谐性，表明整个指端的触觉感受器群体共同编码力的方向信息。
+
+特别值得注意的是，位于指甲边界的SA-II感受器在编码指尖力方面发挥着独特作用。Birznieks等人[5]的研究显示，这些位于指甲壁附近的SA-II感受器能够可靠地响应施加的载荷，并对特定力量方向具有广泛的调谐性，表明它们能够编码指尖力量的向量信息。这一发现为在指甲区域进行触觉刺激提供了神经生理学支持——指甲边界不仅具有丰富的机械感受器，而且这些感受器在力感知中具有重要功能。
+
+在物体操作任务中，触觉信号的编码和使用遵循特定的时间模式。Johansson和Flanagan[6]的研究表明，触觉传入神经元通过相对脉冲定时（而不是平均发放率）快速传递接触参数信息，这解释了人类在操作任务中能够快速使用触觉信息的能力。Cole和Abbs[7]的研究显示，当握持物体时，握力在负荷变化后60至90毫秒内就能迅速调整，且其大小与负荷变化的幅度或速度成比例，这种快速的自动调整依赖于皮肤机械感受器和本体感受器的信号。Johansson和Westling[8]进一步证明，当手指皮肤与物体之间发生滑动时，触觉传入响应会引发自动调整握力，以防止滑落并确保稳定。Wiertlewski等人[9]的研究则表明，滑动产生的振动信号被中枢神经系统用来调节握力反射，特别是在接触表面具有明显纹理时。
+
+这些神经生理学研究为触觉反馈设备的设计提供了重要指导：（1）不同类型的触觉刺激应针对不同的机械感受器系统；（2）指甲区域具有丰富的力敏感感受器，适合进行力反馈；（3）触觉反馈的时间特性对于实现自然的感知和运动控制至关重要；（4）切向力和振动信号在摩擦感知和握力控制中发挥关键作用。
+
+## 可穿戴指尖触觉设备
+
+为实现沉浸式的虚拟和增强现实体验，研究者们开发了多种可穿戴指尖触觉设备。这些设备的核心挑战在于如何在提供丰富触觉反馈的同时，保持设备的轻量化和非侵入性。Prattichizzo等人[10]提出了可穿戴触觉设备的设计准则，强调设备应避免干扰手指的自然运动和感知能力。他们开发了一种3自由度的可穿戴触觉界面，通过放置在手指背部的静态平台和与指尖交互的移动平台，能够施加最大1.5牛顿的力。然而，该设备的结构相对复杂，限制了其在日常使用中的实用性。
+
+Purnendu等人[11]介绍了一种电液压触觉界面，通过16个独立控制的电液泡泡驱动器在指尖产生高保真的多模态触觉反馈，能够产生高达34千帕的触压和高达700赫兹的振动。尽管该设备展现了出色的触觉渲染能力，但其复杂的驱动机制和较大的体积限制了其在移动场景中的应用。Schorr和Okamura[12]提出通过变形指尖皮肤传递切肤力量信息，使用户能够感知虚拟物体的重量、摩擦和刚度变化。这些研究表明，指尖触觉设备能够有效地增强虚拟物体操作的沉浸感，但设备的轻量化和非侵入性仍然是关键挑战。
+
+## 指甲刺激触觉反馈
+
+相比于传统的指腹刺激，指甲区域的触觉刺激为可穿戴设备提供了独特的优势：它能够保持指尖的自然触觉敏感性，避免阻碍用户与真实物体的交互。Hsieh等人[13]提出了NailTactors，通过在人工指甲边缘安装偏心旋转质量振动器阵列，实现了小型化的高分辨率触觉显示器。他们的研究显示，用户能够识别方向性线索和数字字符，证明了指甲区域能够传递丰富的触觉信息。
+
+Tran等人[14]系统性地探讨了通过指甲振动触觉来增强身体触控输入，实验结果显示用户在身体触控过程中更偏好加入触觉反馈。他们确定了不同身体部位实现逼真"点击"感觉的频率阈值，并利用单一驱动器实现了丰富的触觉效果。Maeda等人[15]提出了Fingeret，结合了指侧驱动器（FSA）和指甲驱动器（FNA），前者适合低频触觉反馈，后者适合高频触觉反馈，两者在覆盖宽范围的触觉反馈中具有互补作用。这些研究表明，指甲区域的触觉刺激是一种具有潜力的触觉增强方法，但现有研究主要集中在振动刺激，对于切向力反馈的探索仍然有限。
+
+## 切向力与剪切力反馈
+
+切向力（或称剪切力）在触觉感知中扮演着重要角色，能够传达摩擦、纹理和物体重量等信息。Girard等人[16]开发了HapTip，一种模块化的可穿戴触觉设备，能够在指尖上模拟双自由度的剪切力，位移范围为±2毫米。他们的实验显示，用户能够成功识别剪切力的方向并感知虚拟物体的重量。Smith等人[17]的研究表明，切向力变化速率是粗糙感知的重要决定因素，强调了切向力在纹理感知中的关键作用。
+
+Konyo等人[18]提出了一种无需在指尖施加实际切向力即可表现摩擦感觉的方法，通过调节高频振动来激活触觉受体。然而，这些研究或者需要较大的力输出装置，或者只能提供单一方向的反馈，限制了其在轻量级可穿戴设备中的应用。
+
+## 基于弦/线驱动的触觉设备
+
+弦或线驱动的触觉设备因其轻量化和结构简单的特点，近年来受到广泛关注。AOKI等人[19]提出了一种重量仅为1.4克的指尖安装触觉设备，通过使用细线实现皮肤感知，使用户能够感受到虚拟物体。该设备强调了轻便性和对指尖运动的最小阻碍，但其反馈能力有限。
+
+Fang等人[20]开发了Wireality，这是一种肩部佩戴的系统，利用可收回、可编程锁定的电线在手部各关节模拟物理约束。该系统能够产生较大的力度，并实现与复杂虚拟物体的触觉交互，如用手指绕栏杆。然而，其电线从肩部延伸到手部的设计增加了系统的复杂性，且不适合需要大范围手臂运动的场景。DeVrio和Harrison[21]提出了Reel Feel，同样采用肩部佩戴的多弦设计，能够渲染刚性几何、物体绑定的触觉动画、冲击力和表面顺应性。这些系统虽然实现了丰富的触觉效果，但由于驱动单元远离手部，在精细力控制和响应速度方面存在局限。
+
+Xu等人[22]介绍了一套以物理为基础的操控和触觉渲染系统，采用无芯电动机作为触觉执行器，并利用物理引擎创建虚拟手。该设备轻便（40克），能够模拟接触碰撞、压力和摩擦，包括粘滑现象。这些研究展示了线驱动设备在轻量化方面的潜力，但如何在小型化的同时实现多自由度的切向力反馈仍然是一个开放性问题。
+
+## 环形触觉设备
+
+环形设计为可穿戴触觉设备提供了另一种方案，它可以安装在手指的不同位置，避免完全覆盖指尖。Pacchierotti等人[23]介绍了hRing，一种安装在指的近端指节部位的可穿戴皮肤触觉设备，通过两个伺服电机驱动一条带子，实现正常力和剪切力的传递。实验结果显示，hRing在任务性能上提升了20%，在感知效果上提升了47%，且不影响手部追踪质量。
+
+Han等人[24]提出了HydroRing，这是一款戴在手指上的设备，能在指腹提供压力、振动和温度的触觉感受。不同于以往的探索，HydroRing在主动模式下通过细长柔软的乳胶管内流体的流动传递感受，设备结构尺寸为12×12×4毫米，重量约5-10克。Trzpit等人[25]开发了NURing，这是一种腱驱动式触觉设备，重量约220克，通过引导手指实现运动感知反馈。参与者能在不到3秒内识别目标方向，稳态误差为1.5°。
+
+Gonzalez等人[26]提出了X-Rings，一种手持式360°形状显示器，由多个电机驱动的可扩展环（直径5.7-7.7厘米）模块化叠加而成，能够模拟径向对称表面。这些环形设备展示了在不完全覆盖指尖的情况下提供触觉反馈的可行性，但现有设备或者体积较大、或者只能提供单一类型的反馈，限制了其在精细操作中的应用。
+
+## 力觉、重量和摩擦感知
+
+在触觉反馈设备的评估中，用户对重量、摩擦和力方向的感知能力是重要的性能指标。Kurimoto等人[27]研究了触觉敏感性、摩擦系数和正常力之间的个体差异，结果显示辨别敏感性与摩擦系数之间存在显著相关性。这表明设备在设计时需要考虑个体差异，以实现最佳的触觉传递效果。
+
+Nakayama等人[28]提出了一种通过在手指侧面进行经皮电刺激以引发力觉的方法，实验证明电刺激能增强握持物体时的重量感知。这种方法轻便且无干扰，但电刺激可能引起不适，且难以精确控制力的大小和方向。Palmer等人[29]介绍了Hoxels，通过向手腕提供法线方向的触觉反馈，实现虚拟环境中指部交互力的重新定位，研究显示这能有效降低虚拟任务中的抓握力。这些研究表明，即使反馈位置偏离实际接触点，用户仍能感知到力的存在，但精确的方向识别和多模态反馈仍需要直接在手指上施加刺激。
+
+## 研究空白与本文贡献
+
+综上所述，现有的可穿戴指尖触觉设备在实现轻量化、多自由度切向力反馈和保持指尖自然触觉敏感性之间存在权衡。基于指腹的设备虽然能够提供丰富的触觉反馈，但往往阻碍了手指与真实物体的交互[11,12]。指甲区域的刺激虽然保持了指尖的可用性，但现有研究主要集中在振动反馈[13,14,15]，缺乏对切向力反馈的系统探索。线驱动设备展示了轻量化的潜力[19,20,21,22]，但现有设计或者只提供单一方向的反馈，或者需要将驱动单元放置在远离手部的位置，影响了系统的响应速度和便携性。环形设备提供了不完全覆盖指尖的设计思路[23,24,25,26]，但在实现多自由度切向力反馈方面仍存在局限。
+
+本研究提出的轻量级可穿戴触觉设备通过将环形结构安装在指甲侧，整合三个微型电机（两个用于远端-近端方向的基于弦的力反馈，一个带弧形销用于桡侧-尺侧刺激），实现了2自由度的切向力反馈，同时保持了指尖的自然触觉敏感性。设备重量仅为5.24克，能够生成九种不同的力模式。通过初步的用户研究，我们评估了用户的方向识别能力以及对不同重量和摩擦系数的感知能力。与现有工作相比，本设备在轻量化、多自由度反馈和指尖可用性之间实现了更好的平衡，为虚拟和增强现实中的精细触觉交互提供了一种新的解决方案。
+
+
+## 参考文献
+
+[1] Johnson, K. O. (2001). The roles and functions of cutaneous mechanoreceptors. Current Opinion in Neurobiology, 11(4), 455-461.
+
+[2] Johansson, R. S., Landström, U., & Lundström, R. (1982). Responses of mechanoreceptive afferent units in the glabrous skin of the human hand to sinusoidal skin displacements. Brain Research, 244(1), 17-25.
+
+[3] Johansson, R. S. (1983). Tactile sensory coding in the glabrous skin of the human hand. Trends in Neurosciences, 6, 27-32.
+
+[4] Birznieks, I., Jenmalm, P., Goodwin, A. W., & Johansson, R. S. (2001). Encoding of direction of fingertip forces by human tactile afferents. Journal of Neuroscience, 21(20), 8222-8237.
+
+[5] Birznieks, I., Macefield, V. G., Westling, G., & Johansson, R. S. (2009). Slowly adapting mechanoreceptors in the borders of the human fingernail encode fingertip forces. Journal of Neuroscience, 29(29), 9370-9379.
+
+[6] Johansson, R. S., & Flanagan, J. R. (2009). Coding and use of tactile signals from the fingertips in object manipulation tasks. Nature Reviews Neuroscience, 10(5), 345-359.
+
+[7] Cole, K. J., & Abbs, J. H. (1988). Grip force adjustments evoked by load force perturbations of a grasped object. Journal of Neurophysiology, 60(4), 1513-1522.
+
+[8] Johansson, R. S., & Westling, G. (1987). Signals in tactile afferents from the fingers eliciting adaptive motor responses during precision grip. Experimental Brain Research, 66(1), 141-154.
+
+[9] Wiertlewski, M., Endo, S., Wing, A. M., & Hayward, V. (2013). Slip-induced vibration influences the grip reflex: A pilot study. Proceedings of the IEEE World Haptics Conference, 627-632.
+
+[10] Prattichizzo, D., Chinello, F., Pacchierotti, C., & Malvezzi, M. (2013). Towards wearability in fingertip haptics: A 3-DoF wearable device for cutaneous force feedback. IEEE Transactions on Haptics, 6(4), 506-516.
+
+[11] Purnendu, Hartcher-O'Brien, J., Mehta, V., Colonnese, N., Gupta, A., Bruns, C. J., & Agarwal, P. (2023). Fingertip wearable high-resolution electrohydraulic interface for multimodal haptics. Nature Communications, 14, 865.
+
+[12] Schorr, S. B., & Okamura, A. M. (2017). Fingertip tactile devices for virtual object manipulation and exploration. Proceedings of the CHI Conference on Human Factors in Computing Systems, 3115-3119.
+
+[13] Hsieh, M.-J., Liang, R.-H., & Chen, B.-Y. (2016). NailTactors: Eyes-free spatial output using a nail-mounted tactor array. Proceedings of the 29th Annual ACM Symposium on User Interface Software and Technology, 29-34.
+
+[14] Tran, P., Gadepalli, P., Lee, J., & Nittala, A. S. (2023). Augmenting on-body touch input with tactile feedback through fingernail haptics. Proceedings of the CHI Conference on Human Factors in Computing Systems.
+
+[15] Maeda, T., Yoshida, S., Murakami, T., Matsuda, K., Tanikawa, T., & Sakai, H. (2022). Fingeret: A wearable fingerpad-free haptic device for mixed reality. Proceedings of the IEEE VR, 707-716.
+
+[16] Girard, A., Marchal, M., Gosselin, F., Chabrier, A., Louveau, F., & Lécuyer, A. (2016). HapTip: Displaying haptic shear forces at the fingertips for multi-finger interaction in virtual environments. Frontiers in ICT, 3, 6.
+
+[17] Smith, A. M., Chapman, C. E., Deslandes, M., Langlais, J.-S., & Thibodeau, M.-P. (2002). Role of friction and tangential force variation in the subjective scaling of tactile roughness. Experimental Brain Research, 144(2), 211-223.
+
+[18] Konyo, M., Yamada, H., Okamoto, S., & Tadokoro, S. (2008). Alternative display of friction represented by tactile stimulation without tangential force. Proceedings of EuroHaptics, 619-629.
+
+[19] Aoki, T., Hasegawa, S., Mitake, H., & Sato, M. (2009). Wearable haptic device to present contact sensation based on cutaneous sensation using thin wire. Proceedings of ICAT.
+
+[20] Fang, C., Zhang, Y., Dworman, M., & Harrison, C. (2020). Wireality: Enabling complex tangible geometries in virtual reality with worn multi-string haptics. Proceedings of the CHI Conference on Human Factors in Computing Systems, 1-10.
+
+[21] DeVrio, N., & Harrison, C. (2025). Reel feel: Rich haptic XR experiences using an active, worn, multi-string device. Proceedings of the CHI Conference on Human Factors in Computing Systems.
+
+[22] Xu, Y., Wang, S., & Hasegawa, S. (2023). Realistic dexterous manipulation of virtual objects with physics-based haptic rendering. IEEE Transactions on Visualization and Computer Graphics.
+
+[23] Pacchierotti, C., Salvietti, G., Hussain, I., Meli, L., & Prattichizzo, D. (2016). The hRing: A wearable haptic device to avoid occlusions in hand tracking. Proceedings of the IEEE Haptics Symposium, 134-139.
+
+[24] Han, T., Anderson, F., Irani, P., & Grossman, T. (2018). HydroRing: Supporting mixed reality haptics using liquid flow. Proceedings of the 31st Annual ACM Symposium on User Interface Software and Technology, 913-925.
+
+[25] Trzpit, T. P., Reardon, G., Shilati, A., Gerber, E. M., Peshkin, M. A., & Colgate, J. E. (2025). NURing: A tendon-driven wearable ring for on-demand kinesthetic haptic feedback. Proceedings of the CHI Conference on Human Factors in Computing Systems.
+
+[26] Gonzalez, E. J., Ofek, E., Gonzalez Franco, M., & Sinclair, M. (2021). X-Rings: A hand-mounted 360° shape display for grasping in virtual reality. Proceedings of the CHI Conference on Human Factors in Computing Systems, 1-12.
+
+[27] Kurimoto, K., Torres, D. A., Tanaka, Y., Kappers, A. M. L., & Giraud, F. (2025). Individual differences of friction coefficient and normal force on friction perception. Proceedings of the IEEE World Haptics Conference.
+
+[28] Nakayama, S., Ushiyama, K., & Kajimoto, H. (2023). Force cue presentation by electrical stimulation to lateral side of the finger. Proceedings of the IEEE World Haptics Conference.
+
+[29] Palmer, J. E., Vuong, B. B., Zhakypov, Z., Qin, Y., Tilton, L., & Okamura, A. M. (2024). Haptic relocation of virtual finger forces via pneumatic wrist-worn haptic devices. Proceedings of the IEEE Haptics Symposium.
+

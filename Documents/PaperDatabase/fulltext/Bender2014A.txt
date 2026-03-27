@@ -1,0 +1,2372 @@
+DOI: 10.1111/cgf.12346
+COMPUTER GRAPHICS forum
+Volume 33 (2014), number 6 pp. 228–251
+A Survey on Position-Based Simulation Methods in Computer
+Graphics
+Jan Bender1, Matthias M¨uller2, Miguel A. Otaduy3, Matthias Teschner4 and Miles Macklin2
+1Graduate School CE, TU Darmstadt, Darmstadt, Germany
+bender@gsc.tu-darmstadt.de
+2NVIDIA PhysX Research, Zurich, Switzerland
+{matthiasm, mmacklin}@nvidia.com
+3URJC Madrid, Madrid, Spain
+maotaduy@gmail.com
+4Department of Computer Science, University of Freiburg, Freiburg, Germany
+teschner@informatik.uni-freiburg.de
+Abstract
+The dynamic simulation of mechanical effects has a long history in computer graphics. The classical methods in this ﬁeld discretize
+Newton’s second law in a variety of Lagrangian or Eulerian ways, and formulate forces appropriate for each mechanical effect:
+joints for rigid bodies; stretching, shearing or bending for deformable bodies and pressure, or viscosity for ﬂuids, to mention just a
+few. In the last years, the class of position-based methods has become popular in the graphics community. These kinds of methods
+are fast, stable and controllable which make them well-suited for use in interactive environments. Position-based methods are
+not as accurate as force-based methods in general but they provide visual plausibility. Therefore, the main application areas
+of these approaches are virtual reality, computer games and special effects in movies. This state-of-the-art report covers the
+large variety of position-based methods that were developed in the ﬁeld of physically based simulation. We will introduce the
+concept of position-based dynamics, present dynamic simulation based on shape matching and discuss data-driven upsampling
+approaches. Furthermore, we will present several applications for these methods.
+Keywords: position-based simulation, shape matching, data-driven upsampling, deformable solids, ﬂuids
+ACM CCS: I.3.7 [Computer Graphics]: Three-Dimensional Graphics and Realism Animation
+1. Introduction
+The simulation of solid objects such as rigid bodies, soft bodies or
+cloth has been an important and active research topic in computer
+graphics for more than 30 years. The ﬁeld was introduced to graphics
+by Terzopoulos and his colleagues in the late 1980s [TPBF87a].
+Since then, a large body of work has been published and the list is
+growing rapidly. There exists a variety of survey papers [GM97],
+[MTV05], [NMK*06], [MSJT08], [BETC12] which document this
+development. However, due to the shear number of papers, it has
+become difﬁcult to cover the entire ﬁeld in one survey.
+In this state-of-the-art report, we focus on a special class of simu-
+lation methods, namely position-based approaches. These methods
+were originally developed for the simulation of solids. However,
+some recent works demonstrated that the position-based concepts
+can even be used to simulate ﬂuids. Classical dynamics simula-
+tion methods formulate the change of momentum of a system as
+a function of applied forces, and evolve positions through numer-
+ical integration of accelerations and velocities. Position-based ap-
+proaches, instead, compute positions directly, based on the solution
+to a quasi-static problem.
+Physical simulation is a well-studied problem in the computa-
+tional sciences and therefore, many of the well-established methods
+have been adopted in graphics such as the ﬁnite element method
+(FEM) [OH99], the ﬁnite differences method [TPBF87b], the ﬁnite
+volume method [TBHF03], the boundary element method [JP99] or
+particle-based approaches [DSB99], [THMG04]. The main goal of
+computer simulations in computational physics and chemistry is to
+replace real-world experiments and thus, to be as accurate as possi-
+ble. In contrast, the main applications of physically based simulation
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and
+John Wiley & Sons Ltd. Published by John Wiley & Sons Ltd.
+228
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+229
+methods in computer graphics are special effects in movies and com-
+mercials and more recently, computer games and other interactive
+systems. Here, speed and controllability are the most important fac-
+tors and all that is required in terms of accuracy is visual plausibility.
+This is especially true for real-time applications.
+Position-based methods are tailored particularly for use in inter-
+active environments. They provide a high level of control and are
+stable even when simple and fast explicit time integration schemes
+are used. Due to their simplicity, robustness and speed, these ap-
+proaches have recently become very popular in computer graphics
+and in the game industry.
+In this state-of-the-art report, we focus the discussion on several
+geometrically motivated methods, in particular those that directly
+manipulate the positions of the simulated bodies. We start with
+a description of position-based dynamics methods, which compute
+equilibrium positions by iteratively resolving geometric constraints.
+Then, we cover shape matching methods, and we conclude with
+data-driven upsampling methods, which compute positions as a
+function of data from pre-captured deformation examples.
+Collision detection is an important part of any simulation system.
+However, an adequate discussion of this topic is beyond the scope
+of this report. Therefore, we refer the reader to the surveys of Lin
+and Gottschalk [LG98] and the one of Teschner et al. [TKH*05].
+2. Background
+The most popular approaches for the simulation of dynamic systems
+in computer graphics are force based. Internal and external forces are
+accumulated from which accelerations are computed based on New-
+ton’s second law of motion. A time integration method is then used
+to update the velocities and ﬁnally the positions of the object. A few
+simulation methods (most rigid body simulators) use impulse-based
+dynamics and directly manipulate velocities. In contrast, geometry-
+based methods omit the velocity layer as well and immediately
+work on the positions. The main advantage of a position-based
+approach is its controllability. Overshooting problems of explicit
+integration schemes in force-based systems can be avoided. In ad-
+dition, collision constraints can be handled easily and penetrations
+can be resolved completely by projecting points to valid locations.
+Among the force-based approaches, one of the simplest methods
+is to represent and simulate solids with mass-spring networks. A
+mass-spring system consists of a set of point masses that are con-
+nected by springs. The physics of such a system is straightforward
+and a simulator is easy to implement. However, there are some
+signiﬁcant drawbacks of the simple method.
+r The behaviour of the object depends on the way the spring net-
+work is set up.
+r It can be difﬁcult to tune the spring constants to get the desired
+behaviour.
+r Mass-spring networks cannot capture volumetric effects directly
+such as volume conservation or prevention of volume inversions.
+The FEM solves all of the above problems because it considers the
+entire volume of a solid instead of replacing it with a ﬁnite number of
+point masses. Here, the object is discretized by splitting the volume
+into a number of elements with ﬁnite size. This discretization yields
+a mesh as in the mass-spring approach in which the vertices play the
+role of the mass points and the elements, typically tetrahedra, can
+be viewed as generalized springs acting on multiple points at the
+same time. In both cases, forces at the mass points or mesh vertices
+are computed due to their velocities and the actual deformation of
+the mesh.
+3. Position-Based Dynamics
+In this section, we present position-based dynamics, an approach
+which omits the velocity and acceleration layer and immediately
+works on the positions [MHHR07]. We will ﬁrst describe the ba-
+sic idea and the simulation algorithm of position-based dynamics
+(PBD). Then, we will focus speciﬁcally on how to solve the system
+of constraints that describe the object to be simulated. After this, we
+will provide a list of constraints that can be used to simulate a variety
+of materials such as soft bodies, cloth or even ﬂuids with PBD. We
+will also discuss the relation of PBD to strain limiting methods, how
+to include damping and ways to parallelize the simulation algorithm.
+3.1. Overview
+The objects to be simulated are represented by a set of N particles
+and a set of M constraints. Each particle i has three attributes,
+namely
+mi
+Mass
+xi
+Position
+vi
+Velocity
+A constraint j is deﬁned by the ﬁve attributes
+nj
+Cardinality
+Cj : R3nj →R
+Scalar constraint function
+{i1, . . . inj }, ik ∈[1, . . . N]
+Set of indices
+kj ∈[0 . . . 1]
+Stiffness parameter
+unilateral or bilateral
+Type
+Constraint j with type bilateral is satisﬁed if Cj(xi1, . . . , xinj ) =
+0. If its type is unilateral then it is satisﬁed if Cj(xi1, . . . , xinj ) ≥0.
+The stiffness parameter kj deﬁnes the strength of the constraint in a
+range from zero to one.
+Algorithm 1 Position-based dynamics
+1: for all vertices i do
+2:
+initialize xi = x0
+i , vi = v0
+i , wi = 1/mi
+3: end for
+4: loop
+5:
+for all vertices i do vi ←vi +Δtwifext(xi)
+6:
+for all vertices i do pi ←xi +Δtvi
+7:
+for all vertices i do genCollConstraints(xi →pi)
+8:
+loop solverIteration times
+9:
+projectConstraints(C1,...,CM+MColl,p1,...,pN)
+10:
+end loop
+11:
+for all vertices i do
+12:
+vi ←(pi −xi)/Δt
+13:
+xi ←pi
+14:
+end for
+15:
+velocityUpdate(v1,...,vN)
+16: end loop
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+230
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+Given these data and a time step t, the simulation proceeds as
+described by Algorithm 1. Since the algorithm simulates a system
+which is second order in time, both the positions and the velocities
+of the particles need to be speciﬁed in (1)–(3) before the simulation
+loop starts. Lines (5)–(6) perform a simple explicit forward Euler in-
+tegration step on the velocities and the positions. The new locations
+pi are not assigned to the positions directly but are only used as pre-
+dictions. Non-permanent external constraints such as collision con-
+straints are generated at the beginning of each time step from scratch
+in line (7). Here, the original and the predicted positions are used in
+order to perform continuous collision detection. The solver (8)–(10)
+then iteratively corrects the predicted positions such that they satisfy
+the MColl external as well as the M internal constraints. Finally, the
+corrected positions pi are used to update the positions and the veloc-
+ities. It is essential here to update the velocities along with the posi-
+tions. If this is not done, the simulation does not produce the correct
+behaviour of a second-order system. As you can see, the integration
+scheme used here is very similar to the Verlet method. It is also
+closely related to Jos Stam’s Nucleus solver [Sta09] which also uses
+a set of constraints to describe the objects to be simulated. The main
+difference is that Nucleus solves the constraints for velocities, not
+positions.
+3.2. The System to be Solved
+The goal of the solver steps (8)–(10) is to correct the predicted
+positions pi of the particles such that they satisfy all constraints.
+The problem that needs to be solved comprises of a set of M equa-
+tions for the 3N unknown position components, where M is now
+the total number of constraints. This system does not need to be
+symmetric. If M > 3N (M < 3N) the system is overdetermined
+(underdetermined). In addition to the asymmetry, the equations
+are in general non-linear. The function of a simple distance con-
+straint C(p1, p2) = |p1 −p2|2 −d2 yields a non-linear equation.
+What complicates things even further is the fact that collisions pro-
+duce inequalities rather than equalities. Solving a non-symmetric,
+non-linear system with equalities and inequalities is a tough
+problem.
+Let p be the concatenation [pT
+1, . . . , pT
+N]T and let all the constraint
+functions Cj take the concatenated vector p as input while only using
+the subset of coordinates they are deﬁned for. We can now write the
+system to be solved as
+C1(p) ≻0
+. . .
+CM(p) ≻0,
+where the symbol ≻denotes either = or ≥. Newton–Raphson it-
+eration is a method to solve non-linear symmetric systems with
+equalities only. The process starts with a ﬁrst guess of a solution.
+Each constraint function is then linearized in the neighbourhood of
+the current solution using
+C(p + p) = C(p) + ∇pC(p) · p + O(|p|2) = 0.
+This yields a linear system for the global correction vector p
+∇pC1(p) · p = −C1(p)
+. . .
+∇pCM(p) · p = −CM(p),
+where ∇pCj(p) is the 1 × N dimensional vector containing the
+derivatives of the function Cj with respect to all its parameters,
+i.e. the N components of p. It is also the jth row of the linear
+system. Both, the rows ∇pCj(p) and the right-hand side scalars
+−Cj(p) are constant because they are evaluated at the location p
+before the system is solved. When M = 3N and only equalities are
+present, the system can be solved by any linear solver, e.g. a pre-
+conditioned conjugate gradient method. Once it is solved for p the
+current solution is updated as p ←p + p. A new linear system is
+generated by evaluating ∇pCj(p) and −Cj(p) at the new location
+after which the process repeats.
+If M ̸= 3N the resulting matrix of the linear system is non-
+symmetric and not invertible. Goldenthal et al. [GHF*07] solve this
+problem by using the pseudo-inverse of the system matrix which
+yields the best solution in the least-squares sense. Still, handling
+inequalities is not possible directly.
+3.3. The Non-Linear Gauss–Seidel Solver
+In the position-based dynamics approach, non-linear Gauss–Seidel
+is used. It solves each constraint equation separately. Each con-
+straint yields a single scalar equation C(p) ≻0 for all the particle
+positions associated with it. The subsystem is therefore highly un-
+derdetermined. PBD solves this problem as follows. Again, given
+p we want to ﬁnd a correction p such that C(p + p) ≻0. It is
+important to notice that PBD also linearizes the constraint func-
+tion but individually for each constraint. The constraint equation is
+approximated by
+C(p + p) ≈C(p) + ∇pC(p) · p ≻0.
+(1)
+The problem of the system being underdetermined is solved by
+restricting p to be in the direction of ∇pC which conserves the
+linear and angular momenta. This means that only one scalar λ—a
+Lagrange multiplier—has to be found such that the correction
+p = λ∇pC(p)
+solves Equation (1). This yields the following formula for the cor-
+rection vector of a single particle i
+pi = −s wi∇piC(p),
+(2)
+where
+s =
+C(p)
+
+j wj|∇pj C(p)|2
+(3)
+and wi = 1/mi.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+231
+As mentioned above, this solver linearizes the constraint func-
+tions. However, in contrast to the Newton–Raphson method, the
+linearization happens individually per constraint. Solving the lin-
+earized constraint function of a single distance constraint for in-
+stance yields the correct result in a single step. Because the positions
+are immediately updated after a constraint is processed, these up-
+dates will inﬂuence the linearization of the next constraint because
+the linearization depends on the actual positions. Asymmetry does
+not pose a problem because each constraint produces one scalar
+equation for one unknown Lagrange multiplier λ. Inequalities are
+handled trivially by ﬁrst checking whether C(p) ≥0. If this is the
+case, the constraint is simply skipped.
+The fact that each constraint is linearized individually before its
+projection makes the solver more stable than a global approach in
+which the linearizations are kept ﬁxed for the entire global solve
+of a Newton iteration. Liu et al. [LBOK13] pointed out that PBD
+can be interpreted as a heuristic variant of the variational implicit
+Euler method taking the inertial term out of the solver and into the
+integration step of the simulation.
+We have not considered the stiffness k of the constraint so far.
+There are several ways to incorporate it. The simplest variant is to
+multiply the corrections p by k ∈[0 . . . 1]. However, for multi-
+ple iteration loops of the solver, the effect of k is non-linear. The
+remaining error for a single distance constraint after ns solver it-
+erations is p(1 −k)ns. To get a linear relationship, we multiply
+the corrections not by k directly but by k′ = 1 −(1 −k)1/ns. With
+this transformation, the error becomes p(1 −k′)ns = p(1 −k)
+and, thus, becomes linearly dependent on k and independent of ns
+as desired. However, the resulting material stiffness is still depen-
+dent on the time step of the simulation. Real-time environments
+typically use ﬁxed time steps in which case this dependency is not
+problematic.
+3.4. Constraint Examples
+In the following, we will introduce different constraint examples.
+For better readability, we deﬁne pi,j = pi −pj.
+3.4.1. Stretching
+To give an example, let us consider the distance constraint function
+C(p1, p2) = |p1,2| −d. The derivatives with respect to the points
+are ∇p1C(p1, p2) = n and ∇p2C(p1, p2) = −n with n =
+p1,2
+|p1,2|. The
+scaling factor s is, thus, s = |p1,2|−d
+1+1
+and the ﬁnal corrections
+p1 = −
+w1
+w1+w2 (|p1,2| −d) p1,2
+|p1,2|
+p2 = +
+w2
+w1+w2 (|p1,2| −d) p1,2
+|p1,2|,
+which are the formulas proposed in [Jak01] for the projection of
+distance constraints (see Figure 1). They pop up as a special case of
+the general constraint projection method.
+3.4.2. Bending
+In cloth simulation, it is important to simulate bending in addition to
+stretching resistance. To this end, for each pair of adjacent triangles
+Figure 1: Projection of the constraint C(p1, p2) = |p1,2| −d. The
+corrections pi are weighted according to the inverse masses wi =
+1/mi.
+Figure
+2: For
+bending
+resistance,
+the
+constraint
+function
+C(p1, p2, p3, p4) = arccos(n1 · n2) −ϕ0 is used. The actual dihe-
+dral angle ϕ is measured as the angle between the normals of the
+two triangles.
+Figure 3: Constraint function C(q, p1, p2, p3) = (q −p1) · n −h
+makes sure that q stays above the triangle p1, p2, p3 by the cloth
+thickness h.
+(p1, p3, p2) and (p1, p2, p4) a bilateral bending constraint is added
+with constraint function
+Cbend(p1, p2, p3, p4) =
+acos
+ p2,1 × p3,1
+|p2,1 × p3,1| · p2,1 × p4,1
+|p2,1 × p4,1|
+
+−ϕ0
+and stiffness kbend. The scalar ϕ0 is the initial dihedral angle between
+the two triangles and kbend is a global user parameter deﬁning the
+bending stiffness of the cloth (see Figure 2). The advantage of this
+bending term over adding a distance constraint between points p3
+and p4 is that it is independent of stretching. This is because the term
+is independent of edge lengths. In Figure 4 we show how bending
+and stretching resistance can be tuned independently.
+3.4.3. Triangle collisions
+Self-collisions within cloth can be handled by additional unilateral
+constraints. For vertex q moving through a triangle p1, p2, p3, the
+constraint function reads
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+232
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+Figure 4: The image shows a mesh that is simulated using stretching and bending constraints. The top row shows (kstretching, kbending) = (1, 1),
+( 1
+2, 1) and ( 1
+100, 1). The bottom row shows (kstretching, kbending) = (1, 0), ( 1
+2, 0) and ( 1
+100, 0).
+C(q, p1, p2, p3) = (q −p1) · p2,1 × p3,1
+|p2,1 × p3,1| −h,
+where h is the cloth thickness (see Figure 3). If the vertex enters from
+below with respect to the triangle normal, the constraint function
+has to be
+C(q, p1, p2, p3) = (q −p1) · p3,1 × p2,1
+|p3,1 × p2,1| −h.
+3.4.4. Volume conservation
+For tetrahedral meshes, it is useful to have a constraint that conserves
+the volume of single tetrahedron. Such a constraint has the form
+C(p1, p2, p3, p4) = 1
+6
+
+p2,1 × p3,1
+
+· p4,1 −V0,
+where p1, p2, p3 and p4 are the four corners of the tetrahedron and
+V0 is its rest volume. In a similar way, the area of a triangle can be
+kept constant by introducing
+C(p1, p2, p3) = 1
+2
+p2,1 × p3,1
+ −A0.
+Figure 5: Simulation of overpressure inside a character.
+3.4.5. Cloth balloons
+For closed triangle meshes, overpressure inside the mesh as shown
+in Figure 5 can easily be modelled with an equality constraint con-
+cerning all N vertices of the mesh:
+C(p1, . . . , pN) =
+ntriangles
+	
+i=1
+(pti
+1 × pti
+2) · pti
+3
+
+−kpressureV0.
+Here, ti
+1, ti
+2 and ti
+3 are the three indices of the vertices belonging to
+triangle i. The sum computes the actual volume of the closed mesh.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+233
+It is compared against the original volume V0 times the overpressure
+factor kpressure. This constraint function yields the gradients
+∇piC =
+	
+j:tj
+1 =i
+(ptj
+2 × ptj
+3 ) +
+	
+j:tj
+2 =i
+(ptj
+3 × ptj
+1 ) +
+	
+j:tj
+3 =i
+(ptj
+1 × ptj
+2 ).
+These gradients have to be scaled by the scaling factor given in
+Equation (3) and weighted by the masses according to Equation (2)
+to get the ﬁnal projection offsets pi.
+3.4.6. Fluids
+It is also possible to simulate ﬂuids in the PBD framework even
+though it has been used almost exclusively for the simulation of
+deformable objects. We mention ﬂuids simply as an item in the list
+of possible constraints because all that is needed to simulate liquids
+and gases is a specialized constraint.
+A straightforward approach would be to model the ﬂuid as a sys-
+tem of particles constrained to maintain a minimum distance from
+each other, however this leads to granular-like behaviour and will
+typically fail to reach hydrostatic equilibrium when coming to rest.
+An alternative method is presented by Macklin and M¨uller [MM13]
+where ﬂuid incompressibility is enforced using density constraints.
+Borrowing the concept of a density estimator from smoothed parti-
+cle hydrodynamics (SPH) [Mon94, Mon92], a density constraint is
+constructed for each particle i in the system as follows:
+Ci(p1, ..., pn) = ρi
+ρ0
+−1,
+(4)
+where ρ0 is the ﬂuid rest density and ρi is the density at a parti-
+cle, deﬁned as the sum of smooth kernels [MCG03] centred at the
+particle’s neighbour positions
+ρi =
+	
+j
+mjW(pi −pj, h).
+Note that here each particle’s mass is assumed to be one, and the
+rest density adjusted accordingly. In order to solve these density
+constraints using position-based dynamics, the derivative of the
+constraint function (4) with respect to each particle’s position is
+required. This can be calculated using the gradient of SPH kernels
+∇pkCi = 1
+ρ0
+ 
+j
+∇pkW(pi −pj, h) if k = i
+−∇pkW(pi −pj, h) if k = j.
+Then, by taking advantage of symmetry in the SPH smoothing
+kernel W, the corrective change in position due to the particle’s own
+density constraint, and the density constraints of its neighbours is
+given by
+pi = 1
+ρ0
+	
+j
+
+λi + λj
+
+∇W(pi −pj, h),
+where λ is the per-constraint scaling factor (see Section 3.3).
+Figure 6 shows a real-time water simulation using this method.
+Figure 6: A wave pool scene consisting of 128K ﬂuid particles
+simulated in 10 ms/frame on the GPU. Incompressibility is enforced
+using density constraints solved using position-based dynamics.
+3.5. Strain Limiting
+Strain limiting is an important topic in the ﬁeld of cloth simulation.
+The reason is that the low solver iteration counts used in real-time
+applications yield stretchy cloth. Since most cloth types are per-
+ceived by the human eye as completely inextensible, it is important
+to make simulated cloth inextensible in order to avoid disturbing
+visual artefacts [GHF*07, BB08].
+A strain limiting method makes sure that the overall stretch of
+the cloth stays below a certain threshold. In force-based simulations,
+strain limiting is a separate pass which is executed before or after the
+regular cloth solver. In most cases, this pass moves the positions of
+vertices directly, even in force-based simulations. Therefore, most
+strain limiting methods fall under the category of position-based
+methods.
+A straightforward way of limiting strain is to iterate through all
+edges of a cloth mesh and project the adjacent particles of over-
+stretched edges as shown in Figure 1 so that the stretch of the edge
+does not exceed the stretch limit. Provot [Pro95] was among the ﬁrst
+to use this method in the context of cloth simulation. He performs
+a single iteration through all cloth edges after a force-based solver.
+Desbrun et al. [DSB99] and Bridson et al. [BMF03] later used the
+same post-solver strain limiter but with multiple iterations through
+all edges. Due to its simplicity, this method is still one of the most
+popular strain limiting methods used in cloth simulations .
+The method is very similar to position-based cloth simulation. The
+main difference is that the strain limiting pass described above does
+not inﬂuence the velocities. These are updated by the force-based
+solver. In contrast, position-based cloth simulation derives the new
+velocities from the projections, making an additional solver pass
+obsolete. Therefore, every position-based strain limiting method
+used in force-based simulations can directly be used in a PBD solver.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+234
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+Figure 7: The Long-Range Attachments (LRA) method used to sim-
+ulate an inextensible rope attached at one end. Each particle is
+constrained or remain inside a sphere centred at the attachment
+point (red) whose radius is the initial distance from the particle to
+the attachment. For each conﬁguration, target positions are shown
+in green when particles need to be projected. Particles inside the
+constraint spheres are allowed to move freely.
+The result of projecting along edges depends on the structure of
+the mesh. To reduce this artefact, Wang et al. [WOR10] propose to
+limit the principal strains of the 2D deformation ﬁeld within each
+triangle. The 2D deformation ﬁeld can be determined by considering
+the 2D coordinates of the vertices of a triangle within the planes
+of the rest and current triangle conﬁgurations. Wang et al. compute
+the principal strains of the 2D deformation gradient, clamp them
+and construct a new 2D transformation using the clamped strains.
+With this new transformation, they correct the current positions of
+the triangle vertices. As before, to limit strain globally, they iterate
+through all triangles multiple times in a Gauss–Seidel fashion.
+Due to the relatively slow convergence rate of a Gauss–Seidel
+solver, high iteration counts are necessary to limit the strain globally
+which slows down the simulation. The two main methods to improve
+the convergence rate are the use of a global Newton–Raphson solver
+as proposed by Goldenthal et al. [GHF*07] or to perform Gauss–
+Seidel iterations on a hierarchy of meshes as proposed in [M¨ul08],
+[WOR10] and [SKBK13]. However, these methods complicate the
+implementation and even though their convergence rate is higher, a
+single iteration can be signiﬁcantly more expensive than a simple
+Gauss–Seidel iteration.
+Recently, Kim et al. [KCM12] found a surprisingly simple and
+robust technique they call Long-Range Attachments (LRA) to pre-
+vent cloth from getting stretched globally with low iteration counts.
+Their method exploits the fact that stretching artefacts almost always
+appear when cloth is attached. In this case, instead of only applying
+attachment constraints to the subset of the vertices near the region
+where the cloth is attached and relying on error propagation of the
+solver for all other vertices, they apply unilateral attachment con-
+straints to all the vertices by attaching each vertex to one or more
+attachment point directly. The rest lengths of these LRA can either
+be set to the Euclidian distance in the rest state or via measuring
+geodesic lengths along the cloth. Figure 7 demonstrates the method
+Figure 8: Simulation of a piece of cloth with 90K vertices at 20 fps
+on a GPU using LRA.
+on a single rope attached at one end. The method allows the sim-
+ulation of a piece of cloth with 90K vertices at interactive rates as
+shown in Figure 8.
+A similar approach was recently proposed by M¨uller et al.
+[MKC12] to guarantee zero stretch in a single pass for the case
+of attached ropes. This approach allows the simulation of thousands
+of hair strands in real time (Figure 9). Figure 10 visualizes the basic
+idea. Particle x1 is attached. To satisfy the ﬁrst distance constraint,
+particle x2 is moved towards x1 such that their mutual distance is l0.
+Particle x3 is then moved towards the new position of x2 and similarly
+along the chain until the last particle is reached. After this single
+pass, all the distance constraints are satisﬁed. This method is called
+Follow The Leader (FTL). While LRA guarantees zero stretch of
+all the particles with respect to the attachment points, the constraint
+between consecutive particles can still remain overstretched. On the
+other hand, in contrast to LRA which is momentum conserving,
+FTL introduces unphysical behaviour. Not projecting distance con-
+straints symmetrically means that a system is simulated for which
+each particle has inﬁnitely more mass than its successor. To com-
+pensate for this behaviour, the authors replace the PBD velocity
+update vi ←(pi −xi)/t by
+vi ←pi −xi
+t
++ sdamping
+−di+1
+t
+,
+where di+1 is the position correction applied to particle i + 1 and
+sdamping ∈[0, 1] a scaling factor do inﬂuence damping. While this
+modiﬁcation of DFTL (dynamic FTL) hides the unphysical be-
+haviour of FTL, it introduces a certain amount of damping which is
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+235
+Figure 9: Dynamic FTL allows the simulation of every hair strand in real time. From left to right: 47K hair strands simulated at 25 fps
+including rendering and hair–hair repulsion. Long hair composed of 1.9-m particles at 8 fps. Curly hair using visualization post-processing.
+l0
+l0
+l0
+1
+x
+2
+x
+3
+x
+4
+x
+Figure 10: Follow The Leader (FTL) projection. Starting from the
+attachment down, each particle is moved directly towards its prede-
+cessor such that their mutual distance constraint is satisﬁed.
+acceptable for the simulation of hair and fur as the author’s results
+show.
+3.6. Wrinkle Meshes
+In cloth simulations, reducing the mesh resolution not only reduces
+the cost of a single solver iteration but also the number of iterations
+required to get visually pleasing results. In [MC10], the authors
+proposed a way to reduce the resolution of the dynamic mesh with-
+out losing too much visual detail. The most signiﬁcant detail in
+cloth simulations are small wrinkles. The method is based on the
+observation that global dynamic behaviour of the cloth and wrinkle
+formation can be separated. Therefore, expensive dynamic simula-
+tion including collision handling is performed on a low-resolution
+mesh. The wrinkle formation is handled on a high-resolution mesh
+that is attached to the dynamic mesh (see Figures 11 and 12). Since
+wrinkles do not oscillate, it is sufﬁcient to use a static solver with a
+low iteration count on the high-resolution mesh.
+Figure 13 shows the constraints deﬁned on the high-resolution
+mesh to make it form wrinkles and follow the dynamic mesh. The
+Figure 11: Basic idea of wrinkle meshes. The high resolution wrin-
+kle mesh (white vertices) follows the low-resolution dynamic mesh
+(black vertices) by restricting the white vertices to remain within a
+certain distance (grey discs) to the dynamic mesh.
+Figure 12: Visualization of the wrinkle mesh (solid) and the under-
+lying dynamic mesh (wireframe).
+attachment constraints makes sure that the vertices of the wrinkle
+mesh stay close to their attachment points on the dynamic mesh.
+If the dynamic mesh has outside/inside information, a one-sided
+constraint can be used which makes sure that the wrinkle vertices
+stay on the outside of the dynamic mesh, thus avoiding penetra-
+tions with other objects. The stretching and bending constraints are
+responsible for wrinkle formation.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+236
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+p
+a
+1
+p
+2
+p
+0l
+n
+a
+p
+1
+p
+2
+p
+3
+p
+4
+p
+Figure 13: Static constraints on a wrinkle mesh: Attachment con-
+straint (top left), one-sided attachment constraint (top right), stretch
+constraint (bottom left) and bending constraint (bottom right).
+3.7. Damping
+The quality of dynamic simulations can generally be improved by
+the incorporation of an appropriate damping scheme. As a positive
+effect, damping can improve the stability by reducing temporal
+oscillations of the point positions of an object. This enables the use
+of larger time steps which increases the performance of a dynamic
+simulation. On the other hand, damping changes the dynamic motion
+of the simulated objects. The resulting effects can be either desired,
+e.g. reduced oscillations of a deformable solid, or disturbing, e.g.
+changes of the linear or angular momentum of the entire object.
+Generally, a damping term C ˙X can be incorporated into the mo-
+tion equation of an object where ˙X denotes the vector of all ﬁrst
+time derivatives of positions. If the user-deﬁned matrix C is diago-
+nal, absolute velocities of the points are damped, which sometimes
+is referred to as point damping. If appropriately computed, such
+point damping forces result in an improved numerical stability by
+reducing the acceleration of a point. Such characteristics are de-
+sired in some settings, e.g. in the context of friction. In the general
+case, however, the overall slow-down of an object, caused by point
+damping forces, is not desired. Point damping forces are, e.g. used
+in [TF88] or in [PB88], where point damping is used for dynamic
+simulations with geometric constraints such as point-to-nail.
+In order to preserve linear and angular momentum of deformable
+objects, symmetric damping forces, usually referred to as spring
+damping forces, can be used. Such forces can be represented by
+non-diagonal entries in the matrix C. Damping forces are, e.g. de-
+scribed by Baraff and Witkin [BW98] or Nealen et al. [NMK*06].
+These forces can also be applied to position-based methods. How-
+ever, as the approaches of Baraff and Witkin and Nealen et al. rely
+on topological information of the object geometry, they cannot be
+applied to meshless techniques such as shape matching.
+Point and spring damping can be used to reduce current velocities
+or relative velocities. However, it is generally more appropriate to
+consider predicted velocities or relative velocities for the next time
+step.
+An
+interesting
+damping
+alternative
+has
+been
+presented
+in [SGT09]. Here, the idea of symmetric, momentum-conserving
+forces is extended to meshless representations. Global symmetric
+damping forces are computed with respect to the centre of mass of an
+object. While such forces conserve the linear momentum, the preser-
+vation of the angular momentum is guaranteed by force projection
+onto relative positions or by torque elimination using Linear Pro-
+gramming. The approach presented in [SGT09] iteratively computes
+damping forces. The paper, however, also shows the convergence of
+the iterative process and how the solution can be computed directly
+without performing iterations. Therefore, the approach is an efﬁcient
+alternative to compute damping forces for arbitrary position-based
+deformation models with or without connectivity information. The
+approach can be used to damp oscillations globally or locally for
+user-deﬁned clusters.
+3.8. Parallelization
+Parallelization of the PBD approach is an important topic since
+multi-core systems and massively parallel GPUs are ubiquitous to-
+day.
+In a single CPU implementation, the solver processes the con-
+straints one by one in a Gauss–Seidel-type fashion. Thereby, after
+each constraint projection, the positions of affected particles are im-
+mediately updated. In a parallel implementation, the constraints are
+processed in parallel by multiple threads. If two constraints affecting
+the same particle are handled by two different threads simultane-
+ously, they are not allowed to immediately update the particle’s
+position because writing to the same position simultaneously leads
+to race conditions making the process unpredictable. A solution to
+circumvent this problem is to use atomic operations. Such opera-
+tions are guaranteed not to be interrupted. However, atomics can
+slow down parallel execution signiﬁcantly.
+To avoid these issues, a parallel implementation of PBD needs
+to split the constraints into groups or phases. In each phase, none
+of the constraints are allowed to share a common particle. With
+this restriction, the constraints in the ﬁrst phase can be processed
+in parallel without conﬂicts. Then, after a global synchronization,
+the next phase can be processed. This cycle is repeated until all
+constraints are processed.
+As an example, if N particles are connected in a serial chain, the
+constraints 1–2, 3–4, 5–6, 7–8, ... can be processed in phase 1 and
+the constraints 2–3,4–5,6–7, ... in phase 2. This speciﬁc example
+corresponds to the Red–Black Gauss Seidel scheme, where there
+are two sets (colours) of constraints. For more general types of
+constraint such as the stretch, shear and bending constraints of cloth,
+more phases are needed. In this general case, splitting constraints
+into phases corresponds to the graph colouring problem, where each
+constraint corresponds to a node of the graph and two constraints are
+connected by an edge if they affect one or more common particles.
+The minimum number of colours determines how many phases are
+needed in the parallel execution of PBD. Keeping the number of
+phases small is not the only optimization criterion. The sets also
+need to have similar sizes for good load balancing.
+3.9. Discussion
+Position-based dynamics is fast, easy to implement and controllable.
+Furthermore, it avoids the overshooting problems of force-based
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+237
+Figure 14: Robust and volume-conserving deformations using shape matching. Armadillos (32 442 particles total), 20 ducks and 20 tori
+(21 280 particles total) and 20 balls (7640 particles total) were simulated in real-time on a GPU.
+simulation models when using an explicit time integration scheme.
+The method can handle arbitrary bilateral and unilateral constraints
+as long as the gradient of the constraint function can be determined.
+Therefore, this method is very ﬂexible and has already been used to
+simulate cloth, deformable solids and ﬂuids.
+However, position-based dynamics also has some disadvantages.
+The stiffness of the model does not only depend on the user-
+deﬁned stiffness parameter but also on the time step size and the
+number of solver iterations. Although the dependency can be re-
+duced as described in Section 3.3, it cannot be completely removed.
+Therefore, it is difﬁcult to adjust parameters independently. De-
+coupling these parameters as well as adaptive time stepping are
+open problems and important topics for future work. Another draw-
+back is that position-based dynamics is not convergent, i.e. the
+simulation does not converge to a certain solution with mesh re-
+ﬁnement. Hence, the usage of adaptive meshes is another open
+problem.
+4. Shape Matching
+The geometrically motivated concept of shape matching to simulate
+deformable objects was introduced by M¨uller et al. [MHTG05].
+Shape matching is a meshless approach which is able to simulate
+visually plausible elastic and plastic deformations (see Figure 14).
+This approach is easy to implement, very efﬁcient and uncondition-
+ally stable.
+The basic idea of simulating elastic behaviour with shape match-
+ing is shown in Figure 15. For the simulation, the initial conﬁgura-
+tion of the deformable object must be stored. Since no connectivity
+information is needed, this conﬁguration is deﬁned by the initial
+positions ¯xi. In each time step, the positions and velocities of the
+particles are updated without considering any internal constraints
+between the particles. Only external forces and collision response
+are taken into account. Instead of using internal constraints, goal
+positions are determined by matching the initial shape with the de-
+formed conﬁguration. Then, each particle is pulled towards its goal
+position.
+In the following, we ﬁrst describe how the goal positions are
+determined. Then we show how large deformations can be simulated
+x1
+x2
+x3
+x0
+x1
+x2
+x3
+x0
+g0
+g1
+g2
+g3
+R, c
+Figure 15: The initial shape with the vertex positions ¯xi is matched
+to the deformed conﬁguration xi to obtain goal positions gi. The
+deformed shape is pulled towards these goal positions to simulate
+elastic behaviour.
+using region-based shape matching and introduce fast summation
+techniques for this approach. In the end, the concept of oriented
+particles and different extensions of the shape matching method are
+presented.
+4.1. Goal Positions
+In order to obtain goal positions for the deformed shape, the best
+rigid transformation is determined which matches the set of initial
+positions ¯x and the set of deformed positions x. The corresponding
+rotation matrix R and the translational vectors c and ¯c are determined
+by minimizing
+	
+i
+wi (R (¯xi −¯c) + c −xi)2 ,
+where wi are the weights of the individual points. The optimal
+translation vectors are given by the centre of mass of the initial
+shape and the centre of mass of the deformed shape:
+¯c = 1
+M
+	
+i
+mi ¯xi,
+c = 1
+M
+	
+i
+mixi,
+M =
+	
+i
+mi.
+(5)
+If we minimize the term 
+i(A¯ri −ri)2 with ri = xi −c
+and ¯ri = ¯xi −¯c, we get the optimal linear transformation A
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+238
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+of the initial and the deformed shape. This transformation is
+determined by
+A =
+	
+i
+miri ¯rT
+i
+
+ 	
+i
+mi ¯ri ¯rT
+i
+
+−1
+= ArAs.
+(6)
+In our case, we are only interested in the rotational part of this trans-
+formation. Since As is symmetric, it contains no rotation. Therefore,
+we only need to extract the rotational part of Ar to get the optimal
+rotation R for shape matching. This can be done by a polar de-
+composition Ar = RS of the transformation matrix where S is a
+symmetric matrix.
+Finally, the goal positions are determined by
+gi = T
+ ¯xi
+1
+
+,
+where T =
+ R (c −R¯c) 
+. These goal positions are used to compute
+position corrections:
+xi = α (gi(t) −xi(t)) ,
+where α ∈[0, 1] is a user-deﬁned stiffness parameter which deﬁnes
+how far the particles are pulled to their goal positions.
+Shape matching can be seen as a form of constraint projection
+which can directly be integrated in the position-based dynamics
+algorithm. By performing shape matching in line (9) of Algorithm 1,
+it can be easily combined with other position-based constraint.
+4.2. Region-Based Shape Matching
+The shape matching algorithm described above allows only for
+small deviations from the initial shape. For the simulation of large
+deformations, the concept of region-based shape matching became
+popular, see, e.g. [MHTG05, RJ07, DBB11]. The idea is to perform
+shape matching on several overlapping regions of the original shape.
+In each region, we can have a small deviation from the corresponding
+part of the initial shape which results in a large deformation over all
+regions.
+Diziol et al. [DBB11] propose to deﬁne a region for each parti-
+cle of the model where the ith region contains all particles in the
+ω-ring of the ith particle in the original mesh of the model. Shape
+matching is a meshless method but Diziol et al. require a mesh to
+deﬁne the shape matching regions. Rivers and James [RJ07] use a
+regular lattice instead to deﬁne their regions. No matter which kind
+of regions are used, the stiffness of the model depends on the size
+of the overlapping regions (see Figure 16). Enlarging the regions
+results in a more global shape matching and therefore the stiffness
+of the simulated model is increased.
+In region-based shape matching, a particle is part of multiple
+regions. In the following, we denote the set of regions to which a
+particle i belongs by ℜi. Since particles can belong to more than
+one region, Rivers and James [RJ07] proposed to use modiﬁed
+particle masses ˜mi = mi/|ℜi| for shape matching. This ensures that
+a particle which is part of many regions has not more inﬂuence than
+Figure 16: The stiffness of the model depends on the region size.
+Smaller regions (top) allow larger deformations than larger regions
+(bottom). The hexagons in the left images represent the overlapping
+regions of the model. The right images show the goal positions after
+one particle is moved away.
+others. The optimal translation vectors for a region i are determined
+by
+¯ci = 1
+˜Mi
+	
+j∈ℜi
+˜mj ¯xj,
+ci = 1
+˜Mi
+	
+j∈ℜi
+˜mjxj,
+(7)
+where ˜Mi = 
+j∈ℜi ˜mj is the effective region mass which can be pre-
+computed. The optimal rotation matrix R is computed by extracting
+the rotational part of the following matrix:
+Ar,i =
+	
+j∈ℜi
+˜mjxj ¯xT
+j −˜Mici ¯cT
+i .
+(8)
+In this form, the ﬁrst term depends on the particles j of the region
+while the second term depends on the region i. This isolation of the
+dependencies is required for fast summation techniques (see below).
+After performing shape matching for all regions, we get multiple
+goal positions for each particle. The ﬁnal goal position for a particle
+is determined by blending the goal positions of the corresponding
+regions:
+gi =
+1
+|ℜi|
+	
+j∈ℜi
+Tj
+ ¯xi
+1
+
+.
+4.3. Fast Summation Techniques
+In the case of region-based shape matching, the stiffness in-
+creases with growing region size ω. However, at the same time the
+computation of the optimal translation c and the transformation ma-
+trix Ar becomes a bottleneck since large sums have to be computed
+for each region. For a mesh with the dimension d and n regions,
+O(ωdn) operations are required with the naive approach.
+4.3.1. Regular lattices
+Rivers and James demonstrated in [RJ07] how the number of oper-
+ations for computing the sums can be reduced to O(n) for regular
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+239
+lattices (d = 3). Their optimization is closely related to the concept
+of summed-area tables [Cro84]. In their approach, they compute
+the summation for a set of particles just once and reuse it for all
+regions that contain this set. This reduces redundant computations
+signiﬁcantly for a system with large overlapping regions. The fast
+summation of Rivers and James is based on the usage of cubical re-
+gions. These cubical regions can be subdivided in 2D plate regions
+which can again be subdivided in one-dimensional bar regions. The
+region summation is performed in three passes. In the ﬁrst pass,
+the sum for each bar is determined. The results are used to compute
+the sums for the plates which are again used to obtain the ﬁnal re-
+gion sum. Each pass requires O(ω) operations. However, the region
+sum can even be determined in constant time if we take into account
+that the sum of two neighbouring bars, plates or cubes only differs
+by one element. Lattice shape matching can be performed in linear
+time if the sums in Equations (7) and (8) are evaluated using the fast
+summation technique described above.
+The FastLSM method of Rivers and James has several limita-
+tions. To handle regions where the lattice is not regular, e.g. on the
+boundary, several sums are deﬁned in a pre-processing step for the
+corresponding node. In the case of fracturing, the deﬁnition of
+these sums must be performed at runtime which is expensive to
+compute. Small features need a ﬁne sampling to obtain realistic
+results. Since a regular lattice is used, a ﬁne sampling yields an
+explosion of the computational costs. FastLSM does not support a
+varying region size to simulate inhomogeneous material.
+4.3.2. Adaptive lattices
+Steinemann et al. [SOG08] introduce an adaptive shape matching
+method, which is based on lattice shape matching to overcome
+these limitations. A fast summation is realized by an octree-based
+sampling and an interval-based deﬁnition of the shape matching re-
+gions. The hierarchical simulation model is created by starting with
+a coarse cubic lattice and then performing an octree subdivision. The
+subdivision process can be controlled by a user-deﬁned criterion.
+At the end of the process, a simulation node is placed at the centre
+of each leaf cell and a virtual node at the centre of each non-leaf
+cell. A virtual node stores the sum of all its descendant simulation
+nodes.
+The fast summation for the hierarchical model is performed by an
+interval-based method which requires O(1) operations per region.
+For each simulation node ni, a shape matching region is deﬁned by a
+region width ωi. To perform a fast summation, all summation nodes
+of the region i are determined in a pre-processing step. First, for
+each node nj of the octree the interval of minimum and maximum
+distances of all descendant leaves of nj to ni are determined. Then,
+during a top–down traversal each node nj where the maximum
+distance is smaller than the region width is added to region i. If
+the descendant leaf nodes are contained only partially in region i,
+the current node must be reﬁned. Only in this case the traversal
+continues.
+The top–down traversal assigns O(1) summation nodes to each
+region. A fast summation can now be performed in two steps. In the
+ﬁrst step, the sums of all nodes in the hierarchy are determined. This
+is done by ﬁrst computing the sums for the simulation nodes which
+P0
+P1
+P2
+P3
+P4
+−
+x0+x1+x2
+−
+x1+x2+x3
+Path P0 sum
+in regions
+x0+x1
+x0
+x0+x1+x2+x3
+x0+x1+x2
+0
+Preﬁx sum P0
+x0
+x1
+x2
+x3
+Figure 17: Fast summation technique for arbitrary triangle
+meshes [DBB11]. First, the preﬁx sums for the disjoint paths are de-
+termined. Then the region sum is computed by adding the difference
+of the intersection interval for each path.
+are the leaf nodes of the hierarchy, and then updating the sums of
+the virtual nodes in a bottom–up fashion. The second step sums up
+the values of the summation nodes for each region. For a roughly
+balanced octree, the computation of the sums takes O(n) time where
+n is the number of simulation nodes. Hence, the adaptive shape
+matching method requires linear time when using the described fast
+summation technique to evaluate Equations (7) and (8).
+4.3.3. Triangle meshes
+In contrast to Rivers and James, Diziol et al. [DBB11] only use
+the surface mesh of a volumetric model to simulate its deforma-
+tion. Therefore, no interior elements are required for the simulation
+which reduces the computational costs. Diziol et al. introduce a fast
+summation technique for arbitrary triangle meshes (d = 2) to com-
+pute the large sums of the region-based approach efﬁciently. This
+technique only requires O(ωn) operations instead of O(ω2n) and
+can be performed very efﬁciently in parallel.
+The fast summation technique of Diziol et al. is based on a sub-
+division of all particles of the mesh in disjoint paths. A path i is
+a set of vertices xi1, . . . , xin which are connected by edges. The
+paths are determined in a pre-computation step. The goal of the
+path construction algorithm is that each region is intersected by a
+minimum number of paths. To determine the optimal path layout
+is computationally expensive. Therefore, a heuristic is used to ﬁnd
+a good path layout. Starting with a single vertex, adjacent vertices
+are added to a path until the path length exceeds a maximum size
+or cannot be extended any further. The heuristic tries to avoid gaps
+by choosing vertices which have neighbours that are already part of
+a path. To obtain paths which are as parallel as possible we add the
+vertex which is closest to a plane passing through the starting vertex
+of the current path, e.g. the xy-plane.
+The fast summation is split in two phases (see Figure 17). In
+the ﬁrst phase, the preﬁx sum for each path i is computed with
+j ∈[1, ni]:
+cp
+ij =
+j
+	
+k=1
+˜mikxik,
+Ap
+ij =
+j
+	
+k=1
+˜mikxik ¯xT
+ik.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+240
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+Figure 18: This underwater scene demonstrates the ability of the
+oriented particle approach to handle sparse meshes such as the
+one-dimensional branches of the plants or the ﬁns of the lion ﬁsh.
+Since the preﬁx sums for all paths are independent of each other, they
+can be computed in parallel. The sums for a region r are computed
+by ﬁrst setting cr := 0 and Ar := 0. Then, for each path i, which
+intersects the region in the interval [ik, . . . , il], the following terms
+are added:
+cr := cr + cp
+il −cp
+ik−1,
+Ar := Ar + Ap
+il −Ap
+ik−1.
+(9)
+The ﬁnal translational vector and the afﬁne matrix are determined
+by cr := (1/ ˜Mr)cr and Ar := Ar −˜Mrcr ¯cT
+r , respectively.
+4.4. Oriented Particles
+For a small number of particles or particles that are close to colinear
+or coplanar (as in Figure 18), the matrix Ar in Equation (6) becomes
+ill-conditioned and the polar decomposition needed to obtain the
+optimal rotation tends to be numerically unstable.
+To solve this problem, M¨uller et al. [MC11] proposed to use
+oriented particles. By adding orientation information to particles,
+the polar decomposition becomes stable even for single particles.
+The moment matrix of a single spherical particle with orientation
+R ∈R3×3 and ﬁnite radius r at the origin is well-deﬁned and can be
+computed via an integral over its volume as
+Asphere =
+
+Vr ρ(Rx)xT dV = ρR
+
+Vr xxT dV
+=
+4
+15πr5ρR =
+4
+15πr5 m
+Vr R
+= 1
+5mr2R,
+where Vr is the volume of a sphere of radius r. Since R is an or-
+thonormal matrix, Ai always has full rank and an optimal condition
+number of 1. For an ellipsoid with radii a, b and c, we get
+Aellipsoid = 1
+5m
+⎡
+⎣
+a2 0 0
+0 b2 0
+0 0 c2
+⎤
+⎦R.
+However, the moment matrices of the individual particles cannot
+simply be added because each one is computed relative to the origin.
+We need the moment matrix of particle i relative to the position
+xi −c.
+Fortunately, this problem can be ﬁxed easily. As we saw above,
+the equation for computing the moment matrix
+A =
+	
+i
+mi(xi −c)(¯xi −¯c)T
+(10)
+can be rewritten as
+A =
+	
+i
+mixi ¯xT
+i −Mc¯cT,
+where ¯c and c are the centres of mass of the initial and the deformed
+shape, respectively (see Equation (5)).
+Therefore, shifting the evaluation from the origin to the position
+xi −c yields
+Aglobal
+i
+= Ai + mixi ¯xT
+i −mic¯cT.
+Equation (10) now generalizes to
+A
+= 
+i
+
+Ai + mixi ¯xT
+i
+
+−Mc¯cT
+= 
+i
+
+Ai + mi(xi −c)(¯xi −¯c)T
+.
+As you can see, the last form looks like Equation (10) but with all
+the individual particle moment matrices added in the sum.
+In addition to position x and velocity v, oriented particles carry a
+rotation which can be deﬁned as an orthonormal matrix R as above
+or a unit quaternion q. They also carry the angular velocity ω. In
+the prediction step of position-based dynamics, these two quantities
+have to be integrated as well:
+xp
+←x + vt
+qp ←
+ ω
+|ω| sin (|ω|t
+2
+), cos(|ω|t
+2
+)
+
+q.
+For stability reasons, qp should directly be set to q if |ω| < ϵ.
+After the prediction step, the solver iterates multiple times through
+all shape match constraints in a Gauss-Seidel type fashion as be-
+fore. To simulate objects represented by a mesh of linked particles,
+M¨uller and Chentanez [MC11] deﬁne one shape matching group
+per particle. A group contains the corresponding particle and all the
+particles connected to it via a single edge. The positions of the par-
+ticles in a group are updated as in regular shape matching by pulling
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+241
+Figure 19: The rotation information of oriented particles cannot
+only be used to stabilize shape matching, it also allows the use of
+ellipsoids as collision primitives. The ﬁgure shows how the same
+mesh is approximated much more accurately with ellipsoids (right)
+than with the same number of spheres (left).
+them towards the goal positions while the orientation of the centre
+particle only is replaced by the optimal rotation of shape matching.
+After the solver has modiﬁed the predicted state (xp, qp), the
+current state is updated using the integration scheme
+v
+←(xp −x)/t
+x
+←xp
+ω ←axis (qpq−1) · angle (qpq−1)/t
+q
+←qp,
+where axis () returns the normalized direction of a quaternion and
+angle () its angle. Again, for stability reasons, ω should be set to zero
+directly if |angle (qpq−1)| < ϵ. There are two rotations, r = qpq−1
+and −r transforming q into qp. It is important to always choose
+the shorter one, i.e. if rw < 0 use −r, where rw is the real part
+of the quaternion. As in traditional PBD for translation, changing
+the rotational quantity qp in the solver also affects its time derivate
+ω through the integration step creating the required second-order
+effect.
+The orientation information of particles cannot only be used to
+stabilize shape matching but also to move a visual mesh along
+with the physical mesh. With position and orientation, each particle
+deﬁnes a full rigid transformation at every point in time. This allows
+the use of traditional linear blend skinning with particles replacing
+skeletal bones.
+An additional advantage of having orientation information is that
+ellipsoids can be used as collision volumes for particles. This allows
+a more accurate approximation of the object geometry than with the
+same number of spherical primitives (see Figure 19).
+4.5. Extensions
+There exist several extensions for shape matching. In the following,
+we will introduce volume conservation and plastic deformation.
+4.5.1. Volume conservation
+The conservation of volume plays an important role in the dynamic
+simulation of deformable bodies [HJCW06], [ISF07], [DBB09].
+Since most soft biological tissues are incompressible, this is an
+essential extension in the ﬁeld of medical simulation. However, it
+is also used in the ﬁeld of shape modelling [vFTS06] since volume
+conserving deformations appear more realistic.
+In the following, we introduce the position-based approach for
+volume conservation of Diziol et al. [DBB11]. This method con-
+siders only the surface of a simulated object and does not require
+interior particles which reduces the computational effort. The vol-
+ume V of a volumetric 3D shape V can be determined by using the
+divergence theorem as proposed in [Mir96] and [HJCW06]:
+
+V
+
+∇· x dx =
+
+∂
+
+V
+xTn dx = 3V,
+(11)
+where ∂V is the boundary of the shape and n is the surface normal.
+If the boundary is given as triangle mesh, the integral can be written
+as sum over all triangles i:
+V (X) := 1
+3
+
+∂
+
+V
+xTn dx = 1
+9
+	
+i
+Ai(xi1 + xi2 + xi3)Tni, (12)
+where Ai is the area and i1, i2 and i3 are the vertex indices of the
+ith triangle. Now we can deﬁne a volume constraint C := V (X) −
+V ( ¯X) = 0 and compute a corresponding position correction (see
+Section 3):
+xV
+i = −
+wiC(X)
+
+j wj∥∇xj C(X)∥2 ∇xiC(X).
+(13)
+The weights wi are used to realize a local volume conservation (see
+below). The gradient can be approximated by
+∇C(X) ≈1
+3[nT
+1, . . . , nT
+n]T,
+where ni =  Ajnj is the sum of the area weighted normals of all
+triangles which contain particle i.
+The weights in Equation (13) are chosen as follows:
+wi = (1 −α)wl
+i + αwg
+i ,
+wl
+i =
+∥xi∥
+
+j ∥xj∥,
+wg
+i = 1
+n,
+where wl
+i and wg
+i are the weights for local and global volume con-
+servation, respectively, and the user-deﬁned value α ∈[0, 1] is used
+to blend between both. The vector xi contains the position change
+of the ith particle in the shape matching step. Hence, strongly de-
+formed particles participate more in volume correction. The weight
+of a colliding particle is set to zero in order to ensure that a collision
+constraint is not violated during the position correction for the vol-
+ume conservation. Finally, the weights are smoothed by a Laplacian
+ﬁlter.
+Diziol et al. also propose another deﬁnition for the local weights
+wl
+i. To propagate volume changes through the object, they ﬁrst
+determine pairs of opposing particles in a pre-processing step by
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+242
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+Figure 20: Four spheres with different volume conservation
+squeezed by a plate. Left to right: global conservation, local con-
+servation with distance constraints, local conservation without dis-
+tance constraints and no volume conservation. The maximum vol-
+ume loss was 0.6%, 0.7%, 0.7% and 40%, respectively.
+intersecting the geometry with multiple rays. For each particle i,
+one particle k on the opposite side of the volumetric body is stored.
+Then they choose a local weight which does not only depend on the
+position change xi of a particle but also on the distance changes
+di of the corresponding particle pairs:
+wl
+i =
+βsidi + (1 −β)∥xi∥
+
+j
+
+βsjdj + (1 −β)∥xj∥
+ ,
+where si is a user-deﬁned stiffness parameter and β ∈[0, 1] is used
+to deﬁne the inﬂuence of the distance changes.
+Analogous to the positions correction, we perform a velocity cor-
+rection to fulﬁl the constraint ∂C/∂t = 0. This leads to a divergence-
+free velocity ﬁeld.
+In Figure 20, different conﬁgurations for the presented volume
+conservation method are compared with each other.
+4.5.2. Plastic deformation
+Shape matching can be extended in order to simulate plastic defor-
+mations [MHTG05]. If we perform a polar decomposition Ar = RS
+for the linear transformation matrix Ar (see Equation 6), we get a
+rotational part R and a symmetric part S = RT Ar. The matrix S
+represents a deformation in the unrotated reference frame. Hence,
+for each region we can store the plastic deformation state in a matrix
+Sp which is initialized with the identity matrix I. As proposed by
+Goktekin et al. [GBO04], we use two parameters cyield and ccreep
+to control the plastic behaviour of the material. If the condition
+∥S −I∥2 > cyield is fulﬁlled for the deformation matrix S of the cur-
+rent time step, the plastic deformation state is updated as follows:
+Sp ←
+
+I + tccreep(S −I)
+
+Sp.
+After this update, Sp is divided by 3√det (Sp) in order to conserve
+the volume. The plastic state Sp is integrated in the shape matching
+process by deforming the reference shape in Equation (6). This is
+done by replacing the deﬁnition of ¯ri (see Section 4.1) with
+¯ri = Sp (¯xi −¯c) .
+Note that the plasticity can be bound by the condition ∥Sp −I∥2 >
+cmax where cmax is the threshold for the maximum plastic defor-
+mation. If this condition is fulﬁlled, we use Sp ←I + cmax(Sp −
+I)/∥Sp −I∥2.
+4.6. Cloth Simulation
+Stumpp et al. [SSBT08] present a region-based shape matching
+approach for the simulation of cloth. In their work, they deﬁne a
+region for each triangle in the model. But instead of using the tri-
+angles directly as regions for shape matching, overlapping regions
+are deﬁned. The region of a triangle is deﬁned by the outer cor-
+ners of its adjacent triangles. These overlapping regions enable the
+bending resistance of the cloth model. Since the model of Stumpp
+et al. uses regions with only three vertices, the stiffness of high-
+resolution models is too low for realistic results. Therefore, they
+introduce so-called ﬁbre clusters to increase the stretching stiffness.
+These one-dimensional regions are determined in a pre-processing
+step by subdividing the mesh into multiple edge strips. During the
+simulation, each strip is traversed in both directions to obtain addi-
+tional goal positions. The resulting displacements are translated so
+that they sum up to zero to preserve the momentum of the model.
+The ﬁnal goal positions are blended with the goal positions of the
+triangular regions.
+The usage of ﬁbre clusters increases the stiffness of the cloth
+model. However, this effect is limited and for high-resolution models
+the stiffness is still too low to achieve a realistic cloth behaviour.
+Bender et al. [BWD13] solve this problem by the introduction of
+multi-resolution shape matching (see Figure 21) which is based on
+the idea of multi-grid solvers [Hac85]. A shape matching region is
+deﬁned for each edge and each triangle in a cloth model. To increase
+the inﬂuence of these simple regions and therefore the stretching and
+shearing stiffness of the model, shape matching is performed on
+different resolution levels. Multi-resolution shape matching enables
+the robust simulation of stiff cloth models in linear time.
+In the following, we ﬁrst describe 2D shape matching for trian-
+gular regions and then introduce multi-resolution shape matching.
+For a cloth simulation with triangular regions, shape matching
+is performed per triangle in the 2D space of the triangle plane.
+First, the optimal translation vectors of the regions are computed by
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+243
+Figure 21: A stiff cloth model with 32 467 triangles is simulated
+using multi-resolution shape matching with ﬁve hierarchy levels.
+evaluating Equation (7). Then, for each triangle with the vertices x1,
+x2 and x3 and the normal n a projection matrix is determined:
+P =
+ aT
+x
+aT
+y
+
+∈R2×3
+with
+ax =
+x2 −x1
+∥x2 −x1∥,
+ay =
+n × ax
+∥n × ax∥.
+The matrix P is used to project the vectors r and ¯r in Equation (6)
+to get a 2D version of the matrix Ar:
+¯r′
+i = ¯P (¯xi −¯c) ,
+r′
+i = P (xi −c) ,
+where ¯r′
+i ∈R2 can be pre-computed. The optimal rotation for
+shape matching is obtained by performing a 2D polar decompo-
+sition [SD92] for the resulting matrix A′
+r ∈R2×2. This rotation ma-
+trix is used to compute 2D goal positions g′
+i for the particles and the
+corresponding 2D position changes x′
+i:
+g′
+i = R′¯r′
+i,
+x′
+i = α 1
+|ℜi|(g′
+i −x′
+i).
+Finally, the vectors x′
+i are transformed to world space by xi =
+PT x′
+i and the particle positions are updated. This process is shown
+in Figure 22.
+In a simulation with multi-resolution shape matching [BWD13],
+two intergrid transfer operators are required to couple the different
+meshes in the multi-resolution hierarchy. The restriction operator
+Il
+l+1 transfers values from level l + 1 to the next coarser level l
+and the prolongation operator Il+1
+l
+transfers values in the opposite
+direction. These operators can be deﬁned by barycentric coordi-
+nates [GW06]. In each simulation step, ﬁrst the positions of the
+ﬁnest mesh are updated by time integration. For non-nested models,
+0
+x′
+1
+x′
+2
+x′
+3
+g′
+1
+g′
+2
+g′
+3
+a′
+x
+a′
+y
+0
+¯x′
+1
+¯x′
+2
+¯x′
+3
+¯a′
+x
+¯a′
+y
+Figure 22: 2D shape matching. The initial conﬁguration of a trian-
+gle in 2D (left) is matched to the deformed conﬁguration (middle) by
+projecting the deformed triangle into 2D and computing the optimal
+translation and rotation to get goal positions (right).
+the positions of the coarser meshes are interpolated using the restric-
+tion operator. Then multi-resolution shape matching is performed
+in a V-cycle as described by Algorithm 2.
+Algorithm 2 Multi-resolution shape matching
+1: for l = lmax to 1 do
+2:
+Store current positions: ˆxl ←xl
+3:
+Perform shape matching
+4:
+xl−1 := xl−1 +Il−1
+l
+(xl −ˆxl)
+5: end for
+6: for l = 0 to lmax do
+7:
+Store current positions: ˆxl ←xl
+8:
+Perform shape matching
+9:
+if l ̸= lmax then
+10:
+xl+1 := xl+1 +Il+1
+l
+(xl −ˆxl)
+11:
+end if
+12: end for
+In the restriction phase, the hierarchy is traversed from the ﬁnest
+to the coarsest mesh performing a shape matching step on each level
+and projecting the resulting position differences xl −ˆxl to the next
+coarser level with the restriction operator. In the prolongation phase,
+the hierarchy is traversed in the opposite direction. On each level,
+a shape matching step is performed and the position differences are
+interpolated and added to the next ﬁner level. Since only position
+differences are propagated between the levels, ﬁne details are con-
+served on ﬁner levels. However, ﬁne details could get lost if the
+original shape matching method is used on the coarse levels of the
+hierarchy. Wrinkles on a ﬁne resolution cause a compression of ele-
+ments on a coarser level. Shape matching reduces this compression
+and thus eliminates ﬁne details. Therefore, Bender et al. [BWD13]
+propose a modiﬁed computation of the goal positions on the coarse
+levels of the hierarchy so that shape matching only prevents stretch-
+ing on these levels but not a compression.
+4.7. Parallelization
+In Section 4.3, we presented different fast summation techniques for
+shape matching. The one of Diziol et al. [DBB11] is best suited for
+a parallel implementation on the GPU. In the following, the GPU
+implementation of this technique with CUDA is described in detail.
+For such an implementation, memory access and memory layouts
+play an important role as well as the number of kernel calls.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+244
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+Since each kernel call introduces a computational overhead, the
+particles of all objects in a simulation are packed into one single
+array. This array is ordered according to the path layout which is used
+for the fast summation (see Section 4.3). Since the array contains
+the paths one after another, a segmented preﬁx sum [SHZO07] can
+be used to determine the preﬁx sums of all paths at once. To avoid
+numerical problems due to the 32-bit ﬂoating-point arithmetic on
+the GPU, the path length is limited to 512. The resulting preﬁx sums
+are stored in texture memory to beneﬁt from the texture cache when
+the translational vectors and the afﬁne matrices are determined (see
+Equation 9).
+The volume conservation introduced in Section 4.5.1 can also be
+performed efﬁciently on the GPU. This is done by evaluating the
+volume integral (see Equation 11), the integral which is required
+to obtain a divergence free velocity ﬁeld and the weights for the
+local volume conservation in parallel. Both integrals can be written
+as sums over the vertices (see Equation 12). Hence, the integrals as
+well as the weights can be computed by a segmented sum reduction.
+Finally, the smoothing of the weights by a Laplacian ﬁlter can
+be performed in parallel using the fast summation technique as
+described above.
+The multi-resolution approach described in Section 4.6 can be
+implemented on the GPU as follows. Shape matching on each level
+of the hierarchy is performed by computing the goal positions per
+element in parallel in a ﬁrst step. The results are stored for each
+element. In a second step, shape matching is completed by summing
+up the contributions of all elements containing a vertex to get a ﬁnal
+goal position for the vertex. The restriction and the prolongation of
+the results can be performed efﬁciently using the sparse matrix data
+structure of Weber et al. [WBS*13]. This implementation allows
+to simulate the deformation of a cloth model with more than 200K
+triangles on the ﬁnest level in 22 ms/step on a GeForce GTX 470.
+4.8. Discussion
+Shape matching is efﬁcient, unconditionally stable and easy to im-
+plement. However, the shape matching algorithm can only handle
+small deformations. Therefore, the concept of region-based shape
+matching was introduced as well as corresponding fast summation
+techniques. Although this method is a meshless approach, many im-
+plementations use a mesh to deﬁne the required overlapping regions.
+Shape matching can even handle sparse structures by the usage of
+oriented particles.
+We also want to discuss the drawbacks of shape matching. Being a
+geometric approach, only visually plausible results can be obtained.
+The stiffness of the model does not only depend on the user-deﬁned
+stiffness parameter α but also on the time step size and the region
+sizes or, in case of multi-resolution shape matching, the number of
+hierarchy levels. Moreover, the physical behaviour depends on the
+mesh geometry and does not converge to a certain solution as the
+mesh is reﬁned. Hence, adaptive time stepping and the application
+of level-of-detail methods are open problems for further research.
+5. Data-Driven Upsampling Methods
+The behaviour of solid objects can be accurately described using
+well-known mechanical models, but real-world materials display
+other inherent sources of complexity that largely limit the results of
+traditional models in computer animation. Complexity is produced,
+for example, by non-linear or anisotropic behaviours, by heteroge-
+neous properties, or by a wide frequency spectrum. These sources
+of complexity are typically addressed by designing complex non-
+linear constitutive models to describe the mechanical behaviour of
+diverse materials. However, these models require computationally
+expensive simulation algorithms, and their parameters are difﬁcult
+and tedious to tune, particularly if the properties are heterogeneous.
+All in all, the animation of solid objects is limited by the domain
+of effects captured by the underlying physical models, but also by
+their parametrization accuracy.
+Data-driven methods offer an alternative to complex constitutive
+models, as they turn the modelling metaphor into the knowledge of
+a system’s response under several example conditions. This section
+describes geometric data-driven methods in computer animation. It
+formulates a two-scale representation of geometry and dynamics,
+describes the computation of detailed geometry as the interpolation
+of example data, and discusses several successful examples.
+5.1. Two-Scale Geometry and Dynamics
+Let us consider the surface of a solid object (e.g. the cloth in Fig-
+ure 23), with vertex positions x ∈R3. These positions can be decom-
+posed into a low-resolution position x0 and a ﬁne-scale displacement
+x, expressed in a local reference system for each vertex (i.e. with
+orientation R):
+x = x0 + R x.
+This deﬁnition of vertex positions essentially decomposes large-
+scale geometry (i.e. the overall shape of a solid object) from the
+small-scale deformation (i.e. wrinkles).
+The large-scale and ﬁne-scale geometry can be represented at
+different resolutions, connected through subdivision schemes. As
+shown in Figure 23 for a cloth object, a low-resolution feature mesh
+deﬁnes the large-scale deformation. A high-resolution smooth mesh
+is obtained by subdividing the feature mesh a user-deﬁned number
+of times, and can be regarded as an upsampled version of the feature
+mesh. Finally, a high-resolution detail mesh is obtained by adding
+local displacements onto the smooth mesh. The smooth and detail
+meshes fully share the connectivity, thus trivially deﬁning their
+correspondence.
+Once large-scale and ﬁne-scale geometry are separated, they can
+be computed using different models. The choice of models can be
+made based on the following observations. First, for many objects
+such as the face or cloth, the most salient dynamic effects can
+be captured at a large scale. For example, Bickel et al. [BLB*08]
+and Ma et al. [MJC*08] compute the large-scale face geometry
+from an actor’s performance, using a single face scan and sparse
+mocap markers as input, and a linear deformation model. Wang
+et al. [WHRO10], Zurdo et al. [ZBO13] and Kavan et al. [KGBS11]
+compute the large-scale geometry of cloth using a low-resolution
+dynamics model with contact handling.
+A second important observation is that plausible high-resolution
+wrinkles can often be deﬁned as a quasi-static function in a reduced
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+245
+Figure 23: Data-driven animation of cloth wrinkles. On the left, a low-resolution feature mesh, a smooth mesh obtained by subdivision and
+a high-resolution detail mesh. On the right, a schematic depiction of the data-driven wrinkle computation. The feature mesh is subdivided to
+obtain the smooth mesh, and then detailed wrinkles are added in a local reference frame by combining detail from examples.
+low-resolution domain u. All authors mentioned in the previous
+paragraph follow this observation to some extent. For the face,
+and due to the repetitive nature of facial expressions, tissue be-
+comes weaker at certain locations, and expressive wrinkles appear
+in a deterministic fashion as a function of large-scale deforma-
+tion, and indirectly as a function of muscle activations and facial
+bone conﬁgurations. For cloth, even though real wrinkles require a
+large number of degrees of freedom to capture their true diversity,
+plausible wrinkles can be deﬁned in the reduced domain of large-
+scale deformation. We can formally write the dependency between
+high-resolution detail x and the low-resolution conﬁguration u as
+x = f (u), where the function f is a position-based model.
+The reduced-domain deﬁnition presents some limitations, which
+should be mentioned upfront. Fine-scale wrinkle dynamics cannot
+be captured, as wrinkles are deﬁned quasi-statically. And the model
+captures only a limited set out of all the possible wrinkles that
+a solid object might present. However, the power of data-driven
+methods is that the generic function f makes use of data from
+real deformation examples; therefore, data-driven wrinkles preserve
+natural characteristics such as length, width and consistency over
+time, and they appear plausible despite their limitations.
+5.2. Data-Driven Geometric Detail
+At this point, we have a suitable setting to deﬁne a position-based
+data-driven model. For data collection, we need to record example
+deformations (denoted by the subscript i), with vertex displace-
+ments {xi} and low-resolution conﬁgurations {ui} in correspon-
+dence. Then, we apply learning methods to design a data-driven
+approximation of the function f , which can be formally deﬁned as
+x ≈ˆf (u, {xi}, {ui}).
+A general and successful approach to deﬁne a data-driven ap-
+proximation ˆf is through a linear combination of example-based
+basis functions,
+x =
+	
+j
+wj(u) bj
+(14)
+with weights wj computed as a function of the low-resolution
+conﬁguration u. In the expression above, bj ∈R3 constitutes an
+example-based detail displacement, and represents the values asso-
+ciated with one vertex in the jth basis function.
+In the rest of this section, we discuss several examples of position-
+based data-driven deformation models, which differ in terms of the
+choice of low-resolution conﬁguration, basis functions, or interpo-
+lation method.
+5.2.1. Weighted pose-space deformation (WPSD)
+Bickel et al. [BLB*08] proposed a data-driven method to compute
+facial wrinkles as a function of large-scale deformation and a small
+set of example deformations, and later Zurdo et al. [ZBO13] fol-
+lowed a similar strategy for cloth animation. Figure 24 shows an
+example facial animation by Bickel et al., and Figure 25 an example
+cloth animation by Zurdo et al.
+In their methods, the basis function combination in Equation (14)
+follows the WPSD approach [KM04]. In a nutshell, the basis func-
+tions constitute local vertex displacements in example deformations,
+called poses, and the weights w are convex weights for each of the
+poses. The weights of the poses are computed using scattered-data
+interpolation based on radial basis functions (RBFs) in pose space.
+In this case, the pose space is given by the large-scale deformation u.
+As shown by Zurdo et al., pose weights can be computed through
+WPSD on the sparse vertices of the feature mesh, and then simply
+interpolated to the vertices of the detail mesh using subdivision
+weights. For the computation of pose weights on a given vertex,
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+246
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+Figure 24: Example of facial animation with the data-driven method of Bickel et al. [BLB*08]. From left to right: large-scale deformation
+interpolating mocap markers, full result data-driven detail computation, the same result with full shading and comparison to the real actor’s
+face.
+Figure 25: Top row: a low-resolution model of a dress, with only 381 triangles, deﬁnes the dynamics, the large-scale deformation, and
+response to contact. The dress is then subdivided to 24 384 triangles for rendering. Bottom row: high-resolution wrinkles are interpolated
+from six example poses based on the large-scale deformation of the dress, using the data-driven method of Zurdo et al. [ZBO13].
+WPSD requires a local deﬁnition of the pose space u. Both Bickel
+et al. and Zurdo et al. use a metric of local low-resolution strain,
+formed by concatenating the deformation of the 16 closest edges of
+the feature mesh, multiplied by fast-decaying weights. With RBF
+interpolation, the weight of each pose is computed as
+wj =
+	
+i
+ωi,j φ(∥u −ui∥).
+The RBF weights ωk,j are pre-computed such that pose weights
+fulﬁl the Kronecker delta for the database of poses, i.e. wj(ui) is 0 if
+j ̸= i and 1 if j = i, for poses j and i in the database. The function
+φ represents a speciﬁc type of RBF. Both Bickel et al. and Zurdo
+et al. use RBFs with global support φ(r) = r, as they avoid complex
+tuning of support radii for unevenly sampled data [CBC*01].
+The selection of poses starts with the generation of training
+data, which requires a database of synchronized feature and de-
+tail meshes. Zurdo et al. employ the TRACKS method [BMWG07]
+to pre-compute cloth simulations where the detail mesh tracks the
+motion of the feature mesh. In the training simulations, contact is
+solved both on the feature mesh and the detail mesh, and then the
+high-resolution information in the poses captures the response to
+contact. From all mesh pairs in the database, Zurdo et al. select only
+a small number of poses (typically 6), until the L2 error between
+synthesized animations and the training data set is below a certain
+threshold. The set of poses is grown in a greedy manner, adding
+each time the mesh pair with largest L2 error between the training
+and synthesized conﬁgurations.
+5.2.2. Polynomial displacement maps (PDM)
+Ma et al. [MJC*08] designed PDM, a method for data-driven
+computation of wrinkles in facial animation, following the
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+247
+computational strategy of polynomial texture maps [MGW01]. De-
+spite the computational differences, the method shares many simi-
+larities with the WPSD approach of Bickel et al. [BLB*08].
+In the general data-driven framework described by Equation (14),
+the low-resolution conﬁguration of PDM is deﬁned as a 2D local
+strain metric of the feature mesh, u = (u1, u2). In particular, this
+metric is obtained through principal component analysis of a ﬁve-
+dimensional vector formed by the local vertex offset and the in-plane
+strain of the feature mesh. Based on this low-resolution conﬁgura-
+tion, the weights in Equation (14) are deﬁned based on biquadratic
+polynomials, w(u) = (u2
+1 u2
+2 u1u2 u1 u2 1). Finally, the detail po-
+sition of each vertex in the detail mesh, x, is deﬁned as a scalar
+displacement in the local normal direction.
+Due to the choice of biquadratic PDMs, the per-vertex displace-
+ments are computed through linear combination of six basis func-
+tions, which are stored in texture maps. Ma et al. compute the
+coefﬁcients in these texture maps as the result of a least-squares
+problem that minimizes the ﬁtting error over the training data.
+5.2.3. Physics-inspired upsampling (PIU)
+Kavan et al. [KGBS11] proposed a data-driven method to compute
+cloth animations with detailed wrinkles at video game frame rates.
+In their approach, high-resolution cloth positions are computed
+following a position-based data-driven method, but the data are
+learned from dynamic simulations with tracking of high-resolution
+and low-resolution geometry, similar to the approach by Zurdo
+et al. [ZBO13] described earlier.
+In PIU, the weights w in Equation (14) correspond directly to the
+vertex positions of the feature mesh. The basis functions coefﬁcients
+b extend subdivision schemes, and are learned from a database of
+example deformations.
+For the description of the method in more detail, let us deﬁne
+the low-resolution deformation u as a vector that concatenates
+the vertex positions of the low-resolution feature mesh. We also
+deﬁne a matrix B of upsampling basis functions, being each row of
+B the basis function for one vertex coordinate. Finally, we deﬁne a
+vector X that concatenates all vertex positions of the high-resolution
+detail mesh. Note that the method of Kavan et al. computes high-
+resolution positions directly, not local displacements as discussed
+earlier. With these deﬁnitions, the data-driven detail from Equa-
+tion (14) can be rewritten as X = B u.
+Given the data captured in training simulations, expressed as
+example deformations of the feature mesh, {ui}, and the detail mesh,
+{Xi}, Kavan et al. compute basis functions through an optimization
+problem
+B = arg min
+	
+i
+∥B ui −Xi∥.
+The optimization must satisfy additional constraints. In particu-
+lar, the basis functions B must constitute a partition of unity, and
+the objective function includes a regularization term to prevent
+overﬁtting.
+As mentioned earlier, one of the limitations of pure position-based
+data-driven methods is that wrinkles are quasi-static functions of
+low-resolution deformations. In PIU, Kavan et al. add oscillatory
+modes to allow the simulation of travelling waves.
+5.3. Parallelization
+One of the most attractive features of position-based data-driven
+methods is that they can be massively parallelized on GPUs. Taking
+as reference Equation (14), the multiplication of basis weights times
+the basis values follows the same procedure at all vertices of the
+detail mesh, but it can be executed in a completely independent
+manner on each vertex. Therefore, this multiplication is very well
+suited for parallel implementation on GPUs. In fact, it can be handled
+as a dense matrix–vector product.
+Moreover, the evaluation of weights w can also be done inde-
+pendently for each basis. In the PIU method described above, the
+weights are trivially deﬁned as the positions of vertices in the fea-
+ture mesh, hence they do not need further evaluation. In the WPSD
+and PDM methods, on the other hand, these weights are computed
+as a function of low-resolution deformation. As shown by Zurdo
+et al. [ZBO13], the non-linear weights at feature vertices can be
+evaluated easily on the CPU, and then interpolated to detail vertices
+using subdivision weights. This interpolation step is trivial to paral-
+lelize on single instruction, multiple data (SIMD) architectures.
+Thanks to the highly parallel nature of data-driven algorithms,
+existing implementations exhibit very high performance. For ex-
+ample, Zurdo et al. [ZBO13] simulate cloth with 25.6K triangles
+at 125 fps including contact handling on the feature mesh, Kavan
+et al. [KGBS11] simulate a cape with 10K vertices at 1 kHz, and
+Bickel et al. [BLB*08] animate a face with more than 1M triangles
+at 30 fps.
+5.4. Discussion
+The particular data-driven methods discussed here present differ-
+ent pros and cons. Among all methods, PIU is probably the fastest
+method, as it relies on simple matrix-vector multiplication. How-
+ever, the result is limited to a linear operator, and wrinkles may
+appear smoothed. WPSD and PDM, on the other hand, allow non-
+linear operators, and the combination of the input data is decided in
+a local manner.
+With WPSD and PDM, the representation is more compact,
+thanks to the choice of low-resolution strain as interpolation domain.
+Low-resolution strain also has been used as a parameter space for
+cloth wrinkles in procedural models [RPC*10], or in the Wrinkle
+Meshes method [MC10]. In the position-based Wrinkles Meshes
+method, described in Section 3.6, the low-resolution strain affects
+wrinkle modelling indirectly, as it inﬂuences the deformation of the
+high-resolution cloth. Seiler et al. [SSH12] propose a different in-
+terpolation domain based on local contact data, as their work targets
+the animation of high-resolution effects due to contact interactions.
+One limitation of most data-driven methods is that wrinkles are
+deﬁned as a quasi-static function of the feature mesh, hence they
+exhibit no dynamics. Kavan et al. [KGBS11] somewhat alleviate
+this problem by adding oscillatory modes, but the solution does not
+support all dynamic effects. The work of de Aguiar et al. [dASTH10]
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+248
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+offers an interesting approach to data-driven simulation of dynamic
+effects, but it models low-resolution motion, not high-resolution
+details.
+The data-driven cloth upsampling method of Feng et al. [FYK10]
+departs from those presented here. It not only deﬁnes ﬁne-scale
+details in a data-driven manner, but also a mid-scale transformation
+from a coarse cloth simulation. Its two deformation transformers, for
+ﬁne-scale and mid-scale deformations, are learned using regression
+with rotation-invariant data. The method of Feng et al. produces
+high-quality results if the training sequence captures the dynamics
+that will appear at runtime, but it will suffer larger errors otherwise.
+This section has covered position-based data-driven methods for
+animating high-resolution effects on solids, but recent advances
+open the possibility to extend this paradigm also to ﬂuids. The
+recent work of Kim et al. [KTT13] introduces a decomposition of
+liquid surface geometry into a low-resolution surface plus high-
+resolution ripples, just like the one deﬁned for solid surfaces in
+Section 5.1 above. However, for liquids, a quasi-static deﬁnition of
+high-resolution details is a particularly severe limitation. Kim et al.
+propose a model that decouples low-resolution and high-resolution
+dynamics, and they use the i Wave model [Tes04] to synthesize high-
+resolution liquid ripples. We envision that such ripples could also
+be synthesized from pre-computed data using a data-driven model.
+6. Applications
+In this section, we introduce different application areas of position-
+based methods. These methods are mainly used in interactive ap-
+plications where performance, controllability and stability are more
+important than accuracy, like, e.g. in [SGdA*10], [DB13]. But there
+exist also other works which use a position-based approach for
+stabilization.
+One application area for position-based methods is interactive
+surgical simulation. In this area, Wang et al. [WXX*06] introduce a
+mass-spring model based on a surface mesh to simulate deformable
+bodies in real-time. Since such a model can neither preserve its
+volume nor resume its rest shape in the absence of external forces,
+the authors propose to couple the surface model with a rigid core
+by using spring forces. This rigid core is simulated using shape
+matching [MHTG05] which results in a fast and stable simulation.
+Kubiak et al. [KPGF07] present a simulation method for surgical
+threads which is based on the position-based dynamics approach
+of M¨uller et al. [MHHR07]. Their method simulates the stiffness,
+bending and torsion of a thread and also provides feedback for
+a haptic device. For the simulation, Kubiak et al. deﬁne distance
+constraints for stiffness and bending, torsion constraints, contact
+constraints and friction constraints. The presented method allows
+for an interactive and robust simulation of knots.
+The simulation of complex hairstyles using a shape matching
+approach is presented by Rungjiratananon et al. [RKN10]. Their
+approach is based on Lattice Shape Matching which was originally
+introduced by Rivers and James [RJ07]. For the simulation, each
+hair strand is represented by a chain of particles which is subdivided
+in overlapping chain regions. After shape matching an additional
+position-based strain limiting is applied to each strand which moves
+the particles in the direction of their root. Different hair styles are
+realized by using appropriate initial conﬁgurations and by modifying
+the region sizes of a chain.
+O’Brien et al. [ODC11] use position-based dynamics for the
+physically plausible adaptation of motion-captured animations. In
+their work, they use a vertex-based character skeleton and different
+constraints to preserve the skeleton structure, to deﬁne joint lim-
+its and to implement a centre of mass control. In addition to the
+kinematic constraints, they deﬁne a couple of dynamics constraints
+which consider vertices in multiple frames. Dynamics constraints
+are used to enforce smooth acceleration and dynamical correctness.
+Fierz et al. [FSAH12] introduce a position-based approach to sta-
+bilize a ﬁnite element simulation. When using an explicit time inte-
+gration for a ﬁnite element simulation, the time step size is typically
+limited by the stiffness of the model and its spatial discretization. In
+each simulation step, Fierz et al. use the Courant–Friedrichs–Lewy
+(CFL) condition to determine the maximum allowed time step size
+for each tetrahedral element in their volumetric simulation model.
+However, instead of using the time step size given by the CFL condi-
+tion to perform a stable simulation step with an explicit integration
+scheme, they use a ﬁxed size and mark all elements where the con-
+dition is not met. The marked elements are then simulated using a
+shape matching approach while for all other elements a linear FEM
+is used for the simulation.
+7. Conclusion
+In this survey, we focused on a popular and practically relevant
+subset of approaches for dynamically deforming solids, namely
+on position-based approaches. Such geometrically motivated tech-
+niques are not force-driven and are particularly appropriate in in-
+teractive applications due to their versatility, robustness, controlla-
+bility and efﬁciency. We explained general ideas of position-based
+methods, shape-matching approaches and data-driven techniques.
+Various deformation aspects for 2D and 3D solids and efﬁcient solu-
+tion strategies were discussed with a particular focus on the beneﬁts
+of position-based approaches compared to force-driven techniques.
+Acknowledgements
+The work of Jan Bender was supported by the ‘Excellence Initiative’
+of the German Federal and State Governments and the Graduate
+School CE at TU Darmstadt. Miguel A. Otaduy was partially funded
+by the Spanish Ministry of Economy (grant TIN2012-35840) and the
+European Research Council (ERC-2011-StG-280135 Animetrics).
+References
+[BB08] BENDER J., BAYER D.: Parallel simulation of inextensible
+cloth. In VRIPHYS 08: Proceedings of Fifth Workshop in Virtual
+Reality Interactions and Physical Simulations (2008), pp. 47–56.
+[BETC12] BENDER J., ERLEBEN K., TRINKLE J., COUMANS E.: Interac-
+tive simulation of rigid body dynamics in computer graphics. In
+EG 2012 - State of the Art Reports (2012), Cani and F. Ganovelli,
+(Eds.), Eurographics Association, pp. 95–134.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+249
+[BLB*08] BICKEL B., LANG M., BOTSCH M., OTADUY M. A., GROSS
+M.: Pose-space animation and transfer of facial details. In Pro-
+ceedings of the ACM SIGGRAPH/Eurographics Symposium on
+Computer Animation (2008), pp. 57–66.
+[BMF03] BRIDSON R., MARINO S., FEDKIW R.: Simulation of
+clothing with folds and wrinkles. In Proceedings of the
+ACM/Eurographics Symposium on Computer Animation (2003),
+pp. 28–36.
+[BMWG07] BERGOU M., MATHUR S., WARDETZKY M., GRINSPUN E.:
+TRACKS: Toward directable thin shells. In Proceedings of ACM
+SIGGRAPH (2007).
+[BW98] BARAFF D., WITKIN A.: Large steps in cloth simulation. In
+SIGGRAPH ’98: Proceedings of Computer Graphics and Inter-
+active Techniques (1998), ACM, pp. 43–54.
+[BWD13] BENDER J., WEBER D., DIZIOL R.: Fast and stable cloth
+simulation based on multi-resolution shape matching. Computers
+& Graphics (2013).
+[CBC*01] CARR J. C., BEATSON R. K., CHERRIE J. B., MITCHELL T.
+J., FRIGHT W. R., MCCALLUM B. C., EVANS T. R.: Reconstruction
+and representation of 3D objects with radial basis functions. In
+Proceedings of ACM SIGGRAPH (2001), pp. 67–76.
+[Cro84] CROW F. C.: Summed-area tables for texture mapping. SIG-
+GRAPH Computer Graphics 18, 3 (Jan. 1984), 207–212.
+[dASTH10] DE AGUIAR E., SIGAL L., TREUILLE A., HODGINS J. K.: Sta-
+ble spaces for real-time clothing. ACM Transactions on Graphics
+29, 4 (July 2010), 106:1–106:9.
+[DB13] DEUL C., BENDER J.: Physically-based character skinning.
+In VRIPHYS 13: Proceedings of 10th Workshop on Virtual Real-
+ity Interactions and Physical Simulations (Lille, France, 2013),
+Eurographics Association, pp. 25–34.
+[DBB09] DIZIOL R., BENDER J., BAYER D.: Volume conserving sim-
+ulation of deformable bodies. In Short Paper Proceedings of
+Eurographics (Mar. 2009).
+[DBB11] DIZIOL R., BENDER J., BAYER D.: Robust real-time deforma-
+tion of incompressible surface meshes. In SCA ’11: Proceedings
+of the 2011 ACM SIGGRAPH/Eurographics Symposium on Com-
+puter Animation (2011), Eurographics Association.
+[DSB99] DESBRUN M., SCHR¨ODER P., BARR A.: Interactive animation
+of structured deformable objects. In Proceedings of SIGGRAPH
+99 (1999), ACM, pp. 1–8.
+[FSAH12] FIERZ B., SPILLMANN J., AGUINAGA I., HARDERS M.: Main-
+taining large time steps in explicit ﬁnite element simulations
+using shape matching. IEEE Transactions on Visualization and
+Computer Graphics 18, 5 (May 2012), 717 –728.
+[FYK10] FENG W.-W., YU Y., KIM B.-U.: A deformation transformer
+for real-time cloth animation. ACM Transactions on Graphics 29,
+4 (July 2010), 108:1–108:9.
+[GBO04] GOKTEKIN T. G., BARGTEIL A. W., O’BRIEN J. F.: A method
+for animating viscoelastic ﬂuids. ACM Transactions on Graphics
+23, 3 (August 2004), 463–468.
+[GHF*07] GOLDENTHAL R., HARMON D., FATTAL R., BERCOVIER M.,
+GRINSPUN E.: Efﬁcient simulation of inextensible cloth. ACM
+Trans. Graph. 26, 3 (2007), 49.
+[GM97] GIBSON S. F., MIRTICH B.: A survey of deformable modeling
+in computer graphics. Tech. Rep. TR-97-19, Mitsubishi Electric
+Research Lab., 1997.
+[GW06] GEORGII J., WESTERMANN R.: A multigrid framework for
+real-time simulation of deformable bodies. Computer & Graphics
+30 (2006), 408–415.
+[Hac85] HACKBUSCH W.: Multi-Grid Methods and Applications, vol.
+4 of Springer Series in Computational Mathematics. Springer,
+1985.
+[HJCW06] HONG M., JUNG S., CHOI M., WELCH S.: Fast volume
+preservation for a mass-spring system. IEEE Comput. Graph.
+Appl. 26 (2006), 83–91.
+[ISF07] IRVING G., SCHROEDER C., FEDKIW R.: Volume conserving
+ﬁnite element simulations of deformable models. ACM Transac-
+tions on Graphics 26, 3 (July 2007), 13:1–13:6.
+[Jak01] JAKOBSEN T.: Advanced character physics. In Proceedings,
+Game Developer’s Conference 2001 (2001).
+[JP99] JAMES D. L., PAI D. K.: Artdefo: Accurate real time de-
+formable objects. In Proceedings of SIGGRAPH 99 (1999),
+ACM, pp. 65–72.
+[KCM12] KIM T.-Y., CHENTANEZ N., M¨ULLER M.: Long range at-
+tachments — A method to simulate inextensible clothing in
+computer games. In Proceedings of the Eurographics/ACM
+SIGGRAPH Symposium on Computer Animation (2012), J.
+Lee, and P. Kry, (Eds.), Eurographics Association, pp. 305–
+310.
+[KGBS11] KAVAN L., GERSZEWSKI D., BARGTEIL A. W., SLOAN P.-P.:
+Physics-inspired upsampling for cloth simulation in games. In
+Proceedings of ACM SIGGRAPH (2011).
+[KM04] KURIHARA T., MIYATA N.: Modeling deformable human
+hands from medical images. In Proceedings of the ACM
+SIGGRAPH/Eurographics Symposium on Computer Animation
+(2004), pp. 357–366.
+[KPGF07] KUBIAK B., PIETRONI N., GANOVELLI F., FRATARCAN-
+GELI M.: A robust method for real-time thread simulation.
+In VRST ’07: Proceedings of the 2007 ACM Symposium on
+Virtual Reality Software and Technology (2007), ACM, pp.
+85–88.
+[KTT13] KIM T., TESSENDORF J., TH¨UREY N.: Closest point turbulence
+for liquid surfaces. ACM Transactions on Graphics 32, 2 (April
+2013), 15:1–15:13.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+250
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+[LBOK13] LIU T., BARGTEIL A. W., O’BRIEN J. F., KAVAN L.: Fast
+simulation of mass-spring systems. In Proceedings of ACM SIG-
+GRAPH Asia (Hong Kong, 2013). ACM Transactions on Graph-
+ics 32, 6 (Nov. 2013), 209:1–7.
+[LG98] LIN M. C., GOTTSCHALK S.: Collision detection between
+geometric models: A survey. In Proceedings of IMA Conference
+on Mathematics of Surfaces (1998), pp. 37–56.
+[MC10] M¨ULLER M., CHENTANEZ N.: Wrinkle meshes. In SCA’10:
+Proceedings of the 2010 ACM SIGGRAPH/Eurographics Sympo-
+sium on Computer Animation (2010), Eurographics Association,
+pp. 85–92.
+[MC11] M¨ULLER M., CHENTANEZ N.: Solid simulation with oriented
+particles. ACM Trans. Graph. 30, 4 (July 2011), 92:1–92:10.
+[MCG03] M¨ULLER M., CHARYPAR D., GROSS M.: Particle-based ﬂuid
+simulation for interactive applications. In SCA ’03: Proceedings
+of the 2003 ACM SIGGRAPH/Eurographics Symposium on Com-
+puter Animation (2003), Eurographics Association, pp. 154–159.
+[MGW01] MALZBENDER T., GELB D., WOLTERS H.: Polynomial tex-
+ture maps. In Proceedings of ACM SIGGRAPH 2001(Aug. 2001),
+Computer Graphics Proceedings, Annual Conference Series, pp.
+519–528.
+[MHHR07] M¨ULLER M., HEIDELBERGER B., HENNIX M., RATCLIFF J.:
+Position based dynamics. Journal of Visual Communication and
+Image Representation 18, 2 (2007), 109–118.
+[MHTG05] M¨ULLER M., HEIDELBERGER B., TESCHNER M., GROSS M.:
+Meshless deformations based on shape matching. ACM Trans.
+Graph. 24, 3 (2005), 471–478.
+[Mir96] MIRTICH B.: Fast and accurate computation of polyhedral
+mass properties. Journal of Graphics Tools 1, 2 (February 1996),
+31–50.
+[MJC*08] MA W.-C., JONES A., CHIANG J.-Y., HAWKINS T., FREDERIK-
+SEN S., PEERS P., VUKOVIC M., OUHYOUNG M., DEBEVEC P.: Facial
+performance synthesis using deformation-driven polynomial dis-
+placement maps. In Proceedings of ACM SIGGRAPH Asia, ACM
+Transactions on Graphics 27, 5 (2008).
+[MKC12] M¨ULLER M., KIM T.-Y., CHENTANEZ N.: Fast simulation of
+inextensible hair and fur. In VRIPHYS 12: Proceedings of 9th
+Workshop on Virtual Reality Interactions and Physical Simula-
+tions (2012), Eurographics Association.
+[MM13] MACKLIN M., M¨ULLER M.: Position based ﬂuids. ACM
+Transactions on Graphics 32, 4 (July 2013), 104:1–104:12.
+[Mon92] MONAGHAN J. J.: Smoothed particle hydrodynamics. An-
+nual Review of Astronomy and Astrophysics 30, 1 (1992), 543–
+574.
+[Mon94] MONAGHAN J. J.: Simulating free surface ﬂows with SPH.
+Journal of. Computational Physics 110, 2 (February 1994), 399–
+406.
+[MSJT08] M¨ULLER M., STAM J., JAMES D., TH¨UREY N.: Real time
+physics: Class notes. In SIGGRAPH ’08: ACM SIGGRAPH 2008
+classes (2008), ACM, pp. 88:1–88:90.
+[MTV05] MAGNENAT-THALMANN N., VOLINO P.: From early drap-
+ing to haute couture models: 20 years of research. The Visual
+Computer 21 (2005), 506–519.
+[M¨ul08] M¨ULLER M.: Hierarchical Position Based Dynamics. In
+VRIPHYS 08: Proceedings of Fifth Workshop in Virtual Reality
+Interactions and Physical Simulations (2008), F. Faure and M.
+Teschner (Eds.), Eurographics Association, pp. 1–10.
+[NMK*06] NEALEN A., M¨ULLER M., KEISER R., BOXERMAN E., CARL-
+SON M.: Physically based deformable models in computer graph-
+ics. Computer Graphics Forum 25, 4 (December 2006), 809–836.
+[ODC11] O’BRIEN C., DINGLIANA J., COLLINS S.: Spacetime ver-
+tex constraints for dynamically-based adaptation of motion-
+captured animation. In SCA ’11: Proceedings of the 2011 ACM
+SIGGRAPH/Eurographics Symposium on Computer Animation
+(2011), ACM, pp. 277–286.
+[OH99] O’BRIEN J. F., HODGINS J. K.: Graphical modeling and ani-
+mation of brittle fracture. In SIGGRAPH ’99: Proceedings of the
+26th Annual Conference on Computer Graphics and Interactive
+Techniques (New York, NY, USA, 1999), ACM Press/Addison-
+Wesley Publishing Co., pp. 137–146.
+[PB88] PLATT J. C., BARR A. H.: Constraints methods for ﬂexi-
+ble objects. In SIGGRAPH ’88: Proceedings of the 15th Annual
+Conference on Computer Graphics and Interactive Techniques
+(1988), ACM, pp. 279–288.
+[Pro95] PROVOT X.: Deformation constraints in a mass-spring model
+to describe rigid cloth behavior. In Proceedings of Graphics Inter-
+face (1995), W. A. Davis and P. Prusinkiewicz (Eds.), Canadian
+Human-Computer Communications Society, pp. 147–154.
+[RJ07] RIVERS A. R., JAMES D. L.: FastLSM: fast lattice shape match-
+ing for robust real-time deformation. In SIGGRAPH ’07: ACM
+SIGGRAPH 2007 papers (2007), ACM, p. 82.
+[RKN10] RUNGJIRATANANON W., KANAMORI Y., NISHITA T.: Chain
+shape matching for simulating complex hairstyles. Computer
+Graphics Forum 29, 8 (2010), 2438–2446.
+[RPC*10] ROHMER D., POPA T., CANI M.-P., HAHMANN S., SHEFFER
+A.: Animation wrinkling: Augmenting coarse cloth simulations
+with realistic-looking wrinkles. ACM Transactions on Graphics
+29, 5 (2010), 157:1–157:8.
+[SD92] SHOEMAKE K., DUFF T.: Matrix animation and polar decom-
+position. In Proceedings of the Conference on Graphics Inter-
+face ’92 (1992), Morgan Kaufmann Publishers Inc., pp. 258–
+264.
+[SGdA*10] STOLL C., GALL J., DE AGUIAR E., THRUN S., THEOBALT
+C.: Video-based reconstruction of animatable human characters.
+ACM Trans. Graph. 29, 6 (Dec. 2010), 139:1–139:10.
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License
+J. Bender et al. / A Survey on Position-Based Simulation Methods in Computer Graphics
+251
+[SGT09] SCHMEDDING R., GISSLER M., TESCHNER M.: Optimized
+damping for dynamic simulations. In Proceedings of Spring Con-
+ference on Computer Graphics (2009), pp. 205–212.
+[SHZO07] SENGUPTA S., HARRIS M., ZHANG Y., OWENS J. D.: Scan
+primitives for GPU computing. In Proceedings of the 22nd ACM
+SIGGRAPH/Eurographics Symposium on Graphics Hardware
+(2007), Eurographics Association, pp. 97–106.
+[SKBK13] SCHMITT N., KNUTH M., BENDER J., KUIJPER A.: Multilevel
+Cloth Simulation using GPU Surface Sampling. In VRIPHYS 13:
+Proceedings of 10th Workshop on Virtual Reality Interactions
+and Physical Simulations (Lille, France, 2013), Eurographics
+Association, pp. 1–10.
+[SOG08] STEINEMANN D., OTADUY M. A., GROSS M.: Fast adaptive
+shape matching deformations. In SCA ’08: Proceedings of the
+2008 ACM SIGGRAPH/Eurographics Symposium on Computer
+Animation (2008), Eurographics Association, pp. 87–94.
+[SSBT08] STUMPP T., SPILLMANN J., BECKER M., TESCHNER M.: A
+Geometric Deformation Model for Stable Cloth Simulation. In
+VRIPHYS 08: Proceedings of Fifth Workshop in Virtual Reality
+Interactions and Physical Simulations (2008), F. Faure and M.
+Teschner (Eds.), Eurographics Association, pp. 39–46.
+[SSH12] SEILER M., SPILLMANN J., HARDERS M.: Enriching
+coarse interactive elastic objects with high-resolution data-
+driven deformations. In SCA ’12: Proceedings of the ACM
+SIGGRAPH/Eurographics Symposium on Computer Animation
+(2012), Eurographics Association, pp. 9–17.
+[Sta09] STAM J.: Nucleus: Towards a uniﬁed dynamics solver for
+computer graphics. In Proceedings of the IEEE International
+Conference on Computer-Aided Design and Computer Graphics
+(2009), pp. 1–11.
+[TBHF03] TERAN J., BLEMKER S., HING V. N. T., FEDKIW R.: Finite
+volume methods for the simulation of skeletal muscle. In Pro-
+ceedings of the 2003 ACM SIGGRAPH/Eurographics Symposium
+on Computer Animation (2003), Eurographics Association, pp.
+68–74.
+[Tes04] TESSENDORF J.: Simulating ocean water. ACM SIGGRAPH
+2004 Course Notes (2004).
+[TF88] TERZOPOULOS D., FLEISCHER K.: Deformable models. The
+Visual Computer 4 (1988), 306–331.
+[THMG04] TESCHNER M., HEIDELBERGER B., MULLER M., GROSS
+M.: A versatile and robust model for geometrically complex
+deformable solids. In CGI ’04: Proceedings of the Computer
+Graphics International (Washington, DC, USA, 2004), IEEE
+Computer Society, pp. 312–319.
+[TKH*05] TESCHNER M., KIMMERLE S., HEIDELBERGER B., ZACH-
+MANN G., RAGHUPATHI L., FUHRMANN A., CANI M.-P., FAURE F.,
+MAGNENAT-THALMANN N., STRASSER W., VOLINO P.: Collision de-
+tection for deformable objects. Computer Graphics Forum 24, 1
+(Mar. 2005), 61–81.
+[TPBF87a] TERZOPOULOS D., PLATT J., BARR A., FLEISCHER K.: Elasti-
+cally deformable models. In SIGGRAPH ’87: Proceedings of the
+14th Annual Conference on Computer Graphics and Interactive
+Techniques (1987), ACM, pp. 205–214.
+[TPBF87b] TERZOPOULOS D., PLATT J., BARR A., FLEISCHER K.: Elas-
+tically deformable models. In Proceedings of SIGGRAPH 87,
+Computer Graphics 21 (1987), 205–214.
+[vFTS06] VON FUNCK W., THEISEL H., SEIDEL H.-P.: Vector ﬁeld based
+shape deformations. ACM Transsactions on Graphics 25, 3 (July
+2006), 1118–1125.
+[WBS*13] WEBER D., BENDER J., SCHNOES M., STORK A., FELLNER D.:
+Efﬁcient GPU data structures and methods to solve sparse linear
+systems in dynamics applications. Computer Graphics Forum 32,
+1 (2013), 16–26.
+[WHRO10] WANG H., HECHT F., RAMAMOORTHI R., O’BRIEN J.:
+Example-based wrinkle synthesis for clothing animation. ACM
+Transactions on Graphics 29, 4 (July 2010), 107:1–107:8.
+[WOR10] WANG H., O’BRIEN J., RAMAMOORTHI R.: Multi-resolution
+isotropic strain limiting. ACM Trans. Graph. 29, 6 (Dec. 2010),
+156:1–156:10.
+[WXX*06] WANG Y., XIONG Y., XU K., TAN K., GUO G.: A mass-
+spring model for surface mesh deformation based on shape
+matching. In GRAPHITE ’06: Proceedings of the 4th Interna-
+tional Conference on Computer Graphics and Interactive Tech-
+niques in Australasia and Southeast Asia (2006), ACM, pp. 375–
+380.
+[ZBO13] ZURDO J. S., BRITO J. P., OTADUY M. A.: Animating wrin-
+kles by example on non-skinned cloth. IEEE Transactions on
+Visualization and Computer Graphics 19, 1 (2013).
+c⃝2014 The Authors
+Computer Graphics Forum c⃝2014 The Eurographics Association and John Wiley & Sons Ltd.
+ 14678659, 2014, 6, Downloaded from https://onlinelibrary.wiley.com/doi/10.1111/cgf.12346 by Institute Of Science Tokyo, Wiley Online Library on [26/03/2026]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License

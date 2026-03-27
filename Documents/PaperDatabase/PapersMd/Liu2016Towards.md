@@ -1,0 +1,20 @@
+---
+tags:
+  - topic/modeling
+  - method/optimization
+  - method/simulation
+---
+
+![[Liu2016Towards.png|640]]
+
+## 摘要
+我们提出一种用于实时物理基础仿真的新方法，支持多种类型的高弹性材料。先前的方法如基于位置的动态（Position Based Dynamics）或投影动态（Projective Dynamics）速度很快，但只支持有限的材料集合；甚至诸如 Neo-Hookean 弹性之类的经典材料也不受支持。最近 Xu 等人 [2015] 引入了新的“以样条为基础的材料”，艺术家可以通过它们轻松控制材料属性以实现所需的动画效果。这些材料的仿真目前依赖牛顿法，即使每个时间步只迭代一次也较慢。在本文中，我们表明投影动力学可以被解释为拟牛顿方法。这一见解使得对包括 Neo-Hookean、基于样条的材料等在内的大类高弹性材料的仿真变得非常高效。拟牛顿解释还使我们能够利用数值优化的思想。特别地，我们展示了通过使用 LBFGS 更新（有限内存的布鲁登-弗莱彻-戈德弗拉-尚诺算法）进一步加速解算器。我们最终的方法通常比牛顿法的一次迭代快十倍以上，同时不牺牲质量。事实上，我们的结果往往比一次牛顿法迭代所得结果更准确。我们的方法也更易于实现，从而降低软件开发成本。关键词：基于物理的动画、材料模型、数值优化。
+
+# Towards Real-time Simulation of Hyperelastic Materials
+
+**作者:** Tiantian Liu, Soﬁen Bouaziz, Ladislav Kavan
+
+## Abstract
+We present a new method for real-time physics-based simulation supporting many different types of hyperelastic materials. Previous methods such as Position Based or Projective Dynamics are fast, but support only limited selection of materials; even classical materials such as the Neo-Hookean elasticity are not supported. Recently, Xu et al. [2015] introduced new “spline-based materials” which can be easily controlled by artists to achieve desired animation effects. Simulation of these types of materials currently relies on Newton’s method, which is slow, even with only one iteration per timestep. In this paper, we show that Projective Dynamics can be interpreted as a quasi-Newton method. This insight enables very efficient simulation of a large class of hyperelastic materials, including the Neo-Hookean, spline-based materials, and others. The quasi-Newton interpretation also allows us to leverage ideas from numerical optimization. In particular, we show that our solver can be further accelerated using L-BFGS updates (Limited-memory Broyden-Fletcher-Goldfarb-Shanno algorithm). Our final method is typically more than 10 times faster than one iteration of Newton’s method without compromising quality. In fact, our result is often more accurate than the result obtained with one iteration of Newton’s method. Our method is also easier to implement, implying reduced software development costs. Keywords: Physics-based animation, material models, numerical optimization.
+
+[阅读原文](../Pdf/Liu2016Towards.pdf)

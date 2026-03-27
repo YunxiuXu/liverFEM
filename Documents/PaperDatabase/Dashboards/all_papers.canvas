@@ -1,0 +1,22 @@
+{
+	"nodes":[
+		{"id":"paper-Riddle2024Surgical","type":"file","file":"PapersMd/Riddle2024Surgical.md","x":0,"y":0,"width":400,"height":400},
+		{"id":"paper-Anonymous2023Energy-based","type":"file","file":"PapersMd/Anonymous2023Energy-based.md","x":500,"y":0,"width":400,"height":400},
+		{"id":"paper-Bender2014A","type":"file","file":"PapersMd/Bender2014A.md","x":1000,"y":0,"width":400,"height":400},
+		{"id":"paper-Liu2016Towards","type":"file","file":"PapersMd/Liu2016Towards.md","x":0,"y":500,"width":400,"height":400},
+		{"id":"paper-Wang2025Group-Based","type":"file","file":"PapersMd/Wang2025Group-Based.md","x":500,"y":500,"width":400,"height":400},
+		{"id":"paper-Escobar-Castillejos2016A","type":"file","file":"PapersMd/Escobar-Castillejos2016A.md","x":1000,"y":500,"width":400,"height":400},
+		{"id":"paper-Macklin2016XPBD","type":"file","file":"PapersMd/Macklin2016XPBD.md","x":0,"y":1000,"width":400,"height":400},
+		{"id":"paper-Bouaziz2014Projective","type":"file","file":"PapersMd/Bouaziz2014Projective.md","x":500,"y":1000,"width":400,"height":400},
+		{"id":"paper-Rangarajan2019Systematic","type":"file","file":"PapersMd/Rangarajan2019Systematic.md","x":1000,"y":1000,"width":400,"height":400},
+		{"id":"paper-Agboh2016A","type":"file","file":"PapersMd/Agboh2016A.md","x":0,"y":1500,"width":400,"height":400},
+		{"id":"paper-Bui2019Corotational","type":"file","file":"PapersMd/Bui2019Corotational.md","x":500,"y":1500,"width":400,"height":400},
+		{"id":"paper-Hamza-Lupa0Haptic","type":"file","file":"PapersMd/Hamza-Lupa0Haptic.md","x":1000,"y":1500,"width":400,"height":400},
+		{"id":"paper-Overtoom2018Haptic","type":"file","file":"PapersMd/Overtoom2018Haptic.md","x":0,"y":2000,"width":400,"height":400},
+		{"id":"paper-Hou2019A","type":"file","file":"PapersMd/Hou2019A.md","x":500,"y":2000,"width":400,"height":400},
+		{"id":"paper-Müller2006Position","type":"file","file":"PapersMd/Müller2006Position.md","x":1000,"y":2000,"width":400,"height":400},
+		{"id":"paper-WU2021Interactive","type":"file","file":"PapersMd/WU2021Interactive.md","x":0,"y":2500,"width":400,"height":400},
+		{"id":"paper-Bjelland2025Haptic","type":"file","file":"PapersMd/Bjelland2025Haptic.md","x":500,"y":2500,"width":400,"height":400}
+	],
+	"edges":[]
+}

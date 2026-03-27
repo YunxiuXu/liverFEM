@@ -1,0 +1,14 @@
+Title: Haptic Feedback, Force Feedback, and Force-Sensing in Simulation Training for Laparoscopy: A Systematic Overview
+
+Author: Evelien M Overtoom, Tim Horeman, Frank-Willem Jansen, Jenny Dankelman, Henk W R Schreuder
+
+Abstract: Objective: To provide a systematic overview of the literature assessing the value of haptic and force feedback in current simulators teaching laparoscopic surgical skills. Data sources: PubMed, Cochrane, Embase, Web of Science, and Google Scholar were searched for relevant studies published up to January 31, 2017, using keywords related to laparoscopic surgery, simulation, and haptic or force feedback. Methods: Duplicates were removed, and titles and abstracts screened. The remaining articles were reviewed in full text and included if they met the criteria. Two types of feedback analyzed and discussed separately: haptic and force feedback. Results: From 4,023 articles identified, 87 were relevant for this review. A descriptive analysis is provided. The added value of haptic interface devices in virtual reality is variable. Haptic feedback is most important for more complex tasks. The interface devices do not require the highest level of fidelity. Haptic feedback leads to a shorter learning curve with a steadier upward trend. Regarding force feedback, force parameters are measured through force-sensing systems in the instrument and/or environment. These parameters, especially when combined with motion parameters, provide box trainers with an objective evaluation of laparoscopic skills. Feedback of force is useful in real time and post-practice, and has been shown to improve training. Conclusions: Haptic feedback is added to virtual reality simulators to increase fidelity and thereby improve training effect. Variable results have been found from adding haptic feedback. It is most important for more complex tasks, but results in only minor improvements for novice surgeons. Force parameters and force feedback in box trainers have been shown to improve training results.
+
+摘要: 目的：对现有模拟器在教导腹腔镜手术技能方面使用触觉反馈和力反馈的价值进行系统综述。数据来源：检索 PubMed、Cochrane、Embase、Web of Science 和 Google Scholar，检索截至 2017 年 1 月 31 日的相关研究，关键词涵盖腹腔镜手术、模拟和触觉或力反馈。方法：去重后筛选题名和摘要，随后全文阅读并纳入符合纳入标准的文章。分析并分开讨论两种反馈类型：触觉反馈和力反馈。结果：共检索到 4,023 篇文章，87 篇符合纳入标准。对数据进行了描述性分析。触觉接口装置在虚拟现实中的附加价值具有变异性。触觉反馈对于更复杂的任务最为重要。界面设备不需要最高保真度。触觉反馈能够缩短学习曲线并呈现更稳定的上升趋势。关于力反馈，通过工具和/或环境中的力传感系统测量力参数。这些参数，尤其是与运动参数结合时，为盒式训练器提供客观的腹腔镜技能评估。力的反馈在实时和课后都能改善训练效果。结论：为提高保真度并因此改进训练效果，触觉反馈被添加到虚拟现实模拟器中。关于增加触觉反馈的效果的结果存在变异；它对更复杂的任务最为重要，但对初学者的改进有限。盒式训练中的力参数和力反馈已被证明能改善训练结果。
+tags:
+  - topic/haptics-overview
+  - topic/force-perception
+  - method/simulation
+  - sensor/tactile-array
+  - topic/biomechanics
+

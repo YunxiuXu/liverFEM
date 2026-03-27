@@ -1,0 +1,1428 @@
+IEEE TRANSACTIONS ON HAPTICS, VOL. 18, NO. 3, JULY-SEPTEMBER 2025
+569
+Haptic Rendering Using Reality-Based Force Proﬁles
+in Surgical Simulation
+Øystein Bjelland
+, Bismi Rasheed
+, Intissar Cherif, Andreas Fagerhaug Dalen
+, Amine Chellali
+,
+Martin Steinert
+, and Robin T. Bye
+, Senior Member, IEEE
+Abstract—This paper presents a novel method for simplify-
+ing kinesthetic haptic rendering of complex contact interactions
+in arthroscopic surgery training simulators using reality-based
+force proﬁles. We demonstrate continuous kinesthetic feedback for
+applications to arthroscopic knee portal creation and diagnostic
+meniscusexamination.Thisinvolvesmeasuringcharacteristicforce
+proﬁles in ex vivo experiments, simulator implementation in SOFA,
+and performing user validation experiments. When comparing the
+methodwithlinear-elastic-basedhapticfeedbackformeniscusstiff-
+ness discrimination, novices had difference thresholds of 1.80 MPa
+(linear-elastic) and 1.47 MPa (reality-based), while experts showed
+thresholds of 0.99 MPa and 1.39 MPa, respectively, indicating ﬁner
+sensitivity among experts. Experts also used signiﬁcantly less force
+(p< 0.05) and had shorter decision times (p< 0.05) than novices
+across both methods, indicating construct validity. Although kines-
+thetic feedback was veriﬁed with ex vivo experiments for portal cre-
+ation, user validation was here inconclusive due to minor inconsis-
+tencies in the integration of visual and haptic feedback. Limitations
+include triggering material removal via instrument penetration
+instead of haptic force limits, as well as omitting contact vibrations.
+The method gives only a minor reduction in computation speed.
+Examples are available on GitHub.
+Index Terms—Haptic feedback, kinesthetic feedback, arthro-
+scopic surgery, simulation.
+Received 16 September 2024; revised 4 February 2025 and 7 May 2025;
+accepted 14 May 2025. Date of publication 16 May 2025; date of current
+version 19 September 2025. This work was supported by the NTNU - Norwegian
+University of Science and Technology. This article was recommended for pub-
+lication by Associate Editor C. Pacchierotti and Editor-in-Chief D. Prattichizzo
+upon evaluation of the reviewers’ comments. (Corresponding author: Øystein
+Bjelland.)
+This research involves the use of human cadaveric specimens, and has been
+considered by the Norwegian Research Ethics Committee (REC), Application
+214114. The study has followed the ethical principles for medical research
+involving human subjects outlined in the Declaration of Helsinki.
+Øystein Bjelland, Bismi Rasheed, Martin Steinert, and Robin T. Bye are with
+the Departments of ICT and Natural Sciences and Mechanical and Industrial
+Engineering, NTNU - Norwegian University of Science and Technology, 6009
+˚Alesund, Norway (e-mail: oystein.bjelland@ntnu.no; bismi.rasheed@ntnu.no;
+martin.steinert@ntnu.no; robin.t.bye@ntnu.no).
+Intissar Cherif is with the Department of Computer Science, Université de
+Biskra, Biskra 07000, Algeria, and also with the Department of Computer
+Engineering, Université d’Évry, Université Paris-Saclay, 91000 Évry, France
+(e-mail: intissar.cherif@univ-biskra.dz).
+Andreas Fagerhaug Dalen is with the Department of Research and In-
+novation, ˚Alesund General Hospital, 6017 ˚Alesund, Norway (e-mail: an-
+dreas.fagerhaug.dalen@helse-mr.no).
+Amine Chellali is with the Department of Computer Engineering,
+Université d’Évry, Université Paris-Saclay, 91000 Évry, France (e-mail:
+amine.chellali@univ-evry.fr).
+Digital Object Identiﬁer 10.1109/TOH.2025.3570810
+I. INTRODUCTION
+C
+OMPUTER-BASED simulations are of increasing impor-
+tance for ﬁlling the training gap needed to transition from
+resident doctor to specialist in surgery. Arthroscopic surgery
+is a ﬁeld within orthopedics that is concerned with minimally
+invasive surgery on joints to reduce pain or restore joint function.
+A handful of commercial training simulators exist for arthro-
+scopic surgery, such as Virtamed ArthroS (Switzerland), Surgi-
+calScience ArthroMentor (Sweden) and Simendo Arthroscopy
+(USA). However, none of these include training in arthroscopic
+portal placement [1], despite being ranked as the second highest
+priority skill in arthroscopy [2]. The role of haptic feedback
+in such simulators have been described as very important. For
+example, in an editorial article in Arthroscopy from 2019, R.M.
+Frank concludes that “the value of any VR simulator that does
+not provide tactile feedback (...) is unclear” [3]. Moreover,
+in a review from 2019, Overtoom et al. assessed the value
+of haptic feedback in simulation training for laparoscopy [4].
+They found that variable results have been found from adding
+haptic feedback, because existing systems cannot provide the
+same tactility as in fresh frozen cadavers. They also found that
+surgeons consider the lack of tactile feedback as an important
+weakness in existing simulators.
+To model haptic interactions involved with arthroscopic knee
+surgery, probing and cutting in soft and hard tissues must
+be addressed. Sensory substitution through cutaneous/tactile
+feedback has been demonstrated for many applications within
+robotic surgery [5]. However, virtual reality (VR) simulations
+are not constrained by safety issues with stability of grounded
+kinesthetic feedback, as no patient harm is risked. Rather, we
+argue that functional task alignment, which refers to whether
+training is transferable to the operating room, is best pre-
+served through kinesthetic haptic feedback. This is because
+cutaneous/tactile stimuli are also naturally conveyed through
+kinesthetic feedback, and are representative for arthroscopy, as
+the surgeon mostly uses an instrument to manipulate tissue. Such
+functional tasks can include triangulation, which involves pro-
+prioception, handling specialized surgical instruments, which
+require the development of dexterous motor skills, and learning
+the tactile sensation of tissues through a surgical instrument.
+For suspected meniscus injury, the surgeon creates lateral and
+medial incisions and then introduces a camera and a probe into
+the knee compartment for examination. Two tasks relying on
+dexterous motor skills and tactility are (i) creating incisions
+1939-1412 © 2025 IEEE. All rights reserved, including rights for text and data mining, and training of artiﬁcial intelligence and similar technologies.
+Personal use is permitted, but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html for more information.
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+570
+IEEE TRANSACTIONS ON HAPTICS, VOL. 18, NO. 3, JULY-SEPTEMBER 2025
+using a scalpel blade, where an overshoot could injure the
+ligaments, menisci and cartilage tissues, all of which have little
+healing potential, and (ii) assessing the stiffness of the meniscus
+tissue by probing, as a decrease in stiffness has been found to
+indicate meniscus degeneration [6]. A degenerative meniscus
+could cause arthrosis, and therefore the stiffness of the tissue
+couldaffectthedecisionofwhethertoresectorsutureameniscus
+tear. Convincing haptic display is, therefore, essential for safely
+practicing these skills. Following general triangulation, portal
+creation, and examination have been identiﬁed as the most
+important skills for simulation training in arthroscopy [2].
+Our work focuses on haptic modelling of complex con-
+tact interactions experienced in surgery. We propose a reality-
+based method for enhancing kinesthetic feedback in a three-
+dimensional (3D) ﬁnite element (FE) simulation environment
+by enabling the use of empirically measured characteristic force
+proﬁles. The method is demonstrated for applications in the
+human knee, with arthroscopic portal creation and meniscus
+examination as examples. However, the method is applicable
+to any type of surgery.
+II. RELATED WORK AND CONTRIBUTIONS
+A. Related Work
+Computing mechanical forces from interactions between a
+virtual surgical instrument and a biomechanical tissue model
+lies at the core of this work. The computations are on the
+biomechanical physics side constrained by the need to satisfy
+visual refresh rate requirements and perform collision detection,
+in the range of 25–30 Hz. The mass-spring method (MSM) was
+previously popular due to its low computational load. However,
+it is difﬁcult to achieve a realistic force response from tuning in-
+dividual springs. Position-based dynamics (PBD) works directly
+on positions to solve geometric constraints, which makes it fast
+and free of instabilities. It has recently been applied for surgical
+simulations in laparoscopy and endoscopy [7]. However, since
+stiffness depends on the time step, it is challenging to achieve a
+realistic force response [8]. The ﬁnite element method (FEM) is
+considered the gold standard in soft tissue biomechanics because
+of its high accuracy force response, even if it has a higher
+computational load than PBD and MSM [9].
+On the haptic side, computations need to meet refresh rates of
+about 500–1000 Hz to satisfy stability of the haptic device [10],
+as well as the sensitive tactile receptors of individuals [11].
+To meet stability requirements in kinesthetic display of rigid
+bodies, virtual coupling, and the God-object method have been
+introduced [12]. These ensure visual non-penetration as well
+as stiffness and damping parameters that can be tuned to en-
+sure stability and model rigid body haptic interactions. In knee
+arthroscopy, this is relevant for bony structures where geometry,
+friction and texture dominate the haptic sensation. Constraint-
+based methods have later been developed to handle haptic ren-
+deringofcomplexcontactinteractionsinthecontextofFE-based
+soft-tissue simulations. Relevant tissues in the knee include
+the skin, ligaments, and menisci. Here, the contact response
+is formulated as the linear complementary problem (LCP) for
+unilateral contacts [13] and bilateral contacts [14]. This method
+is referred to as constraint-based multi-rate compliant mecha-
+nisms, and contact forces are computed using Lagrange mul-
+tipliers. Because constraints are formulated in a physics loop
+and resolved in a separate haptic loop, haptic refresh rates are
+ensured. Such implementation exists in the Simulation Open
+Framework Architecture (SOFA) [15].
+Multi-rate compliant mechanisms provide an elegant way of
+computing haptic forces from FE-based soft-tissue deformation.
+However, the method is limited by constitutive biomechanics
+inherent in FEM [16]. For example, the co-rotational FEM
+(CFEM) is a neat way of modelling geometric nonlinearities
+while using linear-elastic material parameters, thereby not hav-
+ing to recompute the stiffness matrix at each time step which
+reduces computational loads. However, the contact force re-
+sponse from material deformation is limited to be linear, while
+many interactions are nonlinear. For example, have both skin and
+meniscus tissue been shown to exhibit nonlinear and anisotropic
+behavior [17], [18], which could affect both arthroscopic portal
+creation and meniscus probing exercises. Although FEM with
+hyperelastic constitutive models can describe material non-
+linearities, stability can be compromised under the constraint
+of computational speed which makes it risky for interactive
+real-time simulation [19]. Also, model ﬁtting can be complex.
+Furthermore, it has been shown that coarse FE-meshes used to
+satisfy real-time requirements affect the accuracy, and therefore,
+the same mechanical contact force response as used for calibra-
+tion is not guaranteed [20].
+Moving into soft tissue topology change, such as cutting or
+materialremoval,kinestheticforcefeedbackbecomesevenmore
+challenging. Some work has addressed bone removal scenarios
+but is limited to rigid objects [21]. With FEM, topology change
+is modeled with element removal and subsequent update of the
+global stiffness matrix, of which the updated compliance of the
+soft tissue can be rendered [22], [23]. This is useful for example
+in displaying the compliance of a cut skin. The cutFEM [24]
+and co-rotational cutFEM have been proposed for modelling
+soft tissue cutting [25]. The idea is to use a non-conforming
+background mesh to reduce the computational burden of mesh
+generation. However, a fundamental challenge in haptic render-
+ing during tissue removal is that when an element is removed,
+in what we must assume is a somewhat coarse computational
+mesh, impedance is temporarily removed and dynamic ampliﬁ-
+cations are introduced once the instrument collides with the next
+element, which could compromise stability. Also, the normal
+directions of the cutting surface can vary quite dramatically
+for coarse tetrahedral meshes, making constraint-based haptic
+feedback unsuitable.
+Pioneering work modelled haptic interactions directly from
+tool-tissue interaction experiments in reality-based mod-
+elling [26], [27]. Today, many researchers still rely on reality-
+based methods to develop haptic feedback for surgical proce-
+dures. However, studies often involve specialized devices that
+are mostly not integrated with established simulation frame-
+works that model 3D soft tissue physics due to cumbersome
+implementation [1], [28], [29], [30]. Furthermore, reality-based
+modelling has renewed relevance due to recent technological
+developments. In surgery, such as computer-assisted orthopedic
+surgery (CAOS), the use of intraoperative navigation and force
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+BJELLAND et al.: HAPTIC RENDERING USING REALITY-BASED FORCE PROFILES IN SURGICAL SIMULATION
+571
+registration techniques are making their way into the operating
+room, making interaction data more available than ever [31].
+Data-driven methods, for example, within machine learning,
+have also shown good performance in modelling haptic inter-
+actions [32]. As such, there is a need for structured methods
+to leverage haptic rendering from FE-based simulations using
+reality-based methods.
+B. Contributions
+Motivated by the efforts of Okamura et al. [27] and Peterlik
+et al. [14], the primary objective of this work is to propose,
+demonstrate, and validate a method for reality-based enrichment
+of haptic interactions in the context of constraint-based kines-
+thetic feedback. It addresses the need for displaying complex
+nonlinear contact forces experienced during surgery, as well as
+the fundamental challenge of proving a continuous cutting force
+during soft tissue removal in coarse FE-meshes. We argue that
+the main beneﬁt of this method is that it simpliﬁes the focus
+on critical haptic interactions in the development of interactive
+surgical simulators, enabling safe training of dexterous motor
+skills. Instead of comprehensive material parameter tuning,
+characteristic contact forces can be used directly whether it has
+a linear, nonlinear, or discontinuous shape.
+Our method is based on mapping 3D contact forces, mea-
+sured experimentally in an arbitrary reference frame, into a
+one-dimensional (1D) characteristic force proﬁle. We refer to
+this as a reference force, even though it consists of a force-
+and displacement signal. Although we have applied a similar
+principle in [33] to estimate the elastic moduli of the meniscus,
+our novel contribution is to use this 1D reference force directly
+in a 3D reality-based haptic rendering scenario. Speciﬁcally, the
+experimental reference force (e.g. measured by a specialized
+device [34]) can be rendered by extracting constraint directions
+from the simulation contact forces (see Sections III-A and III-B),
+and then combine the reference force and simulation contact
+force into a new haptic force signal. A method for performing
+this fusion using a Kalman ﬁlter has been introduced in [30], but
+has not been demonstrated in a full 3D simulation environment.
+We also present a practical contribution to transmit these forces
+to a kinesthetic device with three degrees of freedom (DOF)
+force feedback (see Section III-E).
+We demonstrate our method in the case of arthroscopic portal
+creation in the knee joint, in which a reality-based discontinuous
+haptic force is displayed during cutting, as well as for arthro-
+scopic meniscus examination, where an empirical nonlinear
+haptic force is enabled without the need for hyperelastic con-
+stitutive models. The method is implemented using the SOFA
+framework [15] (see Section V). Reference force signals are
+obtained from ex vivo arthroscopic knee surgery experiments
+(see Section IV), and a secondary objective is to describe char-
+acteristic force proﬁles from arthroscopic portal creation and
+meniscus examination.
+Finally, a user validation study (see Section VI) is presented
+as another contribution, where we compare the performance
+of experts and novices using our method with a conventional
+linear-elastic haptic force. In addition to validating our method,
+we investigate whether the shape of the haptic force signal
+affects user performance in meniscus stiffness discrimination.
+We show that experts have a ﬁner sensitivity than novices in
+discriminating meniscus stiffness for both methods, indicating
+construct validity and validating our method. We also show that
+there is no statistical difference between a linear and nonlinear
+force curve in meniscus stiffness discrimination. For arthro-
+scopic portal creation, we ﬁnd no statistical difference in scalpel
+insertion length between experts and novices. This is discussed
+in Section VII.
+III. METHOD: REALITY-BASED KINESTHETIC RENDERING
+A. Extracting Simulation Contact Forces
+Our method begins by extracting contact forces from the
+interaction between an instrument and an FE-based deformable
+or rigid object, as described in [14]. A short summary is pro-
+vided for reference. CFEM is used in our method demonstration
+because it can handle geometric nonlinearities of tissue defor-
+mations. This is needed to produce accurate contact directions
+as well as a convincing visual representation.
+The two types of contacts concerned are holonomic con-
+straints, Φ, meaning bilateral interaction laws such as attach-
+ment and sliding, and non-holonomic constraints, Ψ, meaning
+unilateral interaction laws such as contact and friction. These
+can be denoted
+Φ(x1, x2, . . .) = 0,
+(1)
+Ψ(x1, x2. . .) ≥0,
+(2)
+where x1, x2, . . . are the objects involved with the constraint. In
+our method, we primarily address non-holonomic constraints,
+but holonomic constraints are included in the description for
+completeness. Assuming the deformation of soft tissue is mod-
+elled using CFEM with implicit time integration, we get the
+following general description:
+
+M −dtB −dt2K
+
+
+
+
+A
+Δv =
+dt · f(x(t), v(t)) + dt2Kv(t)
+
+
+
+b
++dtHT λ.
+(3)
+where M is the mass matrix, K is the stiffness matrix, B is
+the damping matrix, f(x(t), v(t)) is the sum of internal and
+external forces not associated with mechanical interactions, dt
+is the time step and v is the velocity. The term, HT λ, gives the
+nodal forces to be applied to compensate for collision. For two
+colliding objects, we have
+A1Δv1 = b1 + dtH1
+T λ
+(4)
+A2Δv2 = b2 + dtH2
+T λ.
+(5)
+This is usually solved indirectly, by ﬁrst computing the free
+motion (no constraints), and then minimizing interpenetration,
+as described in [14].
+From the interaction laws, the Jacobian, H, of the constraints
+can be computed:
+H1(x) =
+ ∂Φ
+∂x1
+; ∂Ψ
+∂x1
+	
+; H2(x) =
+ ∂Φ
+∂x2
+; ∂Ψ
+∂x2
+	
+(6)
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+572
+IEEE TRANSACTIONS ON HAPTICS, VOL. 18, NO. 3, JULY-SEPTEMBER 2025
+This Jacobian represents the direction of the constraints, while
+the forces are computed using the Lagrange multipliers, λ, in
+constraintspace.Fromhere,thecontactforcesincartesianspace,
+λ(x, y, z), can be extracted from the contact forces in constraint
+space, λ(n, t1, t2):
+λ(x, y, z) = HT λ(n, t1, t2)
+(7)
+where n is the force intensity in the normal direction and t1, t2
+are the force intensities in the two tangential directions.
+B. Decomposition of Contact Force and Projection of
+Displacement
+The contact force signal from the simulation in cartesian
+space, as well as the experimentally measured reference force,
+is next decomposed, and mapped from three to one dimension.
+This is done to (i) extract the contact force direction from the
+simulation and (ii) prepare the simulation- and reference forces
+(and displacements) for reference-frame-free signal processing.
+The experimental reference force follows the same procedure
+for force decomposition and displacement projection as the
+simulation contact force, but we limit the explanation to the
+latter here.
+Consider that for non-holonomic constraints, the force vector
+will consist of a dominant direction. For example, this would
+be nearly perpendicular to the surface for frictionless contact.
+The contact force, λ(x, y, z), can then be decomposed into
+magnitude, |λ|, and direction uλ, so that:
+|λ| =
+
+λ2x + λ2y + λ2z
+(8)
+uλ = λ
+|λ|.
+(9)
+If needed, any of the normal or tangential directions could be
+selected instead (λ(n, t1, t2)).
+Characteristic haptic interactions are most generally de-
+scribed by ordinary differential equations, of which reaction
+force is computed from a linear- or nonlinear position-, velocity-
+or acceleration dependent relationship. Therefore, the relevant
+states of a simulation target object, δ, need to be extracted. The
+most relevant target object will in many cases be the haptic
+interaction point (HIP), of which could be attached to a virtual
+surgical instrument model. We use this for our explanation.
+However, we emphasize that states of the nodes in the de-
+formable object involved with the contact also could serve as
+target objects.
+Because the length of the force direction unit vector is one
+by deﬁnition, |uλ| = 1, the projected states, δ(x, y, z) along the
+direction of force, uλ, can be calculated using the vector dot
+product:
+|δλ| = |δ(x, y, z)||uλ|cos(θ) = δ(x, y, z) · uλ.
+(10)
+We are interested in the projected states because these will
+have the same direction as the contact force and the force-state
+relationship can be described. For example, a unidirectional
+force-displacement relationship for meniscus probing can be
+modelled in 3D-space, as shown in Fig. 1. This produces a
+Fig. 1.
+As the instrument tip moves from point A to point B, the direction
+of the resulting force vector for non-holonomic constraints will consist of a
+dominant direction which is determined from the topology. Because the length
+of the force direction unit vector is one, the projected states δ(x, y, z) can be
+calculated using the vector dot product, as shown in (10).
+meaningful 1D representation of the force-state relationship that
+can be used for haptic modelling.
+C. Generating a Reality-Based Characteristic Force Signal
+The purpose of mapping the 3D representation of the con-
+tact force to 1D is to prepare it for intuitive signal fusion or
+replacement by an experimental characteristic reference signal.
+In the reality-based haptic modelling framework, Okamura et al.
+describe three main categories. These are (i) physics-based
+models, such as ordinary differential equations, (ii) empirical
+models, which could be a useful mathematical representation
+without physical meaning, and (iii) a database of recorded inter-
+actions, which are normally rendered by means of interpolation
+methods [26]. Machine-learning based methods would often fall
+into the second category. The goal of our method is to accept
+characteristic force signals, fref, generated from any of these
+methods. In this study, we consider an empirical reference force
+measured by a force-torque sensor (FS), fFS, and position sensor
+(PS), δPS, located in the surgical instrument. This reference force
+is ﬁrst mapped to 1D using equations (8)–(10), or by selecting
+the dominant direction. A simulation reference force, fref, can
+then be generated e.g. using linear interpolation, so that:
+fref,k = fFS,k + (fFS,k+1 −fFS,k)
+δk −δPS,k
+δPS,k+1 −δPS,k
+,
+(11)
+or through an empirical model, such as shown in (23).
+D. Signal Fusion
+To provide a smooth fusion of the experimental reference-
+and contact force signals, a Kalman ﬁlter observer is used.
+Initial efforts on this method have been described in our previous
+work [30], but have not been demonstrated in a 3D simulation
+scenario. We emphasize that this step is optional, and it is possi-
+ble to simply replace the simulation force signal by the reference
+force signal. However, the advantage of using a Kalman ﬁlter for
+signal fusion is that a somewhat “rough” characteristic reference
+force signal can be used to generate a smooth haptic force signal.
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+BJELLAND et al.: HAPTIC RENDERING USING REALITY-BASED FORCE PROFILES IN SURGICAL SIMULATION
+573
+Algorithm 1: Kalman ﬁlter signal fusion.
+1: Take measurement of CFEM forces, |λ|.
+2: Assign uncertainty to CFEM force measurement, Rλ.
+3: Perform prediction and correction based on λ.
+4: Take measurement of reference signal, |fref|.
+5: Assign uncertainty to reference signal measurement,
+Rref.
+6: Perform new prediction and correction based on |fref|.
+A mathematical state-space representation of the haptic force
+signal is formulated, and the haptic force, f, and impulse, j, at
+time step k are selected as states. The state space representation
+leads to the system matrix shown in (12).
+A =
+
+1
+dt
+0
+1
+
+(12)
+As such, the a priori state estimate at time step k is
+ˆx−
+k =
+ˆf
+−
+k
+ˆj
+−
+k
+
+=
+
+1
+dt
+0
+1
+ ˆfk−1
+ˆjk−1
+
+.
+(13)
+As the force signal is sampled by alternating between setting
+the measurement at time step k, zk, equal to |λ| or |fref|, the
+measurement matrix is taken as shown in (14).
+H =
+
+1
+0
+
+(14)
+The discrete Kalman ﬁlter, as presented in [35], is then imple-
+mented using the prediction equations shown in (15) and (16).
+ˆx−
+k = Aˆxk−1
+(15)
+P−
+k = APk−1AT + Q
+(16)
+Here, ˆxk−1 is the a posteriori estimate at time step k −1, P−
+k is
+the a priori estimate error covariance at time step k, Pk−1 is the
+a posteriori estimate error covariance at time step k −1, and Q
+is the system covariance matrix.
+The measurement update equations are shown in (17), (18)
+and (19), where Kk is the Kalman gain, ˆxk is the a posteriori
+state estimate, Pk is the a posteriori estimate error covariance
+at time step k, I is the identity matrix, and the rest as previously
+deﬁned.
+Kk = P−
+k HT (HP−
+k HT + R)−1
+(17)
+ˆxk = ˆx−
+k + Kk(zk −Hˆx−
+k )
+(18)
+Pk = (I −KkH)P−
+k
+(19)
+The process noise covariance matrix, Q, and the measurement
+noise variances associated with the simulation, Rλ and reality-
+basedsignalRref,mustbesetinadvance.Theyarehereassumed
+to be constant. The tuning of these parameters will determine
+how much the reference force signal is trusted, and thereby
+how much of it should be weighted in the haptic force signal
+formation. They will also inﬂuence how much noise is removed.
+The signal fusion is performed as shown in Algorithm 1.
+E. Transmitting Force to Haptic Device
+After the new haptic force signal magnitude, f, has been
+generated either from (i) substitution of the magnitude of reality-
+based reference force signal, |fref|, or (ii) by signal fusion (see
+Section III-D), a new haptic force vector is generated from f
+and the simulation contact force direction vector, uλ. We here
+present a practical contribution for transmitting these forces to
+a kinesthetic haptic device.
+For contacts not involving topology change, the haptic force
+vector is generated by multiplying the haptic force signal mag-
+nitude with the contact force direction vector given at the current
+time step, so that
+fk = uλ,kfref,k.
+(20)
+For contacts involving topology change, a problem arises that
+the contact force direction can potentially vary quite chaotically
+fromonetimesteptothenext.Inthecaseoftetrahedralelements,
+this is because collision detection algorithms base the contact
+direction on the new normal directions of the element surface.
+For coarse tetrahedral meshes, the direction changes can be
+large. To overcome this, the initial contact force direction vector
+before elements are removed, u0
+λ, is used so that:
+fk = u0
+λfref,k.
+(21)
+This provides a justiﬁed representation for straight cuts. For
+more intricate material removal operations, such as arthroscopic
+meniscus shaving, the opposing direction of motion of the haptic
+interaction point should be used instead, so that:
+fk = δk
+|δk|fref,k.
+(22)
+The force vector is ﬁnally sent to the haptic device driver for
+haptic display.
+IV. DATA COLLECTION EXPERIMENTS: EX VIVO
+KNEE ARTHROSCOPY
+A. Overview
+This section describes experiments measuring characteristic
+tool-tissue interactions for portal creation and meniscus exam-
+ination in arthroscopic knee surgery. Ex vivo human cadaveric
+knee joints were used. The research was approved by the Re-
+gional Ethics Committee under reference 214114. The use of ca-
+daveric specimens followed the principles underlined in the Dec-
+laration of Helsinki. While we have previously obtained elastic
+moduli of the menisci from the same knee specimens in [33], this
+section presents novel contribution that describe force character-
+istics from arthroscopic portal creation and meniscus probing,
+measured by a force- and position sensor located in the surgical
+instrument.
+B. Specimen Sourcing and Preparation
+Five cadaveric knee joints were obtained (Science Care, USA)
+with a mean age of 71.8 years (68–78). The specimens, including
+anatomical mid-femur to mid-tibia and ﬁbula, were sourced
+from two right knees (RK1, RK2) and three left knees (LK1,
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+574
+IEEE TRANSACTIONS ON HAPTICS, VOL. 18, NO. 3, JULY-SEPTEMBER 2025
+Fig. 2.
+Apparatus overview for ex vivo experiments. (a) Biomechanical in-
+dentation testing of meniscus specimens using the Instron 34SC-5 test system.
+(b) CAD-model of arthroscopic tracker instrument, including ATI Nano25 F/T
+sensor, and ZED Mini stereo camera. The picture shows the setup for the
+arthroscopic probe. For portal creation, a scalpel holder and Swan-Morton
+Scalpel blade no.11 were used. (c) The arthroscopic data collection experiment
+setup. Cadaveric knee specimens were attached to a bench using a vice. The
+arthroscopic tracker instrument was used to measure surgeon interaction forces
+and instrument position.
+LK2, LK3). The donor cohort consists of three males and two
+females, with a mean body mass index of 26.6 (17–33). Prior
+surgeries on knee joints were considered as an exclusion criteria
+during procurement. The knee joints were stored in a freezer
+at −28oC and were thawed at room temperature for 24 hours
+before arthroscopy.
+C. Test Setup and Procedure
+An arthroscopic tracker instrument was used to measure con-
+tact forces and instrument pose [34]. The reported accuracy was
+±1 mm for position, and 0.5◦for orientation. The sampling rate
+was about 38 Hz. The force readings were bias-compensated and
+then transformed from the sensor coordinate system to the global
+coordinate system using the pose data. For meniscus probing ex-
+periments, position readings were transformed from the camera
+coordinate system to the instrument tool tip coordinate system.
+The arthroscopic surgery was performed by an experienced
+orthopedic surgeon. For each knee, a lateral and medial portal
+was established using a scalpel, and the force and pose data
+was saved to a CSV ﬁle. Next, a trocar and arthroscope were
+inserted. The menisci (lateral and medial) were then examined
+by two probings on the superior surface in the posterior, mid, and
+anterior regions. This force and pose data was saved to a separate
+CSV ﬁle. No water was injected into the knee. The procedure,
+includingthearthroscopiccameraview, wasvideorecorded. The
+different phases of the procedures could be veriﬁed by cross-
+checking the time stamp in the video with the measured force-
+pose data.
+After arthroscopy, the menisci were extracted and biomechan-
+ical indentation experiments were performed using an Instron
+electromechanical testing system (model 34SC-5) to identify
+the elastic modulus for each meniscus specimen, as described
+in [33]. An apparatus overview is shown in Fig. 2.
+Fig. 3.
+Force signal components (x, y, z) for arthroscopic portal creation in
+LK1, and the corresponding force signal magnitude (right). The locations of
+skin puncture and joint capsule puncture are marked.
+TABLE I
+THE LATERAL PORTAL SKIN PUNCTURE FORCE (LSPF), LATERAL PORTAL
+JOINT CAPSULE PUNCTURE FORCE (LJCPF), MEDIAL PORTAL SKIN PUNCTURE
+FORCE (MSPF) AND MEDIAL PORTAL JOINT CAPSULE PUNCTURE FORCE
+(MJCPF)
+TABLE II
+THE MEAN PEAK FORCE, |fpeak|, THE MEAN ELASTIC MODULUS, E, AND
+MEAN POISSON’S RATIOS, ν, FOR THE ANTERIOR, MID AND POSTERIOR
+REGIONS OF THE LATERAL AND MEDIAL MENISCI
+D. Results
+1) Portal Creation: A characteristic force curve of arthro-
+scopic portal creation from the medial side of left knee 1 (LK1)
+is shown in Fig. 3. The portal creation consisted of (i) skin tissue
+deformation, (ii) skin puncture, (iii) joint capsule deformation,
+(iv) joint capsule puncture. For the lateral portals, the mean skin
+puncture force (LSPF) was 2.32 N, and the mean joint capsule
+puncture force (LJCPF) was 8.63 N. For the medial portals, the
+mean skin puncture force (MLSPF) was 2.38 N, and the mean
+joint capsule puncture force (MJCPF) was 8.56 N (see Table I).
+The length of the the arthroscopic scalpel blade was 40 mm.
+2) Meniscus Probing: Fig. 4 shows the resulting force signal
+from arthroscopic probing of the medial meniscus in left knee
+1 (LK1). The peak forces measured in each of the respective
+regions (anterior, mid, posterior) of the menisci (lateral, medial)
+of the ﬁve knees are shown in Table II. In addition, the corre-
+sponding elastic moduli (E and Poisson’s ratios, ν), from [33]
+are included for comparison. Fig. 5 shows the region-wise
+differences of the characteristic nonlinear force-displacement
+curve measured by biomechanical indentation.
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+BJELLAND et al.: HAPTIC RENDERING USING REALITY-BASED FORCE PROFILES IN SURGICAL SIMULATION
+575
+Fig. 4.
+Force signal components (x,y,z) for arthroscopic meniscus probing
+of the medial meniscus in left knee 1 (LK1) (top), and the corresponding force
+signalmagnitude(bottom).Theprotocolwastwoprobingsintheposteriorregion
+(P1, P2), two in the mid-region (M1, M2), and two in the anterior region (A1,
+A2). The characteristic force peaks are indicated. A close-up of M1 and M2 is
+shown to the right.
+Fig. 5.
+The characteristic force-displacement curve for 1 mm indentation of
+meniscus tissue. Curves for the anterior, mid, and posterior regions are shown,
+as well as the resulting identiﬁed elastic moduli.
+V. SURGICAL SIMULATION IMPLEMENTATION: KNEE
+ARTHROSCOPY IN SOFA
+A. Biomechanical Simulation Model and Haptic Setup
+A biomechanical simulation model of the knee joint was
+developed in the Simulation Open Framework Architecture
+(SOFA) [15]. Anatomical models were based on magnetic reso-
+nance imaging models that were automatically segmented [36].
+Computation models were modeled in CAD (Siemens NX,
+Germany) using MRI models as a template, and subsequently
+meshed using linear tetrahedral elements in GMSH [37]. The
+mesh density was tuned to meet real-time requirements of
+30 Hz for the physics thread on a laptop (11th Gen Intel Core
+i5-11300H @ 3.10 GHz CPU, 8 GB memory). Surface meshes
+extracted from the computation models were used as collision
+models. For the lateral meniscus, the computation model con-
+sisted of 1263 tetrahedral elements, the collision model 512
+vertices,andthevisualmodel11722vertices.Forportalcreation,
+the skin model consisted of 342 vertices for the visual and colli-
+sion models, and 946 tetrahedral elements for the computation
+model. Other visual models present in the portal creation scene
+made up a total of about 1.7 million vertices.
+Surgical scalpel and arthroscopic probe instrument models
+were developed in CAD, and modeled as rigid bodies. The haptic
+interaction point and virtual instrument model were connected
+with springs, but the spring stiffness (translational and rota-
+tional)wassetveryhightoavoiddisturbancewhenstudyingcon-
+tact forces. Because the tool-tissue interactions were generally
+for soft tissues, this was unproblematic for stability. A Geomagic
+Touch haptic device (3D Systems, USA) was used for haptic
+display. The Geomagic plugin was used in SOFA for handling
+device kinematics and actuation. SofaPython3 was used for
+accessing simulation variables and computing haptic forces.
+The SofaPython3 plugin exposes C++ components available in
+SOFA to Python. The haptic interaction point was selected as
+the target object, δ, and displacement was selected as the state.
+B. Application to Arthroscopic Portal Creation
+To model arthroscopic portal creation, tissue removal and
+haptic force modelling are needed. The skin was modeled as
+a deformable object using CFEM, with E = 15 MPa. Other
+anatomical models were included as visual representations only.
+Topology change was modeled by removing elements in contact
+with the virtual scalpel [23], as implemented in the SofaCarv-
+ing plugin. Fixed boundary conditions were applied at the top
+and bottom surfaces, as well as near the patellar tendon, and
+lateral- and medial collateral ligaments. The carving distance
+and material stiffness were tuned by trial and error.
+The characteristic force curve of the arthroscopic portal cre-
+ation was modeled by performing linear interpolation in the
+measured force signal magnitude, as shown in Fig. 3. Because
+the material removal simulation using CFEM does not produce
+meaningful contact forces during cutting, the initial direction
+of the contact force (before material removal) was used for the
+haptic forces (see (21)). This collision detection was also used to
+trigger the computation of the haptic force. Because there was
+no meaningful simulation contact force, λ, signal fusion was
+omitted and the reference force scaled to ﬁt the force capacity
+of the haptic device was used.
+The resulting reference signal magnitude, haptic force signal
+magnitude, as well as force components of the haptic signal in
+the global simulation reference frame, are shown in Fig. 6. The
+simulation speed for the physics thread was about 25 Hz.
+C. Application to Meniscus Examination
+The characteristic force-displacement curve of meniscus ex-
+amination was modelled as a nonlinear quadratic function fol-
+lowing the characteristics shown in Fig. 5. The model takes in
+the magnitude of the linear-elastic force signal, |λ|, from the
+co-rotational ﬁnite element simulation, which uses the identiﬁed
+elastic modulus, E, as described in section IV-D2. We deﬁne our
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+576
+IEEE TRANSACTIONS ON HAPTICS, VOL. 18, NO. 3, JULY-SEPTEMBER 2025
+Fig. 6.
+(a) Wireframe view of the knee model used in the arthroscopic portal
+creation simulation. (b) Shaded view of the knee model. This is the user view.
+(c) Simulated reference signal magnitude and scaled haptic force signal magni-
+tude. The skin puncture and joint capsule puncture locations are indicated. (d)
+The resulting force components of the haptic force signal in the global simulation
+reference frame.
+nonlinear force signal to be:
+|fref| = β|λ|2,
+(23)
+where β is deﬁned as β =
+1
+fpeak , and fpeak is the force where
+|fref| = |λ|. Ideally, we let fpeak = 10.77 N as shown in Table II.
+However, for our demonstration, the haptic device is limited
+to a maximum force of 3 N. Therefore, the user will apply
+a larger deformation than expected because of the low force
+feedback, and the computed virtual contact force, λ, will become
+correspondingly higher. Thus the force where |fref| = |λ| needs
+to be set higher. Mapping the force range (0 N, 10.77 N) →
+(0 N, 3 N), we let fpeak = 10.77 N · 3 = 32.31 N. The reference
+force signal, |fref|, was then fused with λ using the Kalman ﬁlter,
+as described in Section III-D, with Rλ = 0.001 Rref = 0.774.
+Finally, haptic force signal magnitude, |fhaptic|, is scaled to
+ﬁt the force range of the haptic device to ensure stable hap-
+tic display. The achieved refresh rate for the physics thread
+was about 47 Hz during continuous contact. This effectively
+computes a nonlinear characteristic force signal based on a
+linear-elastic modulus. An example of resulting force signals
+for elastic modulus, E = 3.18 MPa, is shown in Fig. 7.
+VI. USER VALIDATION EXPERIMENTS: CONSTRUCT AND FACE
+VALIDITY
+A. Overview
+This section describes user experiments that evaluate our
+reality-based method compared to linear-elasticity based kines-
+thetic feedback. We compare the performance of experts and
+novices in an arthroscopic portal creation and a meniscus exam-
+ination task with respect to construct validity. Construct validity
+refers to discriminating between novice and expert performance,
+and assumes that if the expert perform better than the novice, the
+Fig. 7.
+(a) Visualization of the contact between probe and meniscus in SOFA.
+The elastic modulus of the meniscus was set to E = 3.18 MPa. (b) The resulting
+contact forces, λ(x, y, z), from mechanical interaction between the probe and
+meniscus tissue. (c) The SOFA contact force magnitude, |λ|, compared to the
+nonlinear reference signal, |fref |, and fused force signal, |fhaptic|. (d) The
+haptic signal scaled to the force range of the haptic device.
+simulationreﬂectsskillsthatresemblesurgicalskills[3].Finally,
+some aspects on face validity, which is a subjective qualitative
+measure of how well the simulation represents actual surgery, is
+included.
+B. Study Design
+Handling of personal data according to GDPR was considered
+by the Norwegian Agency for Shared Services in Education and
+Research (Sikt) under reference 599785. All participant data
+was made anonymous. Informed consent was obtained from all
+participants.
+24 participants were recruited to participate in the study, of
+which 12 (10 males, 2 females) were experienced orthopedic
+surgeons (> 1 year arthroscopy experience), and 12 (8 males,
+4 females) had no prior surgical experience. Experts were re-
+cruited from two different hospitals. The mean age was 43.6
+years in the expert group and 37.2 years in the novice group. For
+the experts, the mean experience with arthroscopic surgery was
+11.8 years. The experiment procedure consisted of three main
+phases: familiarization, meniscus examination, and knee portal
+creation. The setup is shown in Fig. 8.
+1) Familiarization: The purpose of the familiarization phase
+was to reduce familiarization bias. Participants were given in-
+structions on how to operate the haptic device and interact with
+tissue in the virtual environment. They were then invited to
+explore a knee model consisting of rigid bones (femur, patella,
+tibia, ﬁbula), deformable meniscus tissue (lateral and medial),
+deformable ligaments (ACL and PCL), and visual models (LCL,
+PCL, muscle). Participants were encouraged to feel the differ-
+ence between rigid and deformable objects.
+2) Meniscus Examination: The purpose of the meniscus ex-
+amination phase was to distinguish between various levels of
+meniscus stiffness. This exercise is clinically relevant because
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+BJELLAND et al.: HAPTIC RENDERING USING REALITY-BASED FORCE PROFILES IN SURGICAL SIMULATION
+577
+Fig. 8.
+User experiment setup with Geomagic Touch haptic device and simu-
+lation scenes developed in SOFA v.22.06. Participants ﬁlled out a paper survey
+during the experiment.
+TABLE III
+DURING PHASE 2), PARTICIPANTS WERE ASKED TO IDENTIFY WHETHER THEY
+PERCEIVED THE HIGHER OR LOWER MODULUS AS THE STIFFEST.
+it represents distinguishing between healthy and degenerative
+meniscus tissue in diagnostic knee arthroscopy. The difference
+threshold (DT) was used as a metric, and established for both
+the linear-elastic and reality-based methods. The DT indicates
+a point at which participants can no longer reliably distinguish
+between stiffness levels, and was taken as the midpoint of a
+psychometric function spanning from chance to perfect per-
+formance, according to [38]. Following construct validity, we
+hypothesize that experts have ﬁner sensitivity than novices for
+both methods. For this probing task, we emphasize that the
+goal is not to improve sensitivity but to improve realism. We
+therefore use an exercise requiring ﬁne sensitivity to show that
+the reality-based method can achieve the same sensitivity as a
+linear-elastic method, which is considered the gold standard.
+Thus, we hypothesize no difference in sensitivity between the
+two methods.
+Five different elastic moduli were included based on our ex
+vivo modulus measurements as well as reported decrease in
+modulus based on degenerative arthrosis development [6], [33].
+The moduli were 5.05 MPa, 4.24 MPa, 3.85 MPa, 2.67 MPa
+and 1.41 MPa. The moduli were combined to form ﬁve different
+difﬁculty levels based on differences in elastic moduli. A higher
+difﬁculty was associated with a smaller difference in modulus.
+An overview is shown in Table III.
+Participants were shown two visually identical lateral menisci
+in the simulation environment and asked to report in a paper
+survey which meniscus they perceived as the stiffest. The test
+design was a three-option forced choice, with options being
+meniscus A (left), meniscus B (right), or equally stiff. The
+test was repeated ten times. In each participant group (experts
+and novices), half of the participants experienced reality-based
+TABLE IV
+STATISTICAL COMPARISON OF DT USING MANN-WHITNEY U TEST.
+kinesthetic feedback (see section V-C), and the other half was
+from linear-elastic based kinesthetic feedback. User force, dis-
+placement, and decision time were automatically recorded in
+the software. After the ten tests, experts were invited to ﬁll out
+a paper survey regarding how similar the simulation was to the
+actual procedure. The survey included Likert-scale questions
+rating haptic feedback and visual representation on a scale from
+one to ﬁve, as well as free-text answers.
+3) Knee Portal Creation: The purpose of the third task was
+to practice knee portal creation using a scalpel. For this proce-
+dure, kinesthetic feedback is missing in existing commercial
+arthroscopy simulators. Following construct validity, we hy-
+pothesize that experts insert the scalpel a shorter distance than
+novices after puncture occurs.
+Participants were asked to create one medial and one lateral
+arthroscopic portal in a knee model using a virtual scalpel (see
+section V-B). The instructor explained that the task was to insert
+the scalpel as a stab incision and that the users would feel a
+‘pop’ when the joint capsule was punctured. Further, it was
+explained that the participants would need to apply enough force
+to puncture the joint capsule, but take care not to damage internal
+structures. The procedure was repeated three times, but only
+the last two experiments were included to reduce familiarity
+bias. Scalpel insertion length was automatically measured using
+the software. Experts were invited to ﬁll out a paper survey
+with Likert-scale questions and free-text answers regarding the
+realism of the simulation after completion.
+C. Results
+1) Meniscus Examination Difference Threshold: Statistical
+analysis of the survey data was performed in Python (v3.11.2)
+using the Scipy statistics module. The data failed to meet the
+normality assumption upon visual histogram inspection. The
+Mann-Whitney U test was therefore chosen to compare data.
+The mean identiﬁcation score for all four groups was 95.8%
+for level 1 (3.64 MPa difference in stiffness). The groups were
+linear-elastic novice (LN), reality-based novice (RN), linear-
+elastic expert (LE), and reality-based expert (RE). As such, level
+1 was used as a reference of comparison with the other difﬁculty
+levels.
+The results are shown in Table IV. All groups could identify
+level 2 with more than 90% accuracy. For level 3, experts per-
+formed better than novices in the linear group, but the difference
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+578
+IEEE TRANSACTIONS ON HAPTICS, VOL. 18, NO. 3, JULY-SEPTEMBER 2025
+Fig. 9.
+Psychometric functions ﬁtted to survey data. The LE group had the
+lowest DT (highest sensitivity), and the LN group had the highest DT (lowest
+sensitivity).
+TABLE V
+DESCRIPTIVE STATISTICS FOR DECISION TIME, MEAN VIRTUAL CONTACT
+FORCE AND MAXIMUM DISPLACEMENT FOR THE GROUPS EXPERT
+LINEAR-ELASTIC (LE), EXPERT REALITY-BASED (RE), NOVICE
+LINEAR-ELASTIC (LN) AND NOVICE REALITY-BASED (RN)
+for novices was not signiﬁcant (p = 0.06, U = 30.0). There was
+a signiﬁcant difference between level 4 and level 1 for all groups
+(p < 0.05, U = 36.0; 36.0; 33.0; 31.5). This indicates that no
+groups could distinguish between differences in modulus less
+than 0.81 MPa. The difference threshold was therefore higher
+than 0.81 MPa for all groups. For no difference in stiffness,
+the mean score was higher than level 4 for all groups. This
+indicates that it was easier to identify equal stiffness than small
+differences.
+A psychometric Sigmoid function for each group was ﬁtted
+based on the data according to [38]. The curves are shown in
+Fig. 9. The lower asymptote represents the probability of a
+correct answer by chance from the three-option forced choice
+survey. The difference threshold (DT) was found to be 1.80 MPa
+for LN, 1.47 MPa for RN, 0.99 MPa for LE, and 1.39 MPa for
+RE. A lower DT (ﬁner sensitivity) for experts in both the linear-
+elastic and reality-based groups indicates construct validity.
+2) Meniscus Examination - Decision Time, Force Use and
+Deformation: Decision times, mean force, and maximum probe
+displacements were automatically measured during the experi-
+ments. The decision time was deﬁned as the time from ﬁrst con-
+tact until the end. Statistical analysis was performed to compare
+groups LN, RN, LE, and RE. The data did not exhibit deviance
+from normality by visual inspection. A two-way ANOVA test in
+Python was therefore used.
+Descriptive results are shown in Table V. Results show
+that experts had signiﬁcantly shorter decision times than
+novices (F(1,196) = 12.34, p < 0.05, η2
+partial = 0.06), and that
+experts used signiﬁcantly less force (F(1,159748) = 141.88, p <
+0.05, η2
+partial < 0.01). This supports construct validity.
+Further, the decision times were signiﬁcantly shorter
+for reality-based haptics compared to linear-elastic hap-
+tics (F(1,196) = 6.12, p < 0.05, η2
+partial = 0.03). For max dis-
+placements, reality-based groups (combined) had signiﬁcantly
+smaller probe displacements than the linear-elastic group
+(F(1,31276) = 298.99, p < 0.05, η2
+partial = 0.01). However, this
+was primarily due to the novice group, and this trend was not
+apparent in the expert group.
+3) Meniscus Examination - Face Validity: A qualitative as-
+sessment of the face validity was performed from Likert survey
+results and free text answers in the expert group. From the
+ﬁve-point Likert survey, the linear-elastic based haptic feedback
+obtained a mean score of 4.0, and the mean score for the reality-
+based haptic feedback was 3.4. For the visual representation,
+the scores were respectively 3.3 and 4.0 in the linear-elastic
+and reality-based groups. For the free text answers, four experts
+commented that missed collision detection with “pop-through”
+was disturbing (both LE and RB groups). Three commented
+that there was too much visual deformation (both groups).
+Two reported that visual depth perception was challenging, and
+several others also commented on this to the instructor. Five in
+the LE group and four in the RB group reported that the haptic
+feedback was very good. Two in each group reported that the
+haptic feedback was realistic.
+4) Portal Creation - Scalpel Insertion Length: For knee por-
+tal creation, the scalpel insertion length was statistically com-
+pared for experts and novices. The data did not exhibit deviance
+from normality by visual inspection, and a paired T-test was
+therefore used for comparison. The mean insertion length was
+19.91 ± 15.43 mm for the novice group, and 21.25 ± 15.03 mm
+for the expert group. There was no statistically signiﬁcant dif-
+ference between the groups (p = 0.85). The length of the virtual
+scalpel blade was 40 mm.
+5) Portal Creation - Face Validity: A qualitative assessment
+of face validity for portal creation was performed from the
+ﬁve-point Likert survey and free text answers from experts.
+The haptic feedback obtained a mean score of 2.4, and the
+visual representation obtained 2.3. From the free text answers,
+eight out of twelve experts reported that they struggled with
+sense of depth. Three reported that visual cuts removed too
+much material. For the haptic feedback, three reported that the
+joint capsule puncture felt clear, but the skin puncture was less
+distinct. The general feedback was that excessive visual tissue
+removal dominated the overall impression, but haptic feedback
+functioned well on its own.
+VII. DISCUSSION
+Considering the meniscus examination task in the user vali-
+dation study, which represents general soft tissue contact, the
+ﬁndings indicate that the difference threshold was lower for
+experts than novices in both the linear-elastic and reality-based
+groups. This indicates a ﬁner sensitivity for experts. Also,
+experts used less force and had shorter decision times than
+novices. This supports construct validity for both methods.
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+BJELLAND et al.: HAPTIC RENDERING USING REALITY-BASED FORCE PROFILES IN SURGICAL SIMULATION
+579
+When comparing haptic methods for meniscus examination,
+experts had slightly ﬁner sensitivity using the linear-elastic
+method (0.99 MPa) than the reality-based method (1.39 MPa).
+In contrast, novices had slightly ﬁner sensitivity with the
+reality-based method (1.47 MPa) than the linear-elastic method
+(1.80 MPa). From this one might hypothesize that the proposed
+reality-based method confers advantages to novices compared to
+experts. However, qualitative feedback did not provide evidence
+to support this. In addition, the Mann-Whitney test did not reveal
+statistical differences between the methods. The aim was to
+show that the reality-based method provides stable nonlinear
+kinestheticfeedbackmatchingthesensitivityofthelinear-elastic
+method, not to enhance stiffness discrimination sensitivity. A
+limitation of the user study design was that it focused on experts
+and novices and did not consider intermediate levels. Integrating
+participants with intermediate skill levels, such as junior resident
+physicians, could potentially reveal differences in sensitivity
+between methods.
+The arthroscopic portal creation task demonstrated continu-
+ous kinesthetic feedback during soft tissue removal. Here, the
+difference between experts and novices was not statistically
+signiﬁcant (p = 0.85). This could be attributed to a coarse ﬁ-
+nite element mesh which led to minor inconsistencies between
+visual and haptic display during tissue removal. Notably, visual
+perception has been shown to dominate haptic perception, and
+inconsistencies should be carefully avoided [39]. One limitation
+of this method is that visual material removal depends on how
+far the instrument penetrates the tissue, and tissue stiffness and
+boundary conditions also affect instrument travel. While it is
+possible to adjust this factor to align visual and haptic feedback,
+a more effective approach might be to trigger visual material
+removal directly based on haptic force limits. Alternatively,
+a ﬁner mesh would likely yield better results. As such, user
+validation was inconclusive in demonstrating construct validity
+for the entire simulation setup (visual and haptic). However,
+haptic feedback functioned well on its own, with kinesthetic
+force curves consistent with experimental measurements, and
+without reported user issues.
+The simulation setup was limited by the force capacity of the
+hapticdevice(3N)andtherefreshrateofthephysicsthread.This
+was apparent from qualitative feedback from the expert group.
+Oneparticipant(male,42yearsold)explainedtherewasmorevi-
+sual deformation in meniscus examination than expected, which
+was a direct consequence of the force capacity and stability of
+the haptic device. Similar comments were received from experts
+in both the linear-elasticity and reality-based groups, albeit
+the deformation was signiﬁcantly smaller (p < 0.05) for the
+reality-based method. The mean maximum displacement was
+3.3 mm in the linear-elasticity groups (combined), and 2.7 mm
+for the reality-based groups (combined). Using the reality-based
+method, visual deformation can be further limited by setting
+fpeak to a smaller value. However, this requires higher refresh
+rates to avoid stability issues [10]. It is likely that a haptic device
+with a higher force capacity would improve the face validity of
+the simulation. With a mean peak force of 10.77 N in meniscus
+probing experiments, only three commercial kinesthetic devices
+meet this force requirement according to Haptipedia [40]. These
+are the Force Dimension Omega, Phantom Premium 1.5 high
+force, and Haption Virtuose 6D high force. However, consid-
+ering functional task alignment of arthroscopic tasks, such as
+learning tactile sensations and dexterous motor skills of special-
+ized surgical equipment, surgery-like devices, such as Follou
+Haptics could be equally important.
+Considering the computational cost of the proposed reality-
+based method, there was only a minor reduction in speed. For
+the meniscus probing task, the speed was about 80 Hz when the
+probe was moving in free space. During continuous contact us-
+ing only the linear-elastic force feedback, the speed was reduced
+to about 52 Hz. Further, by introducing contact force extraction
+in Python (see (7)), the speed was reduced to about 47 Hz. Fi-
+nally, by introducing nonlinear force computation (23), Kalman
+ﬁlter sensor fusion (Algorithm 1) and transmitting forces to
+haptic device (20), the speed remained at about 47 Hz. It shall
+be noted that contact force extraction, which represented the
+majority of the speed reduction, was implemented in Python, and
+that C++ implementation could minimize this speed reduction.
+This clearly demonstrates that our method did not introduce a
+substantial loss of computation speed.
+A limitation of this study is that it did not consider multimodal
+haptics, for example by including vibrotactile display of contact
+andslipvibrations.Otherstudieshavedemonstratedanimprove-
+ment in perceived realism by displaying transient vibrations in
+combination with kinesthetic feedback during object contact, for
+exampleduringtapping[41],slidingandpuncture[42],andbone
+drilling [28]. These vibrations can be conveyed via the motors of
+the kinesthetic device and can be seamlessly incorporated into
+the proposed method. One challenge of the data collection setup
+in this paper is maintaining an adequate sampling rate for such
+vibrations.
+A challenge in adopting the proposed reality-based method
+could be system integration. To mitigate this, we have made
+a Python implementation openly available on GitHub [43].
+Simulation scenes used in the user validation study are also
+available.
+For future work, the method should be evaluated for char-
+acteristic force signals from other surgical maneuvers such as
+shaving or suturing the meniscus, and from other methods, such
+as neural network models. Also, exploration of the method
+within the position-based dynamics framework is interesting
+because higher refresh rates can be combined with reality-based
+force signals, thereby simultaneously addressing limitations in
+computation speed and characteristics of the haptic force.
+VIII. CONCLUSION
+This paper presented a reality-based method for the enrich-
+ment of kinesthetic haptic rendering in surgical simulations. The
+method was compared to linear-elastic kinesthetic feedback in
+arthroscopic meniscus examination through a user experiment
+with experts and novices. The difference thresholds were found
+to be 1.80 MPa (novice, linear-elastic), 1.47 MPa (novice,
+reality-based), 0.99 MPa (expert, linear-elastic), and 1.39 MPa
+(expert, reality-based). Experts used signiﬁcantly less force and
+had shorter decision times (p < 0.05), supporting construct
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+580
+IEEE TRANSACTIONS ON HAPTICS, VOL. 18, NO. 3, JULY-SEPTEMBER 2025
+validity for both haptic feedback approaches. We remark that
+a well-tuned linear elastic simulation could be sufﬁcient for
+meniscus stiffness discrimination, but is limited to a linear force
+response. The reality-based method also demonstrated continu-
+ous kinesthetic feedback free of instabilities during arthroscopic
+portalcreation,butuservalidationwasinconclusiveduetominor
+inconsistencies with visual and haptic integration. The beneﬁt
+of the presented method is that it simpliﬁes procedure-speciﬁc
+haptic rendering in surgical simulation development.
+ACKNOWLEDGMENT
+The authors would like to thank Hugo Talbot, Paul Baksic, and
+the SOFA consortium for support with simulator development.
+The authors would also like to thank Alf Inge Hellevik and
+Eivind Inderhaug for help with organizing user experiments,
+and the volunteers who participated. Carl Petter Kulseng and
+Kjell-Inge Gjesdal at NordicCAD are recognized for providing
+the anatomical models used in this project.
+REFERENCES
+[1] S. Chae, S.-W. Jung, and H.-S. Park, “In vivo biomechanical measurement
+and haptic simulation of portal placement procedure in shoulder arthro-
+scopic surgery,” PLoS One, vol. 13, no. 3, Mar. 2018, Art. no. e0193736.
+[2] Y. Hui, O. Saﬁr, A. Dubrowski, and H. Carnahan, “What skills should
+simulation training in arthroscopy teach residents? A focus on resident
+input,” Int. J. Comput. Assist. Radiol. Surg., vol. 8, no. 6, pp. 945–953,
+Nov. 2013.
+[3] R. M. Frank, “Editorial commentary: Arthroscopic simulators—Are we
+there yet?,” Arthroscopy: J. Arthroscopic Related Surg., vol. 35, no. 8,
+pp. 2391–2393, Aug. 2019.
+[4] E. M. Overtoom, T. Horeman, F.-W. Jansen, J. Dankelman, and H. W.
+R. Schreuder, “Haptic feedback, force feedback, and force-sensing in
+simulation training for laparoscopy: A systematic overview,” J. Surg.
+Educ., vol. 76, no. 1, pp. 242–261, Jan. 2019.
+[5] C. Pacchierotti and D. Prattichizzo, “Cutaneous/Tactile haptic feedback in
+robotic teleoperation: Motivation, survey, and perspectives,” IEEE Trans.
+Robot., vol. 40, pp. 978–998, 2024.
+[6] K. M. Fischenich, J. Lewis, K. A. Kindsfater, T. S. Bailey, and T. L.
+Haut Donahue, “Effects of degeneration on the compressive and tensile
+properties of human meniscus,” J. Biomech., vol. 48, no. 8, pp. 1407–1411,
+Jun. 2015.
+[7] U. Erden, M. A. Gromski, S. De, and D. Demirel, “Preliminary valida-
+tion of the virtual bariatric endoscopic simulator,” iGIE, vol. 3, no. 4,
+pp. 453–462, Dec. 2024.
+[8] J. Bender, M. Müller, and M. Macklin, “Position-based simulation
+methods in computer graphics,” in EUROGRAPHICS Tutorials, Zürich,
+Switzerland: The Eurographics Association, pp. 1–32, 2015.
+[9] M. Freutel, H. Schmidt, L. Dürselen, A. Ignatius, and F. Galbusera, “Finite
+element modeling of soft tissues: Material models, tissue interaction and
+challenges,” Clin. Biomech., vol. 29, no. 4, pp. 363–372, 2014.
+[10] J. Colgate, M. Stanley, and J. Brown, “Issues in the haptic display of tool
+use,” in Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst. Hum. Robot Interact.
+Cooperative Robots, vol. 3, Aug. 1995, pp. 140–145.
+[11] B. Hannaford and A. M. Okamura, “Haptics,” in Springer Handbook of
+Robotics, B. Siciliano and O. Khatib, Eds. Berlin, Germany: Springer,
+2008, pp. 719–739.
+[12] C. Zilles and J. Salisbury, “A constraint-based God-object method for
+haptic display,” in Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst. Hum.
+Robot Interact. Cooperative Robots, vol. 3, Aug. 1995, pp. 146–151.
+[13] C. Duriez, F. Dubois, A. Kheddar, and C. Andriot, “Realistic haptic
+rendering of interacting deformable objects in virtual environments,” IEEE
+Trans. Vis. Comput. Graph., vol. 12, no. 1, pp. 36–47, Jan./Feb. 2006.
+[14] I. Peterlik, M. Nouicer, C. Duriez, S. Cotin, and A. Kheddar, “Constraint-
+based haptic rendering of multirate compliant mechanisms,” IEEE Trans.
+Haptics, vol. 4, no. 3, pp. 175–187, Jul./Sep. 2011.
+[15] F. Faure et al., “SOFA: A multi-model framework for interactive physical
+simulation,” Soft Tissue Biomech. Model. Comput. Assist. Surg., 2012,
+vol. 11, pp. 283–321.
+[16] O. Bjelland et al., “Toward a digital twin for arthroscopic knee surgery: A
+systematic review,” IEEE Access, vol. 10, pp. 45029–45052, 2022.
+[17] A. C. Abraham, C. R. Edwards, G. M. Odegard, and T. L. H. Donahue,
+“Regional and ﬁber orientation dependent shear properties and anisotropy
+of bovine meniscus,” J. Mech. Behav. Biomed. Mater., vol. 4, no. 8,
+pp. 2024–2030, Nov. 2011.
+[18] P. Shull, K. Bark, and M. Cutkosky, “Skin nonlinearities and their effect on
+user perception for rotational skin stretch,” in Proc. IEEE Haptics Symp.,
+Mar. 2010, pp. 77–82.
+[19] B. Smith, F. D. Goes, and T. Kim, “Stable Neo-Hookean ﬂesh simulation,”
+ACM Trans. Graph., vol. 37, no. 2, pp. 12:1–12:15, Mar. 2018.
+[20] N. Schulmann, S. Cotin, and I. Peterlik, “The effect of discretization on
+parameter identiﬁcation. Application to patient-speciﬁc simulations,” in
+Proc. Comput. Methods, Imag. Visual. Biomech. Biomed. Eng., 2020,
+pp. 237–247.
+[21] M. Kaluschke, R. Weller, N. Hammer, L. Pelliccia, M. Lorenz,
+and G. Zachmann, “Realistic haptic feedback for material removal
+in medical simulations,” in Proc. IEEE Haptics Symp., Mar. 2020,
+pp. 920–926.
+[22] H. Courtecuisse, H. Jung, J. Allard, C. Duriez, D. Y. Lee, and S. Cotin,
+“GPU-based real-time soft tissue deformation with cutting and haptic
+feedback,” Prog. Biophys. Mol. Biol., vol. 103, no. 2, pp. 159–168, Dec.
+2010.
+[23] M. Bro-Nielsen, “Finite element modeling in surgery simulation,” in Proc.
+IEEE, vol. 86, no. 3, pp. 490–503, Mar. 1998.
+[24] E. Burman, S. Claus, P. Hansbo, M. G. Larson, and A. Massing, “CutFEM:
+Discretizing geometry and partial differential equations,” Int. J. Numer.
+Methods Eng., vol. 104, no. 7, pp. 472–501, 2015.
+[25] H. P. Bui, S. Tomar, and S. P. A. Bordas, “Corotational cut ﬁnite element
+method for real-time surgical simulation: Application to needle insertion
+simulation,” Comput. Methods Appl. Mechan. Eng., vol. 345, pp. 183–211,
+Mar. 2019.
+[26] A. Okamura, M. Cutkosky, and J. Dennerlein, “Reality-based models for
+vibration feedback in virtual environments,” IEEE/ASME Trans. Mecha-
+tron., vol. 6, no. 3, pp. 245–252, Sep. 2001.
+[27] A. Okamura, C. Simone, and M. O’Leary, “Force modeling for needle
+insertion into soft tissue,” IEEE Trans. Biomed. Eng., vol. 51, no. 10,
+pp. 1707–1716, Oct. 2004.
+[28] Q. Ha-Van, H. Schwendinger, Y. Kim, and M. Harders, “Design and char-
+acterization of an actuated drill mockup for orthopedic surgical training,”
+IEEE Trans. Haptics, vol. 13, no. 4, pp. 655–667, Oct. 2020.
+[29] A. Galvan, A. K. Da Costa, J. Shields, K. Kho, and A. M. Fey, “Haptic
+simulator for trocar insertion training,” in Proc. IEEE World Haptics Conf.,
+Jul. 2021, pp. 397–402.
+[30] O. Bjelland, M. D. Pedersen, M. Steinert, and R. T. Bye, “Intraoperative
+data-based haptic feedback for arthroscopic partial meniscectomy punch
+simulation,” IEEE Access, vol. 10, pp. 107269–107282, 2022.
+[31] F. Picard, A. H. Deakin, P. E. Riches, K. Deep, and J. Baines, “Computer
+assisted orthopaedic surgery: Past, present and future,” Med. Eng. Phys.,
+vol. 72, pp. 55–65, Oct. 2019.
+[32] J. B. Joolee and S. Jeon, “Data-driven haptic texture modeling and ren-
+dering based on deep spatio-temporal networks,” IEEE Trans. Haptics,
+vol. 15, no. 1, pp. 62–67, Jan. 2022.
+[33] B. Rasheed et al., “Intraoperative identiﬁcation of patient-speciﬁc elastic
+modulus of the meniscus during arthroscopy,” Comput. Methods Programs
+Biomed., vol. 254, Sep. 2024, Art. no. 108269.
+[34] O. Bjelland, L. I. Hatledal, R. T. Bye, and M. Steinert, “Implementation
+and evaluation of an arthroscopic tracker system for intraoperative motion
+tracking and force registration,” in Proc. 37th ECMS Int. Conf. Model.
+Simul., Jun. 2023, pp. 459–465.
+[35] G. Welch and G. Bishop, “An introduction to the Kalman ﬁlter,” University
+of North Carolina at Chapel Hill, White Paper, 1997. [Online]. Available:
+https://perso.crans.org/club-krobot/doc/kalman.pdf
+[36] C. P. S. Kulseng, V. Nainamalai, E. Grøvik, J.-T. Geitung, A. ˚Arøen,
+and K.-I. Gjesdal, “Automatic segmentation of human knee anatomy
+by a convolutional neural network applying a 3D MRI protocol,” BMC
+Musculoskelet. Disord., vol. 24, no. 1, Jan. 2023, Art. no. 41.
+[37] C. Geuzaine and J.-F. Remacle, “GMSH: A three-dimensional ﬁnite ele-
+ment mesh generator with built-in pre- and post-processing facilities,” Int.
+J. Numer. Methods Eng. 79, no. 11, pp. 1309–1331, 2009.
+[38] L. A. Jones and H. Z. Tan, “Application of psychophysical techniques
+to haptic research,” IEEE Trans. Haptics, vol. 6, no. 3, pp. 268–284,
+Jul.–Sep. 2013.
+[39] Y. Xu, S. O’Keefe, S. Suzuki, and S. L. Franconeri, “Visual inﬂuence
+on haptic torque perception,” Perception, vol. 41, no. 7, pp. 862–870,
+Jul. 2012.
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 
+BJELLAND et al.: HAPTIC RENDERING USING REALITY-BASED FORCE PROFILES IN SURGICAL SIMULATION
+581
+[40] H. Seiﬁet al., “Haptipedia: Accelerating haptic device discovery to support
+interaction & engineering design,” in Proc. CHI Conf. Hum. Factors
+Comput. Syst., May 2019, pp. 1–12.
+[41] K.J.Kuchenbecker,J.Fiene,andG.Niemeyer,“Improvingcontactrealism
+through event-based haptic feedback,” IEEE Trans. Vis. Comput. Graph.,
+vol. 12, no. 2, pp. 219–230, Mar./Apr. 2006.
+[42] A. Okamura, J. Dennerlein, and R. Howe, “Vibration feedback models for
+virtual environments,” in Proc. IEEE Int. Conf. Robot. Automat., vol. 1,
+May 1998, pp. 674–679.
+[43] B. Øystein, “Reality-based haptics for SOFA,” Apr. 2025. [Online].
+Available: https://github.com/CHAOS-AES/Reality-Based-Haptics-For-
+SOFA
+Øystein Bjelland received the M.Sc. degree in me-
+chanical engineering from the Norwegian University
+of Science and Technology (NTNU), Trondheim,
+Norway, in 2016, and the Ph.D. degree in engineer-
+ing cybernetics from NTNU, ˚Alesund, Norway, in
+2025. From 2016 to 2020, he was a Mechanical De-
+sign Engineer of applied research and development
+with Prototech AS, working with Subsea Robotics,
+Flow Measurement Technology, Fuel Cell Systems
+for Space Applications, and Metal Additive Manufac-
+turing. Since 2020, he has been a Researcher with the
+Cyber-Physical Systems Lab, NTNU, and is also with Aalesund Biomechanics
+Laboratory and TrollLabs. His research interests include digital twins, mecha-
+tronic systems, and biomechanics, and focuses on advancing haptic technology
+for interactive surgical training simulations in orthopedic applications.
+Bismi Rasheed graduated in civil engineering from
+the University of Calicut, Malappuram, Kerala, India,
+in 2014, the M.Tech degree in computer aided struc-
+tural analysis and design from the Cochin University
+of Science and Technology, Kochi, Kerala, India, in
+2017. She is currently working toward the Ph.D. de-
+greewiththeDepartmentofICTandNaturalSciences
+at NTNU, ˚Alesund, Norway. From 2018 to 2020,
+she was a Research Scholar with the Department of
+Applied Mechanics, Indian Institute of Technology
+Madras, Chennai, India. She is also with the Cyber-
+Physical Systems Laboratory, NTNU ˚Alesund and ˚Alesund Biomechanics Labo-
+ratory. Her research interests include computational modeling, solid mechanics,
+and biomechanics. Current research interests focus on biomechanical character-
+ization, soft tissue deformation modeling, and surgical simulation.
+Intissar Cherif received the Bachelor of Science and
+master’s degrees in computer science: Images and
+artiﬁcial life from the University of Mohamed Khider,
+Biskra, Algeria. She is currently working toward the
+Ph.D. degree in computer science with the University
+of Paris Saclay, IBISC Lab, France, in cotutelle with
+the University of Mohamed Khider, LESIA Lab, Al-
+geria. Her research focuses on the Since 2024, she
+has been a Teaching and Research Assistant with the
+University of Évry - Paris Saclay, where she Teaches
+computer science and advanced programming while
+also supervising technology projects. Her research interests include enhancing
+training effectiveness in technical ﬁelds through immersive simulation tech-
+nologies and ﬁdelity of haptic feedback in virtual reality simulators for learning
+technical gestures. She was the recipient of the Eiffel Excellence Scholarship,
+awarded by the French Government to fund her ongoing Ph.D. degree.
+Andreas Fagerhaug Dalen received the M.D. de-
+gree from the Norwegian University of Science and
+Technology (NTNU), Trondheim, Norway, in 2013.
+He is currently working toward the Ph.D. degree
+in orthopedics. He is also an Orthopedic Surgeon
+with ˚Alesund General Hospital. Since 2018, he has
+been the Head of ˚Alesund Biomechanics Laboratory
+( ˚ABL), where his research is focused on ankle frac-
+turesandbiomechanics.Hisresearchinterestsinclude
+biomechanics and treatment of injuries in shoulders,
+knees, and ankles.
+Amine Chellali received the M.Sc. degree in robotics
+from the Ecole Centrale de Nantes, Nantes, France,
+in 2005, and the Ph.D. degree in HCI from the
+University of Nantes, Nantes, in 2009. From 2009
+to 2011, he was a Research Assistant with the Re-
+search Institute on Communication and Cybernetics
+of Nantes (IRCCyN). From 2011 to 2012, he moved
+to the U.S. to work as a Postdoctoral Associate in
+ergonomics with Remote Environments Laboratory
+(EREL), Tufts University, Medford, MA, USA and
+then as a Research Associate with the Interactive
+Surgical Systems Laboratory (ISSyL), Harvard Medical School. He is currently
+an Associate Professor with the Department of Computer Engineering, Univer-
+sity of Evry Paris-Saclay (France) and also a Co-Leader of the Interaction,
+Mixed Reality, and Assistive Robotics (IRA2) with IBISC Laboratory. His
+research interests include simulator ﬁdelity, haptic interactions, collaborative
+virtual environments, and the transfer and evaluation of human skills, and main
+applicationsareintheﬁeldofsurgicaltraining.Hewastherecipientoftheseveral
+grants for his research on VR simulation from the French National Research
+Agency.
+Martin Steinert was born in Dresden, Germany. He
+received the B.A., M.A., and Ph.D. (Dr.rer.pol) de-
+grees in technology management from the University
+of Fribourg, Fribourg, Switzerland. He has been an
+Assistant Professor with the University of Fribourg,
+Switzerland, Visiting Scholar with MIT, Cambridge,
+MA, USA, and Stanford University, Stanford, CA,
+USA, before changing full time to Stanford Univer-
+sity as the Deputy Director with the Center for Design
+Research (CDR), and an Assistant Professor (Acting)
+of mechanical engineering with Stanford University.
+Since 2013, he has been a Full Professor of engineering design with the Depart-
+ment of Mechanical and Industrial Engineering (MTP), Norwegian University
+of Science and Technology (NTNU), Trondheim, Norway. His research interests
+include the fuzzy front end of new product development and design: optimizing
+the intersection of engineering design thinking and new product development,
+mechatronics/sensors, and computer sciences (especially machine learning). A
+special focus is on conceptual development and alpha prototype generation of
+high-performance requirements and on experimental tools and setups. He has
+more than 200 publications registered in Google Scholar, as of August 2021.
+Dr. Steinert was the recipient of the several prizes in both teaching and research.
+He has been a member of the Norwegian Academy of Technological Sciences
+(NTVA) since 2015.
+Robin T. Bye (Senior Member, IEEE) was born in
+˚Alesund, Norway, in 1979. He received the B.Eng.
+(with Hons.), M.Eng.Sc., and Ph.D. degrees in elec-
+trical engineering from the University of New South
+Wales, Sydney, Australia, in 2004, 2005, and 2009,
+respectively. Since 2008, he has been with the De-
+partment of ICT and Natural Sciences (IIR), Norwe-
+gian University of Science and Technology (NTNU),
+˚Alesund, Norway, and became a Full Professor in
+2020. He also Heads the Undergraduate Automation
+Engineering Programme and the Cyber-Physical Sys-
+tems Laboratory. His research interests include the broad areas of cybernetics,
+artiﬁcial intelligence, neuroengineering, and engineering didactics. Prof. Bye
+was the recipient of the Goodeve Medal by The Operational Research Society
+in 2019.
+Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on March 26,2026 at 14:51:24 UTC from IEEE Xplore.  Restrictions apply. 

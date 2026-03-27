@@ -1,0 +1,14 @@
+Title: Haptic Rendering Using Reality-Based Force Profiles in Surgical Simulation
+
+Author: Øystein Bjelland, Bismi Rasheed, Intissar Cherif, Andreas Fagerhaug Dalen, Amine Chellali, Martin Steinert, Robin T. Bye
+
+Abstract: This paper presents a novel method for simplifying kinesthetic haptic rendering of complex contact interactions in arthroscopic surgery training simulators using reality-based force profiles. We demonstrate continuous kinesthetic feedback for applications to arthroscopic knee portal creation and diagnostic meniscus examination. This involves measuring characteristic force profiles in ex vivo experiments, simulator implementation in SOFA, and performing user validation experiments. When comparing the method with linear-elastic-based haptic feedback for meniscus stiffness discrimination, novices had difference thresholds of 1.80 MPa (linear-elastic) and 1.47 MPa (reality-based), while experts showed thresholds of 0.99 MPa and 1.39 MPa, respectively, indicating finer sensitivity among experts. Experts also used significantly less force (p< 0.05) and had shorter decision times (p< 0.05) than novices across both methods, indicating construct validity. Although kinesthetic feedback was verified with ex vivo experiments for portal creation, user validation was here inconclusive due to minor inconsistencies in the integration of visual and haptic feedback. Limitations include triggering material removal via instrument penetration instead of haptic force limits, as well as omitting contact vibrations. The method gives only a minor reduction in computation speed. Examples are available on GitHub. Index Terms—Haptic feedback, kinesthetic feedback, arthroscopic surgery, simulation.
+
+摘要: 本文提出一种新颖的方法，利用基于现实的力轮廓来简化关节镜手术训练仿真器中复杂接触交互的运动性感知触觉渲染。我们展示了用于关节镜下膝关节孔创建和诊断性半月板检查的连续运动性感知反馈。这涉及在离体实验中测量典型力轮廓、在 SOFA 中实现仿真，以及进行用户验证实验。将该方法与基于线性弹性的触觉反馈用于半月板刚度判别的比较结果显示：初学者的阈值差异为1.80 MPa（线性弹性）与1.47 MPa（基于现实的），而专家的阈值分别为0.99 MPa和1.39 MPa，说明专家的灵敏度更高。专家在两种方法中也显著使用更少的力（p<0.05），并且决策时间更短（p<0.05），表明构念效度。尽管通过离体实验验证了用于门户创建的运动性感知反馈，但由于视觉与触觉反馈整合中的轻微不一致，用户验证在此并不确定。局限包括通过器械穿透触发材料去除而非触觉力极限，以及省略接触振动。该方法对计算速度的改进仅为微小。GitHub 上提供示例。
+tags:
+  - topic/haptics-overview
+  - topic/force-perception
+  - topic/proprioception
+  - topic/biomechanics
+  - method/simulation
+

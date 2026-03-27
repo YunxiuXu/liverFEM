@@ -1,0 +1,1223 @@
+ORIGINAL REPORTS
+Systematic Review of Virtual Haptics in
+Surgical Simulation: A Valid Educational
+Tool?
+Karan Rangarajan, MRCS, MBBS, BSc,* Heather Davis MBBS,† and Philip H. Pucher, MD, PhD, FRCS‡,x
+*Department of Surgery, Frimley Park Hospital NHS FT, Camberley, United Kingdom; †Department of Surgery,
+Royal Bournemouth Hospital, Bournemouth, United Kingdom; ‡Department of Surgery, Queen Alexandra Hospital,
+Portsmouth, United Kingdom; and §Department of Surgery, St Mary’s Hospital, Imperial College London, London,
+United Kingdom
+BACKGROUND: Virtual reality (VR)-based surgical simu-
+lation is an expanding and rapidly advancing modality
+which aims to serve the increasing demand to acquire
+surgical skills outside the live operating room. Haptic, or
+“force-feedback" technology in VR simulation is a rapidly
+developing ﬁeld, however the role of haptics in surgical
+education and its efﬁcacy is unclear.
+METHODS: A systematic literature search was carried
+out until September 2018 in MEDLINE, Embase, and
+Cochrane Library using the following keywords: (VR OR
+VR OR simulation OR simulator) AND (Haptic feedback
+OR Haptics OR Force feedback) AND (Surgery). All ran-
+domized controlled studies comparing VR training with
+and without haptics were included. PRISMA guidelines
+were adhered to
+RESULTS: Eight randomized controlled trials that com-
+pare VR training with and without haptics were included
+and 1 survey study with a total of 215 participants, 116
+of which received haptic feedback and 99 were assigned
+to nonhaptic feedback group. Training tasks included
+basic proﬁciency based laparoscopic tasks such as object
+translocation, cutting, camera navigation, and more com-
+plex tasks including diathermy, suturing, dissection,
+knot tying, and operative maneuvers. Six randomized
+controlled trials demonstrated that haptic enhanced VR
+simulation is signiﬁcantly more effective than without
+haptics for skill training with a reduced learning curve
+and faster time to proﬁciency and task completion, par-
+ticularly in novice learners. Two studies showed no sig-
+niﬁcant differences in task-assessed parameters between
+the haptics and nonhaptics cohorts, whereas 1 survey
+study suggested haptics negatively affected training with
+decreased realism.
+CONCLUSION: Haptic feedback has been shown to
+improve the ﬁdelity, realism and thus the training effect
+of VR simulators. However, at present haptic simulators
+are expensive and in a nascent stage and further research
+as well as cost-beneﬁt analyses of such tools must be con-
+sidered to determine whether haptics is truly a surgical
+necessity. (J Surg Ed 77:337347.  2019 Association of
+Program Directors in Surgery. Published by Elsevier Inc.
+All rights reserved.)
+KEY WORDS: Haptic-feedback, Force-feedback, Laparos-
+copy, Simulation, Training, Surgery
+COMPETENCIES: Patient Care, Medical Knowledge,
+Practice-Based Learning and Improvement
+INTRODUCTION
+Advances in surgical simulation are driven by the con-
+tinuing desire to reﬁne surgical training and optimize
+patient outcomes. This need to improve surgical train-
+ing, in an age of surgical complexity with the advent of
+laparoscopic, robotic, and other minimally invasive
+approaches, has also been instigated by ever increasing
+public perception of risk and rejection of the traditional
+Halstedian model of apprenticeship training where the
+surgeon trained “on the patient.”1,2 Thus the need for
+realistic, efﬁcient, and transferrable ex vivo skills training
+has never been greater.
+Simulation training has progressed from simple
+bench-top knot tying boards to allowing complex full
+procedural training on high ﬁdelity immersive virtual
+Dr Pucher is a consultant for Fundamental Surgery.
+Funding Support: There was no funding related to this study.
+Correspondence: Inquiries to Karan Rangarajan MRCS MBBS BSc (Hons), Surgical
+Registrar in General Surgery, Frimley Park Hospital NHS FT, 4 West End, Sher-
+borne St John, Camberley RG24 9LF, UK.; e-mail: Karan.rangarajan@gmail.com
+337
+Journal of Surgical Education 
+1931-7204/$30.00
+© 2019 Association of Program Directors in Surgery. Published by
+Elsevier Inc. All rights reserved.
+https://doi.org/10.1016/j.jsurg.2019.09.006
+reality (VR) simulators. The effectiveness of simulation
+training, and transferability of skills from an ex vivo
+simulated environment to the operating room has
+been well established.35 Furthermore, technology
+enhanced simulation has shown to be associated with
+improved performance outcomes.3
+The utility and necessity of simulation training, and its
+ability to shorten learning curves, is particularly relevant
+given the statutory reduction of working hours during
+training, such as through the European Working Time
+Directive and analogous legislation in North America,6
+alongside the ever increasing complexity of surgical
+interventions.
+In the current market, surgical simulators across a wide
+spectrum of cost, ﬁdelity, complexity, and immersion are
+available.7,8 Within general surgery, the highest ﬁdelity
+VR simulators are typically applied to laparoscopic sur-
+gery. These high ﬁdelity platforms typically tout advan-
+tages such as complex and full procedural simulation and
+the inclusion of haptics (or force feedback).8 However,
+these technological advantages come at signiﬁcant cost,
+with up to 50%100% greater expense compared to
+lower-ﬁdelity, nonhaptic platforms.9 Although studies
+have shown low-ﬁdelity simulators adequate to provide
+skill transfer to the operating room, it has been theorized
+that higher ﬁdelity models with a greater degree of real-
+ism owing to haptic technology and multisensory feed-
+back could enable richer learning experiences and
+outcomes.1013 However, the true educational value of
+this added functionality (and cost) is unclear.
+Haptics refers to the process of recognizing objects
+through touch, delivered in the form of vibrations and
+force feedback, created by moving components of a
+device which is controlled by integrated software.14
+Haptic perception encompasses both tactile somatosen-
+sory perception mediated by the skin and kinaesthetic
+proprioceptive feedback in the tendons, muscles, and
+ligaments.15 Haptic enabled systems allow the user to
+touch objects with a great degree of realism and is
+thought to be of increasing importance in ﬁelds of dis-
+tance learning, interactive telemedicine, and computer
+simulations as it provides a bidirectional ﬂow of
+information.14,16
+Haptic technology may be used to augment VR-based
+simulation learning, particularly in enabling trainees to
+appreciate tissue structures and cultivating basic skills
+such as tissue tension by providing live artiﬁcial tactile
+feedback when excessive tension or trauma is encoun-
+tered, and increasing the overall “realism” of the simula-
+tion. The effect of this on learning and skill progression,
+however, is not known. Laparoscopic tactile perception is
+often attenuated by torque exerted on laparoscopic ports
+(fulcrum) by the abdominal wall, particularly in obese
+patients. Furthermore, the lack of haptic feedback in the
+current generation robotic surgery platforms does not
+appear to have detrimentally affected outcomes when
+compared to laparoscopic surgery.1719 Conversely, it has
+been argued that certain haptic cues are crucial during a
+simulated training experience and certainly in surgery to
+enable appropriate and safe tissue handling.20,21 It has
+been suggested that haptic feedback plays an integral role
+in complex motor skill acquisition; particularly the cogni-
+tive and associative stages where trainees aim to integrate
+task knowledge into appropriate motor behavior.22 Thus
+force cues provided by haptics can allow for better task
+performance by allowing for a greater perception of force
+output  a critical element of laparoscopic skills training.
+In this review, we aim to systematically assess the cur-
+rent evidence for the educational value of haptics in VR
+surgical simulation.
+METHODS
+Search Strategy
+A systematic review was conducted in accordance with
+PRISMA guidelines for the reporting of systematic review.
+The literature search and data extraction was conducted
+independently by 2 authors (KR, HD) and ﬁnal data
+including any discrepancies were resolved by consensus.
+A systematic search in MEDLINE, Embase, and Cochrane
+Library was conducted using the following keywords and
+MeSH headings: (Virtual Reality OR VR OR simulation OR
+simulator) AND (Haptic feedback OR Haptics OR Force
+feedback)
+AND
+(Surgery).
+PRISMA
+guidelines
+were
+adhered to in reporting the results of this study.23
+Selection Criteria
+All studies reporting data comparing outcomes for hap-
+tic feedback in VR simulation versus no haptic feedback
+in VR simulation were included. Studies focusing on
+nonhaptic feedback, projected haptic feedback models,
+and those studies not including a direct comparison
+were excluded.
+No year of publication limits were set, and only English
+text publications were included. The search was last
+updated on March 1, 2019. Reference lists of included
+publications were also checked for any other studies suit-
+able for inclusion. Following removal of duplicates, an ini-
+tial review of titles and abstracts was conducted to
+identify articles of potential interest; these were then
+retrieved for full-text analysis and independent data
+extraction by authors conducting the literature search.
+Reference lists of retrieved articles were hand-searched
+for additional relevant references. Data were extracted
+and entered into Microsoft Excel (Microsoft Corp, Red-
+mond, WA). A meta-analysis was not undertaken because
+338
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+of heterogeneity of data, devices, and methods. The
+included studies cover a period of 13 years and multiple
+generations of devices. The same devices were used in no
+more than 2 studies; even here different metrics were
+used, meaning that in our judgment meaningful meta-anal-
+ysis is not possible.
+Results were collated and are presented in a systematic
+fashion. The overall ﬁndings of each study were rated by
+author consensus (Due to the lack of any pre-existing
+framework, judgment based on authors’ expertize in sim-
+ulation based research and is analogous to other subjec-
+tive ratings whose aim is to give reader a summative
+overview) according to the strength of their ﬁndings with
+respect to the effect of haptics on training: ++ strong posi-
+tive effect, + weak positive effect, +/ neutral or equivo-
+cal effect, weak negative effect,  strong negative
+effect, to provide a summative overview for the reader.
+Assessment of Methodological Quality
+Study quality was assessed using quality assessment tool
+for quantitative studies as described in the Cochrane
+Handbook of Systematic Reviews of interventions.24
+RESULTS
+Search Results and Demographics
+Total 600 potentially relevant studies were identiﬁed in
+the initial search; 9 studies fulﬁlled the inclusion criteria
+and were included in ﬁnal data synthesis (Fig 1). These
+included 8 randomized trials and 1 survey study.
+Table 1 shows study characteristics including a quality
+assessment of each randomized controlled trial. The 9
+studies (8 randomized controlled trials [RCTs] and 1
+FIGURE 1. PRISMA ﬂow diagram.
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+339
+survey) included a total of 215 participants, 116 of
+which received haptic feedback and 99 were assigned to
+nonhaptic feedback group. Six different simulator plat-
+forms were used in the included studies (Table 2): MIST
+(Mentice
+Medical
+Simulation,
+Sweden)
+(3
+studies,
+n = 63), LapSim (Surgical Science, Sweden) (2 studies,
+n = 30), ProMIS (Haptica, Ireland) (2 studies, n = 25),
+LapMentor II (Simbionix corp) (2 studies, n = 53), Lapa-
+roscopy VR (Immersion Medical) (1 study, n = 10), Sim-
+ball (Surgical Science, Sweden) (1 study, n = 10), and
+Phantom 1.5 (SensAble Technologies) (1 study, n = 24).
+The
+haptic/nonhaptic
+VR
+training
+tasks
+varied
+between studies and included basic proﬁciency based
+laparoscopic tasks such as object translocation (peg
+transfer,
+object
+lifting),
+cutting,
+camera
+navigation
+(3 studies, n = 64), and more complex tasks such as use
+of diathermy, suturing, dissection, and knot tying
+(3 studies, n = 78). A combination of basic proﬁciency
+based tasks and complex tasks analogous to an operative
+maneuver was used in 3 studies (n = 73).
+Final trainee assessment was conducted using either a
+simulated surgical operation (laparoscopic cholecystec-
+tomy, Heller’s cardiomytomy) by 3 RCTs.9,25,26 Two
+RCTs used laparoscopic knot tying as their assessment
+method27,28 and 3 RCTs and the survey20,2931 simply
+used the prior training tasks used to prepare candidates
+for the ﬁnal performance assessments.
+Primary outcomes included time (6 studies), error (4
+studies), path length (3 studies), economy of movement
+(2 studies), accuracy (2 studies), and use of cautery (2
+studies). Only 1 study25 used a global skills assessment
+score (OSATS) to determine performance.
+Participant type varied greatly between studies with
+the commonest being medical students (4 studies,
+n = 83), followed by surgeons with an unspeciﬁed expe-
+rience level (3 studies, n = 88), and ﬁnally novices (2
+studies, n = 44). Six of these studies were conducted in
+the USA, 2 in Sweden and 1 in Norway.
+Results of Included Studies
+The included studies reported mixed results, with vary-
+ing effect of haptics on outcomes. Five studies showed
+strong positive results20,2629; these studies of haptic
+enabled training versus no haptics showed a positive
+impact of haptic feedback across multiple parameters.
+Kim et al.26 investigated the effect of 3 different levels of
+VR haptic ﬁdelity on performance: the nonlinear model
+(most accurate high-ﬁdelity model), the linear model
+(medium-ﬁdelity), and a model without force feedback.
+This study using a push/pull assessment task showed that
+the haptic trained group with the highest ﬁdelity took the
+least time for tasks. Hagelsteen et al.28 reported that haptic
+feedback is a key tool for novice trainees and leads to faster
+acquisition of laparoscopic skills. Comparison of a range of
+basic laparoscopic skill including “instrument navigation”,
+“grasping”, “ﬁne dissection”, and “suturing” between a
+haptic and nonhaptically trained cohort revealed that the
+haptic trained group ﬁnished all tasks in the course faster
+than the group without haptic training (146 minutes com-
+pared to 215 minutes in the control group, p < 0.002),
+which was 69 minutes (32%) faster. Task complexity was
+assessed by Cao et al 20 who simulated this by means of
+increasing cognitive loading via mental arithmetic mid-simu-
+lation. In this study the combination of cognitive loading
+and haptic feedback showed that increasing cognitive load
+led to a larger increase in time-to-task completion without
+haptics than with haptics. Zhou et al.27 demonstrated that
+haptics not only led to trainees experiencing a less steep
+learning curve than participants trained without haptic, but
+that the learning rate was also higher (70% vs 64% in No-
+Haptics group). They also concluded that fewer attempts
+TABLE 1. Study Demographics
+Author
+Year
+Country
+Study
+Type
+n
+Participant
+Type
+Simulation
+Device
+Comparison
+CRB
+Score
+Kim
+2004
+USA
+RCT
+24
+Novices*
+Phantom 1.5
+H v H2 v NH*
+Medium
+Strom
+2006
+Sweden
+RCT
+38
+Surgeons
+MIST
+EH v LH
+Medium
+Cao
+2007
+USA
+RCT
+30
+Surgeons
+ProMIS/MIST
+H + cognitive load v
+NH + cognitive load
+Medium
+Panait
+2009
+USA
+RCT
+10
+Medical students
+Laparoscopy VR
+H v NH
+High
+Salkini
+2010
+USA
+RCT
+20
+Medical students
+LapMentor II
+H v NH
+High
+Thompson
+2011
+USA
+RCT
+33
+Medical students
+LapMentor II
+H v NH v C
+Medium
+Zhou
+2012
+USA
+RCT
+20
+Novices**
+ProMIS/MIST
+H v NH
+High
+Vapenstad
+2013
+Norway
+Survey
+20
+Surgeons
+LapSim
+H v NH
+Medium
+Hagelsteen
+2017
+Sweden
+RCT
+20
+Medical students
+LapSim/Simball
+H+3D vision v NH
+High
+CRB, Cochrane Risk of Bias score; Newcastle-Ottawa Scale; RCT, Randomized Controlled Trial.
+*Experience unspeciﬁed.
+**Includes undergraduates and postgraduates.
+340
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+were needed until performance plateaued. Although this
+study shows haptics allow for consistent and decreased var-
+iability of performance during early stages of training, the
+learning curves of the 2 groups converge in later sessions
+suggesting minimal beneﬁts of haptics at this later stage.
+Finally, Strom et al.29 compared the use of early vs late hap-
+tics. In this crossover trial, groups were exposed to either
+haptic or nonhaptic training followed by crossover after a
+TABLE 2. Study Outcomes
+Author
+Training Task (s)
+Assessed Task
+Outcome Assessment
+Outcome (data)
+Findings
+Kim
+Seven sessions of
+Bimanual pushing
+and cutting tasks
+‘Basic’ Heller’s myotomy
+Performance improve-
+ment from training
+Training effect without hap-
+tics lower than with haptics
+(p = 0.003, p = 0.81)
+++
+Strom
+1 hour: manipulation
+and Diathermy; 1
+hour: point
+diathermy
+Manipulation and dia-
+thermy in abdominal
+environment
+Time, movement econ-
+omy, tooltool collision
+error, shafttarget colli-
+sion error, and instru-
+ment, diathermy, and
+pedal error
+After 2h early haptics group
+performed
+better
+in
+both
+tasks
+(p = 0.010,
+p < 0.05)
+++
+Cao
+Six attempts: Object
+translocation
+Object transloca-
+tion + mental arithmetic
+problems
+Time, error, maths prob-
+lems solved
+Larger increase in time-to-
+task completion without
+haptics than with haptics
+(p < 0.001) and less
+errors (p < 0.001). Hap-
+tics 37% faster, 95% more
+accurate
+++
+Panait
+1 week ‘warm up’:
+Peg transfer, cutting
+drills
+Analogous simulator
+drills with 3 difﬁculty
+settings
+Time, tension applied,
+path length, errors
+Time to cutting task comple-
+tion shorter at all levels
+with haptics (p < 0.05)
++
+Salkini
+Three training tasks
+£5: grasping & clip-
+ping, cutting & dis-
+section, cautery
+LC
+Speed,
+economy
+of
+movement, accuracy
+No difference in accuracy,
+economy of movement of
+dominant and nondomi-
+nant hand (p = 0.876,
+0.228, 0.6777) but
+improved average speed
+dominant hand
+(p = 0.046)
++/-
+Thompson
+4 h session £2: Cam-
+era navigation, cli
+application, grasp-
+ing, ball-drop, cut-
+ting, cautery, object
+translocation
+LC
+Time,
+Path
+length,
+efﬁciency of cautery,
+OSATS
+No performance difference
+between haptics and non-
+haptics
++/-
+Zhou
+1 h/d £18 sessions
+knot tying tasks
+Laparoscopic suturing
+and knot tying
+Time,
+performance
+variation, number of
+knots
+Learning rate 70% vs 64%,
+faster time to completion
+with haptics (p < 0.04),
+performance variance
+higher with no haptics (p
+< 0.004)
+++
+Vapenstad
+ﬁne dissection, lifting
+and grasping £2
+handles
+Fine dissection, lifting
+and grasping £2
+handles
+Demographics, Percep-
+tion of handles
+Total 95% felt friction in
+haptic handles was too
+high
+- -
+Hagelsteen Minimum 1 £ 6h ses-
+sion: instrument nav-
+igation, grasping,
+ﬁne dissection,
+suturing
+Laparoscopic knot tying
+Time, attempts, Path
+length, accuracy, tissue
+damage, knot error
+Faster time to completion
+with haptics (p = 0.002)-
+69 minutes or 32% faster.
+Fewer attempts for proﬁ-
+ciency with instrument nav-
+igation, grasping and
+suturing with haptics
+27 vs 65 (p = 0.005),
+19 vs 29 (p = 0.017),
+24 vs 41 (p = 0.011)
+++
+Findings: ++ very strong, + strong, +/neutral or ambiguous, weak, very weak.
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+341
+1 hour washout period. The authors demonstrated that
+after 2 hours of training, the early haptics group performed
+signiﬁcantly better in both manipulation and point dia-
+thermy tasks than the group who had a later exposure to
+haptics (p < 0.05).
+One study showed weakly positive results. Panait
+et al.30 assessed simple and complex laparoscopic tasks
+with and without the use of haptics. Although individual
+task performances in simpler skills such as peg transfer
+and pattern cutting did not show any performance differ-
+ences between a haptics and a nonhaptics group; the
+more complex cutting drill revealed a shorter time to
+complete tasks with haptic feedback. In addition, haptic
+enabled complex tasks were performed more precisely,
+with fewer technical errors.
+Two studies reported equivocal results with no differ-
+ence between a haptic trained cohort and nonhaptic
+trained cohort; Salkini et al.9 and Thompson et al.25 Both
+of these studies evaluated VR tasks which assessed estab-
+lished metrics including time, path length, speed of
+movement,
+and
+found
+no
+signiﬁcant
+differences
+between a haptic feedback enabled cohort and a non-
+haptic cohort. However it was noted that in the Salkini
+study9 across both cohorts the video-game playing demo-
+graphic had more economic and faster hand movement
+than their colleagues. Authors reported a trend toward
+improved outcomes in terms of economy of both hand
+movements and speed of nondominant hand, although
+statistically not signiﬁcant. However the average speed
+of the dominant hand was faster with haptics enabled.
+One study showed strongly negative results. Vapen-
+stad et al.31 reported a survey study of a haptic enabled
+device vs a nonhaptic enabled device. Surgeons with
+varying laparoscopic experience levels were asked to
+give an opinion on 2 instrument ports commonly used
+in VR simulators: the Xitact IHP (instrument haptic port)
+with haptic feedback and the Xitact ITP (instrument
+tracking port) without haptic feedback. These instru-
+ments were connected to the LapSim VR simulator. The
+majority of participants preferred the simulated device
+without haptics. Although 15 of 19 surgeons (79 %)
+claimed handles with haptic feedback were important to
+simulate realism, only 4 (20 %) of the participants said
+that the handles with haptic feedback imitated reality
+best whilst 14 surgeons (70 %) thought the handle with-
+out haptic feedback felt most realistic.
+Assessment of Methodological Quality
+Across the 8 RCTs included, 7 out of 8 studies contained
+3 or more domains showing evidence of limitations as
+deﬁned by the Cochrane Risk of Bias Tool, suggesting
+the risk of bias for these studies was moderate to high.
+The summary of each study’s risks of biases are
+TABLE 3. Risk of Bias Summary
+Selection Bias
+Selection Bias
+Performance Bias
+Detection Bias
+Attrition Bias
+Reporting Bias
+Other Biases
+Author
+Random Sequence
+Generator
+Allocation
+Concealment
+Blinding of
+Participants
+Blinding of Outcome
+Assessors
+Incomplete Collection/
+Outcome Data
+Selective
+Reporting
+Baseline
+Confounders
+Kim
+No
+No
+No
+?
+Yes
+Yes
+Yes
+Strom
+?
+Yes
+No
+No
+Yes
+Yes
+Yes
+Cao
+No
+No
+No
+No
+Ys
+Yes
+Yes
+Panait
+No
+No
+No
+N
+Yes
+Yes
+Yes
+Salkini
+No
+No
+No
+No
+Yes
+Yes
+No
+Thompson
+Yes
+Yes
+No
+No
+Yes
+No
+Yes
+Zhou
+No
+No
+No
+No
+Yes
+No
+Yes
+Vapenstad
+No
+Yes
+Yes
+?
+Yes
+No
+Yes
+Hagelsteen
+Yes
+No
+No
+No
+No
+No
+yes
+Yes, component present and adequate; no, Component absent or inadequate; ?, Complete unclear/data unavailable.
+342
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+summarized in Table 3. Table 1 shows the risk of bias
+summary across studies.
+DISCUSSION
+This review highlights the inconsistency and paucity of
+current evidence with regards to haptics and its validity
+and evidence of its value in training. Haptic feedback as
+a concept is an important factor in minimally invasive
+surgery (MIS) and although its role is contradictory, this
+has not limited the development of haptic enabled tech-
+nologies.
+Overall the results suggests that there is a role for hap-
+tic feedback in surgical simulation training with 6 stud-
+ies20,2630 demonstrating a positive effect of training
+performance when compared to no haptic feedback on
+a range of tasks from fundamental laparoscopic skills to
+full
+simulated
+operations.
+These
+6
+studies
+show
+improved performances across multiple validated assess-
+ment parameters with haptics as opposed to no haptics.
+Studies which included an assessment of participants
+learning curves27,28 demonstrated that haptic feedback
+enhanced learning, resulting in an upward trend in terms
+of task proﬁciency compared with those trained without
+haptic feedback; these results were particularly signiﬁ-
+cant at the early stages of training.
+Although there has been previous validation of skill
+transfer from VR simulators that do not incorporate haptic
+feedback to the operating room,32 there remains contro-
+versy regarding the timing of haptics integration into sur-
+gical training. Panait et al.30 in their study of laparoscopic
+novices performing simple tasks with and without haptic
+demonstrated improved performance with haptic feed-
+back, strengthening the case for early haptic induction.
+These ﬁndings were congruent with Zhou27 who found
+that complex tasks were learned more efﬁciently when
+haptic feedback was present during the early phases of
+surgical training and identiﬁed this early phase as the key
+point to introduce and emphasize haptic cues.
+The application of, and need for haptics may vary with
+the complexity of task at hand. Chmarra et al.33 suggest
+that procedures requiring force application, such as laparo-
+scopic knot tying, or handling the bowel would require
+simulators with haptic feedback; whereas simpler tasks
+such as peg transfer or tasks relying heavily on hand-eye
+coordination as is the case with the tasks assessed in the 3
+studies above, can be trained on simulators with no haptic
+feedback.9,25,31 Conversely, at higher levels of complexity,
+current simulator limitations in graphic and physical tissue
+modeling may reduce the usefulness of VR training for com-
+plex full procedure simulation both with or without hap-
+tics; this may be expected to change as software models
+continue to rapidly evolve.
+Highlighting the point regarding the relationship
+between task complexity and utility of haptics, Hagels-
+teen28 shows that there was a lack of statistically signiﬁ-
+cant differences in performance between the 2 study
+cohorts in a “ﬁne dissection” task; a fairly basic task.
+The authors concluded that the simplicity of said task
+may have resulted in a ceiling effect; suggesting a
+threshold level of task complexity is required to affect
+tested outcomes. It would be of interest to further
+investigate this ceiling effect and the thresholds of task
+complexity required; especially in the light of similar
+basic tasks in the Thompson study25 suggesting haptics
+had no effect on performance. Indeed Cao et al.20 who
+explored the effect of haptic feedback on both surgical
+experience and cognitive load by adding a secondary
+less demanding task showed that these “complex” tasks
+(due to the additional mental load) were performed bet-
+ter with haptic feedback and these participants demon-
+strated reduced cognitive load. Of particular interest
+were the subgroup analyses of experienced surgeons in
+the no-cognitive-load subgroup who displayed the larg-
+est
+performance
+improvement
+thus implying
+that
+experts use spare cognitive capacity to address and use
+indirect haptic cues.
+It is well known that during MIS, tactile feedback is
+attenuated and distorted due to interactions of the instru-
+ments and ports with the abdominal wall but these phys-
+ical cues are often important in the surgical setting to
+encourage safe tissue handling skills.34
+Studies have suggested previously that the incorpo-
+ration of haptic feedback enabled instruments, are
+required to increase efﬁciency in terms of more success-
+ful grasping actions and to provide greater control over
+tissues.35 The results of 2 recent reviews regarding hap-
+tic feedback in MIS conclude that the implementation of
+haptic technology in MIS may prove beneﬁcial to both
+surgeon and patient.32,36
+The future of haptic integration in surgical simulation
+includes application of this in robotic assisted surgery and
+further technological design improvementsperhaps a
+future goal is to develop surgical instruments which serve
+as extensions of the surgeon’s hands and allows for mea-
+surement of contact forces between the device and tis-
+sue.37 While current robotic platforms do not offer
+integrated tactile feedback, it has been hypothesized that
+the inclusion of haptic feedback in robotic surgery may
+reduce technical errors, tissue damage, and decrease oper-
+ative time.34 A preliminary study by Jacobs et al. demon-
+strated the potential value and impact of robotic training
+with a combination of haptic and visual feedback. The
+results indicated that haptic feedback improved training
+performances with respect to task completion time, accu-
+racy, and number of errors made compared with task per-
+formances with only visual feedback.38
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+343
+Despite the perceived beneﬁts of haptic technology, it
+remains in a nascent stage Haptic feedback could be
+improved in several ways; improving the actuators
+which provide the haptic cues and the use of more real-
+istic tissue models to derive more natural responses and
+interactions with tissue and structures.39
+Study Limitations
+The studies assessed in this review are subject to a num-
+ber of limitations. A number of different simulators were
+used with varying levels of validation of these instru-
+ments, limiting the interpretation of trial results and
+scope of successful transfer of skills to the OR environ-
+ment. Thus, inconsistencies in both type of simulators
+used, the method of training sessions and performance
+assessments as well as the disparity across methodology
+and study outcomes limits generalizability of the results.
+In light of the above, a meta-analysis of studies was
+deemed inappropriate given the wide range of simula-
+tors and metrics.
+With regards to bias and evidence quality, the results
+summarized in Table 3 suggest overall low quality of
+evidence with a medium/high degree of bias across
+most studies. Limitations endemic to most of these
+studies which limits quality and introduces bias include
+the use of small cohorts and novices participants and
+volunteers; the latter resulting in self-selection and
+selection bias.
+Of the studies included, only 1 study had any form of
+validated structures assessment of laparoscopic surgery
+or skills assessment (GOALS/OSATS).40 Whilst all studies
+attempted to compare groups using performance met-
+rics provided by the simulator devices, this raises the
+question as to which variables and metrics provide the
+best measurement of skill acquisition across the different
+platforms, as different simulators use different metrics
+for objective measurement of skills acquisition. This lack
+of a consistent objective scoring system makes a direct
+comparison of results after training on different simula-
+tors difﬁcult.
+While the majority of studies reported positive effects
+of haptics, there was 1 negative study in this review.31
+Considering this study, however, the majority of partici-
+pants suggest a lack of realism with the haptic handset
+itself (rather than haptics as a concept or tool) and attrib-
+uted this to increased stiffness. This may in fact be a
+comment on an inferior product, rather than haptics as a
+concept, particularly as no objective learning outcomes
+are reported.
+Further work is needed to improve the provided
+quality or even type of haptic feedback. A review by
+Coles et al.8 suggested that the right amount of haptic
+feedback is needed at the right time and that providing
+feedback of too high ﬁdelity can be as much a hin-
+drance as providing too little haptic feedback. This
+is
+particularly
+evident
+in
+laparoscopic
+surgery,
+where instruments entering through tight ports are
+exposed to frictional forces that mask the interactive
+forces at the instrument tip. Thus providing clear
+interaction forces in training environs may negatively
+affect the real intraoperative training experience as
+the user would not be fed back this level of quality
+feedback.
+Finally, the rapid progression of computer-based soft-
+ware and hardware, and generational advance of simula-
+tor technology, also means that an objective review of
+published literature risks being out of date with refer-
+ence to currently available platforms. Many of these
+already offer new advances on realism (such as immer-
+sive headset-based VR), and updated software and haptic
+sets, but may not yet be reﬂected in published academic
+literature.
+CONCLUSION
+Although a vastly improved domain, the development
+and state of tactile simulators is still in its infancy and
+will have an increasingly pivotal role to play in the medi-
+cal domain as technology grows. Despite demonstrating
+its efﬁcacy for training in minimal access surgery or
+where an instrument acts as an indirect tactile conduit
+(needles, drills); the ﬁeld of open surgery and proce-
+dures requiring direct physical contact with soft tissues
+directly will remain a challenge to simulate.
+With an ever diminishing number of training hours
+available for trainees and the increasing complexity of
+procedures; simulation plugs a vital gap in training. It is
+clear that with appropriate use and direction, training
+that is haptic-enabled is a key adjunct to training, proﬁ-
+ciency, and improving patient outcomes.
+Despite the high cost of these tactile VR simulators in
+comparison to lower cost haptic-free models, few stud-
+ies have examined the added value of this feature. The
+cost-beneﬁt analysis of such a proﬁtable marketing tool
+must be considered and whether haptics is truly a surgi-
+cal necessity. Haptics as part of a move toward “ultra-
+realistic” simulators have proven their use in other
+ﬁelds such as ﬂight simulation training and space explo-
+ration to good effect; further research is required to
+assess the need for universal inclusion of haptics in sur-
+gical simulation.
+ETHICAL APPROVAL
+Ethical approval was not required for this study.
+344
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+AUTHOR CONTRIBUTION
+Conception and design: PP, KR, HD.
+Analysis and interpretation: KR, PP, HD.
+Data collection: KR, HD, PP.
+Writing the article: KR, PP, HD.
+Critical revision of the article: KR, PP, HD.
+Final approval of the article: KR, PP, HD.
+Statistical analysis: KR, PP, HD.
+Overall responsibility: KR, PP, HD.
+(KR  Karan Rangarajan,
+PP  Philip Pucher,
+HD  Heather Davis).
+REFERENCES
+1. Halstead WS. The training of the surgeon. Bull
+Johns Hop Hosp. 1904;15:267–275.
+2. Scott IA. Errors in clinical reasoning: causes and
+remedial strategies. BMJ. 2009;338:b1860. https://
+doi.org/10.1136/BMJ.B1860.
+3. Cook DA, Hatala R, Brydges R, et al. Technology-
+enhanced simulation for health professions educa-
+tion.
+JAMA.
+2011;306:978–988.
+https://doi.org/
+10.1001/jama.2011.1234.
+4. Breda A, Territo A, Moglia A, et al. Platinum priority-
+review-education a systematic review of virtual real-
+ity simulators for robot-assisted surgery. Eur Urol.
+2016;69:1065–1080.
+https://doi.org/10.1016/j.eur-
+uro.2015.09.021.
+5. Dawe SR, Windsor JA, Broeders JAJL, Cregan PC,
+Hewett PJ, Maddern GJ. A systematic review of sur-
+gical skills transfer after simulation-based training.
+Ann
+Surg.
+2014;259:236–248.
+https://doi.org/
+10.1097/SLA.0000000000000245.
+6. Waurick R, Weber T, Br€oking K, Van Aken H. The
+European working time directive: effect on educa-
+tion and clinical care. Curr Opin Anaesthesiol.
+2007;20:576–579.
+https://doi.org/10.1097/ACO.0-
+b013e3282f0ef61.
+7. Yiannakopoulou E, Nikiteas N, Perrea D, Tsigris C.
+Virtual reality simulators and training in laparo-
+scopic surgery. Int J Surg. 2015;13:60–64. https://
+doi.org/10.1016/j.ijsu.2014.11.014.
+8. Coles TR, Meglan D, John NW. The role of haptics in
+medical training simulators: a survey of the state of
+the art. IEEE Trans Haptics. 2011;4:51–66. https://
+doi.org/10.1109/TOH.2010.19.
+9. Salkini MW, Doarn CR, Kiehl N, Broderick TJ, Dono-
+van JF, Gaitonde K. The role of haptic feedback in lap-
+aroscopic
+training
+using
+the
+LapMentor
+II.
+J
+Endourol. 2010;24:99–102. https://doi.org/10.1089/
+end.2009.0307.
+10. Aggarwal R, Mytton OT, Derbrew M, et al. Training
+and simulation for patient safety. Qual Saf Health
+Care.
+2010;19:i34–i43.
+https://doi.org/10.1136/
+qshc.2009.038562.
+11. Fried GM. FLS assessment of competency using simu-
+lated
+laparoscopic
+tasks.
+J
+Gastrointest
+Surg.
+2008;12:210–212. https://doi.org/10.1007/s11605-007-
+0355-0.
+12. P. Lamata, E.J. Gomez, F. Bello, R.L. Kneebone, R.
+Aggarwal, F. Lamata, Conceptual framework for lap-
+aroscopic VR simulators., IEEE Comput Graph
+Appl26(n.d.)69-79.
+http://www.ncbi.nlm.nih.gov/
+pubmed/17120915 (Accessed September 25, 2018).
+13. Kretschmer A, Grimm T, Buchner A, et al. Prospec-
+tive evaluation of health-related quality of life after
+radical cystectomy: focus on peri- and postoperative
+complications. World J Urol. 2017;35:1223–1231.
+https://doi.org/10.1007/s00345-016-1992-2.
+14. Culbertson H, Schorr SB, Okamura AM. Haptics: the
+present and future of artiﬁcial touch sensation. Annu
+Rev Control Robot Auton Syst. 2018;1:385–409. https://
+doi.org/10.1146/annurev-control-060117-105043.
+15. Flesher SN, Collinger JL, Foldes ST, et al. Intracorti-
+cal microstimulation of human somatosensory cor-
+tex.
+Sci
+Transl
+Med.
+2016;8.
+https://doi.org/
+10.1126/scitranslmed.aaf8083. 361ra141.
+16. Minogue J, Jones MG. Haptics in education:
+exploring an untapped sensory modality. Rev
+Educ
+Res.
+2006;76:317–348.
+https://doi.org/
+10.3102/00346543076003317.
+17. Jeong IG, Khandwala YS, Kim JH, et al. Association
+of robotic-assisted vs laparoscopic radical nephrec-
+tomy with perioperative outcomes and health care
+costs, 2003 to 2015. JAMA. 2017;318:1561. https://
+doi.org/10.1001/jama.2017.14586.
+18. Jayne D, Pigazzi A, Marshall H, et al. Effect of
+robotic-assisted vs conventional laparoscopic sur-
+gery on risk of conversion to open laparotomy
+among patients undergoing resection for rectal can-
+cer. JAMA. 2017;318:1569. https://doi.org/10.1001/
+jama.2017.7219.
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+345
+19. K€ockerling F. Robotic vs. standard laparoscopic
+technique - what is better? Front Surg. 2014;1:15.
+https://doi.org/10.3389/fsurg.2014.00015.
+20. Cao CGL, Zhou M, Jones DB, Schwaitzberg SD. Can
+surgeons think and operate with haptics at the same
+time? J Gastrointest
+Surg. 2007;11:1564–1569.
+https://doi.org/10.1007/s11605-007-0279-8.
+21. Rodrigues SP, Horeman T, Sam P, et al. Inﬂuence of
+visual force feedback on tissue handling in mini-
+mally invasive surgery. Br J Surg. 2014;101:1766–
+1773. https://doi.org/10.1002/bjs.9669.
+22. Van Bruwaene S, De Win G, Miserez M. How much
+do we need experts during laparoscopic suturing
+training? Surg Endosc. 2009;23:2755–2761. https://
+doi.org/10.1007/s00464-009-0498-z.
+23. Liberati A, Altman DG, Tetzlaff J, et al. The PRISMA
+statement for reporting systematic reviews and
+meta-analyses of studies that evaluate health care
+interventions: explanation and elaboration. PLoS
+Med.
+2009;6:e1000100.
+https://doi.org/10.1371/
+journal.pmed.1000100.
+24. Higgins JPT, Altman DG, Gøtzsche PC, et al. The
+Cochrane Collaboration’s tool for assessing risk of
+bias in randomised trials. BMJ. 2011;343:d5928.
+https://doi.org/10.1136/BMJ.D5928.
+25. Thompson JR, Leonard AC, Doarn CR, Roesch MJ,
+Broderick TJ. Limited value of haptics in virtual real-
+ity laparoscopic cholecystectomy training. Surg
+Endosc.
+2011;25:1107–1114.
+https://doi.org/
+10.1007/s00464-010-1325-2.
+26. Kim HK, Rattner DW, Srinivasan MA. Virtual-reality-
+based laparoscopic surgical training: the role of sim-
+ulation ﬁdelity in haptic feedback. Comput Aided
+Surg.
+2004;9:227–234.
+https://doi.org/10.3109/
+10929080500066997.
+27. Zhou M, Tse S, Derevianko A, Jones DB, Schwaitzberg
+SD, Cao CGL. Effect of haptic feedback in laparoscopic
+surgery skill acquisition. Surg Endosc. 2012;26:1128–
+1134. https://doi.org/10.1007/s00464-011-2011-8.
+28. Hagelsteen K, Langega
+ rd A, Lantz A, Ekelund M,
+Anderberg M, Bergenfelz A. Faster acquisition of
+laparoscopic skills in virtual reality with haptic
+feedback and 3D vision. Minim Invasive Ther
+Allied Technol. 2017;26:269–277. https://doi.org/
+10.1080/13645706.2017.1305970.
+29. Str€om P, Hedman L, S€arna
+ L, Kjellin A, Wredmark T,
+Fell€ander-Tsai L. Early exposure to haptic feedback
+enhances performance in surgical simulator training: a
+prospective randomized crossover study in surgical
+residents.
+Surg
+Endosc
+Other
+Interv
+Tech.
+2006;20:1383–1388.
+https://doi.org/10.1007/s00464-
+005-0545-3.
+30. Panait L, Akkary E, Bell RL, Roberts KE, Dudrick SJ,
+Duffy AJ. The role of haptic feedback in laparoscopic
+simulation training. J Surg Res. 2009;156:312–316.
+https://doi.org/10.1016/j.jss.2009.04.018.
+31. Va
+ penstad C, Hofstad EF, Langø T, Ma
+ rvik R,
+Chmarra
+MK.
+Perceiving
+haptic
+feedback
+in
+virtual reality simulators. Surg Endosc Other Interv
+Tech. 2013;27:2391–2397. https://doi.org/10.1007/
+s00464-012-2745-y.
+32. van der Meijden OAJ, Schijven MP. The value of hap-
+tic feedback in conventional and robot-assisted mini-
+mal invasive surgery and virtual reality training: a
+current review. Surg Endosc. 2009;23:1180–1190.
+https://doi.org/10.1007/s00464-008-0298-x.
+33. Chmarra MK, Dankelman J, Van Den Dobbelsteen JJ,
+Jansen FW. Force feedback and basic laparoscopic
+skills. Surg Endosc Other Interv Tech. 2008;22:2140–
+2148. https://doi.org/10.1007/s00464-008-9937-5.
+34. van der Meijden OAJ, Schijven MP. The value of hap-
+tic feedback in conventional and robot-assisted mini-
+mal invasive surgery and virtual reality training: a
+current review. Surg Endosc. 2009;23:1180–1190.
+https://doi.org/10.1007/s00464-008-0298-x.
+35. Heijnsdijk EAM, Dankelman J, Gouma DJ. Effective-
+ness of grasping and duration of clamping using lap-
+aroscopic graspers. Surg Endosc. 2002;16:1329–
+1331. https://doi.org/10.1007/s00464-001-9179-2.
+36. Westebring  van der Putten EP, Goossens RHM,
+Jakimowicz JJ, Dankelman J. Haptics in minimally
+invasive surgery  a review. Minim Invasive Ther
+Allied
+Technol.
+2008;17:3–16.
+https://doi.org/
+10.1080/13645700701820242.
+37. M.V. Ottermo, M.V. Ottermo, Ø. Stavdahl, T.A.
+Johansen, Palpation instrument for augmented
+minimally invasive surgery, Proc. 2004 IEEE/RSJ
+International Conference Intelligent Robots Sys-
+tems(n.d.)3960-3964. http://citeseerx.ist.psu.edu/
+viewdoc/summary?doi=10.1.1.142.2279 (accessed
+October 20, 2018).
+346
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+38. Jacobs S, Holzhey D, Strauss G, Burgert O, Falk V.
+The impact of haptic learning in telemanipulator-
+assisted surgery. Surg Laparosc Endosc Percutan
+Tech.
+2007;17:402–406.
+https://doi.org/10.1097/
+SLE.0b013e3180f60c23.
+39. Famaey N, Vander Sloten J. Soft tissue modelling
+for applications in virtual surgery and surgical
+robotics.
+Comput
+Methods
+Biomech
+Biomed
+Engin. 2008;11:351–366. https://doi.org/10.1080/
+10255840802020412.
+40. Niitsu H, Hirabayashi N, Yoshimitsu M, et al. Using
+the Objective Structured Assessment of Technical
+Skills (OSATS) global rating scale to evaluate the
+skills of surgical trainees in the operating room.
+Surg
+Today.
+2013;43:271–275.
+https://doi.org/
+10.1007/s00595-012-0313-7.
+Journal of Surgical Education  Volume 77 /Number 2  March/April 2020
+347

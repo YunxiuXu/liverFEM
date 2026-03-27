@@ -1,0 +1,140 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Working manuscript entry for the Frontiers template.
+% Put your paper text here, bibliography files in ./bibtex, and figures in ./img.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[utf8]{FrontiersinHarvard}
+%\documentclass[utf8]{FrontiersinVancouver}
+%\documentclass[utf8]{frontiersinFPHY_FAMS}
+
+%\setcitestyle{square}
+\usepackage{url,hyperref,lineno,microtype,subcaption}
+\usepackage[onehalfspacing]{setspace}
+\graphicspath{{img/}}
+
+\linenumbers
+
+\def\keyFont{\fontsize{8}{11}\helveticabold}
+\def\firstAuthorLast{Sample {et~al.}}
+\def\Authors{First Author\,$^{1,*}$, Co-Author\,$^{2}$ and Co-Author\,$^{1,2}$}
+\def\Address{$^{1}$Laboratory X, Institute X, Department X, Organization X, City X, State XX, Country X \\
+$^{2}$Laboratory X, Institute X, Department X, Organization X, City X, State XX, Country X}
+\def\corrAuthor{Corresponding Author}
+\def\corrEmail{email@uni.edu}
+
+\begin{document}
+\onecolumn
+\firstpage{1}
+
+\title[Running Title]{Article Title}
+
+\author[\firstAuthorLast]{\Authors}
+\address{}
+\correspondance{}
+
+\extraAuth{}
+%\extraAuth{Corresponding Author2 \\ Laboratory X2, Institute X2, Department X2, Organization X2, Street X2, City X2, State XX2, Zip Code2, Country X2, email2@uni2.edu}
+
+\maketitle
+
+\begin{abstract}
+\section{}
+For full guidelines regarding your manuscript please refer to \href{http://www.frontiersin.org/about/AuthorGuidelines}{Author Guidelines}.
+
+As a primary goal, the abstract should render the general significance and conceptual advance of the work clearly accessible to a broad readership. References should not be cited in the abstract.
+
+\tiny
+\keyFont{\section{Keywords:} keyword, keyword, keyword, keyword, keyword}
+\end{abstract}
+
+\section{Introduction}
+
+For Original Research Articles \citep{conference}, Clinical Trial Articles \citep{article}, and Technology Reports \citep{patent}, the introduction should be succinct, with no subheadings \citep{book}.
+
+\section{Article types}
+
+For requirements for a specific article type please refer to the Article Types on any Frontiers journal page.
+
+\section{Manuscript Formatting}
+
+\subsection{Heading Levels}
+\subsection{Level 2}
+\subsubsection{Level 3}
+\paragraph{Level 4}
+\subparagraph{Level 5}
+
+\subsection{Equations}
+Equations should be inserted in editable format from the equation editor.
+
+\begin{equation}
+\sum x + y = Z
+\label{eq:01}
+\end{equation}
+
+\subsection{Figures}
+Keep your manuscript figures under the `img/` directory. For multi-panel figures, the most robust approach in this template is to place panels side by side and describe them as \textbf{(A)} and \textbf{(B)} in a single caption, as in figure \ref{fig:subfigures}.
+
+\subsection{Tables}
+Tables should be inserted at the end of the manuscript. Please build your table directly in LaTeX.
+
+\section{Nomenclature}
+
+\subsection{Resource Identification Initiative}
+To take part in the Resource Identification Initiative, please use the corresponding catalog number and RRID in your current manuscript.
+
+\subsection{Life Science Identifiers}
+Life Science Identifiers (LSIDs) for ZOOBANK registered names or nomenclatural acts should be listed in the manuscript before the keywords.
+
+\section{Additional Requirements}
+
+For additional requirements for specific article types and further information please refer to \href{http://www.frontiersin.org/about/AuthorGuidelines#AdditionalRequirements}{Author Guidelines}.
+
+\section*{Conflict of Interest Statement}
+The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.
+
+\section*{Author Contributions}
+The Author Contributions section is mandatory for all articles, including articles by sole authors.
+
+\section*{Funding}
+Details of all funding sources should be provided, including grant numbers if applicable.
+
+\section*{Acknowledgments}
+This is a short text to acknowledge the contributions of specific colleagues, institutions, or agencies that aided the efforts of the authors.
+
+\section*{Supplemental Data}
+\href{http://home.frontiersin.org/about/author-guidelines#SupplementaryMaterial}{Supplementary Material} should be uploaded separately on submission.
+
+\section*{Data Availability Statement}
+The datasets [GENERATED/ANALYZED] for this study can be found in the [NAME OF REPOSITORY] [LINK].
+
+\bibliographystyle{Frontiers-Harvard}
+%\bibliographystyle{Frontiers-Vancouver}
+\bibliography{bibtex/references}
+
+\section*{Figure captions}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=10cm]{img/logo1}
+\end{center}
+\caption{Enter the caption for your figure here. Repeat as necessary for each of your figures.}
+\label{fig:1}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{minipage}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/logo1.eps}
+    
+\end{minipage}
+\hfill
+\begin{minipage}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/logo2.eps}
+\end{minipage}
+\caption{Enter the caption for your subfigure here. \textbf{(A)} This is the caption for Subfigure 1. \textbf{(B)} This is the caption for Subfigure 2.}
+\label{fig:subfigures}
+\end{figure}
+
+\end{document}

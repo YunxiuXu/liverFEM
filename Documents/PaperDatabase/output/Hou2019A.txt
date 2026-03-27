@@ -1,0 +1,14 @@
+Title: A new model of soft tissue with constraints for interactive surgical simulation
+
+Author: Wenguo Hou, Peter X. Liu, Minhua Zheng
+
+Abstract: Background and objectives: An accurate and real-time model of soft tissue is critical for surgical simulation, for which a user interacts haptically and visually with simulated patients. This paper focuses on the real-time deformation model of brain tissue for the interactive surgical simulation, such as neurosurgical simulation. Methods: A new Finite Element Method (FEM) based model with constraints is proposed for the brain tissue in neurosurgical simulation. A new energy function of constraints characterizing the interaction between the virtual instrument and the soft tissue is incorporated into the optimization problem derived from the implicit integration scheme. Distance and permanent deformation constraints are introduced to describe the interaction in convexity meningioma dissection and hemostasis. The proposed model is particularly suitable for GPU-based computing, making it possible to achieve real-time performance. Results and conclusions: Simulation results show that the simulated soft tissue exhibits the behaviors of adhesion and permanent deformation under the constraints. Experiments show that the proposed model is able to converge to the exact solution of the implicit Euler method after 96 iterations. The proposed model was implemented in the development of a neurosurgical simulator, in which surgical procedures such as dissection of convexity meningioma and hemostasis were simulated.
+
+摘要: 背景与目标：准确且实时的软组织模型对于需要触觉和视觉交互的外科手术仿真至关重要。本论文聚焦于用于神经外科手术仿真的脑组织实时变形模型。方法：提出了一种基于有限元方法（FEM）的带约束的新脑组织模型，适用于神经外科仿真。将描述虚拟手术器械与软组织相互作用的约束能量函数并入从隐式积分方案导出的优化问题中。引入距离约束和永久变形约束，以描述在凸性脑膜瘤解剖与止血中的相互作用。该模型尤其适合基于GPU的计算，可以实现实时性能。结果与结论：仿真结果表明，在约束条件下，模拟的软组织表现出粘附和永久变形的行为。实验证明该模型在96次迭代后能够收敛到隐式Euler法的精确解。该模型已实现于神经外科手术仿真器中，在该仿真器中实现了如凸性脑膜瘤解剖与止血等手术过程。
+tags:
+  - topic/biomechanics
+  - topic/neuroanatomy
+  - method/fem
+  - method/optimization
+  - method/simulation
+

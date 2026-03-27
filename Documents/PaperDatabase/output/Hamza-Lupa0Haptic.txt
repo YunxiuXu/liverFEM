@@ -1,0 +1,14 @@
+Title: Haptic Simulator for Liver Diagnostics through Palpation
+
+Author: Felix G. Hamza-Lupa, Crenguta M. Bogdan, Adrian Seitan
+
+Abstract: Abstract. Mechanical properties of biological tissue for both histological and pathological considerations are often required in disease diagnostics. Such properties can be simulated and explored with haptic technology. Development of cost effective haptic-based simulators and their introduction in the minimally invasive surgery learning cycle is still in its infancy. Receiving pre-training in a core set of surgical skills can reduce skill acquisition time and risks. We present the development of a visuo-haptic simulator module designed to train internal organs disease diagnostics through palpation. The module is part of a set of tools designed to train and improve basic surgical skills for minimally invasive surgery. Keywords:  haptic, diagnostics, minimally invasive surgery.
+
+摘要: 摘要：在疾病诊断中，生物组织在组织学和病理学方面的力学性质通常是必需的。这些性质可以通过触觉技术进行模拟和探索。开发成本有效的视觉-触觉型模拟器及其在微创外科学习循环中的引入仍处于起步阶段。在掌握核心手术技能的一系列培训中进行的预训练可以缩短技能获取时间并降低风险。我们介绍一种视觉-触觉耦合的模拟器模块，其旨在通过触诊训练内部器官疾病诊断。该模块是用于训练和提升微创手术基本技能的一系列工具的一部分。关键词：触觉、诊断、微创手术。
+tags:
+  - topic/haptics-overview
+  - method/simulation
+  - topic/biomechanics
+  - topic/force-perception
+  - topic/stiffness
+

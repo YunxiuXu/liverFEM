@@ -1,0 +1,317 @@
+Position Based Dynamics
+Matthias Müller et al.
+VRIPHYS 2006
+Copyright of figures and other materials in the paper belongs original authors.
+Presented by Eunki Hong
+2014. 10. 21
+Computer Graphics @ Korea University
+Eunki Hong  | 2014. 10. 21  | # 2
+Computer Graphics @ Korea University
+•
+Introduction
+•
+Related Work
+•
+Position Based Simulation
+
+Algorithm Overview
+
+Constraint Projection
+
+Collision Response
+•
+Cloth Simulation
+
+Representation of Cloth
+
+Self Collision
+
+Cloth Balloons
+•
+Result
+Index
+Eunki Hong  | 2014. 10. 21  | # 3
+Computer Graphics @ Korea University
+Introduction
+•
+Traditional approach to simulation
+dynamic objects had been work
+with forces
+•
+F = ma Calculate accelerations
+Error
+•
+This paper use only 
+constraint and position
+•
+Main Feature of PBD
+
+Control over explicit integration.
+
+Removes the typical instability problems.
+
+Positions of vertices can directly be manipulated during the 
+simulation.
+
+Easy to understand and implement.
+Eunki Hong  | 2014. 10. 21  | # 4
+Computer Graphics @ Korea University
+•
+Large Steps in Cloth Simulation
+
+[Baraff D. and Witkin A. / Proceedings of ACM SIGGRAPH 1998]
+•
+Using constraint function
+•
+Instead of computing constraint 
+function energy, this paper 
+solve for the equilibrium 
+configuration and 
+project positions
+Related Work
+Eunki Hong  | 2014. 10. 21  | # 5
+Computer Graphics @ Korea University
+•
+Meshless Deformations Based on Shape Matching
+
+[Matthias Müller et al / Proceedings of ACM SIGGRAPH 2005]
+•
+Closest method with this paper
+•
+Only treat one specialized global constraint. Therefore, do not 
+need a position solver.
+Related Work
+Position Based Simulation
+Eunki Hong  | 2014. 10. 21  | # 7
+Computer Graphics @ Korea University
+Algorithm Overview
+Initialize
+Move Position
+(external forces)
+Solver
+(internal forces)
+Eunki Hong  | 2014. 10. 21  | # 8
+Computer Graphics @ Korea University
+Algorithm Overview - Solver
+projectConstraints(C1,...,CM+Mcoll,p1,...,pN)
+for(C = C1 to CM)
+q C.get_using_vertices_set();
+ConstraintProjection(C,q);
+endfor
+for(C = CM+1 to CM+Mcoll)
+q C.get_using_vertices_set();
+CollisionResponse(C,q);
+endfor
+end
+Eunki Hong  | 2014. 10. 21  | # 9
+Computer Graphics @ Korea University
+•
+Constraint is a function
+
+C : R3nj R
+
+nj : the number of vertices that constraint use
+•
+Constraints expression internal energy
+•
+C(p) = 0 mean System is stable
+Define Constraint
+Eunki Hong  | 2014. 10. 21  | # 10
+Computer Graphics @ Korea University
+•
+C(p1,p2) = ||p1 – p2|| - d
+C(p1,p2) = ||Δp1|| + ||Δp2||
+C(p1,p2) = 0
+Constraint Example
+Eunki Hong  | 2014. 10. 21  | # 11
+Computer Graphics @ Korea University
+•
+Let define terms like
+
+C : Current constraint
+
+n : The number of vertices that constraint use
+
+pi : i‘s vertex position vector (size is 3)
+
+wi : Inverse of i‘s vertex mass ( = 1/mi)
+
+p : (p1,p2,…,pn) Connect of vertices position vector (size is 3n)
+
+Δp : next timestep vertices position (size is 3n)
+•
+We want to find Δp s.t. C(p + Δp) = 0
+•
+and ∑i miΔpi = 0 (momentum conserved)
+Constraint Projection
+Eunki Hong  | 2014. 10. 21  | # 12
+Computer Graphics @ Korea University
+•
+Taylor expansion
+C(p + Δp) ≒ C(p) + ∇pC(p)∙Δp = 0
+•
+Direction of Δp
+Δp = λ ∇pC(p)
+•
+Putting together
+Δp = –
+C(p)
+||∇pC(p)||2 ∇pC(p)
+•
+For individual position
+Δpi = –s ∇piC(p) ,
+s =  
+C(p)
+∑j||∇pjC(p)||2 (is scaling factor)
+Constraint Project Equation (1/2)
+(only if all vertices mass are equal)
+Eunki Hong  | 2014. 10. 21  | # 13
+Computer Graphics @ Korea University
+•
+Consider mass
+Δpi = –s wi ∇piC(p) ,
+s =  
+C(p)
+∑jwj||∇pjC(p)||2
+•
+Why?
+∑i miΔpi = 0 (linear momentum conserved)
+= –s ∑i∇piC(p) = 0 (translation invariance)
+Constraint Project Equation (2/2)
+Eunki Hong  | 2014. 10. 21  | # 14
+Computer Graphics @ Korea University
+•
+C(p1,p2) = ||p1 – p2|| - d
+∇p1C(p) = p1 – p2
+||p1 – p2||
+∇p2C(p) = – p1 – p2
+||p1 – p2||
+•
+∴ s = 
+C(p)
+∑jwj||∇pjC(p)||2 = ||p1 – p2|| – d
+w1 + w2
+.
+∴ Δp1 = – ||p1 – p2|| – d
+w1 + w2
+w1
+p1 – p2
+||p1 – p2||
+Δp2 = + ||p1 – p2|| – d
+w1 + w2
+w2
+p1 – p2
+||p1 – p2||
+Constraint Project Example
+Eunki Hong  | 2014. 10. 21  | # 15
+Computer Graphics @ Korea University
+•
+pi pi + k Δpi (k ∈ [0…1])
+•
+Distance between prev point and result point is Δpi(k)
+•
+After ns iteration, distance become Δpi(1 – (1 – k)ns)
+•
+So we need to change k’ dependent on iteration time
+•
+k‘ = 1 – (1 – k)1/solverIterations
+pi pi + k’ Δpi
+Stiffness parameter of Constraint
+Eunki Hong  | 2014. 10. 21  | # 16
+Computer Graphics @ Korea University
+•
+If xi pi ray enters an object,
+
+qc : entry point
+
+nc : suface normal
+•
+Make Constraint
+C(pi) = (pi – qc)∙nc
+Stiffness k=1
+•
+This constraint goal
+is C(pi + Δpi) ≥ 0,
+not C(pi + Δpi) = 0
+Collision Constraint
+xi
+pi
+qc
+nc
+Eunki Hong  | 2014. 10. 21  | # 17
+Computer Graphics @ Korea University
+•
+Collision constraint will work only C(pi) < 0
+Δpi =  
+0
+C(pi) ≥0
+–s wi ∇piC(pi)
+C(pi) < 0
+Collision Response
+Cloth Simulation
+Eunki Hong  | 2014. 10. 21  | # 19
+Computer Graphics @ Korea University
+•
+There are two type of internal force
+•
+Stretch
+
+Cstretch(p1,p2) = ||p1 – p2|| – l0
+
+Stiffness k = kstretch
+•
+Bending
+
+Cbend(p1,p2,p3,p4) = 
+acos( (p2 – p1) ×(p3 – p1)
+||(p2 – p1) ×(p3 – p1)|| ∙ (p2 – p1) ×(p4 – p1)
+||(p2 – p1) ×(p4 – p1)||) – φ0
+
+Stiffness k = kbend
+Representation of Cloth
+Eunki Hong  | 2014. 10. 21  | # 20
+Computer Graphics @ Korea University
+With Bending
+Without Bending
+Bending Constraint
+Eunki Hong  | 2014. 10. 21  | # 21
+Computer Graphics @ Korea University
+•
+If vertex q move though a triangle p1, p2, p3
+C(q,p1,p2,p3) = . (q – p1)∙n – h 
+and
+C(q,p1,p2,p3) = –(q – p1)∙n – h
+•
+When
+
+n : normal vector of triangle p1, p2, p3
+
+h : cloth thickness
+Self Collision
+Eunki Hong  | 2014. 10. 21  | # 22
+Computer Graphics @ Korea University
+•
+C(p1,…,pN) = ∑i(pt𝑖
+1 × pt𝑖
+2) ∙pt𝑖
+3
+– kpressureV0
+└ (Volume of mesh)
+•
+If kpressure > 1 mesh will get overpressure
+•
+∇piC(p) = ∑j:t𝑗
+1=i (pt𝑗
+2 × pt𝑗
+3) + ∑j:t𝑗
+2=i(pt𝑗
+3 × pt𝑗
+1) + ∑j:t𝑗
+3=i (pt𝑗
+1 × pt𝑗
+2)
+= ∑(normal vector who contain pi) * (area of flat)
+Cloth Balloons
+Eunki Hong  | 2014. 10. 21  | # 23
+Computer Graphics @ Korea University
+Result

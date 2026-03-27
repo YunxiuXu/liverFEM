@@ -1,0 +1,11 @@
+Title: XPBD: position-based simulation of compliant constrained dynamics
+
+Author: Miles Macklin, Matthias Müller, Nuttapong Chentanez
+
+Abstract: This short paper introduces XPBD, a position-based framework for the stable simulation of constrained dynamics with compliance. XPBD presents a method for solving constraints that accommodates both stiff and soft (compliant) interactions, enabling robust, scalable, and interactive physical simulation relevant to computer graphics and related applications.
+
+摘要: 本文简要介绍 XPBD，一种基于位置的框架，用于在具备顺从性的约束动力学中实现稳定的仿真。XPBD 提供了一种求解约束的方法，能够同时处理刚性和柔性（顺从）交互，从而实现鲁棒、可扩展且适用于交互式物理仿真的计算机图形学相关应用。
+tags:
+  - method/simulation
+  - topic/modeling
+

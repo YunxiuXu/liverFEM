@@ -1,0 +1,195 @@
+{
+  "main": {
+    "id": "f334927dc55fda22",
+    "type": "split",
+    "children": [
+      {
+        "id": "3b901180df6a22ad",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b5694c29c6c5b4c6",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Dashboards/all_papers.canvas",
+                "viewState": {
+                  "x": 700,
+                  "y": 1315.9321241409177,
+                  "zoom": 0.35651431823493906
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "all_papers"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "0a79a4b8804fd8bf",
+    "type": "split",
+    "children": [
+      {
+        "id": "7fc88f9eea9c96f0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4d912e1bf78cf43d",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "09bf3ac94f2b31ca",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "6d45cc240984f3b6",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "2774c2f7eb7fd330",
+    "type": "split",
+    "children": [
+      {
+        "id": "bb5a5feccc3a039d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "56ed4702c4a5abb9",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "PapersMd/Bouaziz2014Projective.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Bouaziz2014Projective 的反向链接列表"
+            }
+          },
+          {
+            "id": "5722b9d24cbb23ba",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "PapersMd/Bouaziz2014Projective.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Bouaziz2014Projective 的出链列表"
+            }
+          },
+          {
+            "id": "a8ca0fbeda75b419",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "f4d79fab36c73752",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "4dfd531bb31c23e4",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "PapersMd/Bouaziz2014Projective.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Bouaziz2014Projective 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false
+    }
+  },
+  "active": "b5694c29c6c5b4c6",
+  "lastOpenFiles": [
+    "Dashboards/Group-Based_Corotational_FEM_for_Real-Time_Large_Deformation_Simulation (1).pdf",
+    "Dashboards/all_papers.canvas",
+    "Dashboards/1-s2.0-S0045782518305267-main.pdf"
+  ]
+}

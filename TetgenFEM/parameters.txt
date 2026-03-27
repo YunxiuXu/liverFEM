@@ -138,20 +138,21 @@ agent_liveFileIntervalFrames=2
 
 # Axis-aligned walls (bbox-like): Y-/Y+ and X+ (3 planes)
 # `wall_marginBboxScale` is a per-axis bbox extent fraction (0.05 => ~5% gap).
-wall_enabled=true
+wall_enabled=false
 wall_marginBboxScale=0.05
 wall_restitution=0.0
 wall_tangentialDamp=0.2
 # Abdominal cavity: liver-shaped wall (rest-pose surface inflated outward by a gap).
+# Temporarily disabled: the inflated cavity is larger than the liver and is currently not desired.
 # Exposed side is +Y (no wall there).
-cavity_enabled=true
-cavity_collision_enabled=true
+cavity_enabled=false
+cavity_collision_enabled=false
 cavity_gap_bboxScale=0.065
 cavity_open_frac=0.45
 cavity_open_axis=1
 cavity_open_side=+1
 
-# Ultraleap Leap Motion (LeapC) right-hand fingertips (thumb..pinky) -> agent spheres mapping
+# Ultraleap Stereo IR-170 (LeapC) right-hand fingertips (thumb..pinky) -> agent spheres mapping
 leap_enabled=true
 leap_workspaceXmm=260
 leap_workspaceYmm=260

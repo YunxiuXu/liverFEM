@@ -1,0 +1,2200 @@
+ORIGINAL REPORTS
+Haptic Feedback, Force Feedback, and
+Force-Sensing in Simulation Training for
+Laparoscopy: A Systematic Overview
+D1X XEvelien M Overtoom, D2X XMD,* D3X XTim Horeman, D4X XPhD,† D5X XFrank-Willem Jansen, D6X XMD, PhD,†,‡
+D7X XJenny Dankelman, D8X XPhD,† and D9X XHenk W R Schreuder, D10X XMD, PhD*
+*Department of Gynaecology and Reproductive Medicine, University Medical Center Utrecht and Department of
+Gynaecologic Oncology, UMC Utrecht Cancer Centre, Utrecht, The Netherlands; †Department of Biomechanical
+Engineering, Faculty of Mechanical Engineering, Delft University of Technology, Delft, The Netherlands; and
+‡Department of Gynaecology, Leiden University Medical Centre, Leiden, The Netherlands
+OBJECTIVES: To provide a systematic overview of the lit-
+erature assessing the value of haptic and force feedback
+in current simulators teaching laparoscopic surgical skills.
+DATA SOURCES: The databases of Pubmed, Cochrane,
+Embase, Web of Science, and Google Scholar were
+searched to retrieve relevant studies published until Jan-
+uary 31st, 2017. The search included laparoscopic sur-
+gery, simulation, and haptic or force feedback and all
+relevant synonyms.
+METHODS: Duplicates were removed, and titles and
+abstracts screened. The remaining articles were subse-
+quently screened full text and included in this review if
+they followed the inclusion criteria. A total of 2 types of
+feedback have been analyzed and will be discussed sepa-
+rately: haptic- and force feedback.
+RESULTS: A total of 4023 articles were found, of which
+87 could be used in this review. A descriptive analysis of
+the data is provided. Results of the added value of haptic
+interface devices in virtual reality are variable. Haptic
+feedback is most important for more complex tasks. The
+interface devices do not require the highest level of ﬁdel-
+ity. Haptic feedback leads to a shorter learning curve
+with a steadier upward trend. Concerning force feed-
+back, force parameters are measured through force sens-
+ing systems in the instrument and/or the environment.
+These
+parameters,
+especially
+in
+combination
+with
+motion parameters, provide box trainers with an objec-
+tive evaluation of laparoscopic skills. Feedback of force-
+use both real time and postpractice has been shown to
+improve training.
+CONCLUSIONS: Haptic feedback is added to virtual real-
+ity simulators to increase the ﬁdelity and thereby
+improve training effect. Variable results have been found
+from adding haptic feedback. It is most important for
+more complex tasks, but results in only minor improve-
+ments for novice surgeons. Force parameters and force
+feedback in box trainers have been shown to improve
+training results. ( J Surg Ed 76:242261.  2018 Associa-
+tion of Program Directors in Surgery. Published by Elsev-
+ier Inc. All rights reserved.)
+KEY WORDS: Haptic feedback, Force feedback, Force
+sensing, Laparoscopy, Simulation, Training
+COMPETENCIES: Practice-Based Learning and Improve-
+ment, Medical Knowledge, Patient Care
+INTRODUCTION
+Acquiring surgical skills in a nonclinical setting through
+simulation includes fewer patient safety concerns and is
+less time consuming than traditional methods.1-3 More-
+over, simulation can be effectively used to train the more
+complex psychomotor skills necessary for minimal inva-
+sive surgery (MIS).4 Simulation has therefore become an
+essential part of the training curriculum to prepare for
+minimal invasive procedures, such as laparoscopy.5-7
+One of the main goals of simulation training is to cre-
+ate surgical realism at interactive rates.8 This entails
+both a realistic environment as well as a realistic sense
+of touch, including haptic perception.9 Haptic percep-
+tion or feedback is a term used to describe the
+Correspondence: Inquiries to Henk Schreuder MD, PhD, University Medical Cen-
+tre Utrecht, Department of Gynaecology & Obstetrics, PO box 85500, Room
+F05-126, 3508 GA Utrecht, The Netherlands, Tel: 0031(0)88 7556427; fax: 0031
+(0)88 7555433; e-mail: h.w.r.schreuder@umcutrecht.nl
+242
+Journal of Surgical Education 
+1931-7204/$30.00
+© 2018 Association of Program Directors in Surgery. Published by
+Elsevier Inc. All rights reserved.
+https://doi.org/10.1016/j.jsurg.2018.06.008
+combination of tactile and kinesthetic perception.10
+Haptic perception and feedback are controversial sub-
+jects in laparoscopic training simulator design since hap-
+tic feedback is reduced and distorted during MIS
+because of the long instruments and friction inside the
+trocars. On the other hand, haptic cues are essential dur-
+ing surgery to control motor functions and render appro-
+priate tissue handling skills.11,12 Tissue handling should
+be gentle during surgery and require little force use,
+since it causes tissue reaction or even damage and conse-
+quently can result in intraoperative errors.4,13 Better task
+performance is therefore associated with reduced force
+application.14-16 Training should focus on improving tis-
+sue-handling skills by proper use of force.14
+Currently available simulating methods can be subdi-
+vided into box-training, virtual reality (VR) and aug-
+mented reality (AR) training. A box trainer (BT) provides
+real haptic feedback but lacks a realistic environment and
+objective results. VR on the other hand lacks haptic feed-
+back but provides objective results. AR provides both
+haptic feedback during training and objective results.2
+Haptic feedback has been suggested to improve simu-
+lation training. In VR-trainers, haptic interface devices
+have been developed to create artiﬁcial haptic feedback,
+while BTs, which already provide natural haptic feed-
+back, are supplied with force sensing and force feedback
+mechanisms to improve training results.10,16-28 Although
+haptic and force feedback have been widely recognized
+as important concepts within laparoscopic simulation
+training, several issues have remained unresolved. These
+issues surround the characteristics that will result in
+optimal skill acquisition, such as ﬁdelity of a simulator
+and the composition of the optimal training curriculum.
+With this literature overview, we aim to assess the
+beneﬁts of force and haptic feedback in laparoscopic
+simulation. Should force and haptic feedback be used in
+laparoscopic simulation and more speciﬁcally when
+training skill acquisition and tissue manipulation? The
+available literature on haptic feedback, force feedback,
+and force sensing in simulation training used for laparo-
+scopic surgery will be researched.
+METHODS
+A systematic search was conducted in Pubmed, Embase,
+Cochrane, Google Scholar, and Web of Science to retrieve
+relevant studies published until January 31st, 2017. The
+search method developed for each database comprised of
+relevant synonyms of haptic and force feedback and force
+sensing, simulation, and laparoscopy (Table 1).
+One assessor (EO) removed duplicates and subse-
+quently screened the titles and abstracts of all remaining
+articles for inclusion. Articles were included if they
+focused on either haptic or force feedback or force sens-
+ing in simulation training for laparoscopy. Articles
+included in this systematic literature review include
+experimental studies as well as patent applications,
+opinionated papers, and editorials about both haptic
+and force feedback. Review articles were excluded since
+they do not present original data. They were, however,
+assessed for relevant references. Since haptic rendering
+is a process independent of the haptic interface devices,
+articles solely describing the development of algorithms
+enabling force feedback or calculating deformation were
+excluded. The in- and exclusion criteria are summarized
+in Table 2. The remaining articles were screened full
+text by 2 assessors (EO and TH). Any disagreements
+regarding selection and inclusion of articles were
+resolved through consensus. Each selected article was
+hand searched for relevant cross-references as were any
+reviews on the subject.
+Haptic, force, and tactile feedback are terms that are
+often used disorderly. In this article, haptic feedback is
+used to describe the combination of kinesthetic and tac-
+tile feedback, whereas tactile feedback is used to
+describe the perception of pressure, vibration, and tex-
+ture. Force feedback on the other hand is used to
+describe the actual feedback provided by a device con-
+cerning the use of forces and torques.
+Since this review involves haptic feedback as well as
+force feedback and force sensing, the articles identi-
+ﬁed cover a wide range of different subjects. Haptic
+feedback in VR simulation and force feedback in box
+training will be separately discussed. We will ﬁrst dis-
+cuss VR trainers. The types of haptic interface devices
+that have been designed to create artiﬁcial haptic feed-
+back, the necessary ﬁdelity level and articles discussing
+the effect of haptic feedback in VR trainers on training
+results will be covered. Subsequently, we will elabo-
+rate on force sensing and force feedback in BTs by dis-
+cussing force measurement systems, force parameters,
+and the effect of force feedback. Finally, different
+types of simulating trainers will be compared to one
+another.
+RESULTS
+Search Strategy and Study Selection
+A total of 4023 potentially relevant articles were
+retrieved through the search, of which 87 original
+articles could be used in this review. The articles were
+not
+individually
+appraised
+since
+many
+of
+studies
+included are descriptive and were ineligible for such
+appraisal. Figure 1 displays a ﬂow chart of the study
+selection process.
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+243
+TABLE 1. Search Methods
+Database
+Search Syntax
+Results
+PubMed
+#1
+(((haptic [tiab] OR tactile [tiab] OR tactual [tiab]) OR (force* [tiab] OR power* [tiab]
+OR strength* [tiab] OR tensile [tiab] OR intrinsic [tiab] OR pressure [tiab] OR
+(mechanical [tiab] AND process* [tiab]) OR “Mechanical Processes”[Mesh]) AND
+(feedback [tiab] OR assessment [tiab] OR evaluation [tiab] OR reaction [tiab] OR
+repl* [tiab] OR response* [tiab]) OR “Feedback”[Mesh])) OR (((force* [tiab] OR
+power* [tiab] OR strength* [tiab] OR tensile [tiab] OR intrinsic [tiab] OR pressure
+[tiab] OR (mechanical [tiab] AND process* [tiab]) OR “Mechanical Processes”[-
+Mesh]) AND (sense [tiab] OR sensing [tiab] OR measure [tiab] OR measurement
+[tiab] OR analysis [tiab] OR amount [tiab] OR appraisal [tiab] OR assessment
+[tiab] OR evaluation [tiab] OR “Weights and Measures”[Mesh])))
+593
+#2
+((simulation* [tiab] OR imitation* [tiab] OR reproduction* [tiab] OR “simulation
+model” [tiab] OR (physical [tiab] AND model* [tiab]) OR “virtual reality” [tiab] OR
+“augmented reality” [tiab] OR “box trainer”[tiab]OR “box training”[tiab] OR (box
+[tiab] AND train* [tiab]) OR ((surgical[tiab] OR skill*[tiab]) AND training[tiab])
+OR “Computer Simulation”[Mesh]))
+#3
+((laparoscop* [tiab] OR peritoneoscop* [tiab] OR celioscop* [tiab] OR endoscop*
+[tiab]) OR (((laparoscopic [tiab] OR endoscopic [tiab]) OR (minimal [tiab] AND
+invasive [tiab])) AND ((surgical [tiab] AND procedure* [tiab]) OR surgery [tiab]
+OR surgeries [tiab])) OR “Laparoscopy”[Mesh] NOT (ﬂexible [tiab] AND endos-
+copy [tiab]))
+#4
+#1 AND #2 AND #3
+Embase
+#1
+"tactile feedback"/exp OR ‘tactile feedback’:ab,ti OR "haptic feedback":ab,it OR
+"tactual feedback":ab,ti
+994
+#2
+haptic:ab,it OR tactile:ab,ti OR tactual:ab,ti
+#3
+force:ab,ti OR power:ab,ti OR strength:ab,ti OR tensile:ab,ti OR intrinsic:ab,ti OR
+pressure:ab,ti OR "mechanical process":it,ab OR forces:ab,ti OR powers:ab,ti OR
+strengths:it,ab OR "mechanical processes":ab,ti
+#4
+"feedback system"/exp OR feedback:ab,ti OR assessment:ab,ti OR evaluation:ab,
+ti OR reaction:ab,ti OR reply:ab,ti OR response:ab,ti OR assessments:ab,ti OR
+evaluations:ab,ti OR reactions:ab,ti OR replies:ab,ti OR responses:ab,ti
+#5
+"measurements"/exp OR measurement:ab,ti OR sense:ab,ti OR sensing:ab,ti OR
+measure:ab,ti OR measurementab,ti OR analysis:ab,ti OR amount:ab,ti OR
+appraisal:ab,ti OR assessment:ab,ti OR evaluation:ab,ti
+#6
+#1 OR ((#2 OR #3) AND #4) OR ((#2 OR#3 AND #5)
+#7
+"simulation"/exp OR simulation:ab,ti OR imitation:ab,ti OR reproduction:ab,ti OR
+model:ab,ti OR models:ab,ti OR "simulation model":ab,ti OR "virtual reality":ab,ti
+OR "augmented reality":ab,ti OR "box training":ab,ti OR "box trainer":ab,ti OR
+((surgical:ab,ti OR skills:ab,ti) AND training)
+#8
+"laparoscopy"/exp OR laparoscopy:ab,ti OR peritoneoscopy:ab,ti OR celioscopy:
+ab,ti OR "endoscopy":ab,ti OR videolaparoscopy:ab,ti
+#9
+#6 AND #7 AND #8
+Cochrane
+#1
+tactile:ti,ab or haptic:ti,ab or tactual:ti,ab
+67
+#2
+force:ti,ab or power:ti,ab or strength:ti,ab or tensile:ti,ab or intrinsic:ti,ab or pres-
+sure:ti,ab “mechanical process”:ti,ab
+#3
+“feedback system”:ti,ab or feedback:ti,ab or assessment:ti,ab or evaluation:ti,ab or
+reaction:ti,ab or reply:ti,ab or response:ti,ab or assessments:ti,ab or evaluations:
+ti,ab or reactions:ti,ab or replies:ti,ab or responses:ti,ab
+#4
+MeSH descriptor: [Mechanical Processes] explode all trees
+#5
+MeSH descriptor: [Feedback] explode all trees
+#6
+(#1 or #2 or #4) and (#3 or #5)
+#7
+measurement:ti,ab or sense:ti,ab or sensing:ti,ab or measure:ti,ab or measurement:
+ti,ab or analysis:ti,ab or amount:ti,ab or appraisal:ti,ab or assessment:ti,ab or
+evaluation:ti,ab
+#8
+MeSH descriptor: [Weights and Measures] explode all trees
+#9
+(#2 or #4) and (#7 or #8)
+#10
+simulation:ti,ab or imitation:ti,ab or reproduction:ti,ab or model:ti,ab or models:ti,
+ab or “simulation model*”:ti,ab or “virtual reality”:ti,ab or “augmented reality”:ti,
+(continued)
+244
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+VR Simulation
+Haptic Interface Devices in VR Training
+The majority of the studies identiﬁed covered the design
+of a haptic interface device build for VR trainers or
+described the use of these devices. A total of 39 articles
+elaborated on this subject.
+Several articles describe the development of a simula-
+tor with haptic feedback. By far the most often described
+device is the PHANToM, an invention of Thomas Massie
+at MIT and issued by SensAble technologies.26-33 Instead
+of using the PHANToM device, some researchers have
+themselves developed a device or a complete simulator
+with haptic feedback incorporated.10,27,34-50 The devel-
+oped simulators cover different laparoscopic procedures
+such as cholecystectomy,26 herniorhaphy40 and laparo-
+scopic adjustable gastric band surgery33 or basic laparo-
+scopic tasks such as the tasks used in the fundamentals
+of laparoscopic surgery program,31 palpation techni-
+ques42 and cutting tasks.50
+Fidelity of the VR simulator. Fidelity describes the resem-
+blance of a simulator to the actual surgical procedure in
+the operating room.51 The combination of mechanical
+actuators and the software system deﬁnes the ﬁdelity of
+a haptic interface device. Fidelity of a simulator device is
+thought to affect training results.30,35-38,48,51,52,54,55 Hap-
+tic devices are thought to be most realistic when they
+TABLE 1 (CONTINUED)
+Database
+Search Syntax
+Results
+ab or “box training”:ti,ab or “box trainer”:ti,ab or “surgical training”:ti,ab or
+“skills training”:ti,ab
+#11
+MeSH descriptor: [Computer Simulation] explode all trees
+#12
+laparoscopy:ti,ab OR laparoscop*:ti,ab or peritoneoscop*:ti,ab or celioscop*:ti,
+ab or “endoscopy”:ti,ab or videolaparoscop*:ti,ab or ((surgical:ti,ab and proce-
+dure:ti,ab) or surger*:ti,ab and laparoscop*:ti,ab)
+#13
+MeSH descriptor: [Laparoscopy] explode all trees
+#14
+(#6 or #9) and (#10 or #11) and (#12 or #13)
+Google Scholar
+#1
+((»haptic OR »force) AND »feedback) OR ((»force AND »sensing))
+1.430
+#2
+»simulation OR ((»skills OR »surgical) AND »training)
+#3
+(»laparoscopy OR »endoscopy) NOT »ﬂexible
+#4
+((journal AND paper) OR ‘journal paper’)
+#5
+#1 AND #2 AND #3 AND #4 + last 5 years (2011)
+Web of Science
+#1
+(TS = haptic OR TS = tactile OR TS = tactual) AND (TS = feedback OR TS = assess-
+ment OR TS = evaluation OR TS = reaction OR TS = repl* OR TS = response*) OR
+(TS = force* OR TS = power* OR TS = strength* OR TS = tensile OR TS = intrinsic
+OR TS = pressure OR (TS = mechanical AND TS = process*)) AND ((TS = sense OR
+TS = sensing OR TS = measure OR TS = measurement OR TS = analysis OR
+TS = amount OR TS = appraisal OR TS = assessment OR TS = evaluation) OR
+(TS = feedback OR TS = assessment OR TS = evaluation OR TS = reaction OR
+TS = repl* OR TS=response*))
+939
+#2
+(TS = simulation* OR TS = imitation* OR TS = reproduction*) OR TS = "simulation
+model” OR TS = "physical model” OR TS = "virtual reality" OR TS = "augmented
+reality" OR ((TS = box AND TS = train*) OR (TS = surgical OR TS = skill*)) AND
+(TS = train*)
+#3
+(TS = laparoscop* OR TS = peritoneoscop* OR TS = celioscop* OR TS = endoscop*
+NOT TS = "ﬂexible endoscopy") OR ((TS = laparoscopic OR TS = endoscopic) OR
+(TS = minimal AND TS = invasive)) AND ((TS = surgical AND TS = procedure*) OR
+TS = surger*)
+#4
+#1 AND #2 AND #3
+Date of search: 31-01-2017
+TABLE 2. In—and Exclusion Criteria
+Inclusion criteria
+- Corresponding domain and determinants
+- Haptic or force feedback; force sensing
+- Simulation trainers
+- Laparoscopy
+- Original data
+Exclusion criteria:
+- Systematic reviews
+- Flexible endoscopy
+- Colonoscopy
+- Endoscopic surgery simulator
+- Neurosurgery
+- Robotic surgery
+- Vascular surgery
+- Natural oriﬁce transluminal endoscopic surgery (NOTES)
+- Trocar/Needle insertion training system
+- Algorithm
+- Haptic rendering
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+245
+feature compactness, high sustained output force capa-
+bility, low inertia, low friction, high structural stiffness,
+0 backlash, an absence of mechanical singularities, good
+responsiveness, and narrow-ranged bandwidth.35-38,46
+The degrees of freedom (DOF) of the different haptic
+interface devices described in the literature range from 2
+to 6. Devices with 2 DOFs are solely capable of simulat-
+ing a movement such as poking or swinging in a single
+plane, while a device with 6 DOFs facilitates more com-
+plicated movements and actions in multiple directions.
+A human body allows for a total of 6 DOF: forward/back-
+ward, up/down, left/right, pitch, yaw, and roll.55 Due to
+limitations of a surgeon’s workspace, this number is
+decreased to 4 DOFs during laparoscopic surgery.37 The
+highest ﬁdelity is reached when the haptic interface
+device possesses the amount of DOFs similar to those
+available during laparoscopy.51 A higher number of
+DOFs on the other hand can negatively affect other
+mechanical properties such as inertia. Some studies
+therefore encourage using fewer DOFs.26,35,53,54 The
+software system of the device can further employ differ-
+ent methods to imitate tissue properties, which can be
+divided into linear and nonlinear methods. Force-dis-
+placement of real human tissue is nonlinear. Linear
+FIGURE 1. Study selection process.
+246
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+methods, however, are easier to achieve. Although ﬁdel-
+ity is higher with a nonlinear mechanism, Kim et al.
+found practically identical training effectiveness for both
+methods.51 Since haptic feedback devices are compli-
+cated to build and entail additional costs, Hiemstra et al.
+have proposed an alternative method to raise ﬁdelity.
+They propose to adjust the kinematic behavior of objects
+in a VR environment by adding the instrument velocity
+and physical properties of the objects. A software pro-
+gram was used that was able to add kinematic interac-
+tions to the objects in the VR trainer that were based on
+velocity of laparoscopic instruments and on the physical
+properties of the concerning objects. This has been
+found to improve learning curves compared with VR
+trainers without kinematic interaction.52
+Haptic Feedback in VR Training
+Surgeons have indicated during a preliminary analysis
+that they consider lack of tactile feedback the most
+important weakness of VR trainers and that haptic feed-
+back is sometimes even more important than visual feed-
+back.55,56 At the same time, they are critical about the
+currently available systems and prefer the natural haptic
+feedback such as available in fresh frozen cadavers to
+the simulated haptic feedback in VR trainers.57 Addi-
+tional friction caused by haptic feedback for instance, is
+thought to interfere with the haptic sensation, counter-
+balancing the added realism, and confusing an inexperi-
+enced operator.58-60 Additionally, haptic feedback is
+sometimes considered an unnecessary stimulus for nov-
+ice surgeons during training. Presumably, while acquir-
+ing a surgical skill, novice surgeons have less spare
+attentional resources to attend to these haptic cues.11
+The beneﬁts of adding haptic feedback to simulators
+aimed at inexperienced surgeons is therefore question-
+able. The following section describes the research exe-
+cuted to investigate the effect of haptic feedback in VR
+simulators on training results and learning or perfor-
+mance curves.
+Training results and haptic feedback. A total of 8 studies com-
+pared the training results of VR trainers with haptic feed-
+back
+devices
+to those
+without.7,11,53,61-64
+Table
+3
+provides an overview of these studies. A signiﬁcant dif-
+ference between devices with and without haptic feed-
+back is found in 6 studies,11,30,53,61,62,64 while 2 studies
+do not present a signiﬁcant difference.7,63 Several impor-
+tant differences can be identiﬁed between these studies
+that might explain the contradicting results. First, differ-
+ent types of tasks have been performed ranging in difﬁ-
+culty. Second, studies use several different outcome
+measures to assess task performance. Third, the test pro-
+tocols used, vary between studies. For example, Panait
+et al. let participants perform tasks
+in both the
+nonhaptic and haptic setting,62 while participants are
+split into 2 groups that are trained in either a haptic or
+nonhaptic setting in other studies.62 Finally, studies use
+different types of simulators and haptic interface devices
+with varying levels of ﬁdelity. The difference in perfor-
+mance between the simulators used could have resulted
+in contradictory result. Comparing simulation trainers
+with different levels of ﬁdelity, Khan et al. report that if
+haptic feedback is added to a device, skills improve sig-
+niﬁcantly more.30 Therefore, the differences in ﬁdelity
+levels between studies alone cannot be satisfactorily
+used to clarify contradicting results between studies.
+One study on the effect of haptic feedback is not
+included in Table 3. This study concludes that time to
+complete a task is signiﬁcantly lower when haptic feed-
+back is provided. However, the setting without haptic
+feedback also lacks visual feedback. Therefore, it is
+impossible to distinguish the effect of haptic feedback
+from the effect of visual feedback.32
+Overall, it seems that advanced tasks requiring supe-
+rior precision, beneﬁtted more from haptic feedback
+than basic tasks,62 speciﬁcally once more accuracy and
+delicate tool control are required.53 Needle driving tasks
+also beneﬁt more from haptic feedback during training
+than knot-tying tasks.64 The effect of haptic feedback on
+training results is most signiﬁcant at the beginning of
+training.64 Concerning outcome measures, 5 studies
+demonstrate that the time to complete a task is shorter
+as a result of haptic feedback.11,53,62,64,65 On the other
+hand, instrument movement is slower7 and tracking
+time similar for VR trainers with and without haptic
+feedback.63
+The usefulness of haptic feedback for novice surgeons
+in the skill-acquisition phase was investigated by Cao
+et al.11 They apply a method called cognitive loading.
+This method reduces the available attentional resources
+by asking participants to solve mental arithmetic prob-
+lems while executing a task on the VR trainer. Haptic
+feedback was found to counteract cognitive loading.
+The beneﬁcial effect of haptic feedback increased when
+participants were more experienced with laparoscopic
+surgery.11
+Learning or performance curve and haptic feedback. Since it is
+not possible to measure learning directly, performance
+scores, which combine different outcome measures, are
+often used. A performance or learning curve is then cre-
+ated from the scores acquired when a task is completed
+multiple times.2 The learning curve associated with lapa-
+roscopy is known to be very gradual. At least 100 prac-
+tice
+cases
+are
+recommended
+for
+more
+complex
+procedures.16 VR trainers accelerate this process in novi-
+ces and experts.66,67 The effect of VR trainers is most sig-
+niﬁcant during the early part training.67 A total of 4
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+247
+TABLE 3. Effect of Haptic or Force Feedback on Performance Scores on VR Trainers
+Article
+Participants
+Type of simulator
+Task
+Independent
+Measure
+Dependent Measure
+Conclusion
+N
+Type
+Cao et al.11
+30
+No, I, E
+MIST-VR
+ProMIS
+Transfer-place
+task
+- Cognitive load-
+ing
+- Haptic feedback
+Experience
+- Time to task completion
+- Errors
+- Number of math problems solved
+Haptic feedback enhances
+performance and counter-
+balances cognitive load.
+Kim et al.53
+24
+No
+Self-developed with
+Phantom
+Pulling and
+cutting
+Haptic feedback:
+linear, nonlinear,
+no feedback
+- Total Performance Score
+- Time
+- Cut Accuracy
+- Push Accuracy
+- Obstacle Avoidance
+Skill transfer improves with
+haptic feedback. No dif-
+ference between linear
+and nonlinear model.
+Khan et al.30
+25
+No, E
+Mouse
+Joystick with/without
+haptic feedback
+Phatnom Omni
+Hand Manipulator
+Poking and pre-
+cision
+Peg transfer
+Fidelity of
+simulator
+- Economy of movement
+- Speed
+- Precision
+Haptic feedback improved
+result even on simulators
+with a lower ﬁdelity such
+as a joystick.
+Lamata et al.79
+32
+No, I, E
+Self-developed with
+Phantom
+Pulling and
+pushing
+- Experience
+- Visual feedback
+Haptic feedback
+- Tissue consistency
+- Conﬁdence
+- Tissue identiﬁcation
+If tissue consistency informa-
+tion is to be delivered,
+haptic feedback is
+necessary.
+Panait et al.62
+10
+No
+Self-developed with
+Phantom
+Peg transfer
+Pattern cutting
+- Haptic feedback
+- Time to complete task
+- Grasping tension
+- Instrument path length
+- Dexterity
+- Missed objects
+- Tissue damage
+Haptic feedback improves
+performance measures
+and reduces errors espe-
+cially for advanced tasks.
+Salkini et al.7
+20
+No
+Simbionix LapMentor
+II
+Grasp, Pul and
+Cut
+- Haptic feedback
+- Videogame play-
+ing
+- Accuracy
+- Economy of movement
+- Average speed
+Less effect of haptic feed-
+back on performance than
+hypothesized.
+Thompson et al.63
+33
+No
+Simbionix LapMentor
+II
+Cholecystec-
+tomy; Basic
+tasks
+- Haptic feedback
+- Time
+- Efﬁciency
+- No of movements
+- Path length
+Speed
+No signiﬁcant effect of hap-
+tic feedback.
+Zhou et al.64
+20
+No
+MIST-VR
+ProMIS
+Knot tying
+- Haptic feedback
+- Time to complete
+Signiﬁcant difference espe-
+cially in ﬁrst 5 hours.
+248
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+studies have evaluated the learning curves of VR simula-
+tors with and without haptic feedback.9,53,63,64 An over-
+view of these articles is presented in Table 4.
+The effect of haptic feedback on the learning curve
+seems to depend on the task performed. The learning
+curve of participants training with haptic feedback per-
+forming basic tasks started at a much higher level, was
+more regular, showed a more steadily upward trend,
+and showed less variability between the participants
+when compared to learning curves obtained in a setting
+without haptic feedback.53 The effect of haptic feedback
+on learning curves is most signiﬁcant in the early train-
+ing phase.9 When performing more complicated tasks,
+the difference between learning in a haptic and nonhap-
+tic setting were not found to be signiﬁcant.63 Knot-tying
+tasks in a VR simulator with haptic feedback resulted in
+steeper learning curves and less variance between sub-
+jects compared to a simulator without haptic.64
+Force Feedback and VR
+The use of force feedback to improve skill acquirement
+is most often attributed to BTs. A total of 4 studies have
+discussed force feedback in a VR setting.10,24,68.69 Novi-
+ces were found to apply signiﬁcantly higher amounts of
+force for both basic and more complex probing and
+grasping tasks and basic sweeping tasks than experts in
+a
+VR
+setting
+and
+to
+use
+more
+abrupt
+tool
+movements.24,68,69
+Visual
+force
+feedback
+improved
+force and motion parameters of residents on both basic
+and more complex tasks in a VR trainer.68 Force feed-
+back has also been effectively used during VR training,
+to teach novices how far to insert laparoscopic tools.10
+BTs
+Force Measurement Systems
+The ability of measuring forces is separately added to
+BTs. These force measurement sensors can be divided
+into 2 different categories; force sensors in the instru-
+ment, and force sensors in the environment of the instru-
+ment. Force sensors in the instruments measure a
+representative of the force exerted with the instrument
+tip on the surroundings. Force sensors in the environ-
+ment measure a representative of the reaction force and
+can be located in and under the training task or at the
+instrument incision site.
+Sensors in the instruments should not restrict or inﬂu-
+ence the instrument movements during training. When
+the sensor is placed in the instrument shaft, it is prefera-
+bly small and often built out of layers of piezoelectric,
+resistive,
+optical,
+or
+capacitive
+materials.70-73
+This
+approach requires signiﬁcant modiﬁcation of the instru-
+ment but can provide a relatively good output in terms
+of sensitivity, accuracy, and force direction as all the
+TABLE 4. Effect of Haptic Feedback on Learning Curves in VR Trainers
+Article
+Participants
+Research
+method
+Groups
+Outcome Measure
+N
+Type
+Kim et al.53
+24
+No
+Training results
+pre and post
+test
+VR with linear
+haptic
+feedback
+VR with nonlin-
+ear haptic
+feedback
+Control
+- Total Performance Score
+- Time
+- Cut Accuracy
+- Push Accuracy
+- Obstacle Avoidance
+Str€om et al.9
+38
+I
+Post test
+VR with early
+haptic
+feedback
+VR with late
+haptic
+feedback
+-
+- Total Performance Score
+Thompson et al.63
+33
+No
+Post-test
+training
+Haptics
+No haptics
+Control
+- Time
+- Efﬁciency
+- No of movements
+- Path length
+- Speed
+Zhou et al.64
+20
+No
+Post test
+Haptics
+No haptics
+-
+- Time to complete successful
+knot
+- Instrument path*
+- Instrument smoothness*
+- Error*
+- Overall score*
+AR = Augmented reality; Box = boxtrainer; VR = virtual reality.
+E = expert; I = intermediate; No = novice.
+SP = single port; TP = 2 port.
+*Outcome measures restricted to either the haptics or the no haptics simulator.
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+249
+forces are transmitted through the sensor. If instrument
+modiﬁcation is not allowed, strain gauges glued on, or
+placed around, the shaft can be used to measure the
+strain in the metal shaft due to bending of the instru-
+ment.74 Strain gauges, however, are inﬂuenced by tem-
+perature changes and the glue is not resistant to
+chemicals and autoclave sterilization. As the force is not
+transmitted through the gauges directly the output/
+stress relation needs to be determined through calibra-
+tion. Independent of the location of the sensors on the
+instrument, there is always a connection between sensor
+and controller that potentially inﬂuences the user.
+There are 3 important advantages of forces measure-
+ment in the direct environment of the instrument over
+integration of a force sensor in the instrument. First,
+standard instruments can be used and changed during
+the training based on the user’s preference. Second,
+there is no critical size requirement for the sensor as it is
+often located under or in the training task.17,18 Third,
+deformation of force sensors integrated in or under a
+training task is allowed to some degree as the tissues
+that are manipulated are also highly deformable. A force
+sensor integrated in the instrument should not inﬂuence
+the instrument stiffness of the instrument. It is therefore
+much more expensive to build. A disadvantage of a
+signed force sensor under the task is the measurement
+of reaction forces only. It can therefore be impossible to
+determine which of the 2 instruments exerts force on
+the task. By placing 2 sensors between the 2 instrument
+shafts and top plate at each of the incision sites, the con-
+tact force for each instrument can be used as an addi-
+tional
+source
+of
+information
+for
+bimanual
+skills
+assessment.75
+Force-Sensing for Assessment of Surgical Skills
+Force can be used as a parameter in the training of lapa-
+roscopic skills such as grasping16 and palpation25 or as a
+measure of tissue manipulation in general.76 It can also
+be used in trainers to provide feedback to the users.
+Grasping tissue results in a combination of different
+forces exerted on the tissue, including pinch forces to
+grab the piece of tissue and pull forces moving the tissue
+elsewhere. The combination of these forces inﬂuences
+whether tissue will slip, be damaged or is grasped suc-
+cessfully. Using a force-sensing grasper during laparo-
+scopic surgery, Susmitha et al. have found that more
+surgical experience leads to a reduced use of pinching
+force, as do tissue type and visual feedback.16 It was fur-
+ther found that novices applied signiﬁcantly higher
+amounts of force for probing, sweeping, and grasping
+tasks than experts in VR simulators.24
+An assortment of possible force parameters is men-
+tioned in the literature. The most often used parameters
+are maximum absolute force and mean absolute nonzero
+force, which is the force averaged across all samples dur-
+ing the time that the force exerted was above 0. Some
+parameters are not directly measured, but can be calcu-
+lated such as the rate of change (derivative of used force)
+and total force use over time (integral of used force).77
+Table 5 provides an overview of the different force
+parameters.15,17,18,75-81 Force use is thought to be a
+direct measure of tissue handling skill. This is a measure
+of how roughly the tissue is treated and if tissue damage
+has occurred. Damage to tissue occurs when more than
+1.5 N of tractive force is used during suturing.4
+The use of force-based metrics is a better indication of
+performance than metrics of time or position informa-
+tion alone.77 It is recommended to use a combination of
+different parameters to assess tissue handling skills.
+Assessment of the training of novice and intermediate
+surgeons especially should include force parameters as
+well as motion parameters such as pathway and position
+information.75 Both expert and novice surgeons have
+been found to misinterpret use of force, which results in
+excessive use of force by both groups. Training with
+force feedback and force parameters is therefore hypoth-
+esized to be beneﬁcial for both novices and experts.14
+Differentiating Power
+Discrimination between different levels of experience is
+thought to be a good measure of the training ability of a
+simulator. Table 6 displays results of the different studies
+on this subject. Level of experience is dependent upon
+the amount of accomplished laparoscopic procedures or
+the postgraduate year.
+Table 6 demonstrates that the differentiating power of
+force parameters varies for different task sets. Force
+parameters on a cutting task are not able to discriminate
+between novices and experts,77 while the result of force
+use during peg transfer and needle driving does differ
+signiﬁcantly between novices and experts18,19 and
+between novices, intermediates and experts.17 Results
+of more difﬁcult tasks such as tissue handling, suturing
+and knot tying are more ambiguous. Trejos et al. have
+found the strongest correlations between experience
+and force-based metrics during suturing and knot-tying
+tasks.77 Cundy et al. also report signiﬁcant differences in
+mean force application during a task involving suturing
+and intracorporeal knot tying.22 Horeman et al. describe
+that despite the high discriminating power of the param-
+eters that represent the maximal force value measured,
+the mean force value and force variability are not
+strongly correlated to surgical experience during knot
+tying due to minimal contact between tissue and instru-
+ment tips.20 Concerning tissue handling, Horeman et al.
+found that discrimination was best measurable by com-
+bining motion and force parameters in more dynamic
+tasks.75 Correlations during a tissue handling task in the
+250
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+study by Trejos et al. were signiﬁcant for many force
+parameters, but not as strong as those during suturing
+and knot-tying tasks.77 An important difference between
+these studies is that Trejos et al. use sensitized laparo-
+scopic instruments to measure tool-tissue interaction
+forces at the tip of the instrument,77 while the other
+studies measure the forces exerted on the tissue.17,20,75
+One study is not included in Table 6 since it is not
+reported whether or not differences are signiﬁcant.25 It
+reports that mean force use of novices and experts
+showed very different patterns. While experts tended to
+use overall low forces with a characteristic peak at the
+end of the task as they tighten the knot, novices used
+much higher forces throughout the entire task.25
+Although the exact parameters used as performance
+metrics for different tasks are variable, several differen-
+ces between novices and experts have been clariﬁed.
+Novices
+tend
+to
+use
+higher
+mean
+forces
+than
+experts.17,18,20,22,77 The used forces are higher in the
+course of the complete task with higher peak forces and
+bigger force volumes for most complex tasks. While
+tying a knot, novices tend to exert higher maximum
+forces for longer periods of time and the regularity and
+smoothness of the applied forces are signiﬁcantly better
+for experts.20,25,77
+Force Feedback
+A total of 9 studies have concentrated on using force
+feedback in BTs. Feedback can be provided in 3 different
+ways: auditory, visual, and haptic feedback. Since audi-
+tory feedback is unpractical in an operation room (OR)-
+setting, only visual and tactile feedbacks have been
+investigated.82 Minimizing the time delay between the
+movement and feedback is essential to create realistic
+instrument movement.19
+TABLE 5. Overview Different Force Parameters
+Force Parameter
+Deﬁnition
+In
+Used in
+Maximum absolute force
+Maximum value in the absolute force vector
+Newton
+Cundy et al.17
+Hanna et al.15
+Horeman et al.18,75,76
+Rodrigues et al.12,80
+Mean absolute nonzero force
+Averaged mean absolute force of periods during
+training in which the force was not 0
+Newton
+Cundy et al.17
+Horeman et al.18,20,75
+Rodrigues et al.12,80
+Wottawa et al.81
+Mean absolute force
+The total mean absolute force during measurement
+Newton
+Horeman et al.78
+Rodrigues et al.12
+Force volume
+Volume spanned around the 3 largest standard devia-
+tions of the force in an ellipsoid
+Newton/second
+Cundy et al.17
+Horeman et al.75,78
+Rodrigues et al.12,80
+Maximum force area/peak
+force
+The maximum force area indicates the largest force
+area. This is created between the moment in time
+when the absolute force becomes higher than 0 until
+the moment it becomes 0 again.
+Newton-seconds
+Horeman et al.78
+Wottawa et al.81
+Peak to peak value
+Sum of the tissue reaction force and 2 times the trocar
+friction. A complete cycle of pulling tissue.
+Newton
+Lamata et al.79
+Maximum temporal slope
+The maximal increase rate of the amount of force
+used.
+Newton/second
+Lamata et al.79
+Force range
+The differences between the minimum and maximum
+force applied during a task
+Newton
+Trejos et al.77
+Interquartile range
+This only takes into account the 50% of the data clos-
+est to the median
+Newton
+Trejos et al.77
+Force area/integral of the force
+A measure combining the total force used over a cer-
+tain time.
+Newton/second
+Trejos et al.77
+Force derivatives
+The derivatives of force can indicate the consistency
+and rate of change of the applied force.
+Newton/second
+Trejos et al.77
+Smoothness of the applied
+force
+Measured as the third derivative of force, it calculates
+the regularity and uniformity of the contact force.
+Newton/second
+Trejos et al.77
+Left and right maximum abdom-
+inal force
+This represents the absolute abdominal force in the left
+and the right trocar
+Newton
+Horeman et al.76
+SP maximum abdominal force
+The absolute abdominal force in the single-port trocar
+Newton
+Horeman et al.76
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+251
+TABLE 6. Differentiation Power of Force Parameters in Box Trainers
+Article
+Participants
+Task
+Dependent Measure
+Results
+N
+Type
+p Value
+Cundy et al.17
+18
+No, I, E
+Peg transfer
+- Mean relative nonzero force
+NoIE
+0.006
+- Maximum force
+0.020
+- Force magnitude
+0.001
+- Force error
+<0.001
+Suturing with
+intracorporeal
+knot
+- Mean relative nonzero force
+0.018
+- Maximum force
+0.033
+- Force magnitude/force error
+<0.001
+Horeman et al.18
+10
+No, E
+Needle-driving
+- Max force
+NoE
+<0.017
+- Mean absolute nonzero force
+<0.005
+Horeman et al.20,*
+32
+No, E
+Needlle-driving
+- Mean absolute force/Standard deviation
+NoE
+0.001
+- Max absolute force
+<0.001
+- Volume
+0.022
+- Force Peak
+<0.05
+Knot-tying
+- Mean absolute force, Standard deviation,
+Volume
+>0.05
+- Max absolute force
+0.001
+- Force Peak
+0.027
+Horeman et al.75
+42
+No, I, E
+Tissue attachment
+under traction
+- Max absolute force
+NoI
+>0.05
+IE
+0.042
+NoE
+<0.05
+- Mean absolute nonzero force
+NoI/IE/NoE
+>0.05
+- Force volume
+NoI
+0.028
+IE
+0.034
+NoE
+>0.05
+- Max force area
+NoI/NoE
+>0.05
+IE
+<0.05
+- STD force
+NoI/IE
+>0.05
+NoE
+<0.05
+Placement of
+silicone wire
+- Max absolute force
+NoI
+>0.05
+IE
+0.002
+NoE
+<0.001
+- Mean absolute nonzero force
+NoI/IE/NoE
+>0.05
+- Force volume
+NoI/IE
+<0.05
+NoE
+>0.05
+- Max force area
+NoI/NoE
+>0.05
+IE
+0.036
+- STD force
+NoI/IE
+>0.05
+NoE
+0.017
+Javaraman et al.22
+20
+No, E
+Suturing
+- Total force
+NoE
+>0.05
+- Grasping force
+0.025
+- Torsion force
+0.31
+Trejos et al.77
+30
+No, E
+Palpation
+- Grasp mean, max, IQR
+NoE
+<0.05/>0.05**
+- Grasp integral, second, third derivative
+<0.05/<0.05**
+- Grasp ﬁrst derivative
+<0.05/<0.05**
+- Cartesian forces mean, IQR
+>0.05/>0.05**
+- Cartesian forces maximum,
+integral, ﬁrst, second, third derivative
+<0.05/<0.05**
+Cutting
+- Grasp mean, maximum, IQR, integral,
+ﬁrst, second, third derivative
+>0.05
+- Cartesian forces mean, integral, second,
+third derivative
+<0.05
+Tissue handling
+- Grasp mean, IQR
+>0.05/>0.05**
+- Grasp maximum, integral, ﬁrst derivative
+>0.05/<0.05**
+- Grasp second, third derivative
+<0.05/<0.05**
+- Cartesian forces mean, maximum, IQR
+>0.05/>0.05**
+- Cartesian forces integral, ﬁrst, second,
+third derivative
+<0.05/<0.05**
+(continued)
+252
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+A total of 7 studies have investigated visual force feed-
+back systems.10,12,20,24,78,83,84 These systems provide
+feedback either real time, during the task, or after having
+ﬁnished the task. Both methods have had positive effects
+on training results.12,20,78,84 Real-time feedback can be
+provided as a constant feedback signal that is present
+throughout the entire task, but also in an intermittent
+manner. Smit et al. have compared constant visual feed-
+back with band-with and fade-in visual feedback.88 Band-
+with visual force feedback entails that feedback is pre-
+sented only if a certain threshold is exceeded. With fade-
+in visual force feedback, the amount of feedback shown
+is dependent upon the skill-level of the participant. All
+types of real-time feedback improve tissue-handling skills
+with best result from a band-with presentation of visual
+force feedback.88 The feedback signal used by Horeman
+et al. is a vector displaying the direction of the force and
+the amount of force used.20,78 This lead to a 60% reduc-
+tion of the used force and resulted in improved tissue-
+handling skills compared with visual feedback of the
+time progressed.78 Besides real-time feedback, post-test
+feedback of force parameters has also been found to
+elicit a signiﬁcant improvement of the interaction forces
+during the knot-tying face of suturing, whereas the effect
+of training without any feedback did not improve force
+use.12 A simulator equipped with visual force feedback
+signiﬁcantly improves precision and accuracy of force
+application by combining real-time visual feedback after
+practicing speciﬁcally designed tasks.10,24,83
+Instead of visual feedback, Wottawa et al. have investi-
+gated the effect of enhanced tactile feedback. BTs
+already contain natural haptic feedbacks, therefore the
+tactile feedback signal consisted of an enhanced sensa-
+tion transmitted to the handle grip using a specially
+designed
+laparoscopic
+grasper.
+The
+supplementary
+haptic feedback resulted in lower grasp force for novi-
+ces. Experts used a comparable amount of grasp force in
+either setting.81
+A safe grasp should not damage the tissue, but also
+avoid tissue slipping. To directly compare visual and tac-
+tual feedback, reaction times to tissue slippage have
+been measured. The results of this study showed that
+reaction times to upcoming tissue slippage were faster
+using tactile than visual feedback.82 Further studies on
+this subject comparing different methods of force feed-
+back are currently lacking.
+Similar to studies examining the training effect of hap-
+tic feedback in VR trainers, the advantages of force feed-
+back on learning or performance curves in BTs have
+been investigated. In BTs, force parameters can be used
+to create a learning curve.17 Direct visual feedback of
+force interaction in box training was shown to signiﬁ-
+cantly improve the learning curve of novices compared
+to training without visual feedback when provided in a
+real-time manner78 and after ﬁnishing the exercise.12
+Comparison of Haptic Feedback Between
+Simulators
+Different simulators are used to train laparoscopic skills.
+Besides box- and VR trainers, a third type of simulator,
+an AR simulator, exists. In this type of system, the video
+screen of the simulator shows real images overlaid with
+graphical imagery to create an enhanced world around
+the user and to direct the user. It combines the natural
+haptic feedback of a box-trainer with the virtual sur-
+roundings and objective measures of performance of a
+VR simulator.85 Only a very limited amount of studies
+has investigated AR simulators. One study has been
+found on discriminating power of AR simulators. It
+TABLE 6 (CONTINUED)
+Article
+Participants
+Task
+Dependent Measure
+Results
+N
+Type
+p Value
+Suturing
+- Grasp mean, maximum, integral, ﬁrst,
+second, third derivative
+<0.05/<0.05**
+- Grasp IQR
+>0.05/<0.05**
+- Cartesian forces mean, IQR
+>0.05/<0.05**
+- Cartesian forces maximum, integral, ﬁrst,
+second, third derivative
+<0.05/<0.05**
+Knot tying
+- Grasp mean, maximum, integral, ﬁrst,
+second, third derivative
+<0.05/<0.05**
+- Grasp IQR
+>0.05/>0.05**
+- Cartesian forces mean, maximum, IQR,
+integral, ﬁrst, second, third derivative
+<0.05/<0.05**
+p values in bold are signiﬁcant.
+No = novices; I = intermediates; E = experts.
+*Only the most relevant dependent measures have been used.
+**Left hand/right hand
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+253
+concludes that it is impossible to distinguish between
+novices and experts on an AR trainer based on force
+measurements alone during suturing.21
+Lack of complete or natural haptic feedback is one of
+the most important characteristics distinguishing VR
+trainers from BTs. A comparison of these trainers could
+clarify the importance of (natural) haptic feedback for
+training laparoscopic skills. Several studies have aimed
+to compare the different types of haptic feedback
+employed by simulators.
+A total of 7 studies have compared box and VR train-
+ers.2,52,55,67,86-88 The results of these studies are dis-
+played in Table 7. A total of 3 studies found results
+favoring BTs.2,55,86 The exerted force, time used and
+accuracy were signiﬁcantly worse in the virtual environ-
+ment.86 Participants also performed better on a VR
+trainer after having practiced on a BT ﬁrst, but not the
+other way around if tasks required force application55
+and
+laparoscopic
+suturing
+skills
+were
+not
+further
+improved by training on a VR trainer after having trained
+on a BT.2 A total of 3 studies found comparable results
+for both types of trainers.52,67,87 Madan and Frantzides
+found
+no
+signiﬁcant
+differences
+in
+performance
+scores.87 Balci et al. similarly report that objective struc-
+tured assessment of technical skills scores are similar for
+both types of simulation trainers.67 Both studies employ
+VR trainers without haptic feedback. Hiemstra et al.
+report that both a VR trainer supplied with additional
+kinematic interactions and BTs were found to improve
+economy of movement and speed when accomplishing
+a task demanding complex force application.52 A study
+by Zhang et al. showed that performance scores after
+using a BT were signiﬁcantly higher than those after
+using a VR trainer equipped with haptic feedback, but
+that the same VR trainer induced a steeper learning
+curve than a BT.88
+AR trainers have been compared to VR trainers in 2
+studies.85,89 Performance after training on either an AR
+trainer or VR without haptic feedback did not differ sig-
+niﬁcantly.89 Comparison of the learning curves on a VR
+trainer and an AR trainer also did not indicate favorable
+results for either trainer.89 An AR trainer, however, was
+considered a more realistic and better training tool and
+allowed more measurable parameters than a VR trainer
+without haptic feedback.85
+DISCUSSION
+Haptic, force, and tactile feedback are important con-
+cepts regarding laparoscopic surgery. The overall addi-
+tional value of haptic feedback in VR trainers is
+contradictory. Haptic feedback does seem to have a
+small positive effect on training performances, which is
+most signiﬁcant when performing more advanced tasks.
+Studies on learning curves show that simulators with
+haptic feedback accelerate ones learning and result in a
+steadier upward trend than those without haptic feed-
+back, speciﬁcally at the beginning of training. Disadvan-
+tages of unnatural haptic feedback have furthermore
+been acknowledged such as the additional friction
+caused by a haptic interface device or unexpected move-
+ments due to model errors during instrument environ-
+ment
+collisions.
+Moreover,
+the
+beneﬁts
+of
+haptic
+feedback for novice surgeons in the skill acquisition
+phase of learning, whom simulation training is most
+often aimed at, is questionable. Comparing simulators
+with to simulators without haptic feedback, improve-
+ments are often minor for novices practicing basic skills.
+One of the reasons can be that creating perfect haptic
+feedback from a virtual environment seems difﬁcult due
+to the required response time and operating frequency.
+Therefore it remains difﬁcult to truly show the value of
+haptic feedback in complex laparoscopic tasks.
+Concerning BTs, force parameters, especially when
+combined with motion parameters, are able to provide
+an objective rating of laparoscopic skills. Force feed-
+back, moreover, improves training both when provided
+real time and post training. The possibilities of AR train-
+ers, which provide natural haptic feedback as well as a
+more realistic environment, seem promising. The major-
+ity of the studies compared the effects of VR and BTs
+favor BTs over VR trainers. The results of AR and VR
+trainers were comparable.
+When interpreting these results, several limitations
+must be considered. The most important limitation is
+the large amount of variability between the studies.
+Especially the studies concerning haptic interface devi-
+ces are difﬁcult to compare to each other. Studies use
+many different types of haptic interface devices, differ-
+ent simulators with tasks varying in difﬁculty, subjects,
+and outcome measures. The lack of universal outcome
+measures is especially conspicuous since it prevents
+direct comparison of the results of different studies. Sec-
+ond, several items are investigated in only a limited num-
+ber
+of
+studies.
+The
+effect
+of
+force
+feedback
+on
+performance or learning curves for example is discussed
+in only 3 studies. As a result, conclusive evidence is miss-
+ing. Finally, the one outcome measure that is very often
+used, time to complete a task, is often critically looked
+upon. It would promote working fast instead of consci-
+entious and is especially unsuitable to evaluate begin-
+ners, who have not yet reached the autonomous
+learning phase.77 This assumption is based on the theory
+of learning a skill by Fitts and Posner.90 This theory sub-
+divides the learning of a technical skill into 3 phases: the
+cognitive, assimilation, and autonomy phase. When a
+subject has not yet automated a certain skill, focussing
+254
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+TABLE 7. Trainers With Natural Haptic Feedback Compared to VR Trainer with or Without Added Haptic Feedback
+Article
+Participants
+Type of Simulator
+Task
+Outcome Measure
+Conclusion
+N
+Type
+Box
+VR
+p Value
+Type
+HF
+Balci et al.67
+16
+No
+Box
+LapSim
+Y
+Laparoscopic cyst decortication
+OSATS
+Respect to tissue
+0.64
+Time and manipulation
+0.50
+Instrumental experience
+0.50
+Safety
+1.00
+Assistant use
+1.00
+Flow
+0.23
+Accuracy
+0.38
+Bell and Cao86
+10
+No
+Box
+Handshake
+Y
+Probing
+Time to detection
+<0.001
+Maximum force application
+<0.001
+Error in detection
+0.007
+Botden et al.2
+20
+I
+Box
+SimSurgery
+N
+Suturing Knot tying
+Summation of scores
+Box vs control
+0.298
+VR vs control
+0.772
+Box vs VR
+0.160
+Chmarra et al.89
+19
+I
+Box
+SIMENDO
+N
+Balls task
+Box + VR
+Time/Path length/Depth perception
+>0.05
+Ring task
+Box + VR
+Time/Path length/ Depth perception
+>0.05
+Elastic band task
+Box
+Time/Path length/Depth perception
+<0.001
+VR
+Time, Path length L/Depth perception L
+>0.05
+Path length R
+<0.001
+Depth perception R
+<0.002
+Hiemstra et al.52
+50
+No
+Box I / Box II*
+VRI: SIMENDO/ VR
+II: SIMENDO**
+I:N II:Y Rubber band task
+Time
+VRI/ VRII/BoxI/Box II
+<0.005
+Control
+>0.05
+Total path length
+VRI/Control
+>0.05
+VR II/BoxI/BoxII
+<0.005
+Motion in depth
+VRI/Control
+>0.05
+VRII/BoxII
+<0.05
+BoxI
+<0.01
+Madan and
+Frantzides87
+32
+No
+Box
+MIST-VR
+N
+5 basic tasks (peg transfer/peg
+placement/pipe cleaner/probe
+through rings/rope)
+Time/Error
+>0.05
+Zhang et al.88
+21
+No, I, E
+Box
+VBLaST
+Y
+FLS
+Total score
+<0.001
+HF = haptic feedback; Box = box trainer; VR = virtual reality trainer; Y = yes; N = no.
+*Box I: box trainer; Box II: box with kinematic interactions.
+**VR I: SIMENDO, VR II: SIMENDO with kinematic interactions.
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+255
+on fast times could lead to an increase of errors and
+result the acquirement of incorrect techniques.91 There-
+fore, time measurement might not be an appropriate
+performance measure for novices and conclusions
+should not be based on time scores alone.
+Despite these limitations, this review provides an elab-
+orate overview of the literature, which includes a great
+number of studies on haptic and force sensing in simula-
+tion. Convincing evidence is provided concerning the
+beneﬁts of force parameters, force sensing and force
+feedback. Reaching a univocal conclusion regarding hap-
+tic feedback in VR training, on the other hand, is difﬁ-
+cult. Many different studies and contradicting results
+have been found throughout the literature concerning
+this subject. Interestingly, the emergence of robotic sur-
+gery could increase the popularity of VR trainers without
+haptic feedback. Since robots lack haptic feedback, VR
+trainers without a haptic interface device seem espe-
+cially competent in teaching the skills necessary for this
+speciﬁc procedure.
+For future research, it would be interesting to inves-
+tigate the clinical impact of haptic and force feedback.
+This clinical impact is currently investigated on the
+box or VR trainer, instead of in the OR. Moreover, con-
+struct validity is often used to investigate the training
+ability of simulators. Construct validity shows that the
+simulator can be used to differentiate between differ-
+ent levels of experience. However, the ability to apply
+a skill in the operating room cannot be predicted with
+construct validity alone. To evaluate the effect of a sim-
+ulator on OR performance a different method should
+be applied. For example, performance in the OR can
+be compared after training in different settings. This
+method has been previously applied to demonstrate
+the beneﬁts of VR training.92-96 Studies compared VR
+simulators without haptic or a comprehensive training
+curriculum comprising of box and VR training to no
+simulation training. Performance in the OR was signiﬁ-
+cantly better after simulation training.92-97 It would be
+interesting to apply this method to compare VR train-
+ers with and without haptic feedback, BTs and AR
+trainers in future research. It would further be interest-
+ing to focus speciﬁcally on novice surgeons and evalu-
+ate the optimal training curriculum for residents at the
+beginning of their training.
+CONCLUSION
+The value of haptic and force feedback has been a sub-
+ject of debate. Heterogeneity between and within stud-
+ies
+describing
+the
+subject
+hinder
+decision-making.
+Haptic interface devices are required to endow VR
+simulators with haptic feedback. The surplus value of
+haptic feedback is inconclusive. Haptic feedback seems
+more important when more complex tasks are per-
+formed and can lead to an improved learning curve.
+Improvements, however, are only minor and less pro-
+nounced for novice surgeons. Force feedback in BTs has
+been shown to be beneﬁcial both when provided real
+time and postpractice compared with BTs without force
+feedback. The use of force parameters, especially when
+combined with motion parameters has been reported to
+provide objective rating of laparoscopic skills.
+ACKNOWLEDGMENT
+None.
+FUNDING
+This research did not receive any speciﬁc grant from
+funding agencies in the public, commercial, or not-for-
+proﬁt sectors.
+REFERENCES
+1. Gallagher A, Ritter E, Champion H, et al. Virtual real-
+ity simulation for the operating room. Ann Surg.
+2005;241:364–372.
+2. Botden SMBI, Torab F, Buzink SN, Jakimowicz JJ.
+The importance of haptic feedback in laparoscopic
+suturing training and the additive value of virtual
+reality simulation. Surg Endosc Other Interv Tech.
+2008;22:1214–1222.
+3. Dankelman JGrimbergen C. Systems approach to
+reduce
+errors
+in
+surgery.
+Surg
+Endosc.
+2005;19:1017–1021.
+4. Rodrigues SP, Horeman T, Dankelman J, van den
+Dobbelsteen JJ, Jansen F. Suturing intraabdominal
+organs: when do we cause tissue damage? Surg
+Endosc Other Interv Tech. 2012;26:1005–1009.
+5. Botden S, Jakimowicz J. What is going on in aug-
+mented reality simulation in laparoscopic surgery?
+Surg Endosc. 2008;23:1693–1700.
+6. Scott D, Cendan J, Pugh C, Minter R, Dunnington G,
+Kozar R. The changing face of surgical education:
+simulation as the new paradigm. J Surg Res.
+2008;147:189–193.
+7. Salkini MW, Doarn CR, Kiehl N, Broderick TJ, Dono-
+van JF, Gaitonde K. The role of haptic feedback in
+256
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+laparoscopic training using the LapMentor II. J
+Endourol. 2010;24:99–102.
+8. Cotin S, Delingette H, Clement J, Marescaux J,
+Ayache N. Simulation active de chirurgie endoscopi-
+que. RBM-News. 1997;19:167–172.
+9. Str€om P, Hedman L, S€arna
+ L, Kjellin A, Wredmark T,
+Fell€ander-Tsai L. Early exposure to haptic feedback
+enhances performance in surgical simulator training:
+a prospective randomized crossover study in surgical
+residents. Surg Endosc. 2006;20:1383–1388.
+10. Bontreger R. The design of a haptic device for train-
+ing and evaluating surgeon and novice laparoscopic
+movement skills. All Theses. 2011: 1249.
+11. Cao CGL, Zhou M, Jones DB, Schwaitzberg SD. Can
+surgeons think and operate with haptics at the
+same time? J Gastrointest Surg. 2007;11:1564–
+1569.
+12. Rodrigues SP, Horeman T, Sam P, Dankelman J, van
+den Dobbelsteen JJ, Jansen FW. Inﬂuence of visual
+force feedback on tissue handling in minimally inva-
+sive surgery. Br J Surg. 2014;101:1766–1773.
+13. Tang CN, Tai CK, Ha JPY, Siu WT, Tsui KK, Li MKW.
+Laparoscopy versus open left lateral segmentec-
+tomy
+for
+recurrent
+pyogenic
+cholangitis.
+Surg Endosc Other Interv Tech. 2005;19:1232–
+1236.
+14. Prasad MSR, Manivannan M, Chandramohan SM.
+Effects of laparoscopic instrument and ﬁnger on
+force perception: a ﬁrst step towards laparoscopic
+force-skills training. Surg Endosc Other Interv Tech.
+2015;29:1927–1943.
+15. Hanna GB, Cresswell AB, Cuschieri A. Shadow
+depth cues and endoscopic task performance. Arch
+Surg. 2002;137:1166–1169.
+16. Susmitha WK, Mathew G, Devasahayam SR, Pera-
+kath B, Velusamy SK. Factors inﬂuencing forces dur-
+ing laparoscopic pinching: towards the design of
+virtual simulator. Int J Surgery. 2015;18:211–215.
+17. Cundy TP, Thangaraj E, Raﬁi-Tari H, et al. Force-
+sensing enhanced simulation environment (For-
+Sense) for laparoscopic surgery training and assess-
+ment. Surgery. 2015;157:723–731.
+18. Horeman T, Rodrigues SP, Jansen F, Dankelman J,
+van den Dobbelsteen JJ. Force measurement plat-
+form for training and assessment of laparoscopic
+skills.
+Surg
+Endosc
+Other
+Interv
+Tech.
+2010;24:3102–3108.
+19. Horeman T, Rodrigues SP, van den Dobbelsteen JJ,
+Jansen F-, Dankelman J. Visual force feedback in lap-
+aroscopic training. Surg Endosc. 2011: 1–7.
+20. Horeman T, Rodrigues SP, Jansen FW, Dankelman J,
+van den Dobbelsteen JJ. Force parameters for skills
+assessment in laparoscopy. IEEE Trans Haptic.
+2012;5:312–322.
+21. Ishii H, Uemura M, Matsuoka N, Tomikawa M,
+Hashizume M, Takanishi A. Objective skill assess-
+ment of laparoscopic surgery using a suture simula-
+tor. Int J Comput Assist Radiol Surg. 2011;6:S101–
+S102.
+22. Jayaraman S, Trejos AL, Naish MD, Lyle A, Patel RV,
+Schlachta CM. Toward construct validity for a novel
+sensorized instrument-based minimally invasive sur-
+gery simulation system. Surg Endosc Interv Tech.
+2011;25:1439–1445.
+23. Richards C, Rosen J, Hannaford B, Pellegrini C,
+Sinanan M. Skill evaluation in minimally invasive sur-
+gery using force/torque signatures. Surg Endosc.
+2000;14:791–798.
+24. Singapogu RB, Smith DE, Long LO, Burg TC, Pagano
+CC, Burg KJL. Objective differentiation of force-
+based laparoscopic skills using a novel haptic simu-
+lator. J Surg Educ. 2012;69:766–773.
+25. Trejos AL, Patel RV, Naish MD, Schlachta CM.
+Design of a sensorized instrument for skills assess-
+ment and training in minimally invasive surgery. In:
+2008 2nd IEEE Ras & Embs International Confer-
+ence on Biomedical Robotics and Biomechatronics
+(Biorob 2008), Vols 1 and 2; 2008. p. 682–687.
+26. Basdogan C, Ho C, Srinivasan M. Virtual environ-
+ments for medical training: graphical and haptic
+simulation of laparoscopic common bile duct explo-
+ration. IEEE/ASME Trans Mechatron. 2001;6:269–
+285.
+27. Devarajan V, Scott D, Jones D, et al. Bimanual haptic
+workstation for laparoscopic surgery simulation.
+Stud Health Technol Inform. 2001;81:126–128.
+28. Fung, TT. Computer-Based Assesment for Suturing
+Task. 2013.
+29. Lim Y, Deo D, Singh T, Jones D, S De. In situ mea-
+surement and modeling of biomechanical response
+of human cadaveric soft tissues for physics-based sur-
+gical simulation. Surg Endosc. 2008;23:1298–1307.
+30. Khan ZA, Bin Mansoor S, Ahmad MA, Malik MM.
+Input devices for virtual surgical simulations: a
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+257
+comparative study. In: 2013 16th International Multi
+Topic Conference (Inmic); 2013. p. 189–194.
+31. Maciel A, Liu Y, Ahn W, Singh TP, Dunnican W, De
+S. Development of the VBLaST (TM): a virtual basic
+laparoscopic skill trainer. Int J Med Rob Comput
+Assisted Surg. 2008;4:131–138.
+32. Shamsunder SC, Manivannan M. Haptic guided lapa-
+roscopy simulation improves learning curve. Stud
+Health Technol Inform. 2008;132:454–456.
+33. Sankaranarayanan G, Adair JD, Halic T, et al. Valida-
+tion of a novel laparoscopic adjustable gastric band
+simulator. Surg Endosc Interv Tech. 2011;25:1012–
+1018.
+34. Ayache N, Cotin S, Delingette H, Clemente JM, Russ-
+ier Y, Marescaux J. Simulation of endoscopic sur-
+gery.
+Minim
+Invasive
+Ther
+Allied
+Technol.
+1998;7:71–77.
+35. Basafa E, Sheikholeslami M, Mirbagheri A, Farah-
+mand F, Vossoughi GR. Design and implementation
+of series elastic actuators for a haptic laparoscopic
+device. In: Conference Proceedings: Annual Interna-
+tional Conference of the IEEE Engineering in Medi-
+cine and Biology Society. IEEE Engineering in
+Medicine and Biology Society. Annual Conference.,
+2009; 2009. p. 6054–6057.
+36. Baur C, Guzzoni D, Georg O. VIRGY: a virtual reality
+and force feedback based endoscopic surgery simu-
+lator. Stud Health Technol Inform. 1998;50:110–
+116.
+37. Ben-Ur E, Salisbury JK. Development of a 5-DOF
+force feedback laparoscopic interface for simulation
+and telesurgery. Digitization of the Battlespace V
+and
+Battleﬁeld
+Biomedical
+Technologies
+Ii.
+2000;4037:274-285.
+38. Brown I, Mayooran Z, Seligman C, et al. Engineering
+Design of a virtual reality simulator for gynaecologi-
+cal endoscopy. In: Seventh Australian and New Zea-
+land Intelligent Information Systems Conference;
+2001.
+39. Guiatni M, Abane A, Kheddar A. Modeling and
+Instrumentation for position and torque control of a
+4DOF force-feedback device. In: IEEE International
+Conference on Systems, Man and Cybernetics;
+2010.
+40. Gopalakrishnan G, Devarajan V. StapSim: a virtual
+reality-based stapling simulator for laparoscopic her-
+niorrhaphy. Medicine Meets Virtual Reality 12:
+Building a Better You: the Next Tools for Medical
+Education, Diagnosis, and Care. 2004;98:111-113.
+41. Hwang G, Rozenblit JW. Implementation of com-
+puter-guided navigation in surgical training. In:
+2013 20th Annual Ieee International Conference
+and Workshops on the Engineering of Computer
+Based Systems; 2013. p. 174–180.
+42. Kim S, Ryu J, Lee W. Palpation simulator with stable
+haptic feedback. Minim Invasive Ther Allied Tech-
+nol. 2014;24:211–217.
+43. K€uhnapfel U, Cakmak HK, Maa H. Endoscopic sur-
+gery training using virtual reality and deformable tis-
+sue simulation. Comput Graphics. 2000;24:671–682.
+44. Mack IW, McMenemy K, Ferguson RS, Potts S, Dick
+A. Measuring the forces applied to a virtual reality
+laparoscopic
+surgical
+simulator
+with
+quantum
+tunnelling composite sensors. In: In: Proceedings of
+the First International Conference on Biomedical
+Electronics and Devices; 2008. p. 29–34.
+45. Mack IW, Potts S, McMenemy KR, Ferguson RS.
+Adding tactile realism to a virtual reality laparo-
+scopic
+surgical
+simulator
+with
+a
+cost-effective
+human interface device—art no. 60551T. In: Stereo-
+scopic Displays and Virtual Reality Systems XIII,
+6055; 2006...
+46. Mishra RK, Srikanth S. GENIE—an haptic interface
+for simulation of laparoscopic surgery. In: In: Pro-
+ceedings of the 2000 IEEE/RS International Confer-
+ence on Intelligent Robots and Systems; 2000.
+47. Rolfsson G, Nordgren A, Bindzau S, Hagstrom JP,
+McLaughlin J, Thurfjell L. Training and assessment
+of laparoscopic skills using a haptic simulator. Stud
+Health Technol Inform. 2002;85:409–411.
+48. Rozenblit J, Feng C, Riojas M, et al. The computer
+assisted surgical trainer: design, models, and imple-
+mentation. Soc Comput Simul Int. 2014;30:211–220.
+49. Tseng CS, Lee YY, Chan YP, Wu SS, Chiu AW. A PC-
+based surgical simulator for laparoscopic surgery.
+Stud Health Technol Inform. 1998;50:155–160.
+50. Villard P, Koenig N, Perrenot C, Perez M, Boshier P.
+Toward a realistic simulation of organ dissection.
+Stud Health Technol Inform. 2014;196:452–456.
+51. Maass H, Chantier BB, Cakmak HK, Trantakis C,
+Kuehnapfel UG. Fundamentals of force feedback
+and application to a surgery simulator. Comput
+Aided Surg. 2003;8:283–291.
+258
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+52. Hiemstra E, Terveer E, Chmarra M, Dankelman J,
+Jansen F. Virtual reality in laparoscopic skills train-
+ing: is haptic feedback replaceable? Minim Invasive
+Ther Allied Technol. 2011;20:179–184.
+53. Kim HK, Rattner DW, Srinivasan MA. Virtual-reality-
+based laparoscopic surgical training: the role of sim-
+ulation ﬁdelity in haptic feedback. Comput Aided
+Surg. 2004;9:227–234.
+54. McKenna K, McMenemy K, Ferguson RS, Dick A,
+Potts S. Enhancing the immersive reality of virtual
+simulators for easily accessible laparoscopic surgical
+training.
+Eng
+Real
+Virtual
+Real
+2008.
+2008;6804:680402.
+55. Norkhairani AR, Zaman HB, Ahmad A. Simulation
+for laparoscopy surgery with haptic element for
+medical students in HUKM: a preliminary analysis.
+Visual Inform. 2011;7066:125–138.
+56. Singapogu RB, Sander ST, Burg TC, Cobb WS. Com-
+parative study of haptic training versus visual train-
+ing for kinesthetic navigation tasks. Med Meets
+Virtual Real 16. 2008;132:469–471.
+57. Sharma M, Horgan A. Comparison of fresh frozen
+cadaver and virtual reality simulator as methods of
+training for laparoscopic sigmoid colectomy. Colo-
+rectal Dis. 2011;13:10.
+58. Picod
+G,
+Jambon
+AC,
+Vinatier
+D,
+Dubois
+P.
+What
+can
+the
+operator
+actually
+feel
+when
+performing a laparoscopy? Surg Endosc. 2005;19:
+95–100.
+59. Vapenstad C, Hofstad EF, Lango T, Marvik R,
+Chmarra MK. Perceiving haptic feedback in virtual
+reality simulators. Surg Endosc Other Interv Tech.
+2013;27:2391–2397.
+60. Vapenstad C, Hofstad EF, Bo LE, et al. Limitations
+of haptic feedback devices on construct validity
+of
+the
+LapSim((R))
+virtual
+reality
+simulator.
+Surg Endosc Other Interv Tech. 2013;27:1386–
+1396.
+61. Lamata P, Gomez EJ, Sanchez-Margallo FM, Lamata
+F, Del Pozo F, Uson J. Tissue consistency perception
+in laparoscopy to deﬁne the level of ﬁdelity in vir-
+tual reality simulation. Surg Endosc Interv Tech.
+2006;20:1368–1375.
+62. Panait L, Akkary E, Bell RL, Roberts KE, Dudrick SJ,
+Duffy AJ. The role of haptic feedback in laparo-
+scopic
+simulation
+training.
+J
+Surg
+Res.
+2009;156:312–316.
+63. Thompson JR, Leonard AC, Doarn CR, Roesch MJ,
+Broderick TJ. Limited value of haptics in virtual real-
+ity laparoscopic cholecystectomy training. Surg
+Endosc. 2011;25:1107–1114.
+64. Zhou M, Tse S, Derevianko A, Jones DB, Schwaitz-
+berg SD, Cao CG. Effect of haptic feedback in lapa-
+roscopic surgery skill acquisition. Surg Endosc.
+2012;26:1128–1134.
+65. Kim J, De S Srinivasan MA. Physically based hybrid
+approach in real time surgical simulation with
+force
+feedback.
+Stud
+Health
+Technol
+Inform.
+2003;94:158–164.
+66. Ali MR, Mowery Y, Kaplan B, DeMaria EJ. Training
+the novice in laparoscopy. Surg Endosc Other
+Interv Tech. 2002;16:1732–1736.
+67. Balci MBC, Tas T, Hazar AI, et al. Applicability and
+effectiveness of virtual reality simulator training in
+urologic surgery: a double-blind randomised study.
+Nobel Med. 2014;10:66–71.
+68. Prasad MSR, Maniyannan M, Manoharan G, Chanda-
+mohan SM. Objective assessment of laparoscopic
+force and psychomotor skills in a novel virutal
+reality-based
+haptic
+simulator.
+J
+Surg
+Educ.
+2016;73:858–869.
+69. Singapogu RB, Long LO, Smith DE, et al. Simulator-
+based assessment of haptic surgical skill: a compara-
+tive study. Surg Innov. 2015;22:183–188.
+70. Peirs J, Clijnen J, Reynaerts D, Van Brussel H, Her-
+ijgers P, Corteville B, Boone S. A micro optical force
+sensor for force feedback during minimally invasive
+robotic surgery. Sens Actuators, A. 2004;115:447–
+455.
+71. Puangmali P, Althoefer K, Seneviratne LD, Murphy
+D, Dasgupta P. State-of-the-art in force and tactile
+sensing for minimally invasive surgery. IEEE Sens J.
+2008;8:371–381.
+72. Rosen J, Hannaford B, Richards CG, Sinanan MN.
+Markov modeling of minimally invasive surgery
+based on tool/tissue interaction and force/torque
+signatures for evaluating surgical skills. IEEE Trans
+Biomed Eng. 2001;48:579–591.
+73. Tholey G, Desai JP. A modular, automated laparo-
+scopic grasper with three-dimensional force mea-
+surement
+capability.
+In:
+In
+Robotics
+and
+Automation, 2007 IEEE International Conference
+on. IEEE. p. 250–255.
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+259
+74. Wee J, Brooks RJ, Looi T, Azzie G, Drake J, Gerstle
+JT. Force-sensing sleeve for laparoscopic surgery. J
+Med Devices. 2016;10:030946.
+75. Horeman T, Dankelman J, Jansen FW, Van Den Dob-
+belsteen JJ. Assessment of laparoscopic skills based
+on force and motion parameters. IEEE Trans
+Biomed Eng. 2014;61:805–813.
+76. Horeman T, Sun S, Tuijthof GJM, Jansen FW, Meijer-
+ink JWJHJ, Dankelman J. Design of a box trainer for
+objective assessment of technical skills in single-
+port surgery. J Surg Educ. 2015;72:606–617.
+77. Trejos AL, Patel RV, Malthaner RA, Schlachta CM.
+Development of force-based metrics for skills assess-
+ment in minimally invasive surgery. Surg Endosc
+Other Interv Tech. 2014;28:2106–2119.
+78. Horeman T, van Delft F, Blikkendaal MD, Dankel-
+man J, van den Dobbelsteen JJ, Jansen F. Learning
+from visual force feedback in box trainers: tissue
+manipulation in laparoscopic surgery. Surg Endosc
+Other Interv Tech. 2014;28:1961–1970.
+79. Lamata P, Gomez EJ, Lamata Hernandez F, Oltra Pas-
+tor A, Miguel Sanchez-Margallo F, del Pozo Guerrero
+F. Understanding perceptual boundaries in laparo-
+scopic
+surgery.
+IEEE
+Trans
+Biomed
+Eng.
+2008;55:866–873.
+80. Rodrigues SP, Horeman T, Dankelman J, van den
+Dobbelsteen JJ, Jansen FW. Tying different knots:
+what forces do we use? Surg Endosc Interv Tech.
+2015;29:1982–1989.
+81. Wottawa CR, Cohen JR, Fan RE, et al. The role of
+tactile feedback in grip force during laparoscopic
+training tasks. Surg Endosc Other Interv Tech.
+2013;27:1111–1118.
+82. Westebring-van der Putten EP, Lysen WW, Henssen
+VD, et al. Tactile feedback exceeds visual feedback
+to display tissue slippage in a laparoscopic grasper.
+Medicine
+Meets
+Virtual
+Reality
+17—Nextmed:
+Design for/the Well Being. 2009;142:420-425. (WAS
+11) .
+83. Singapogu RB, DuBose S, Long LO, et al. Salient hap-
+tic skills trainer: initial validation of a novel simula-
+tor for training force-based laparoscopic surgical
+skills.
+Surg
+Endosc
+Other
+Interv
+Tech.
+2013;27:1653–1661.
+84. Smit D, Spruit E, Dankelman J, Tuijthof G, Hamming
+J, Horeman T. Improving training of laparoscopic
+tissue
+manipulation
+skills
+using
+various
+visual
+force feedback types. Surg Endosc. 2017;31:299–
+308.
+85. Botden SM, Buzink SN, Schijven MP, Jakimowicz JJ.
+Augmented versus virtual reality laparoscopic simu-
+lation: what is the difference? A comparison of the
+ProMIS augmented reality laparoscopic simulator
+versus LapSim virtual reality laparoscopic simulator.
+World J Surg. 2007;31:764–772.
+86. Bell AK, Cao CGL. Effects of artiﬁcial force feedback
+in laparoscopic surgery training simulators. In: 2007
+IEEE International Conference on Systems, Man and
+Cybernetics; 2007. p. 564–568.
+87. Madan AK, Frantzides CT. Substituting virtual reality
+trainers for inanimate box trainers does not decrease
+laparoscopic skills acquisition. JSLS. 2007;11:87–89.
+88. Zhang L, Grosdemouge C, Arikatla VS, et al. The
+added value of virtual reality technology and force
+feedback for surgical training simulators. Work.
+2012;41:2288–2292.
+89. Chmarra MK, Dankelman J, van den Dobbelsteen JJ,
+et al. Force feedback and basic laparoscopic skills.
+Surg
+Endosc.
+2008;22:2140
+https://doi.org/
+10.1007/s00464-008-9937-5.
+90. Kanumuri P, Ganai S, Wohaibi EM, Bush RW, Grow
+DR, Seymour NE. Virtual reality and computer-
+enhanced training devices equally improve laparo-
+scopic surgical skill in novices. JSLS. 2008;12:219–
+226.
+91. Fitts Posner M. Human Performance. Belmont, Calif:
+Brooks/Cole; 1967.
+92. Beyer L, Troyer J, Mancini J, Bladou F, Berdah S, Kar-
+senty G. Impact of laparoscopy simulator training
+on the technical skills of future surgeons in the
+operating room: a prospective study. Am J Surg.
+2011;202:265–272.
+93. Grantcharov T, Kristiansen V, Bendix J, Bardram L,
+Rosenberg J, Funch-Jensen P. Randomized clinical
+trial of virtual reality simulation for laparoscopic
+skills training. Br J Surg. 2004;91:146–150.
+94. Seymour NE, Gallagher AG, Roman SA, O’Brien MK,
+Bansal VK, Andersen DK, Satava RM. Virtual reality
+training improves operating room performance:
+results of a randomized, double-blinded study. Ann
+Surg. 2002;236:458–464.
+95. Larsen C, Soerensen J, Grantcharov T, et al. Effect of
+virtual reality training on laparoscopic surgery:
+260
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+randomised controlled trial. BMJ. 2009;338. b1802-
+b1802.
+96. Kundhal P, Grantcharov T. Psychomotor perfor-
+mance measured in a virtual environment correlates
+with technical skills in the operating room. Surg
+Endosc. 2008;23:645–649.
+97. Shore EM, Grantcharov TP, Husslein H, Shirreff L,
+Dedy NJ, McDermott CD, Lefebvre GG. Validating a
+standardized laparoscopy curriculum for gynaecol-
+ogy residents: a randomized controlled trial. Am J
+Obstet Gynecol. 2016;215:e1–e11.
+SUPPLEMENTARY INFORMATION
+Supplementary material associated with this article can
+be found, in the online version, at doi:10.1016/j.
+jsurg.2018.06.008.
+Journal of Surgical Education  Volume 76 /Number 1  January/February 2019
+261

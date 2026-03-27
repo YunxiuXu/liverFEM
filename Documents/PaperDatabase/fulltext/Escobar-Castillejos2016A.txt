@@ -1,0 +1,2274 @@
+J Med Syst (2016) 40: 104
+DOI 10.1007/s10916-016-0459-8
+EDUCATION & TRAINING
+A Review of Simulators with Haptic Devices for Medical
+Training
+David Escobar-Castillejos1 · Julieta Noguez1 · Luis Neri2 · Alejandra Magana3 ·
+Bedrich Benes4
+Received: 3 November 2015 / Accepted: 1 February 2016 / Published online: 18 February 2016
+© Springer Science+Business Media New York 2016
+Abstract Medical procedures often involve the use of the
+tactile sense to manipulate organs or tissues by using spe-
+cial tools. Doctors require extensive preparation in order
+to perform them successfully; for example, research shows
+that a minimum of 750 operations are needed to acquire
+sufficient experience to perform medical procedures cor-
+rectly. Haptic devices have become an important training
+alternative and they have been considered to improve med-
+ical training because they let users interact with virtual
+environments by adding the sense of touch to the simula-
+tion. Previous articles in the field state that haptic devices
+enhance the learning of surgeons compared to current train-
+ing environments used in medical schools (corpses, animals,
+or synthetic skin and organs). Consequently, virtual envi-
+ronments use haptic devices to improve realism. The goal
+of this paper is to provide a state of the art review of
+recent medical simulators that use haptic devices. In par-
+ticular we focus on stitching, palpation, dental procedures,
+This article is part of the Topical Collection on Education &
+Training
+ David Escobar-Castillejos
+a01170737@itesm.mx
+1
+Escuela de Ingenieria y Ciencias, Instituto Tecnologico y de
+Estudios Superiores de Monterrey Campus Ciudad de Mexico,
+Distrito Federal, Mexico
+2
+Escuela de Educacion, Humanidades y Ciencias Sociales,
+Instituto Tecnologico y de Estudios Superiores de Monterrey
+Campus Ciudad de Mexico, Distrito Federal, Mexico
+3
+Associate Professor of Computer and Information Technology,
+Purdue University, West Lafayette, Indiana, USA
+4
+Professor of Computer Graphics Technology, Purdue University,
+West Lafayette, Indiana, USA
+endoscopy, laparoscopy, and orthopaedics. These simulators
+are reviewed and compared from the viewpoint of used tech-
+nology, the number of degrees of freedom, degrees of force
+feedback, perceived realism, immersion, and feedback pro-
+vided to the user. In the conclusion, several observations per
+area and suggestions for future work are provided.
+Keywords E-learning · Medical training · Haptic devices ·
+3D simulators · Training
+Introduction
+Teaching process is a key element during the training of pro-
+fessionals. This has been characterized as a professor-based
+approach, which is considered as the most effective mean
+to acquire new knowledge [1]. Since the origin of comput-
+ers, researchers have been looking for new ways to improve
+and reduce the costs in the teaching process. Therefore, dif-
+ferent types of simulations, control systems and learning
+environments via the Internet have emerged in the field of
+Technology Enhanced Learning (TEL) and e-learning [2].
+One of the main areas where TEL environments have
+been developed is the medical field. Surgical procedures
+have a high degree of difficulty and complexity. It is nec-
+essary to provide students or practitioners a proper and
+extensive learning process before they can perform surg-
+eries correctly. The learning curve in the medical process is
+a concept focused on two aspects: optimization of operating
+time [3] and reduction of patients bleeding [4]. Vickers et al.
+[5] stated that about 750 operations are needed to improve
+surgical procedures. They also found that patients who have
+been treated by doctors with surgical experience, that have
+performed between 750 and 10,250 procedures, tend to have
+fewer health problems than patients who were treated by
+doctors with less experience.
+104
+Page 2 of 22
+J Med Syst (2016) 40: 104
+Considering advances in technology and new laws in the
+medical field, various solutions have been pursued to allow
+medical students to acquire the necessary skills involved
+in medical procedures. Some solutions involve the use of
+animals in operating rooms, which must have similar condi-
+tions as those related to humans. Devices that use synthetic
+materials to resemble human skin have also been imple-
+mented. Nevertheless, they fail to emulate the real char-
+acteristics of human skin. Other solutions suggest the use
+of virtual environments, which can simulate situations with
+different levels of risk. Former virtual environments only
+exploited the senses of sight and hearing; consequently, they
+excluded other interaction possibilities.
+Several companies and authors had created e-learning
+environments for medical education. These advances have
+been reviewed to assess the impact in medical education [6,
+7]. However, Secin et al. [8] stated that current surgical envi-
+ronments did not provide the realism needed to train future
+doctors during operations, they did not provide users the
+sense of force strength during the task, or they were not able
+to adequately develop the necessary skills.
+As a solution, haptic simulation has great potential to
+improve medical training. A haptic device is a mechanical
+input/output device that enables users interact with virtual
+environments by adding the sense of touch, which enhances
+the learning quality [9]. The incorporation of haptic tech-
+nologies in medical software and simulations has grown [10,
+11] and various companies developed medical stations using
+haptic devices [12–17].
+The use of haptic simulators provides new alternative
+solutions that also allow the development of new teaching
+methods. The advantage of haptic technologies in virtual
+environments is the ease they have to recreate difficult sit-
+uations originated during real practices. They provide new
+means of exploration and representation. They enable the
+creation of systems that are capable of implementing new
+methods or procedures, and in some cases, these systems
+can generate uncommon anatomies by modifying specific
+models with patients information, as it has been reviewed
+[9]. Therefore, they provide students the ability to practice
+surgery as often as necessary.
+This paper reviews recent advances in medical training
+simulators with the focus on haptic technologies. In particu-
+lar, virtual environments that use commercial haptic devices
+were chosen because these have already been benchmarked
+and they accomplish security and performance standards.
+This review is focused on stitching, palpation, dental,
+endoscopy, laparoscopy, orthopaedics, and miscellaneous
+procedures. Existing works and simulators are reviewed and
+compared from the point of view of used technology, the
+number of degrees of freedom and degrees of force feed-
+back, immersion, and learning feedback provided to the
+user. At the end, several observations per area are provided
+and suggestions for future work are proposed.
+Haptics
+Haptic devices
+Haptic devices are electro-mechanical devices with handlers
+(Fig. 1) that allow motion with several Degrees of Freedom
+(DoF). When coupled with virtual simulators, they provide
+the user the sense of touch in addition to the sight. In haptic
+environments, touch sensation can be performed by humans,
+machines or a combination of both, while objects and/or
+environments may be real, virtual, or a combination of both.
+Current physical haptic devices always present a residual
+inner friction that can be perceived as noise, which can even
+fatigue the user in some cases. Additionally, the device itself
+has a certain degree of inertia, which present a problem if
+the user moves the haptic device quickly. Haptic devices bal-
+ance to compensate for external forces of the systems, such
+as gravity. They also have mechanisms that provide suffi-
+cient reaction to stimulation and effort sense to detect hard
+surfaces [19]. Their resolution, i.e., the amount of feedback
+per unit of distance, needs to be high in order to provide
+a greater detail of textures in virtual environments, and the
+movement area must be large enough in order to simulate
+the actual workspace. Moreover, haptic devices have differ-
+ent DoF depending on the amount of directions they can
+move. The most common are haptic devices with 3-DoF that
+can follow the XYZ axis.
+Current haptic devices use two basic variations to control
+interaction: impedance control and admittance control. In
+impedance control, the user moves the device, and it sends
+the data back to the computer; therefore, the application is
+(a)
+(b)
+(c)
+(d)
+Fig. 1 Commonly used haptic devices in virtual simulators. a) Phantom Omni ®, b) Phantom Desktop ®. c) Phantom Premium ®, and d)
+Novint Falcon ®
+J Med Syst (2016) 40: 104
+Page 3 of 22
+104
+responsible for controlling the feedback. Prime examples
+of this type of device are Phantom ®, built by Geomagic
+® (previously known as SensAble Technologies ®), and
+Falcon ® from Novint Technologies Inc ® (Fig. 1).
+In contrast, by using the admittance control devices users
+exert a force on the device, which reacts by displacing it
+in a proportional distance. This action is translated in the
+device as displacement of the input and force feedback as
+the output of the system. This type of control provides
+the users with the freedom in the mechanical design of
+the devices, and these devices are able to produce move-
+ment with greater force and stiffness. However, due to their
+complexity, they are usually very large and they must be
+designed carefully to interact safely with humans. Conse-
+quently, they are not commonly used in the training field.
+An example of these devices is HapticMaster ®, manufac-
+tured by Mog Corporation ® (previously known as FCS
+Control Systems ®) [20].
+Haptic rendering
+The goal of haptic rendering is to enable the user to feel,
+touch, and manipulate virtual objects through a haptic inter-
+face. The type of interaction defines the procedure for haptic
+rendering and how the forces are rendered. These methods
+can be identified by the way they model the interaction of
+the haptic device in the virtual environment. There are three
+kinds of haptic rendering: a) point-based, b) ray-based, and
+c) based on a 3D object made by a group of points, lines and
+polygons [18] as shown in Fig. 2.
+Rendering of deformable objects is often required in
+medical procedures. Visual rendering has been studied
+extensively in the area of computer graphics [21]. Basdo-
+gan et al, have divided rendering techniques of deformable
+objects into two types: geometry-based and physics-based
+[18].
+Geometry-based techniques deform the object based on
+geometric manipulations. For instance, the user manipulates
+the vertices or control points around the 3D object to mod-
+ify the shape of the object. These techniques are usually
+fast and relatively easy to implement; however, they focus
+mainly on the visual representation, which does not neces-
+sarily simulates the underlying mechanical deformation.
+Physics-based algorithms add physics simulation to the
+modification of geometry by modeling the physical laws
+involved in the movement of the object and the dynamics
+of the interaction within it. Physical approaches are neces-
+sary to simulate a realistic behavior of deformable objects.
+Nevertheless, physical rendering is computationally more
+expensive than pure geometry-based modeling.
+Haptics in medical training
+We describe and analyze recent virtual simulators that use
+haptic devices to practice medical procedures. These are
+organized by types of medical practices they simulate.
+Stitching techniques
+Simulation of stitching procedures is one of the areas where
+haptic technology has been implemented to create learn-
+ing simulators. Skin and organs have flexible features, so
+stitching simulators consider mainly rendering techniques
+of deformable objects. Additionally, haptic simulators com-
+bined with active learning environments can provide users
+with features such as deformation of the suture thread, knot
+tying, and interaction between tools, the needle and the
+environment, as can be seen in [22]. Jia and Pan devel-
+oped a stitching simulator which can simulate interaction
+and deformation of the suture thread and objects [23]. They
+applied the Follow the Leader (FTL) algorithm [24] to sim-
+ulate the thread, where each link can rotate freely at their
+connecting vertex. On the side of the deformable object,
+a tensor mass-spring deformation model in a tetrahedral
+mesh was implemented to simulate the skin. For collision
+detection in the environment their simulator uses an Axis-
+Aligned Bounding Box (AABB) tree, where the shape of
+the bounding boxes are updated during the simulation. The
+simulator uses a single Phantom Desktop ® haptic device;
+nevertheless, the proper process of stitching simulators is
+two handed. The novelty of the work presented by Jian
+Force
+Force
+Torque
+Force
+Torque
+Fig. 2 Haptic rendering techniques: based on points (left), line segments (middle), and a 3D object (right) [18]
+104
+Page 4 of 22
+J Med Syst (2016) 40: 104
+Fig. 3 Suture simulator
+developed by Payandeh and Shi
+[23]. The skin model (a) is
+constructed as a mass-spring
+system (b) and the system uses
+two haptic device to operate the
+suture thread
+and Pan is the description of four possible states for the
+position of the needle according to its interaction with the
+virtual skin:
+1.
+the needle is completely outside of the deformable
+object,
+2.
+the end of the needle is in contact with the skin (end
+touching),
+3.
+the tip of the needle is in contact with the skin, but it has
+not pierced the skin yet (tip touching), and
+4.
+the needle is piercing the skin.
+Their environment provides a functional approach to
+suture tasks, and it uses shadows for the 3D location of the
+haptic probe; however, the simulator lacks the skin texture,
+the knot tying action of the suture, the needle is modeled as a
+line segment, and, as mentioned before, it only implements
+a single haptic device.
+Similar research was used by Payandeh and Shi [25]
+who proposed a serious gaming platform to teach suturing
+and knotting for simple skin or soft tissue wound closure.
+The haptic devices used in the experimental study were two
+Phantom Omni ®. They also used a mass-spring model to
+create the deformable skin and the suturing material and
+they used Bounding-Volume Hierarchy (BVH) to detect col-
+lisions and self-collisions in the suture thread (Fig. 3). They
+used Virtual Reality Modeling Language (VRML) files pro-
+duced in Autodesk ® 3ds Max ® to create 3D models of
+pre-wounded skin. Latter, the simulator imports these files
+to build the virtual objects.
+Payandeh and Shi presented a suture simulator based on
+physics models, and it allows users to tie a knot. One feature
+that has to be remarked in this work is that it implements
+tissue tearing. This is made by finding intersection points
+between each polygon and the tearing path. However, if
+the user repeatedly inserts the needle at the same location,
+the mesh can be subdivided, which can generate unwanted
+small triangles.
+Another interesting research is the one made by Choi
+et al. [27]. They used the physical rendering engine
+NVIDIA ® PhysX ® in collaboration with OpenGL to
+create a system for developing manual skills in the fields
+of medicine and nursing. The system uses two Phantom
+Omni ® haptic devices. The prototype uses a model of
+springs interconnected to simulate the deformable skin. The
+models of the needle and thread are created as a chain
+of spheres interconnected as a segment, which facilitates
+the flexibility of the elements and allows a simple way to
+reprodcure thread trimming. The FTL algorithm was used
+to simulate the suture thread; however, FTL was modified to
+use springs and springs with mass as the joints of the thread.
+This approach provide a realistic sensation. Furthermore,
+bending can obtained by adding torsion springs in the model.
+A recent work in the suture field is the one made by
+Ricardez et al. [26] that was focused on generating an exter-
+nal suture environment named SutureHap. This simulator
+simulates sensations that are perceived in medical rooms or
+offices, as can be seen in Fig. 4. This feature enables a new
+alternative in the learning process of doctors. The system is
+based on the architecture proposed by [28]. SutureHap used
+NVIDIA ® PhysX ® physical engine, OpenGL ® to ren-
+der the graphical environment, and Phantom Omni ® hap-
+tic devices. The system is based on the elaboration of a
+suturing knot using a real technique, which was consulted
+among medical staff.
+Fig. 4 SutureHap environment
+created by Ricardez et al. [26]
+The left image shows a user
+performing the stitching process
+in the simulator. The use of two
+Phantom Omni ® haptic
+devices is implemented to
+recreate similar conditions as
+the ones experienced in real
+stitching process. On the right
+side a close-up of the virtual
+environment can be seen
+J Med Syst (2016) 40: 104
+Page 5 of 22
+104
+For haptic rendering, three blocks were developed. Col-
+lision detection and calculation of force feedback response
+between the cloth and the haptic cursor were performed by
+using the simplified model, where a novel algorithm was
+used. This algorithm is based on the addition of multiple
+rays that are emanating from the center of the haptic avatar
+in different directions. Finally, response force between solid
+objects was developed according to the ”penalty method”
+standard technique.
+In the environment of Ricardez et al. further changes
+such as improvement of interactions between objects in the
+scene, and the implementation of collision handling and
+haptic feedback between surgical tools should be considered
+to improve the performance of the simulator.
+Both Jia and Pan and Payandeh and Shi do not implement
+or use proper medical tools. The incorporation of tweezers
+with realistic appearance to the simulator will show students
+the correct tools to use in operations and surgical tasks, as
+Ricardez et al. did. Moreover, by simulating physical prop-
+erties of tools, such as shape, students will learn how to
+interact with them and take them into consideration in the
+workspace. Finally, another aspect that Ricardez et al. and
+Payandeh and Shi should consider to provide is appropriate
+space location. Sometimes, students could get lost if they do
+not perceive a visual cue in navigation. Therefore, the addi-
+tion of shadows of objects could improve the perception of
+the 3D environment.
+Palpation
+Palpation is the process where surgeons analyze, via their
+fingers, tissues or organs to detect anomalies on the surface.
+Stiffness is essential in this medical procedure. Areas that
+are stiffer than other can be considered as potential tumors.
+Therefore, correct calculation of force feedback is neces-
+sary during the creation of virtual simulators with haptic
+devices.
+Li et al. [29] developed a tumor location simulator
+based on soft tissue probing data. They used a Microsoft
+® Kinect ® device to create a tissue model using depth data
+from a silicone phantom tissue and Finite Element Model
+(FEM) techniques. This enables the skin to be a geometrical
+deformable soft tissue that can be modified in real time. The
+novelty of this study is the use of a rolling indentation sen-
+sor to obtain friction and stiffness values, which are stored
+in a look-up table. Therefore, the force feedback to the user
+is based on the values from the table that is accessed during
+the simulation.
+A case test study was made with twenty students, who
+used the phantom tissue and the simulator. They were asked
+to identify two zones that are stiffer than others. For the sim-
+ulator, they used a Phantom Omni ® to navigate the system.
+Results showed that the simulator could be seen as a feasi-
+ble and efficient alternative solution of manual palpation to
+train students in this medical field.
+Another palpation simulator is described in the work
+of Ullrich and Kuhlen [30]. The system implements nee-
+dle insertion features, which is a task that is usually
+done after palpation. In their approach, the authors mod-
+eled a deformable skin using FEM methods and tetrahe-
+dral meshes. For collision detection, they used the Bullet
+® Physics Library [31]. The simulation implements the use
+of hand models and illumination to provide space location
+cues; therefore, the authors proposed a new algorithm for
+tissue dragging to provide proper interactions. The simu-
+lator uses two Phantom Omni ® haptic devices; however,
+Ullrich and Kuhlen modified the end effector of one to pro-
+vide a lightweight palpation pad (Fig. 5). This enables the
+haptic device to be used by two fingers, which is the mini-
+mum number of fingers used during palpation. The system
+was evaluated by 23 beginner anesthesiology students and
+17 experts, where results established average acceptance of
+the simulator. The simulator should be modified and better
+improvements of the hardware should be included; however,
+the results also showed that the modification of the hap-
+tic device provided better sensations that the ones that are
+experienced with the original stylus.
+Finally, modifications to typical work stations have been
+made in this area, as the incorporation of Augmented Reality
+(AR). PalpSim is a simulator made by Coles et al. [32]. This
+simulator can be seen in Fig. 6. PalpSim was designed to
+replicate real scenarios in virtual environments by using AR.
+Fig. 5 Palpation environments
+have been developed by
+modifying current haptic
+devices. Ullrich and Kuhlen
+developed one where they use a
+lightweight palpation pad. [30].
+Left figure shows current
+rendering of the virtual
+environment. Right figure
+displays a user using the
+environment. It can be seen the
+modification to the haptic device
+on the left hand
+104
+Page 6 of 22
+J Med Syst (2016) 40: 104
+Fig. 6 Another simulator that
+modified haptic devices is the
+one developed by Coles et al.
+[32]. This simulator uses two
+Falcon ® haptic devices
+coupled with a palpation pad
+(right side). Additionally, the
+authors used Augmented Reality
+techniques to provide a realistic
+approach (left side)
+In their workstation, the authors have guaranteed visuohap-
+tic alignment by fixing a LCD display and using a camera
+under it to capture users’ hands movements. By doing
+the latter, the authors could use chroma-key techniques to
+attain AR. Therefore, users can see in the screen the virtual
+environment with their hands’ real time movements.
+Coles et al. created a work station where the user han-
+dles three haptic devices under the LCD screen: two Falcon
+® haptic devices are coupled to emulate palpation, and one
+Phantom Omni ® haptic device to manipulable the suture
+insertion task. The end effector of both devices were mod-
+ified to provide real sensation for the tasks. Additionally,
+the authors did in vivo force measurement for palpation and
+needle insertion tasks. Data obtained were used to calculate
+and recreate force feedback in the simulator. The simula-
+tor was validated by a user test, where seven experts in the
+field used the workstation. At the end of the simulation, they
+were asked to answer a 29 question survey to provide feed-
+back, and it was strongly agreed that the simulator provides
+realistic and correct stimuli.
+Dental procedures
+Dental training has been done using haptics feedback with
+Phantom Head ® [33] or artificial teeth. However, these
+methods present similar limitations as other surgical areas,
+such as spatial location difficulties. Ethical constraints pro-
+hibit the use of real human teeth, and different teeth materi-
+als lack the appropriate standards or they can be used only
+once per procedure on the same tooth.
+A simulator for typical dental procedures called hapTEL
+was created by Tse et al. [34] and it allows dental drilling,
+caries removal, and cavity preparation for tooth restora-
+tion. In the first stages of hapTEL, Falcon ® and Force
+Dimension ® Omega 3 ® haptic devices were used. The
+results stated that the quality of haptic rendering needed
+to be improved and modifications to the physical environ-
+ment were necessary that were implemented in a second
+prototype. Falcon ® devices were modified by adding an
+additional 6-DoF passive measurement device, and they
+were mounted in an upward position. Additionally, a mag-
+netic ball bearing socket system was developed to provide
+180◦of rotation. This socket system avoided the presence
+of singularities.
+The simulation uses polygonal models that were con-
+verted into tetrahedra by Tetgen ® [35]. The haptic algo-
+rithm to render forces displays four different types of mate-
+rials and physical properties: enamel, dentine, pulp, and
+cavity. hapTEL novelty includes the use of different force
+feedback depending on the material, but mainly the addition
+of a device to the Falcon ®. This setup improved the real-
+ism of the virtual mouth model and let students feel as if
+they were in a typical dental operation.
+Another common field of dental procedures is oral
+implant therapy. It has been accepted worldwide as an
+integral part of dental practice and it has become even
+more important over the past few years. The placement
+of implants takes into consideration anatomically complex
+operation sites in the cranio-maxillofacial region, which
+increase the risk of damage in operations. Computer-aided
+surgeries have helped students improve their skills; how-
+ever, their application in dental implant surgery is rarely
+reported.
+A virtual training system for oral implantation was devel-
+oped by Chen et al. [36]. CAPPOIS (Computer Assisted
+Preoperative Planning for Oral Implant Surgery) helps
+users establish a medical environment, and lets users trans-
+fer the data to the training station. Chen et al. stated that this
+pilot study proved that CAPPOIS helps inexperienced doc-
+tors grasp the feel of the osteotomy procedure during dental
+implant surgery. However, more clinical cases need to be
+done to show the feasibility and reliability of CAPPOIS.
+CAPPOIS used various algorithms in the field of computer
+graphics, and several medical image processing methods
+are involved, including: DICOM ® file parsing, image
+segmentation and 3D-visualization, surface decimation, cut-
+ting, spatial search and 3D distance computing, volume
+measurement, spline curve generation, multi(curved)-planar
+J Med Syst (2016) 40: 104
+Page 7 of 22
+104
+reconstruction, registration, among others. CAPPOIS was
+implemented by using Chai3D ® and Qt ®, and the sys-
+tem uses Omega 6 ® haptic device from Force Dimension
+®. Additionally, CAPPOIS allows the use of 3D glasses
+to view the work place in 3D. This environment was made
+to guide users in preoperative planning. Moreover, CAP-
+POIS allows users perceive the position and orientation of
+oral implants, do bone density analysis and bone volume
+measurements for maxillary defects, among others.
+Soft tissue simulation has been studied extensively in
+computer graphics area [18]. A recent research made by
+Hui and Dang-xiao in the area has expanded this topic by
+including bimanual interaction to attain practical applica-
+tions in the medical field [38]. They developed a dental
+surgery focused on the interactions between the dental tools
+and tissues, in this case cheeks and tongue. They based their
+deformation model on a mass-spring model. The novel part
+of their work is the addition of a special kind of springs,
+”returning spring”. This spring enable their meshes to be
+incompressible and resistant to bending by connecting each
+mass of the mesh to its original position.
+Force feedback provided to the user is calculated from
+the penetration depth made by the tip of the tool. Hui and
+Dang-xiao simplified the interaction of the tools and the
+deformable skin as a case of rigid bodies. Therefore, only
+the tip of the tool is interacting with the mesh and the
+force that is acting on the mesh is calculated by distributing
+the force applied to the contact point to all of its neighbor
+vertexes.
+They applied their approach to a virtual simulator where
+they modeled a face, in which cheeks are made up of 143
+masses and 951 springs and the tongue is made up of 213
+masses and 1747 springs. Hui and Dang-xiao used two
+Phantom Omni haptic devices in the simulator, and they
+modeled their cursors as a Mouth Mirror and a Dental
+Explorer for exploration and interaction purposes.
+One type of teaching-learning techniques used in edu-
+cation are collaborative environments where students can
+interact among them or with a professor to solve prob-
+lems and learn as a team. As stated before, TEL options
+allow students to enhance their learning by allowing them to
+acquire knowledge and skills via virtual environments [39].
+The implementation of these environments in the medical
+area can help teachers guide students in medical operations.
+Kosuki and Okada developed a collaborative training sys-
+tem [37]. The simulator was created using a tool called
+IntelligentBox, which is a 3D visual software development
+system based on the Model-View-Controller architectural
+pattern [40]. The authors have implemented components for
+medical operations in IntelligentBox, and they have devel-
+oped specific modules for touch and drilling actions to
+design a dental training environment (Fig. 7).
+IntelligentBox defines 3D objects as polygonal models,
+which are represented as a set of several polygons. For
+object deformations, the system uses a very simple method
+based on the movements of the haptic device pointer. This
+method enables the user to use push and pull interaction on
+the environment. On the side of collision detection, Intel-
+ligentBox solves an equation based on the vertex locations
+and the interaction point, where only if the interaction point
+is the opposite side of the vertex, the system detects a colli-
+sion. Finally, the dental training station uses Phantom Omni
+® haptic device and IntelligentBox provides a distributed
+model sharing mechanism called RoomBoxes. RoomBoxes
+Fig. 7 Current prototype for
+typical dental procedures made
+by Kosuki and Okada [37]. The
+simulator was made using
+IntelligentBox, and it provides
+students a collaborative
+environment where they can
+work in turns to solve a task
+104
+Page 8 of 22
+J Med Syst (2016) 40: 104
+provides students a virtual environment in which they can
+share user-operation events.
+Evaluations of the learning curve and acquisition of skills
+using haptic technologies have been reviewed in previous
+work [41]. Assessment and evaluation of students training
+can be found in the literature [42]. Wang et al. [42] designed
+a simulator called iDental to provide a preliminary user eval-
+uation. Teeth models were obtained via point-cloud data
+from Computed Tomography (CT) images and scans and
+were refined using 3ds Max ®. The result is a VRML file
+that is the input for the virtual environment. The meshes of
+tissues for rigid and elastic objects are handled as triangles,
+and GHOST SKD ® handled collision [43].
+The simulator uses one Phantom Desktop ® haptic
+device and runs on a workstation with one display. Perfor-
+mance and user tests with 10 dentists and 19 postgraduate
+students with one to two years of experience in dental proce-
+dures were made. Results obtained showed that the current
+simulator provides relative realism similar to that experi-
+enced with real patients. The results suggest that virtual
+reality simulators give undergraduate students more flexible
+training experiences. However, the current simulator needs
+to improve its haptic and graphic feedback, as well as the
+physical hardware, which is not consistent with the current
+technique.
+Endoscopy
+Endoscopy procedures examine the interior of a hollow
+organ or cavity of the body using an endoscope. Neuro-
+surgery is one of the surgical specialties within endoscopy
+with the highest risks [44]. It requires a safe manipulation of
+instruments around fragile tissues; consequently, the most
+frequently reported errors in neurosurgery are technical ones
+[45].
+Delorme et al. [46] developed NeuroTouch ®, a virtual
+simulator for cranial microsurgery training (Fig. 8). The
+neurosurgical simulator was developed using a physic-based
+engine and is composed of a 3D graphics rendering sys-
+tem (stereoscope), haptic devices, other controls, and one
+or two computers. Two different types of haptic systems
+can be used: the Phantom Desktop ® or a Freedom 6S
+® from MPB Technologies ®. Delorme et al. developed
+a software for the simulations to design and mimic a neu-
+rosurgical microscope. The simulation uses multiple rates:
+graphics at 60 Hz, haptics at 1k Hz, and tissue mechanics
+at 100 Hz. NeuroTouch was developed to enable residents
+to practice their skills in tumor-debulking and tumor cauter-
+ization tasks. This system computes the deformation of the
+tissues and topology changes according to tissue rupture,
+cut, or removal. The mechanical behavior of tissues is mod-
+eled as viscoelastic solids using a quasilinear viscoelastic
+constitutive model for the viscous part of the environment.
+Fig. 8 Neurosurgery resident testing a NeuroTouch prototype [46].
+The workstation implements a stereoscope as an immersion device
+to help the user locate himself in the virtual world. The system uses
+two Freedom 6S ® haptic devices. Picture comes from the National
+Research Council Canada
+NeuroTouch is a virtual simulator with haptic feedback
+that was designed for the acquisition and assessment of
+technical skills involved in craniotomy-based procedures.
+Delorme et al. stated that usability feedback from doctors
+provided NeuroTouch ® ways to improve its functionality.
+They have praised the visual portion of the simulator, and
+suggested modifications in the ergonomic design. Finally,
+by adding a modification of parameters of the model, this
+system can be extended to cover patient-specific operations,
+which would increase the adaptability of the environment
+and cover a wider range of scenarios.
+Another simulator was developed by Jiang et al. [47]
+and it allows a simulation of endoscopic third ventricu-
+lostomy. This procedure is used to treat hydrocephalus by
+making a perforation in the floor of the third ventricle of the
+brain under endoscopic guidance. Jiang et al. adapted the
+stereoscope design by Delorme et al. The proposed system
+adapted the NeuroTouch ® microneurosurgery to achieve
+the practices needed in the simulation. They used four mir-
+rors and a screen instead of two mirrors and two screens. To
+provide haptic feedback, a neuro-endoscope handle with a
+blunt probe instrument inserted in its working channel was
+mounted on a Phantom Omni ® haptic device. The sim-
+ulator was created using their software simulation engine
+Blade. Jiang et al. designed the environment through close
+collaboration with the end-users. It enables two tasks: one
+is the burr-hole position and entry orientation selection,
+and the second is the navigation inside the ventricular sys-
+tem, reaching the third ventricle and perforating the third
+ventricle floor.
+Other studies have focused on developing prototypes of
+other kinds of endoscopic surgeries. Previous work in the
+area of endonasal endoscopy made by Neubauer [48], used
+a joystick to navigate and access tumor areas in the envi-
+ronment. This approach reduces the realism of the simulator
+due to its lack of haptic interactions with tools. Additionally,
+J Med Syst (2016) 40: 104
+Page 9 of 22
+104
+they did not implement deformations modules of tissues due
+to its navigation nature. Perez-Gutierrez et al. [49]. divided
+a research study in three steps to develop an endoscopic
+endonasal haptic surgery simulator and they simulated a
+rigid endoscope device with 4-DoF and modeled the nasal
+tissue.
+Perez-Gutierrez et al. used a force feedback joystick
+to provide the haptic interaction. The simulator provides
+the user graphical feedback using the camera movements
+in the virtual environment, and through the joystick, the
+user can sense the interaction forces to reach the tumor,
+as can be seen in Fig. 9. The system was created using
+Nukak3D ® [50]. In this research, further work should
+be considered to improve aspects such as immersion and
+interaction.
+Advances in endoscopy simulators can also be found
+in the area of surgical suturing. Punak et al. developed a
+surgical suturing simulator for wound closure using the sim-
+ulation of the Covidien ® (previously known as Autosuture
+®) Endo Stich ® suturing tool in [51]. The simulator uses
+two Phantom Omni ® haptic devices: one for a grasper and
+the other for the simulated Endo Stich ® suturing device.
+The model of the wound is based on FEM techniques,
+which in this case used the linear hexahedral model. Addi-
+tionally, the wound is simulated as a triangular surface mesh
+embedded in the linear hexahedral. This allowed Punak
+et al. to modify the surface of the wound or change the grid
+resolution of the mesh without changing the global environ-
+ment . On the other hand, the suture model was based on
+a simplified Cosserat theory of elastic rods, which uses the
+CoRDE model [52], enabling the model to be discretized
+into a coupling of a chain of mass points and a chain of
+orientations. The simulator uses bounding volumes in the
+tools and BVH for the collision detection of between the
+open wound and the thread. Finally, they used a finite state
+machine to animate the knot tying sequence.
+The suture was simulated with 100 points, and the trian-
+gular surface mesh of the wound was composed of 2,178
+vertices and 4,352 triangles. The simulation ran at 20 fps
+when there were null or minor intersections, and it ran at
+approximately 10 fps with complex collisions and inter-
+actions. Punak et al. aimed to create low-cost and simple
+simulators that help trainees learn surgical skills. User test-
+ing of the system is necessary to observe if the environment
+provides realistic behavior and allows the user to be trained
+in the correct way. Additionally, diversity of wounds and
+methods of suture are being planned. Most of the surgical
+procedures are done with at least 6 DoF. However, Punak
+et al. proposed to test if simulators with three degrees of
+force feedback can be a feasible option instead of using
+a higher cost simulator offering more degrees of force
+feedback, so further field research should be done.
+Laparoscopy
+One of the most common surgeries is laparoscopic chole-
+cystectomy, which is the removal of a diseased gallblad-
+der. This surgery is often used as the training case for
+laparoscopy due to its high frequency and perceived low
+risk. Park et al. [53] developed a low cost virtual real-
+ity surgical simulator. It consists of three elements: virtual
+reality, motion sensor, and haptic feedback. The authors
+used the Microsoft ® Kinect ® 3D camera to capture and
+store information associated with the movements of the
+body of a user. To provide haptic feedback, this work uses
+Nintendo ® Wiimote ® controllers.
+To create the virtual environment, Park et al. construct
+an expert knowledge database derived from video footage
+taken from a surgical endoscope during real cholecystec-
+tomy operations (Fig 10). A set of 15 key stages were
+defined and a database links the corresponding image
+frames of the video footage to the relevant key stages
+that were used to construct an interactive video tutorial.
+Finally, the system uses Hidden Markov Models (HMMs) to
+compare the actions of users with actions from the expert
+knowledge database.
+Fig. 9 Current visualization for
+an endoscope approaching to the
+middle turbinate in an endonasal
+haptic surgery simulator made
+by Perez-Gutierrez et al. [49]
+104
+Page 10 of 22
+J Med Syst (2016) 40: 104
+Fig. 10 Virtual reality
+simulator made by Park et al. for
+a laparoscopic operation. The
+image depicts the video tutorial
+that users can watch (right), and
+the surgical instruments that the
+user manipulates using
+Wiimotes ® (left) [53]
+By using Wiimotes ® and the Kinect ® sensor, it is
+possible to capture the actions of the user. However, the
+environment loses realism due to the fact that it lacks sim-
+ulated physical surgical devices. Laparoscopic workstations
+usually involve the handling of physical parts while the sur-
+geon proceeds with the operation. However, the workstation
+proposed by Park et al. was aimed as an in-home training
+system for students, and it can help them practice anywhere.
+Another low cost training simulator is eLaparo4D, which
+was created by Gaudina et al. [54]. They designed train-
+ing exercises for medicine students in realistic scenarios
+of videolaparoscopic surgeries. The system is based on a
+node.js application server, which enables all the visualiza-
+tion, communications and administration. The user interface
+uses HTML5 ®, which runs a Unity3D ® engine plugin
+[55]. The meshes in the simulation were developed in
+Blender ® 3D [56].
+Haptic feedback is provided by using three Phantom
+Omni ®, where the first two are used as tool handlers
+(grasper, hook or scissors) and the third one is used to
+move the camera within the virtual abdomen. By using
+three haptic devices, students would experience a realis-
+tic approach of the laparoscopic equipment. Gaudina et al.
+used an Arduino ® board connected to a vibrating motor
+that also has a vibration feedback. Additionally, the way the
+simulator was made allows haptic-based remote guidance
+provided by a supervisor. This guidance can be provided via
+web to show students the proper way to execute a critical
+task. Finally, the system enables users to have their own pro-
+file, which is tracked over time and users can monitor their
+progress. The system was designed in a way in which each
+exercise has its allowed and not allowed actions, which adds
+or subtracts points from the user’s score.
+Gaudina et al. stated that eLaparo4D has many aspects
+that need to be improved. One is the physical modeling to
+simulate the interactions of elements properly, such as body
+parts that could interfere with the surgical procedure. More-
+over, the definition of exercises in the simulator are being
+developed to reach a certain level of mastery. Finally, sur-
+gical procedures need to provide performance feedback, so
+eLaparo4D is evaluating the implementation of a tracking
+module of the students’ learning curve.
+Serious games are employed to teach skills on surgery-
+based training applications. Serious games provide high
+fidelity simulations of environments and situations. De Pao-
+lis presented a serious game for training suture skills in
+laparoscopic surgery [57]. The system is focused on phys-
+ical modeling, and it established a set of parameters to
+determine the development of trainees. The simulator uses
+a pair of haptic devices, which can be two Phantom Omni
+® or two Falcon ® using the multidevice HAPI ® library.
+The system uses PhysX ® physics engine and Ogre3D
+® graphics engine [58].
+De Paolis used the mass-spring method to design the tis-
+sue in PhysX ®, and he used Ogre3D ® to render the tissue.
+On the other hand, the thread model was built using follow-
+the-leader techniques in PhysX ®. The thread is composed
+of cylinders that are connected through a spherical joint.
+This enables the rotation of the elements relative to each
+other. The architecture of the system was developed using
+the architectural pattern of Model-View-Controller, which
+manages the behavior and responses of the environment and
+objects.
+In the assessment of suturing procedure, De Paolis con-
+sidered the following parameters to evaluate the medical
+process: duration time, accuracy, force peak, tissue damage,
+angle of entry, and needle distance. The software architec-
+ture was developed using the architectural pattern Model-
+View-Controller, which manages the behavior of objects in
+the environment, responds to requests for information about
+their states and to instructions to change state. De Paolis
+[57] concluded that the serious game of laparoscopic sutur-
+ing could be improved by modifying some aspects of the
+environment. One is improving the interaction between the
+tissue and suture thread, which is one of the areas in suture
+modeling that is currently researched.
+J Med Syst (2016) 40: 104
+Page 11 of 22
+104
+Other improvements in the area of laparoscopic simu-
+lators include the addition of visual effects. For instance,
+smoke and bleeding models are not developed due to its
+lesser significance compared to other major modules, such
+as collision detection and physics simulation. Neverthe-
+less, Halic and De developed a GPU based method to
+implement realistic smoke and bleeding effects in virtual
+reality simulators [59] (Fig. 11). These effects were applied
+in the Laparoscopic Adjustable Gastric Banding (LAGB)
+simulator [60].
+In order to obtain the desired effects, Halic and De ana-
+lyzed videos obtained from LAGB and they identified two
+different kinds of smoke effects. One is the environmental
+smoke effect, which often obstructs the camera view. The
+other is the smoke effect originated at the tip of the cautery
+tool that spreads around the tissue slowly. Both types are
+blended to generate the final environment. For bleeding
+effects, an attribute variable was assigned to all vertexes of
+the mesh structure. The processing is made when the inter-
+polated value of this variable is compared with the noise
+texture. If it exceeds a certain value, bleeding is rendered in
+that particular fragment.
+The simulator and the effects were written with GLSL
+® shader. The smoke video fetching and bleeding render-
+ing were performed within the same shader. Halic and De
+used the GPU for bleeding and smoke simulation; therefore,
+it decreased the computational load of the CPU with a slight
+reduction in the rendering performance. However, the per-
+formance is better compared to a full-fledged simulation of
+both effects. Halic and De specified that they are planning
+to optimize the texture processing in CPU and CPU-GPU
+data transfer to avoid the loss of performance obtained.
+Finally, assistant modules are currently being applied in
+the area of virtual simulators, where one of the most com-
+mon is the technique of Virtual Fixtures (VF). VF is a
+technique that is used to guide students while they are work-
+ing on a specific task. VF applies forces in the haptic device
+to maintain the students outside of prohibited work space
+areas. Research made by Hernansanz et al. is focused on VF
+[61]. The paper discusses the advantages of VR to improve
+basic learning skills in laparoscopic surgery. They used the
+Skill-Rule-Knowledge taxonomy [62] to assess assisting
+technologies applied in abilities acquisition.
+Hernansanz et al. implemented as VF: visual guidance,
+audio guidance, motion scaling, magnification, and force
+feedback. These provide the student an assistance environ-
+ment. The simulator that Hernansanz et al. used was the
+one developed by Zerbato [63]. The system uses a single
+Phantom Omni ® haptic device.
+Orthopaedics
+Arthroscopy [9] is another medical surgery that has been
+implemented in virtual environments. Arthroscopic proce-
+dures are performed to evaluate or treat orthopaedic condi-
+tions. Heng et al. developed a virtual reality system for knee
+arthroscopic surgery using OpenGL ® and C++ [73]. They
+created soft tissue deformable model using Finite-Element
+Analysis (FEA) with realistic feedback. They developed
+their own 4-DoF haptic device with 3-Degrees of Force
+Feedback (DoFF) to satisfy their requirements, and they
+used slides from the Visible Human Project image dataset
+combined with CT real images to obtain better visual real-
+ism. In this simulator, two types of meshes are generated:
+one to model non-deformable organs (i.e., bones), and
+the other using tetrahedral meshes to represent deformable
+organs. Using an in-house architecture, these two meshes
+are rendered in a preprocessing phase of the system. To
+improve the performance, they propose regions with dif-
+ferent properties to balance the computation time and the
+Fig. 11 In order to promote realism in simulators, Halic and De developed (a) smoke effects and (b) bleeding effects [59]. These effects were
+applied to LAGB simulator [60]
+104
+Page 12 of 22
+J Med Syst (2016) 40: 104
+Fig. 12 Chen and He developed
+a bone drilling simulator, where
+users can feel, by force
+feedback, the different
+components of the bone [64]. In
+figure (a) a user is performing
+the task using a Phantom
+Premium ®, and on figure (b) a
+close-up of the environment can
+be seen
+level of simulation realism. Finally, the simulator devel-
+oped procedures to cut tetrahedral meshes and implemented
+optimized collision detection methods. An endoscope and a
+cutter were modeled to provide real tool models in this sim-
+ulation. The simulator includes the functionality to record
+the surgical process. This feature enables medical students
+to playback the recorded procedure. This system was eval-
+uated by medical professionals and the results reveal a
+satisfactory tactile feedback.
+A typical task in orthopaedics is bone drilling. This pro-
+cess is an essential step before the insertion of screws or
+pins. Chen and He created a simulator for bone drilling of
+a femur bone in a hip fracture surgery [64]. This simulator
+can be seen in Fig. 12. The key feature of this study is the
+use of a Phantom Premium ®, which provide 6 DoFF. In the
+simulator, the bone is modeled as a voxel, which is obtained
+from CT or Magnetic Resonance Imaging (MRI) scans and
+the drilling probe is modeled as a cylindrical volume.
+In this simulator two important aspects for drilling were
+taken into consideration: bone properties and drill param-
+eters. The bone properties was modeled according to its
+heterogeneity (hyaline cartilage, spongy bone, marrow cav-
+ity, and compact bone). For drill parameters, drill speed,
+type of drills and feed rates were considered. Finally, calcu-
+lation of force feedback (drilling force and rolling torque)
+is based on the material removal rate, which depends on
+drill diameter and feed-rate. Additionally, the travel distance
+of the drill is calculated using feed-rate and time interval
+parameters.
+In orthopaedics, one specific surgery process for frac-
+tures on the human femur is the Less Invasive Stabilization
+System (LISS). LISS allows surgeons to insert a percuta-
+neous plate and fix it in the distal femur with screws to help
+bones recover from fractures. For this operation, Cecil et al.
+developed a virtual collaborative simulator for LISS training
+[65]. The simulator uses FEM approach to model deforma-
+tions when surgical tools interact with the surfaces of the
+bone (Fig. 13).
+The importance of this research was the implementation
+of the collaborative mode. Each user has their own virtual
+environment on their work station; the control of the simula-
+tion remains with a specific user until he grants permissions
+Fig. 13 Another environment that uses the technique of collaborative
+learning is the one made by Cecil et al. [65]. Picture on the right shows
+the surgery process for fractures on the human femur was designed. By
+applying the methodology of collaborative environments, Cecil et al.
+enables users to practice the surgery process, and on another work-
+station an expert surgeon can check the process. On the right side, a
+close-up of the virtual simulator can be seen
+J Med Syst (2016) 40: 104
+Page 13 of 22
+104
+to another user, in a token-based approach. In addition to
+the collaborative mode, Cecil et al. designed this simulator
+as two different platforms to be used as an evaluation and
+planning tool for surgeons. The first platform is a simulator,
+which was created using C++ and Chai3D ®. This simula-
+tor incorporates a Phantom Omni ® haptic device to interact
+with the environment and obtain force feedback from it. The
+second platform was created to visualize the surgery process
+obtained in the process. This system was considered as a
+tool to help surgeons teach the process and evaluate medical
+residents.
+Miscellaneous procedures
+Additional to the previous medical areas, there have been
+simulators in other specific areas or tasks. One of them is
+in the training of biopsy, which is the sampling of cells or
+tissues for examination. This procedure is most commonly
+performed to evaluate whether there are inflammatory or
+cancerous conditions in organs. Training of this task can
+only be performed on live patients, where consequent risks
+may occur in patients. Therefore, the importance of creating
+systems that provide visual realism and controlled environ-
+ments is emphasized. In this area, Ni et al. developed a
+virtual reality simulator for Ultrasound-Guided (UG) liver
+biopsy training [66].
+The authors combined images obtained from CT with
+ultrasound images to provide higher realism. In addition, the
+generated deformable model is able to simulate the breath-
+ing of a patient by changing controlled parameters. For hap-
+tic feedback, they used two haptic devices that are managed
+in independent routines, a Phantom Omni ® to simulate
+an ultrasonic scanning probe and a Phantom Premium to
+handle the virtual needle.
+Ni et al. show in the simulator the liver model and the
+ultrasonic sensor image that can be seen in real opera-
+tions, as can be seen in Fig. 14. User tests were made to
+evaluate different aspects of realism, such as images and
+tactile effects. The evaluation was conducted with experts
+and trainees, where satisfactory results were obtained. Nev-
+ertheless, it was highlighted that the performance of experts
+is not as high as expected when breathing is enabled in the
+simulation.
+A Transrectal Ultrasound (TRUS) guided prostate
+biopsy virtual environment using haptic devices has been
+developed in recent studies [67]. Selmi et al. designed
+a complete learning environment where various exercises
+were implemented to provide didactic learning. To achieve
+this goal, the dedicated clinical case database from Koelis
+® UroStation ® system was connected to the system
+to provide diverse patient cases. This database covers a
+large variety of important situations that surgeons typically
+encounter during real surgeries.
+Fig. 14 Ni et al. developed a virtual biopsy simulator [66]. In this, the
+user can perfom interactive anatomical navigations, where according
+to the movements of the probe, a CT view that corresponds to it is
+shown
+The simulator let practitioners use a Phantom Omni
+® haptic device to navigate the environment on one hand,
+and on the other hand they use CamiTK ® GUI [68], which
+provides data and feedback to the user during the simula-
+tion. Moreover, the simulator allows practitioners to access
+their performance record, such as average score and proce-
+dure average time of the procedure. Additionally, to improve
+realism, students have to complete a checklist, which is
+typically done prior to the operation.
+The simulator of Selmi et al. is used in two phases. In the
+first one, students are asked to perform seven specific exer-
+cises, which help them to understand the procedures during
+the biopsy and let them practice hand-eye interaction in the
+simulator. The second phase offers them the option to per-
+form a virtual biopsy process, where the student can select
+the desired position to do the biopsy (decubitus or lateral)
+and the location to start it (left central base, left lateral base,
+right central base or right lateral base).
+Training environments have also been created for liver
+surgery. Yi et al. proposed a method to adapt and calibrate
+shape and size of organs by establishing feature points on
+their surface [69]. The organs are formed by triangle meshes
+that follow the spring-mass damper model to achieve defor-
+mations. Yi et al. used a simplified Lin-Canny algorithm to
+calculate the nearest point from the surgical tool in order
+to deploy the corresponding interaction forces and collision
+detection. This simulator enables medical students practice
+surgeries in virtual environments by applying images of
+patient’s organs in the simulator.
+Virtual training environments have also been designed in
+optometry. Optometry is usually practiced in close super-
+vision of experts due to the fact that these procedures are
+time-consuming and unrepeatable. Tradicional techniques
+in the area focus on the use of artificial or bull eyes. Med-
+ical students in optometry need training environments to
+104
+Page 14 of 22
+J Med Syst (2016) 40: 104
+develop their skills with superior realism. Wei et al. [70]
+created an immersive extendable and configurable work sta-
+tion that implements the use of a Phantom Omni ® haptic
+device and a Head Mounted Display (HMD) to provide AR
+techniques. This work station can be seen in Fig. 15. The
+simulation was developed using C++ and Chai3D ®. The
+eye model was implemented as a polygonal mesh with sep-
+arate component and textures. By doingthis segmentation,
+interaction between the surgical tools and the eye provide
+different physical properties, according to the region that the
+user is navigating. Moreover, the model was built implicitly
+from the interactions with the deformable object; therefore,
+data-driven models were used in this simulator.
+In the virtual environment, illumination and needle
+sharpness modification were adapted to provide the best
+suitable and similar conditions as the ones experienced dur-
+ing real surgeries . Additionally,, the simulator considered
+the use of the HMD to adjust the visual rendering effect,
+and AR techniques to modify the slit lamp orientation dur-
+ing the simulation. Finally, the simulator was tested by five
+optometry students who already knew the procedures. They
+had to perform five different tests and their performance was
+recorded by the system. By using the simulator, they were
+evaluated by assessing 1) distance estimation between the
+tool and the eye, 2) foreign body location, 3) foreign body
+removal task, 4) the angle and position of the needle, and 5)
+needle insertion.
+The authors stated that in the first trials made by the
+students, they had bad performance because they were still
+unfamiliar with the workstation. The principal problem was
+in the area of space location (Z-axis or depth). At the end of
+the evaluation, students were asked to answer a survey about
+the system. In this questionnaire, immersion, interactivity
+and effectiveness of the system were asked. Most students
+agreed that the simulator could enable users to finish the
+tasks faster and safer due to the force feedback provided on
+their hand.
+Besides advances in training students for specific medi-
+cal tasks, physio-therapeutic systems have been made using
+haptics to relieve the work load of physiotherapists. Surg-
+eries are usually followed by a rehabilitation program. Typi-
+cal feedback provided to patients is given using audiovisual
+cues [71]. However, in some cases, using a mechanical or
+haptic feedback can be implemented as an alternative or
+complement treatment. A recent research made by Rajanna
+et al. proposed a system called KinoHaptics, which is an
+autonomous, wearable, haptic device to help during the
+recovery process of patients [72].
+KinoHaptics hardware is based on an in-house devel-
+oped armband (with vibration motors), and a Kinect ®
+2.0 to track the motion of users. By adding the armband
+with vibro-haptic feedback, Rajanna et al. simulates a phys-
+iotherapist that accompanies patients during the training
+session. Kinect ® 2.0 is used to capture the movement
+of the patient to recreate it in a virtual scheme. The
+virtual scheme and the user interface were made using
+Unity3D ® framework.
+The system was tested by 14 students. Test subjects
+were chosen according to the following categories: has
+suffered an injury, has limited motion in their limbs, and
+has no prior injury or limited motion of their limbs.
+Finally, results shows that users liked KinoHaptics and
+felt it convenient to be used for self-care after having a
+surgery.
+Discussion
+In this section we provide a comparison and summary of
+technical aspects used in haptic virtual simulations. Then
+we discuss the visual realism of the simulations and then we
+focus on the training aspects of virtual environments. The
+papers discussed in this work are summarized in Tables 1
+and 2.
+Fig. 15 A workstation for
+optometry tasks was developed
+by Wei et al. [70]. The
+workstation provides a realistic
+approach to real operations.
+Figure (a) shows that the system
+is made from a head display and
+the equipment that is used in the
+operation. Additionally, a
+display and a Phantom Omni are
+mounted. On figure (b)
+screenshot of the body removal
+task is shown
+J Med Syst (2016) 40: 104
+Page 15 of 22
+104
+Table 1 Comparison of haptic simulations
+Author
+Medical
+HaD
+Modification
+Number
+DoF
+DoFF
+Type
+Task performed
+Tools simulated
+Gravity
+Space
+LF to
+area
+to HaD
+to HaD
+of FF
+location
+user
+Jia and Pan [23]
+Stitching
+Desktop
+No
+1
+6
+3
+Force
+Close a wound
+Needle
+No
+Shadows
+No
+Payandeh and Shi [25]
+Stitching
+Omni
+No
+2
+6
+3
+Force
+Close a wound
+Needle and
+No
+None
+No
+Needle Driver
+Ricardez et al. [26]
+Stitching
+Omni
+No
+2
+6
+3
+Force
+Close a wound
+Needle, Needle
+No
+None
+No
+Holder and
+Tweezers
+Choi et al. [27]
+Stitching
+Omni
+No
+2
+6
+3
+Force
+Close a wound
+−
+No
+None
+No
+Li et al. [29]
+Palpation
+Omni
+No
+1
+6
+3
+Force
+Tumor
+−
+No
+None
+No
+Localization
+Ullrich and Kuhlen [30]
+Palpation
+Omni
+Yes
+2
+6
+3
+Force
+Palpation and
+Hands and Needle
+No
+Virtual Reality
+No
+Needle Insertion
+Coles et al. [32]
+Palpation
+Falcon and Omni
+Yes
+2/1
+3/6
+3
+Force
+Palpation and
+Hands and Needle
+No
+None
+No
+Needle
+Insertion
+Tse et al. [34]
+Dental
+Falcon
+Yes
+1
+3
+6
+Force
+Drilling, Caries
+Dental Drill
+No
+3D LCD
+No
+removal and
+Cavity preparation
+Chen et al. [36]
+Dental
+Omega 6
+No
+1
+4
+3
+Force
+Oral implants
+Dental Drill
+No
+3D LCD
+Yes
+Hui and Dang-xiao [38]
+Dental
+Desktop and Omni
+No
+2
+6
+3
+Force
+Manipulation of
+Mouth Mirror
+No
+None
+No
+Cheek and
+and Dental
+Tongue
+Explorer
+Kosuki and Okada [37]
+Dental
+Omni
+No
+1
+6
+3
+Force
+Touch and Drilling
+−
+No
+None
+Yes
+Wang et al. [42]
+Dental
+Desktop
+No
+1
+6
+3
+Force
+Remove calculus
+Dental Drill
+No
+None
+No
+Delorme et al. [46]
+Endoscopy
+Freedom 6s
+No
+2
+6
+3
+Force
+Tumor-debulking
+Ultrasonic
+No
+Stereoscope
+No
+and Tumor
+Aspirator, Bipolar
+cauterization
+Electrocustery
+tasks
+and Microscissors
+Jiang et al. [47].
+Endoscopy
+Omni
+Yes
+2
+6
+3
+Force
+Endoscopic third
+Probe
+No
+None
+Yes
+ventriculostomy
+Perez-Gutierrez et al. [49]
+Endoscopy
+Joystick
+No
+1
+1
+No
+Vibration
+Endoscopic
+Rigid
+No
+None
+No
+endonasal surgery
+Endoscope model
+Punak et al. [51]
+Endoscopy
+Omni
+No
+2
+6
+3
+Force
+Close a wound
+Tweezer and
+No
+Shadows
+No
+Needle Handler
+HaD : Haptic Device, FF : Force Feedback, LF : Learning Feedback, UG : Ultrasound-Guided, TRUS : Transrectal Ultrasound
+104
+Page 16 of 22
+J Med Syst (2016) 40: 104
+Table 2 Comparison of haptic simulations (cont)
+Author
+Medical
+HaD
+Modification
+Number
+DoF
+DoFF
+Type
+Task performed
+Tools simulated
+Gravity
+Space
+LF to
+area
+to HaD
+of HaD
+of FF
+user location
+Park et al. [53]
+Laparoscopy
+Wiimote
+No
+2
+3
+No
+Vibration
+Cholecystectomy
+2
+No
+Kinect
+Yes
+Gaudina et al. [54]
+Laparoscopy
+Omni
+No
+3
+6
+3
+Force
+Video laparoscopic
+1
+No
+None
+Yes
+surgery
+De Paolis [57]
+Laparoscopy
+Falcon or Omni
+No
+2
+3/6
+3
+Force
+Laparoscopic
+−
+Yes
+None
+No
+suture
+Halic and De [59]
+Laparoscopy
+Omni
+No
+2
+6
+3
+Force
+Laparoscopic
+Tweezer
+No
+None
+No
+Adjustable Gastric
+Banding task
+Hernansanz et al. [61]
+Laparoscopy
+Desktop
+No
+1
+6
+3
+Force
+Video
+Smoke and
+No
+None
+No
+laparoscopic
+bleeding modules
+surgery
+Heng et al. [73]
+Orthopaedics
+Own device
+No
+2
+4
+3
+Force
+Knee Arthroscopy
+Endoscope and
+No
+None
+No
+Cutter
+Chen and He [64]
+Orthopaedics
+Premum
+No
+1
+6
+6
+Force
+Bone drilling
+Driller
+No
+None
+No
+in hip
+fracture
+Cecil et al. [65]
+Orthopaedics
+Premium
+No
+1
+6
+6
+Force
+LISS surgery
+Driller
+No
+None
+Yes
+Ni et al. [66]
+Biopsy
+Omni and Premium
+No
+1/1
+6
+3/6
+Force
+Liver UG biopsy
+Transducer and
+No
+None
+No
+Biopsy Needle
+Selmi et al. [67]
+Biopsy
+Omni
+No
+1
+6
+3
+Force
+TRUS Guided
+Ultrasonic
+No
+None
+Yes
+Prostate
+Scanning Probe
+biopsy
+and Needle
+Yi et al. [69]
+Liver Surgery
+Omega 3
+No
+1
+3
+3
+Force
+Liver surgery
+Cutting Probe
+No
+None
+No
+Wei et al. [70]
+Optometry
+Omni
+No
+1
+6
+3
+Force
+Optometry tasks
+Foreign body
+No
+HMD
+No
+removal and
+Injection procedure
+Rajanna et al. [72]
+Rehabilitation
+Armband
+No
+No
+No
+No
+Vibration
+Physio-therapeutic
+None
+Yes
+Kinect 2.0
+No
+tasks
+HaD : Haptic Device, FF : Force Feedback, LF : Learning Feedback, UG : Ultrasound-Guided, TRUS : Transrectal Ultrasound
+J Med Syst (2016) 40: 104
+Page 17 of 22
+104
+Technical comparison
+Haptic devices in virtual simulators
+Current simulators mainly use haptic devices with three
+or six DoF. The most common ones are Falcon ® and
+Phantom Omni ® due to their affordable price (Falcon
+® costs around $150 - $200 US Dollar as of July 2015).
+Falcon ® devices only provide 3-DoF, Phantom Omni
+® provides 6-DoF, but it has only 3-DoFF. Addition-
+ally, its cost is around $2,200 US Dollar, which makes
+it less accessible. Several authors have attempted to com-
+bine low cost haptic devices with external modules to
+provide additional degrees of freedom [32, 34], or they
+provide better realism by adapting surgical tools to them
+[30, 47].
+The prevailing used haptic devices in stitching proce-
+dures are from the Phantom family. This kind of haptics
+uses 6-DoF, but they only have 3-DoFF, except for the Phan-
+tom Premium, which has all its DoF coupled with force
+feedback. A typical task used in the development of stitch-
+ing simulators is open-wound operations, where they mainly
+focus the task on the dermis layer. The nature of this pro-
+cedure implies that torsion is needed when the needle is
+piercing the skin; consequently, simulators need to provide
+6-DoF. Particularly in this area, none of the authors adapted
+haptic devices or created their own to provide forces in cases
+such as skin perforation by the needle.
+Palpation virtual environments target to achieve sensa-
+tions felt in real procedures. Palpation is a procedure that is
+commonly made in parallel with needle insertion. Authors
+usually adapt haptic devices with pads to provide real
+sensations. Other authors focus their attention to provide
+proper sensations of tumors by scanning current tumor pads.
+They translated the texture and force sensations to pro-
+vide better haptic feedback and rendering. Palpation may
+benefit from using new haptic devices that use piezoelec-
+tric sensor in gloves to enhance the sensation and depth
+perception.
+Dental simulators focus on the most common actions in
+dental procedures, as caries and calculus removal. Applica-
+tions use diverse haptic devices; nevertheless, the main aim
+is the reproduction of realistic workstations. Tse et al. [34]
+adapted the workstation to provide these conditions, and
+also added an extension to a Falcon ® device in order to
+provide 6-DoFF. Additionally, undergraduate students used
+a common drill as the handler of the haptic device, which
+enhanced the learning procedure. Further work in this area
+could consider the addition of two haptic devices because
+medical tasks are done by using two hands.
+Endoscopy and laparoscopy environments belong to the
+class of Minimally Invasive Surgeries (MIS). Because
+this procedures need to be performed with two hands,
+simulations are usually manipulated with two Phantom
+Omni ® haptic devices. Virtual environments in this
+area focus principally in endoscopy navigation [47, 49].
+Laparoscopy simulations are commonly developed to pro-
+vide practice in videolaparoscopic surgery [54, 61]. New
+alternatives, such as [53], provide low-cost simulations by
+using haptic devices coupled with video games by using
+Wiimotes ®.
+Orthopaedics environments usually focus in arthroscopic
+tasks, principally drilling. In this type of simulations, FEM
+should be considered. Researchers should focus on how to
+model bone properties and structure. By doing this, they
+can model proper interaction in drilling and force feedback.
+Finally, miscellaneous procedures are being developed.
+Important cases in the area are biopsies and optometry. Both
+kind of simulators use Phantom Omni ®. However, manip-
+ulation of tools requires 6-DoFF, as in the case of stitching.
+Finally, post-surgery rehabilitation has started to add haptic
+feedback as a complementary resources of audiovisual cues
+[72].
+In short, simulators in these areas are developed with 3-
+DoFF due to their nature, where only 3-DoF are needed.
+Commonly used tools in medical procedures involve manip-
+ulations using triggers, so their addition to haptic devices
+do not require the incorporation of more DoF such as
+in [54].
+Degrees of freedom and modifications
+State of the art articles on medical applications focus on
+developing simulations, which leaves the addition and mod-
+ifications of haptic devices as another field of study. The
+modification of haptic devices can be found in robotics and
+robot-assisted surgeries [74]. Modification to haptic devices
+usually improves haptic sensations in order to make them
+closer to real surgeries or procedures [30, 32, 34, 47].
+In contrast, several authors decreased the physical real-
+ism in virtual simulators coupled with different haptic
+devices [53] to make the simulations more affordable.
+Whereas it decreases the cost of a virtual simulator for
+undergraduate students by using a Kinect ® and Wiimotes
+®, the type of force feedback and the form of Wiimotes
+® reduced realism in the practice of skills.
+Additionally, due to the technical properties of the force
+feedback, only one force aiming in one direction can be
+usually applied. One exception is the work of [53] that
+provided vibrations as force feedback. Laparoscopic appli-
+cations need to provide at least 3-DoFF. Consequently, the
+Wiimote ® is not a feasible option because it only provides
+104
+Page 18 of 22
+J Med Syst (2016) 40: 104
+vibration as feedback. Also, twisting forces require 6-DoFF
+and they are found and used rarely [34].
+Visual realism
+Another important aspect that should be considered in the
+development of simulators is to reproduce a high level of
+visual realism. Recent progress in the GPU processing and
+computer graphics in general allows an extremely high level
+of realism. Very few works [46, 54, 60, 61] focus on pho-
+torealistic rendering and high visual quality. Most of the
+works use only schematic rendering with shadow to show
+the location of the probe and simple Phong shading to
+depict the surfaces. Finally, only a limited number of works
+simulate gravity [57].
+The most commonly used visualization is displaying
+the position of the probe as a sphere, sometimes with
+shadow, and in some cases 3D immersion is added. There
+is usually some learning required for the users to become
+familiar with the system as they first need to allocate them-
+selves properly in the simulator. Current simulators let users
+experiment and move freely in the 3D scene before start-
+ing the medical procedures, as exemplified in the work
+of [26].
+Users very often report the difficulty in detecting the
+position of the probe in the 3D space. It is extremely impor-
+tant to locate the coordinate system of the virtual 3D space
+correspondingly to the real one so when the probe moves
+to the right the virtual one should move in the same direc-
+tion. Moreover, scaling of the virtual environment is very
+important as well. In many cases the forces as well as the
+sizes of the objects do not correspond to the real world.
+The minimal requirement for the correct perception of the
+3D location is the inclusion of shadows to locate the haptic
+probe. Some works add 3D immersion to increase realism
+and to add the 3D perception. The immersion is provided
+either by using active 3D head mounted displays [34, 36] or
+by using 2D screens with displaying in stereo [46]. The 3D
+head mounted displays allow free movement, and their posi-
+tion and orientation is coupled with the virtual camera, but
+they are usually bound to a single user. Passive 2D screens
+allow multiple users to view the scene, but the movement
+of the user is not transferred to the movement of the vir-
+tual camera. The most common solution is using active 3D
+displays, where the position of the person performing the
+procedure is critical, as for example, in the treatment of
+occlusions.
+One of the main challenges is to improve the way stu-
+dents perceive the location of objects in space, especially
+the z-axis (depth) as described in [70]. An alternative solu-
+tion was made by Coles et al. [32], where the authors used
+AR to ensure visual-optical alignment.
+Physics
+Computer graphics has provided an unprecedent progress
+in simulation of physics. Recent GPU-supported physics
+simulation engines such as PhysX ® [75], Havok ® [76],
+Newton ® [77], or Bullet ® [31] allow simulation of fluid
+dynamics, kinematics, or FEM and soft tissues. These simu-
+lations are physically precise, they can use very large scenes
+and meshes, and are usually provided in real time. This has
+not been exploited to the full extent in the area of hap-
+tic simulations for two reasons; first, users rely on existing
+haptic libraries and APIs that usually do not provide access
+to the most advanced and recent algorithms. Second, these
+libraries are usually implemented on the GPU and they
+require usage of advanced visualization techniques to be
+fully used. Moreover, combining haptic feedback with those
+libraries is non-trivial. Nevertheless, it would be extremely
+beneficial for haptic simulations to fully exploit and use
+modern GPU-oriented physics-based approaches as it could
+be the next quantum leap in the quality and realism of the
+simulators.
+Feedback in training
+An important aspect is to provide learning feedback and
+evaluation during training sessions. While most of the exist-
+ing simulators provide visuo-haptic feedback, some of them
+also provide a detailed feedback of the training session by
+recording the number of clicks, motion of the haptic cur-
+sor, applied forces in the environment, actions made by the
+user, etc. The assessment of the tasks and user performance
+is made via the registration of the interaction parameters
+of the environment. For instance, some systems focus on
+quantifying the number of operations carried out in a given
+time interval, such as the system described in [42], where
+the authors measured the number of calculus removed over
+a period of ten minutes. Other systems analyzed parame-
+ters and evaluation checklists from the users by checking
+the reliability of the simulation [66, 70]. Nonetheless, these
+results and checklists were measured internally, so no eval-
+uation nor feedback was given to the user. Researches
+have also considered increasing the adaptability of virtual
+environments. Students can use different medical training
+scenarios by modifying the parameters of the models in the
+work of Delorme et al. [46].
+Contrary to the closed systems that do not provide feed-
+back to the user, simulators introduced in [36, 47, 53]
+provided real-time feedback to the user. They send immedi-
+ate messages on how the user is performing and they also
+provide tips during the task. Additionally, Jiang et al. [47]
+presented a system that includes an evaluation of the whole
+task by displaying an appropriate assessment metrics.
+J Med Syst (2016) 40: 104
+Page 19 of 22
+104
+Gaudina et al. [54] used an assessment method to eval-
+uate the learning by measuring user performance. Their
+simulator predicted the score obtained during the training
+session and provided students with feedback that helped
+them to know the aspects that needed to be improved.
+VF has been used in the area as guidance during training
+simulations; however, they are not properly considered as
+learning feedback. VF are used to keep students out of pro-
+hibited areas within the workspace. This type of assistance
+was used by Hernansanz et al. [61]. Nonetheless, VF has
+been shown to be generally ineffective in improving results
+in training [78, 79]. Authors should consider using other
+kinds of virtual assistance methods to attain better results
+during training and avoid disturbances during user’s move-
+ments, such as Temporally Separated Assistance or Spatially
+Separated Assistance [80]. Another methodology that has
+been used in virtual environments with haptic devices is col-
+laborative learning. These environments are based on the
+interaction between users or user-expert. These are prin-
+cipally based in a token-based approach, where one user
+cannot do anything until she has the token [37, 65]. How-
+ever, these environments require large time from experts,
+and they are not easily accessible for training simulators.
+Several studies performed usability tests with students
+and experts in the field of medicine [26, 29, 30, 32, 37,
+42, 66, 70]. Most of the researchers ask the medical staff
+to answer surveys and functionality questionnaires to assess
+the simulation fidelity, and these evaluations helped virtual
+environments with haptic devices to gain acceptance in the
+medical community.
+Even though the above-presented simulators allow
+assessment of user performance in the virtual environment,
+they do not usually provide assistance, guidance or hints
+after simulation. It is important to decide whether it is better
+to provide immediate ongoing feedback while interacting
+with the simulation, or to provide users a post-feedback after
+having interacted with the system. The use of expert human
+tutors could help to train users appropriately. Indeed, these
+systems have contributed in various areas in the training of
+professionals [1].
+Considerations
+By analyzing the state of art of haptic simulators in medical
+training, we identified several aspects that are important to
+consider.
+The target audience It is extremely important to actually
+know the audience, the level of knowledge they hold, and
+to make an ex ante decision about the targeted group before
+the simulator is actually developed. The audience affects
+the choice of the technology (DoF, DoFF, immersion, visual
+realism) as well as appropriate learning feedback to be
+provided.
+The required level of visual realism varies significantly
+for each area. While the high visual quality is important in
+areas where the user can actually see the performed opera-
+tion in daylight (dental, stitching) it may not be so important
+in endo- and laparoscopy. However, a general tendency to
+increase the realism and the quality of rendering is given by
+the increasing quality of GPUs and modern APIs for com-
+puter graphics, such as OpenGL and shading languages such
+as GLSL.
+Another challenge is the incorporation of medical tools
+models in the virtual environment that promotes realism in
+the simulations. Students tend to learn better if they have
+training stations that provide simulator resources as the ones
+they use on real life. On the other hand, modifications of
+current haptic devices may be important to increase the
+quality of haptic feedback, and they represent a lower cost
+choice for situations when a large number of users need to
+be trained. According to users and medical staff, differences
+between the virtual procedure and the real one represent
+a change in traditional operation habits, which generates a
+difficulty in the procedures of surgical tasks. This aspect
+involves the creation of simulators that add, adapt or modify
+current haptic devices.
+The feedback provided by current simulators is often the
+most neglected part of the system. Future work should be
+focused on providing in-depth feedback for the users, eval-
+uating the learning of an individual user over time, and
+including intelligent assistants or tutors that could allow stu-
+dents to enhance dexterity and improve performance. These
+modules should measure and guide them to perform the task
+properly, providing an enhanced learning process.
+In addition to the previous remarks, it is important to
+mention that the development of adaptive simulators, capa-
+ble of modifying the degree of difficulty of surgical pro-
+cesses depending on the user performance, will be highly
+suitable for training purposes. Indeed, these systems could
+provide appropriate challenges aimed to improve suturing
+skills acquisition. Also, this kind of simulators should pro-
+vide modules in order to monitor the curve of expertise
+reached by users and display new scenarios according to
+their progress.
+Moreover, there are also challenges that must be resolved
+when researchers want to incorporate haptic devices in vir-
+tual training environments. One of them is the calibration
+of force feedback that is going to be sent to students when
+they interact with the simulated tissues and organs. Proper
+modeling of forces should be considered by applying proper
+mathematical theorems and constrictions.
+104
+Page 20 of 22
+J Med Syst (2016) 40: 104
+Finally, it is worth to mention that simulators should
+benefit from the latest advances in GPU design and novel
+algorithms for physically based modeling.
+Conclusion
+In this work, we have presented a survey of medical train-
+ing simulators that use haptic feedback. Existing works
+and simulators have been reviewed and compared from the
+viewpoint of surgical techniques modeled, the number of
+degrees of freedom and degrees of haptic feedback, per-
+ceived realism, immersion, and learning feedback provided
+to the user.
+Visual and auditory channels have been privileged in the
+evolution of the interaction between humans and computers.
+Tactile sensations have been added gradually by develop-
+ing devices intended for hands, such as mouse, keyboards
+and touch screens, which are primarily used to input data.
+Recent advances in the development of haptic devices allow
+the perception of the environment through an active exami-
+nation by the sense of touch, feeling, and palpating its shape
+and texture. Training virtual environments that incorporate
+haptic devices pose an important alternative to train and gain
+hand-operated skills.
+While haptic simulations are an interesting and low cost
+alternative to training by using real tissues, they are still
+hindered by the low realism of the visual environment or
+the high price for high quality devices. Visual realism has
+been driven by the entertainment industry, whereas haptic
+feedback is usually developed in research laboratories.
+One important aspect of the medical simulators is
+the quality of the feedback provided to the user. Many
+approaches limit themselves to only mimicking the real
+world. However, simulators should have the capability to
+log the entire session and provide detailed feedback that
+could be coupled with the use of an expert evaluation
+either in the form of human evaluation or an intelligent
+tutor. This would certainly have the potential to increase
+the usage of medical haptic training devices in medical
+practices.
+References
+1. Vanlehn, K., The Behavior of Tutoring Systems. Int. J. Artif. Intell.
+Educ. 16(3):227–265.
+2. Gazibara, T., Marusic, V., Maric, G., Zaric, M., Vujcic, I.,
+Kisic-Tepavcevic, D., Maksimovic, J., Maksimovic, N., Denic,
+L.M., Grujicic, S.S., Pekmezovic, T., and Grgurevic, A., Intro-
+ducing E-learning in Epidemiology Course for Undergradu-
+ate Medical Students at the Faculty of Medicine, Univer-
+sity of Belgrade: A Pilot Study. J. Med. Syst. 40(3):1–12,
+2015.
+3. Ito, M., Sugito, M., Kobayashi, A., Nishizawa, Y., Tsunoda,
+Y., and Saito, N., Influence of learning curve on short-term
+results after laparoscopic resection for rectal cancer. Surg. Endosc.
+23(2):403–408, 2009.
+4. Tseng, J.F., Pisters, P.W., Lee, J.E., Wang, H., G´omez, H.F., Sun,
+C.C., and Evans, D.B., The learning curve in pancreatic surgery.
+Surgery 141(4):456–463, 2007.
+5. Vickers, A.J., Savage, C.J., Hruza, M., Tuerk, I., Koenig, P.,
+Mart´ınez-Pi˜neiro, L., Janetschek, G., and Guillonneau, B., The
+surgical learning curve for laparascopic compared to open rad-
+ical prostatectomy: a retrospective cohort study. Lancet Oncol.
+10(5):475–480, 2009.
+6. Lau, F., and Bates, J., A review of e-learning practices for
+undergraduate medical education. J. Med. Syst. 28(1):71–87,
+2004.
+7. Juanes, J.A., and Ruisoto, P., Computer applications in health
+science education. J. Med. Syst. 39(9):1–5, 2015.
+8. Secin, F.P., Savage, C., Abbou, C., de La Taille, A., Salomon, L.,
+Rassweiler, J., Hruza, M., Rozet, F., Cathelineau, X., Janetschek,
+G., Nassar, F., Turk, I., Vanni, A.J., Gill, I.S., Koenig, P.,
+Kaouk, J.H., Martinez Pineiro, L., Pansadoro, V., Emiliozzi, P.,
+Bjartell, A., Jiborn, T., Eden, C., Richards, A.J., Van Velthoven,
+R., Stolzenburg, J.-U., Rabenalt, R., Su, L.-M., Pavlovich, C.P.,
+Levinson, A.W., Touijer, K.A., Vickers, A., and Guillonneau,
+B., The learning curve for laparoscopic radical prostatectomy:
+an international multicenter study. J. Urol. 184(6):2291–2296,
+2010.
+9. Coles, T.R., Meglan, D., and John, N.W., The Role of Haptics in
+Medical Training Simulators : A Survey of the State of the Art.
+IEEE Trans. Haptic 4(1):51–66, 2011.
+10. Cotin, S., Delingette, H., and Ayache, N., Real-Time Elastic
+Deformations of Soft Tissues for Surgery Simulation. IEEE Trans.
+Vis. Comput. Graph. 5(1):62–73, 1999.
+11. Brown, J., Sorkina, S., Latombea, J.-C., Montgomery, K., and
+Stephanides, M., Algorithmic Tools for Real-Time Microsurgery
+Simulation. Med. Image Anal. 6(3):289–300, 2002.
+12. Immersion Medical, Medical Solutions, [accessed Oct-15-2014].
+http://www.immersion.com/markets/medical/solutions/index.
+html.
+13. Mentice, About us, [accessed Oct-15-2014]. http://www.mentice.
+com/about-us/.
+14. ReachIn Technologies, About ReachIn Technologies, [accessed
+Oct-15-2014]. http://www.reachin.se/companyinfo/.
+15. Science, Surgical, About us, [accessed Oct-15-2014]. http://www.
+surgical-science.com/surgical-science/about-us/.
+16. Simbionix, GI Mentor, [accessed Jan-18-2016]. http://simbionix.
+com/simulators/gi-mentor/.
+17. CAE Healthcare, CAE Healthcare, [accessed Feb-15-2015]. http://
+www.caehealthcare.com/eng/.
+18. Basdogan, C., and Srinivasan, M.A., Haptic Rendering in Virtual
+Environments. In: Handbook of Virtual Environments, 2002, pp.
+117–134.
+19. Massie, T.H., Design of a Three Degree of Freedom Force-
+Reflecting Haptic Interface, Ph.D. thesis, 1993.
+20. Van der Linde, R.Q., Lammertse, P., Frederiksen, E., and Ruiter,
+B., The hapticmaster, a new high-performance haptic interface. In:
+Proc. Euro-haptics (2002), pp. 1–5.
+21. Basdogan, C., De, S., Kim, J., Muniyandi, M., Kim, H., and Srini-
+vasan, M.A., Haptics in minimally invasive surgical simulation.
+IEEE Comput. Graph. Appl. 24(2):56–64, 2004.
+22. Marshall, P., Payandeh, S., and Dill, J., A study on haptic render-
+ing in a simulated surgical training environment. In: 14th sympo-
+sium on haptic interfaces for virtual environment and teleoperator
+systems, 2006, pp. 241–247.
+J Med Syst (2016) 40: 104
+Page 21 of 22
+104
+23. Jia, S., and Pan, Z., A preliminary study of suture simulation in
+virtual surgery. In: International conference on audio language and
+image processing (ICALIP), 2010, pp. 1340–1345.
+24. Brown, J., Latombe, J.-C., and Montgomery, K., Real-time knot-
+tying simulation. Vis. Comput. 20(2-3):165–179, 2004.
+25. Payandeh, S., and Shi, F., Interactive multi-modal suturing. Virtual
+Reality 14(4):241–253, 2010.
+26. Ricardez, E., Noguez, J., Neri, L., Munoz-Gomez, L., and
+Escobar-Castillejos, D., SutureHap : A suture simulator with
+haptic feedback. In: Workshop on virtual reality interaction and
+physical simulation VRIPHYS, 2014, pp. 79–86.
+27. Choi, K.-S., Chan, S.-H., and Pang, W.-M., Virtual suturing sim-
+ulation based on commodity physics engine for medical learning.
+J. Med. Syst. 36(3):1781–1793, 2012.
+28. Salisbury, K., Conti, F., and Barbagli, F., Haptic rendering: intro-
+ductory concepts. IEEE Comput. Graph. Appl. 24(2):24–32, 2004.
+29. Min, L., Faragasso, A., Konstantinova, J., Aminzadeh, V., Senevi-
+ratne, L., Dasgupta, P., and Althoefer, K., A novel tumor localiza-
+tion method using haptic palpation based on soft tissue probing
+data. In: IEEE international conference on robotics and automa-
+tion (ICRA), 2014, pp. 4188–4193.
+30. Ullrich, S., and Kuhlen, T., Haptic palpation for medical simu-
+lation in virtual environments. IEEE Trans. Vis. Comput. Graph.
+18(4):617–625, 2012.
+31. Coumans, E.: Bullet physics library, [accessed April-15-2015].
+http://bulletphysics.org/wordpress/.
+32. Coles, T., John, N., Gould, D., and Caldwell, D., Integrating hap-
+tics with augmented reality in a femoral palpation and needle
+insertion training simulation. IEEE Trans. Haptic 4(3):199–209,
+2011.
+33. Phantom Head Dental Ltd, Phantom Head, [accessed Oct-15-
+2014]. http://www.phantomhead.com/.
+34. Tse, B., Harwin, W., Barrow, A., Quinn, B., San Diego, J., and
+Cox, M., Design and development of a haptic dental training
+system - hapTEL. In: Vol. 6192 of Lecture Notes in Computer Sci-
+ence - Haptics: Generating and Perceiving Tangible Sensations,
+Springer Berlin Heidelberg, pp. 101–108, 2010.
+35. Si, H., Tetgen, [accessed Oct-15-2014]. http://wias-berlin.de/
+software/tetgen/.
+36. Chen, X., Lin, Y., Wang, C., Shen, G., and Wang, X., A vir-
+tual training system using a force feedback haptic device for
+oral implantology. In: Transactions on edutainment VIII, Springer
+Berlin Heidelberg, 2012, pp. 232–240.
+37. Kosuki, Y., Okada, Y., 3D visual component based development
+system for medical training systems supporting haptic devices
+and their collaborative environments. In: Sixth International Con-
+ference on Complex, Intelligent and Software Intensive Systems
+(CISIS), 2012, pp. 687–692.
+38. Hui, Z., and Dang-xiao, W., Soft tissue simulation with biman-
+ual force feedback. In: International conference on audio language
+and image processing (ICALIP), 2010, pp. 903–907.
+39. Yanng, B., Intelligent learning system based on HMM model,
+2011 Intl. Symposium on Knowledge Acquisition and Modeling
+(KAM), 560–564, 2011.
+40. Okada, Y., and Tanaka, Y., Intelligentbox: A constructive visual
+software development system for interactive 3D graphic applica-
+tions. In: Proceedings computer animation, 1995, pp. 114–125,
+213.
+41. Basdogan, C., Sedef, M., Harders, M., and Wesarg, S., VR-
+based simulators for training in minimally invasive surgery. IEEE
+Comput. Graph. Appl. 27(2):54–66, 2007.
+42. Wang, D., Zhang, Y., Hou, J., Wang, Y., Lv, P., Chen, Y., and Zhao,
+H., iDental: A haptic-based dental simulator and its preliminary
+user evaluation. IEEE Trans. Haptic 5(4):332–343, 2012.
+43. SensAble, Ghost SDK, [accessed April-10-2015]. http://www.
+dentsable.com/support-ghost-sdk.htm.
+44. Rodwin, M.A., Chang, H.J., Ozaeta, M.M., and Omar, R., Mal-
+practice premiums in massachusetts, a high-risk state: 1975 to
+2005. Health Aff. 27(3):835–844, 2008.
+45. Stone, S., and Bernstein, M., Prospective error recording in
+surgery: an analysis of 1108 elective neurosurgical cases. Neuro-
+surgery 60(6):1075–1080, 2007.
+46. Delorme, S., Laroche, D., DiRaddo, R., and Del Maestro,
+R.F., NeuroTouch: a physics-based virtual simulator for cranial
+microneurosurgery training. Neurosurgery 71:32–42, 2012.
+47. Jiang, D., Hovdebo, J., Cabral, A., Mora, V., and Delorme, S.,
+Endoscopic third ventriculostomy on a microneurosurgery simula-
+tor. SIMULATION: Transactions of The Society for Modeling and
+Simulation International 89(12):1442–1449, 2013.
+48. Neubauer,
+A.,
+Wolfsberger,
+S.,
+Forster,
+M.-T.,
+Mroz,
+L.,
+Wegenkittl, R., and Buhler, K., Advanced virtual endoscopic pitu-
+itary surgery. IEEE Trans. Vis. Comput. Graph. 11(5):497–507,
+2005.
+49. Perez-Gutierrez, B., Martinez, D. M., Rojas, O.E., Endoscopic
+endonasal haptic surgery simulator prototype: A rigid endoscope
+model, 2010 IEEE Virtual Reality Conference (VR), 2010.
+50. Bioingenium Research Group, Nukak3D, [accessed Oct-15-
+2014]. http://nukak3d.sourceforge.net/index.php.
+51. Punak, S., Kurenov, S., and Cance, W., Virtual interrupted sutur-
+ing exercise with the Endo stitch suturing device. In: Advances in
+visual computing, Springer Berlin Heidelberg, 2011, pp. 55–63.
+52. Spillmann, J., and Teschner, M., CoRdE: Cosserat Rod elements
+for the dynamic simulation of one-dimensional elastic objects. In:
+Eurographics/ACM SIGGRAPH symposium on computer anima-
+tion, 2007, pp. 1–10.
+53. Park, C.H., Wilson, K.L., and Howard, A.M., Examining the
+learning effects of a low-cost haptic-based virtual reality sim-
+ulator on laparoscopic cholecystectomy. In: Proceedings of the
+26th IEEE international symposium on computer-based medical
+systems, 2013, pp. 233–238.
+54. Gaudina, M., Zappi, V., Bellanti, E., and Vercelli, G., eLaparo4D:
+A step towards a physical training space for virtual video laparo-
+scopic surgery. In: IEEE seventh international conference on
+complex, intelligent, and software intensive systems, 2013, pp.
+611–616.
+55. Unity Technologies, Unity - Game engine, tools, and multiplat-
+form, [accessed Jan-18-2015]. https://unity3d.com/es/unity.
+56. Blender Foundation, Blender, [accessed Oct-15-2014]. http://
+www.blender.org/.
+57. De Paolis, L.T., Serious game for laparoscopic suturing training.
+In: IEEE sixth international conference on complex, intelligent,
+and software intensive systems (CISIS), 2012, pp. 481–485.
+58. Torus Knot Software Ltd, Ogre3D, [accessed Oct-15–2014].
+http://www.ogre3d.org/.
+59. Halic, T., and De, S., Lightweight bleeding and smoke effect
+for surgical simulators. In: IEEE virtual reality conference (VR),
+2010, pp. 271–272.
+60. De, S., Ahn, W., Lee, D.Y., and Jones, D.B., Novel virtual lap-
+band simulator could promote patient safety. In: Medicine meets
+virtual reality 16, 2008, pp. 98–100.
+61. Hernansanz, A., Zerbato, D., Gasperotti, L., Scandola, M., Fiorini,
+P., and Casals, A., Improving the development of surgical skills
+with virtual fixtures in simulation. In: Information processing
+in computer-assisted interventions, Springer Berlin Heidelberg,
+2012, pp. 157–166.
+62. Rasmussen, J., and Member, S., Skills, Rules, and Knowledge;
+Signals, Signs, and Symbols, and Other Distinctions in Human
+Performance Models. IEEE Trans. Syst. Man Cybern. 13(3):257–
+266, 1983.
+104
+Page 22 of 22
+J Med Syst (2016) 40: 104
+63. Zerbato, D., Baschirotto, D., Baschirotto, D., Botturi, D., and
+Fiorini, P., GPU-based physical cut in interactive haptic simula-
+tions. Int. J. Comput. Assist. Radiol. Surg. 6(2):265–72, 2011.
+64. Chen, Y., and He, X., Haptic simulation of bone drilling based on
+hybrid 3d part representation. In: 2013 IEEE international confer-
+ence on computational intelligence and virtual environments for
+measurement systems and applications (CIVEMSA), 2013, pp.
+78-81.
+65. Cecil, J., Ramanathan, P., Rahneshin, V., Prakash, A., and Pirela-
+Cruz, M., Collaborative virtual environments for orthopedic
+surgery. In: IEEE international conference on automation science
+and engineering (CASE), 2013, pp. 133-137.
+66. Ni, D., Chan, W.-Y., Qin, J., Chui, Y.-P., Qu, I., Ho, S., and Heng,
+P.-A., A virtual reality simulator for ultrasound-guided biopsy
+training. IEEE Comput. Graph. Appl. 31(2):36–48, 2011.
+67. Selmi, S.-Y., Fiard, G., Promayon, E., Vadcard, L., and Troccaz,
+J., A virtual reality simulator combining a learning environment
+and clinical case database for image-guided prostate biopsy. In:
+IEEE 26th international symposium on computer-based medical
+systems (CBMS), 2013, pp. 179-184.
+68. TIMC-IMAG laboratory, Computer Assisted Medical Intervention
+Tool Kit, [accessed Jan-01-2016]. http://camitk.imag.fr/.
+69. Yi, N., Xiao-jun, G., Xiao-ru, L., Xiang-feng, X., and Wanjun,
+M., The implementation of haptic interaction in virtual surgery.
+In: International conference on electrical and control engineering
+(ICECE), 2010, pp. 2351-2354.
+70. Wei, L., Najdovski, Z., Abdelrahman, W., Nahavandi, S., and
+Weisinger, H., Augmented optometry training simulator with
+multi-point haptics. In: IEEE international conference on systems,
+man, and cybernetics (SMC), 2012, pp. 2991-2997.
+71. Gamecho, B., Silva, H., Guerreiro, J., Gardeazabal, L., and
+Abascal, J., A context-aware application to increase elderly
+users
+compliance
+with
+physical
+rehabilitation
+exercises
+at
+home via animatronic biofeedback. J. Med. Syst. 39(11):1–11,
+2015.
+72. Rajanna, V., Vo, P., Barth, J., Mjelde, M., Grey, T., Oduola, C.,
+and Hammond, T., Kinohaptics: An automated, wearable, haptic
+assisted, physio-therapeutic system for post-surgery rehabilitation
+and self-care. J. Med. Syst. 40(3):1–12, 2015.
+73. Heng, P.-A., Cheng, C.-Y., Wong, T.-T., Xu, Y., Chui, Y.-P., Chan,
+K.-M., and Tso, S.-K., A virtual-reality training system for knee
+arthroscopic surgery. IEEE Trans. Inf. Technol. Biomed. 8(2):217–
+227, 2004.
+74. Hirche, S., and Buss, M., Human-oriented control for haptic
+teleoperation. Proc. IEEE 100(3):623–647, 2012.
+75. NVIDIA, PhysX FAQ - NVIDIA, [accessed April-15-2015].
+http://www.nvidia.com/object/physxfaq.html.
+76. Havok, About Havok, [accessed April-15-2015]. http://www.
+havok.com/about-havok/.
+77. Newton dynamics, Newton Dynamics - About Newton, [accessed
+April-15-2015]. http://newtondynamics.com/forum/newton.php.
+78. Reinkensmeyer, D.J., How to retrain movement after neuro- logic
+injury: a computational rationale for incorporating robot (or ther-
+apist) assistance. IEEE Engineering in Medicine and Biology
+Society Meeting 2:1479–1482, 2003.
+79. Crespo, L. M., Reinkensmeyer, D.J., Effect of robotic guidance on
+motor learning of a timing task, 2008.
+80. Powell, D., and O’Malley, M.K., Efficacy of shared-control guid-
+ance paradigms for robot-mediated training. In: IEEE world
+haptics conference, pp. 427–432, 2011.

@@ -1,0 +1,1057 @@
+Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+Contents lists available at ScienceDirect 
+Computer Methods and Programs in Biomedicine 
+journal homepage: www.elsevier.com/locate/cmpb 
+A new model of soft tissue with constraints for interactive surgical 
+simulation 
+Wenguo Hou a , Peter X. Liu a , b , ∗, Minhua Zheng a , ∗, ∗
+a School of Mechanical, Electronic and Control Engineering, Beijing Jiaotong University, Beijing 10 0 044, PR China 
+b Department of Systems and Computer Engineering, Carleton University, Ottawa, ON, Canada 
+a r t i c l e 
+i n f o 
+Article history: 
+Received 28 February 2019 
+Revised 23 March 2019 
+Accepted 27 March 2019 
+Keywords: 
+Brain tissue deformation model 
+Interactive neurosurgical simulation 
+Geometry constraint 
+Optimization implicit Euler 
+a b s t r a c t 
+Background and objectives: An accurate and real-time model of soft tissue is critical for surgical simulation 
+for which a user interacts haptically and visually with simulated patients. This paper focuses on the 
+real-time deformation model of brain tissue for the interactive surgical simulation, such as neurosurgical 
+simulation. 
+Methods: A new Finite Element Method (FEM) based model with constraints is proposed for the brain 
+tissue in neurosurgical simulation. A new energy function of constraints characterizing the interaction 
+between the virtual instrument and the soft tissue is incorporated into the optimization problem derived 
+from the implicit integration scheme. Distance and permanent deformation constraints are introduced to 
+describe the interaction in the convexity meningioma dissection and hemostasis. The proposed model is 
+particularly suitable for GPU-based computing, making it possible to achieve real-time performance. 
+Results and conclusions: Simulation results show that the simulated soft tissue exhibits the behav- 
+iors of adhesion and permanent deformation under the constraints. Experiments show that the proposed 
+model is able to converge to the exact solution of the implicit Euler method after 96 iterations. The 
+proposed model was implemented in the development of a neurosurgical simulator, in which surgical 
+procedures such as dissection of convexity meningioma and hemostasis were simulated. 
+© 2019 Elsevier B.V. All rights reserved. 
+1. Introduction 
+Neurosurgery is one of the most challenging, complex and tech- 
+nically demanding surgical procedures. A long period of training 
+practices are required to ensure that neurosurgical residents gain 
+proﬁciency in microsurgical skills, such as ventriculostomy, tu- 
+mor debulking, hemostasis and microdissection, which are vital for 
+avoiding intraoperative risks [1–3] . Studies have demonstrated that 
+surgical simulation systems play important roles in the acquisition 
+of surgical skills, which enables young neurosurgical beginners to 
+gain hands-on experiences through practising on risk-free environ- 
+ments [4–7] . An interactive neurosurgical simulation system allows 
+neurosurgical students to manipulate soft tissue models through 
+virtual instruments, which produces complex physical phenomena 
+such as elastic or plastic deformation, contact and adhesion [8–11] . 
+One way to achieve accurately and real-time modeling of soft 
+tissues is incorporating the FEM-based model using an optimiza- 
+∗Corresponding author at: Carleton University, 1125 Colonel By Drive, Ottawa, ON 
+K1S5B6, Canada. 
+∗∗Corresponding author. 
+E-mail addresses: xpliu@sce.carleton.ca (P.X. Liu), mhzheng@bjtu.edu.cn (M. 
+Zheng). 
+tion implicit Euler method [12,13] . A descent method can be used 
+to solve the deformation model, which is suitable for GPU-based 
+computing. Both anisotropic and viscoelastic properties of brain 
+tissues can be incorporated into the deformation model. However, 
+these models can only describe the dynamics of free deformable 
+bodies subject to external gravity with optionally static nodes [14] . 
+Interactions between brain tissues and rigid neurosurgical instru- 
+ments, which take place during neurosurgical procedures, cannot 
+be properly simulated by these models. 
+The FEM model is one of the most commonly used physically 
+based approaches to model soft tissues in the surgical simulation. 
+Continuum constitutive equations are used to govern the elastic 
+behaviors of the soft tissues, which can provide a high degree 
+of mechanical realism [15] . Partial differential equations (PDEs) 
+of the dynamic system derived from the FEM model are solved 
+by integrating procedures. Several works have been proposed to 
+incorporate the FEM deformation model into the development of 
+a surgical simulator [16–19] . In [17] , Delorme et al. developed a 
+physics-based virtual microneurosurgery simulator, in which the 
+FEM model with an explicit time integration scheme is used to 
+model the deformation of brain tissue. In [19] , an open-source 
+ﬁnite element toolkit, NiftySim, is proposed for simulation of soft 
+tissue biomechanics. Contacts between multiple biological tissues, 
+https://doi.org/10.1016/j.cmpb.2019.03.018 
+0169-2607/© 2019 Elsevier B.V. All rights reserved. 
+36 
+W. Hou, P.X. Liu and M. Zheng / Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+self-collisions and contacts between biological tissues and surgical 
+instruments can be simulated in this toolkit. In [18] , an open- 
+source C ++ library for interactive medical simulation is proposed, 
+in which the internal mechanical behavior of biological tissues 
+can be computed using the FEM model. Interactions between 
+virtual objects, such as contact, collision response were handled 
+by constraint solvers. While the FEM model provides the accurate 
+description of the soft tissue deformation, low computational 
+eﬃciency is the bottleneck in developing a surgical simulator 
+which has the requirement of real-time performance. 
+Position Based Dynamic (PBD) method is another commonly 
+used approach to model soft tissues. Position changes are com- 
+puted directly in each simulation time step. Overshooting problem 
+of explicit integration schemes can be avoided in contrast with 
+classical force based simulation approaches [20,21] . Continuous 
+materials can be simulated by combining a continuum-based for- 
+mulation with the position based method [21–23] . In [21] , a set of 
+constraints for the strain energy are introduced into the position 
+based method to model elastic behaviors of continuous materials. 
+Complex physical effects such as lateral contraction, anisotropy 
+and elastoplasticity of deformable objects can be simulated. In 
+[22] , a set of constraints which forcing the entries of the Green - 
+St. Venant strain tensor to zero are introduced into the PBD frame- 
+work. Stretch and shear deformations of continuous materials can 
+be controlled independent of the tessellation of the mesh. The 
+anisotropic behavior can also be simulated by varying the stiffness 
+values corresponding to the individual strain coeﬃcients. 
+Controllability is the main advantage of the PBD method and 
+various kinds of interactions such as collision, friction and vol- 
+ume conservation can be handled easily with constraints, which 
+makes it well-suited for interactive simulations. The position based 
+method have become very popular in computer graphics because 
+of its simplicity, controllability and robustness. Several works have 
+been proposed to describe the elastic behaviors of soft tissues 
+with a position based dynamic framework in surgical simulations 
+[24,25] . In [26] , the position based method is used to model ob- 
+jects collision, friction and volume conservation of soft tissues in 
+an interactive dynamic simulation environment. In [27] , Sui et al. 
+proposed a hybrid deformation model to simulate the mechanical 
+behavior of biological tissues surrounding the rectum, which based 
+on a multi-layer structure and a position based dynamic frame- 
+work. Interactions between different objects can be easily handled 
+through introducing new constraints [28] . However, these methods 
+are generally not as accurate as physic-based methods but provide 
+visual plausibility. 
+Optimization implicit Euler method is another successful way 
+of solving the PDEs of the dynamic system derived from the force- 
+based deformation model. The dynamic system can be converted 
+into an unconstrained nonlinear optimization problem [12,13,29–
+33] . Various optimization strategies can be implemented, which 
+can provided a high computational eﬃciency. In [29] , Liu et al. 
+expressed the implicit Euler integration method as an energy min- 
+imization problem and introduced an new energy potential func- 
+tion of the spring mass system. A block coordinate descent method 
+is used to solve the minimization problem, which converges to the 
+exact solution of the implicit Euler method. In [30] , a projective 
+implicit Euler solver was proposed to solve the optimization prob- 
+lem, which build a bridge between the Finite Element method and 
+the PBD method. In [31] , Gast et al. proposed to use a constrained 
+minimization method to simulate the collision between virtual 
+objects. In [12] , Wang et al. proposed a new gradient descent 
+method with Jacobi preconditioning and Chebyshev acceleration to 
+solve the nonlinear optimization problem derived from the implicit 
+time integration scheme. In [13] , the optimization implicit Euler 
+method was implemented into the development of a neurosurgical 
+simulator, in which the mechanical properties of brain tissue such 
+as anisotropy and viscoelasticity were incorporated into the defor- 
+mation model. The descent method proposed in [12] is particularly 
+suitable for GPU-based parallel computing, which make it possible 
+to achieve real-time performance for computation-intensive neu- 
+rosurgical simulation. While these methods are promising, they 
+are still unable to simulate various interactions between multiple 
+soft tissues and instruments properly. 
+In this paper, we introduce a new soft tissue deformation 
+model with constraints for neurosurgical simulation. Speciﬁcally, a 
+new energy function of constraint is introduced into the optimiza- 
+tion problem derived from the implicit Euler integration scheme; 
+distance and permanent deformation constraints are introduced 
+to characterize the interactions in the convexity meningioma 
+dissection and hemostasis. The descent method is used to solve 
+the optimization problem, which provides high computational 
+eﬃciency. Examples are presented to assess the performance of 
+the developed deformation model. Simulation results show that 
+the interactions such as adhesion and permanent deformation can 
+be properly simulated by the presented deformation model. In 
+the meantime, the GPU-based implementation of the developed 
+deformation model improves computational eﬃciency signiﬁcantly 
+over CPU-based FEM models with the implicit integration scheme. 
+The developed model was incorporated into the development 
+of a neurosurgical simulator, in which neurosurgical procedures 
+such as dissection of convexity meningioma and hemostasis were 
+simulated. The simulator provides a relatively high degree of visual 
+realism with a visual refreshment rate of 31.1 frames per second on 
+a regular PC. 
+The novelty of this work exists in at least two aspects: (1) A 
+new energy function of constraints is introduced into the optimiza- 
+tion problem, which characterizes well the interactions between 
+surgical instruments and soft tissues; (2) Both distance and per- 
+manent deformation constraint functions are integrated into the 
+model of soft tissue, making it particularly useful to model the be- 
+haviors of connections between different types of soft tissues dur- 
+ing the surgical process. The results are very important for the sim- 
+ulation of neurosurgical procedures, such as hemostasis and tumor 
+dissection. 
+The reminder of this paper is organized as follows. In Section 2 , 
+the FEM-based model using the optimization implicit Euler method 
+is brieﬂy explained. In Section 3 , we show how the new energy 
+function of constraint is introduced into the deformation model. 
+Implementation and simulation results are provided in Section 4 . 
+A brief discussion is presented in Section 5 . Conclusion and future 
+work are given in Section 6 . 
+2. Background 
+In the FEM-based deformation model, the deformation of soft 
+tissue can be formulated as a function φ : R 3 → R 3 , which maps 
+an undeformed conﬁguration into a deformed conﬁguration. The 
+Linear Tetrahedron (LT) technique is often used to discrete the de- 
+formable object into a number of ﬁnite elements. When the soft 
+tissue undergoes deformation, a strain energy function W is used 
+to characterize the stress-strain relationship of the soft object. In 
+each tetrahedron mesh T i , the elastic forces associated with each 
+individual mesh vertex are the negative gradient of the strain en- 
+ergy function with respect to the corresponding degree of freedom, 
+which can be written as 
+f i 
+
+x j 
+
+= −∂W i 
+∂ −→ 
+x j 
+(1) 
+where f i ( x j ) is the forces applied on vertex j which is contributed 
+by its immediate neighbor element T i . 
+For the FEM-based deformation model, implementation of the 
+implicit time integration scheme results in a large system of non- 
+W. Hou, P.X. Liu and M. Zheng / Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+37 
+linear equations, which can be converted into a nonlinear op- 
+timization problem [12,13] . Consider the tetrahedron mesh con- 
+sisting of N vertices with position vector x = ( −→ 
+x 1 , −→ 
+x 2 , . . . , −→ 
+x N ) T , 
+and let v = ( −→ 
+v 1 , −→ 
+v 2 , . . . , −→ 
+v N ) T be the velocity vector of the mesh 
+vertices. The dynamic system derived from the FEM-based model 
+evolves in time according to the Newton’s laws of motion through 
+a discrete set of time samples. The deformation of soft tissue from 
+time step t to t + 1 can be calculated through an implicit time in- 
+tegration scheme, as: 
+x t+1 = x t + h v t+1 
+v t+1 = v t + h M −1 f ( x t+1 ) 
+(2) 
+where h is the simulation time step size, M ∈ R 3 N×3 N is the mass 
+matrix of mesh vertices, f ∈ R 3 N is the elastic forces applied on 
+each mesh vertices. By combing the two equations, we derive a 
+single nonlinear system: 
+M ( x t+1 −x t −h v t ) = h 2 f ( x t+1 ) 
+(3) 
+Since the elastic forces are the negative gradient of the strain 
+energy as f ( x ) = −∂ W ( x ) /∂ x , where W ( x ) is the total poten- 
+tial energy evaluated at x , the nonlinear dynamic system can be 
+converted into an unconstrained nonlinear optimization problem: 
+x t+1 = arg min ϵ( x ) 
+ϵ( x ) = 1 
+2 h 2 ( x −s t ) T M ( x −s t ) + W ( x ) 
+(4) 
+where s t = x t + h v t , which is related to the state of the discretized 
+model at time t . 
+Several kinds of solvers have been proposed to solve the non- 
+linear optimization problem. In the PBD method, a Gauss–Seidel- 
+like solver is used to minimize the object function ϵ( x ). However, 
+the inertial term ( x −s t ) T M ( x −s t ) is not taken into account. A 
+local/global solver is proposed to reduce specially designed energy 
+potentials in the Projective Dynamic Method [30] . Another method 
+to solve the optimization problem is the descent method [12,13] , 
+of which the key question is how to ﬁnd an effective descent di- 
+rection with low computational cost. Iterative procedures are per- 
+formed in the descent method to minimize the object function 
+ϵ( x ). 
+The descent method used in our proposed deformation model 
+is shown in Algorithm 1 . At time step t + 1 , the vertex position 
+Algorithm 1 Deformation algorithm of proposed soft tissue defor- 
+mation model. 
+Input: Geometric model of soft tissue 
+Output: Position of each vertex 
+1: Initialize x (0) 
+2: for l = 0 to L −1 do 
+3: 
+Calculate the gradient and Hessian matrix of ϵ( x ) at x (l) 
+4: 
+Get descent direction: 
+x (l) = −diag −1 ( H (l) ) ∇ϵ( x (l) ) 
+5: 
+Adjust the step length α(l) 
+6: 
+Update vertex position: x (l+1) ← x (l) + α(l) x (l) 
+7: end for 
+8: Obtain the new position of each vertices 
+x t+1 is calculated by solving the optimization problem described 
+in Eq. (4) . The descent method contains four steps. Step 1, the ini- 
+tial vertex position x (0) is predicted through an explicit integration 
+scheme x (0) = x t + h v t , which help reduce the object function ϵ( x ) 
+to a low level, as shown in line (1). Step 2, the descent direction 
+at iteration step l is calculated. The estimate x ( l ) is already known. 
+In line (3), the gradient and Hessian matrix of the object function 
+ϵ( x ) are evaluated at x ( l ) . In line (4), a new descent direction is 
+deﬁned as: 
+x (l) = −diag −1 
+H (l) ∇ϵ
+x (l) 
+(5) 
+where H ( l ) is the Hessian matrix of ϵ( x ( l ) ). Step 3, given the descent 
+direction x ( l ) , the step length α( l ) is gradually reduced until sat- 
+isﬁed the ﬁrst Wolfe condition [12] : 
+ϵ
+x (l) + α(l) x (l) 
+< ϵ
+x (l) 
++ c (l) α(l) x (l) · ∇ϵ
+x (l) 
+(6) 
+in which c is a control parameter. Step 4, the estimate of the ver- 
+tex position x (l+1) is updated, as shown in line (6). Step 2 - Step 4 
+are iteratively performed, which could help to reduce the objec- 
+tive function ϵ( x ) to minim. Finally, the new vertex position x t+1 
+at time step t + 1 can be obtained after 96 iterations. 
+The descent method achieves accurate and eﬃcient description 
+of the soft tissue deformation, which meets the basic requirements 
+of the surgical simulation. However, there are lots of interactive sit- 
+uation in the interactive neurosurgical simulation, such as adhesion 
+of multi soft tissues, cutting, suction and permanent deformation, 
+which cannot be properly simulated. 
+3. A new brain tissue deformation model with constraints 
+So far we have described the dynamics of a free deformation 
+body subject to external gravity with optionally static nodes. Soft 
+tissues can deform under the manipulation such as traction in the 
+virtual environment, which satisﬁes the basic requirements of sur- 
+gical simulation. However, a neurosurgical simulator is supposed to 
+help neurosurgeons practice various kinds of surgical procedures 
+which contains different kinds of interactions between soft tis- 
+sues and instruments. For example, dissection of convexity menin- 
+giomas is one of the classic situation for neurosurgical training 
+exercise, where the meningiomas adheres to the surface of brain 
+tissue. Hemostasis is another essential technique in the neuro- 
+surgery that demands neurosurgeons to use bipolar forceps to con- 
+trol blood loss, which would cause permanent deformation of soft 
+tissues. Neurosurgical simulation is performed in a highly interac- 
+tive environment where the free body equations of motion can be 
+transiently changed [14] . Interactions and the phenomenon they 
+produced should be properly simulated, which help to improve 
+training outcomes by providing realistic visual feedback. 
+In FEM-based method and PBD method, interactions between 
+virtual objects are usually treated as constraints [28] . The posi- 
+tion based method can be interpreted as descent method under 
+a nonlinear optimization framework derived from implicit integra- 
+tion scheme [30] . Inspired by that, the constraint function in PBD 
+method is adopted into the optimization implicit method. In this 
+paper, a constraint function, which characterizes the interactions 
+between virtual objects, is introduced into the optimization im- 
+plicit method. The proposed deformation model can provide a high 
+realistic description of soft tissue deformation in an interactive en- 
+vironment. 
+When 
+there 
+are 
+interactions 
+between 
+virtual 
+objects, 
+they can be formulated as a set of constraints C ( x ) = 
+[ C 1 ( x ) , C 2 ( x ) , . . . , C m ( x )] T . The key to our proposed deforma- 
+tion method is to introduce a new extra constraint term into the 
+optimization problem. In order to incorporate the constraints into 
+the optimization problem, we deﬁne a new energy potential U ( x ) 
+as function of constraints. Inspired by Macklin et al. [34] , the new 
+energy potential can be formulated as 
+U( x ) = 1 
+2 C ( x ) T γC ( x ) 
+(7) 
+where γ is a block diagonal matrix. The entries of matrix γ repre- 
+sent the stiffness of each constraint in the dynamic system derived 
+from the FEM-based model. Given the potential energy function 
+of interaction constraints, the equivalent constraint forces, which 
+press the deformation model such that it is displaced and reaches 
+a new rest state, can be written as the negative gradient of U ( x ) 
+with respect to x , 
+f C = −∇ x U T = −∇ C T γC 
+(8) 
+38 
+W. Hou, P.X. Liu and M. Zheng / Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+When new constraints are applied on the deformation model, the 
+equivalent constraints forces are added into the nonlinear dynamic 
+system described in (3) , as 
+M ( x t+1 −x t −h v t ) = h 2 f ( x t+1 ) + h 2 f C ( x t+1 ) 
+(9) 
+The nonlinear dynamic system with extra constraint forces can also 
+be converted into a new nonlinear optimization problem: x t+1 = 
+arg min ϵ( x ) 
+ϵC ( x ) = 1 
+2 h 2 ( x −s t ) T M ( x −s t ) + W ( x ) + U( x ) 
+(10) 
+where s t = x t + h v t , U ( x ) is the energy potential of constraints. 
+In the simulation of soft tissue, nonlinear Eq. (9) are used to 
+govern the dynamics of the deformable object. Elastic forces 
+which applied on each vertices make the deformation model 
+maintain dynamic equilibrium. As the constraint is introduced 
+into the deformation model, the constraints forces will compel the 
+deformable objects rest into a desired state. 
+In our proposed deformation model, the descent method 
+is used to solve the optimization problem as described in 
+Algorithm 1 . At the beginning of each time step t + 1 , an initial 
+estimate of x (0) is predicted through performing an explicit time 
+integration step. In each iteration step l , the descent direction at 
+x ( l ) is calculated as 
+x (l) = −diag −1 
+H (l) 
+C 
+∇ϵC 
+
+x (l) 
+(11) 
+where H (l) 
+C is the Hessian matrix of ϵC ( x ( l ) ). A suitable step length 
+α( l ) is adopted which satisﬁes the simpliﬁed ﬁrst Wolfe condition, 
+as 
+ϵC 
+
+x (l) + α(l) x (l) 
+< ϵC 
+
+x (l) 
+(12) 
+in which the control parameter c is set to zero. Finally, the vertices 
+move to the new estimated position along the descent direction 
+x (l+1) = x (l) + α(l) x (l) . After L times of iterations, the ﬁnal solu- 
+tion of the optimization problem is obtained, which is the new 
+vertex position x t+1 at time step t + 1 . 
+The energy function of constraint, which characterizes the in- 
+teractions between virtual objects in the interactive neurosurgical 
+simulation, is incorporated into the optimization implicit method. 
+For different kinds of interactions in the neurosurgical simulation, 
+the constraints can be incorporated in the same way. In this paper, 
+energy functions of constraint, including distance and permanent 
+deformation constraints, are introduced. 
+3.1. Distance constraint 
+Dissection of convexity meningioma is one of the classical 
+situations for neurosurgical training exercise, in which the brain 
+tumor adheres to the surface of brain tissue. When neurosurgeon 
+performs microdissection, the tumor is retracted with forceps to 
+expose the tumor–brain interface. Neurosurgical instruments, such 
+as microscissors, are often used to separate the brain tissue and 
+the tumor. Simulation of convexity meningioma dissection could 
+help young neurosurgeons to gain proﬁciency in microsurgical 
+skills, which requires proper simulation of the adhesions between 
+the brain and the meningioma as well as the separation process. 
+In this paper, we proposed a distance constraint to characterize 
+the adhesion between the brain tissue and the tumor. When the 
+tumor adheres to the brain, the distance between surfaces of brain 
+and tumor keeps constant. In the deformation model, the initial 
+distance between each pair of two attached vertices −→ 
+x q 1 and −→ 
+x q 2 
+is d q . The distance constraint can be deﬁned as 
+C q ( x ) = || −→ 
+x q 1 −−→ 
+x q 2 || −d q 
+(13) 
+Given the distance constraint of each pair of attached vertices in 
+the deformation model, we formulate the energy function of con- 
+straint as 
+U( x ) = 1 
+2 C ( x ) T γC ( x ) 
+= 1 
+2 
+m 
+ 
+q =1 
+k q 
+|| −→ 
+x q 1 −−→ 
+x q 2 || −d q 
+2 
+(14) 
+where γ = diag(k 1 , k 2 , . . . , k m ) . In the energy function of distance 
+constraint, k q represents the stiffness of each distance constraint. 
+The energy function of distance constraint is incorporated into 
+the optimization problem (10) . When solving the optimization 
+problem in each time step, the descent direction in each iteration 
+can be calculated as 
+x (l) = −diag −1 H (l) 
+C ∇ϵC 
+
+x (l) 
+= −diag −1 
+H (l) + ∇ 2 U 
+x (l) ∇ ϵ
+x (l) 
++ ∇ U 
+x (l) 
+(15) 
+where ∇ϵ( x ( l ) ) is the gradient of total energy potential ϵ( x ) with- 
+out considering constraints evaluated at x ( l ) and H ( l ) is its Hessian 
+matrix. The gradient of distance energy potential in (15) is calcu- 
+lated as 
+∇U( x ) = ∇ C T γC 
+(16) 
+in which 
+∂C q ( x ) 
+∂ −→ 
+x q 1 
+= 
+−→ 
+x q 1 −−→ 
+x q 2 
+|| −→ 
+x q 1 −−→ 
+x q 2 || 
+∂C q ( x ) 
+∂ −→ 
+x q 2 
+= 
+−→ 
+x q 2 −−→ 
+x q 1 
+|| −→ 
+x q 1 −−→ 
+x q 2 || 
+(17) 
+In (15) , ∇ 2 U ( x ) is the Hessian matrix of energy function of distance 
+constraint, which can be written as 
+∇ 2 U( x ) = ∇ 2 C T γC + ∇ C T γ∇ C 
+(18) 
+where 
+∂ 2 C q ( x ) 
+∂ −→ 
+x q 1 ∂ −→ 
+x q 1 
+= 
+I 
+|| −→ 
+x q 1 −−→ 
+x q 2 || 
+−
+−→ 
+x q 1 −−→ 
+x q 2 
+−→ 
+x q 1 −−→ 
+x q 2 
+T 
+|| −→ 
+x q 1 −−→ 
+x q 2 || 3 
+∂ 2 C q ( x ) 
+∂ −→ 
+x q 2 ∂ −→ 
+x q 2 
+= 
+I 
+|| −→ 
+x q 1 −−→ 
+x q 2 || 
++ 
+−→ 
+x q 1 −−→ 
+x q 2 
+−→ 
+x q 1 −−→ 
+x q 2 
+T 
+|| −→ 
+x q 1 −−→ 
+x q 2 || 3 
+When deformable objects adhere with each other, a set of at- 
+tached vertex pairs can be identiﬁed. Distance constraints are im- 
+posed in order to keep the distance between each pair of ver- 
+tices constant. When the deformable objects is separated with each 
+other by the neurosurgical instruments, the constraints imposed on 
+the vertex pair are removed respectively. 
+3.2. Permanent deformation constraint 
+Hemostasis is one the most important technical skills that must 
+be mastered by neurosurgeons. Bipolar forceps are usually used to 
+cauterize blood vessels to complete coagulation. The heat gener- 
+ated by bipolar forceps results to permanent deformation of brain 
+tissue. Simulation of permanent deformation with the optimization 
+implicit method can help to provide more realistic visual feedback 
+in virtual neurosurgical training. 
+In this paper, we proposed a new permanent deformation 
+constraint function to characterize the permanent deformation of 
+brain tissue during the hemostasis procedure. When the brain tis- 
+sue deforms from its reference conﬁguration, the strain energy of 
+deformed object can be written as W (q ) = ( E (q )) . From geomet- 
+ric point of view, ( E (q )) = 0 represents the undeformed conﬁgu- 
+ration of the deformation model, of which the strain tensor E ( q ) 
+W. Hou, P.X. Liu and M. Zheng / Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+39 
+Fig. 1. Permanent deformation of the tetrahedron mesh. N c is the contact normal. 
+N f is the surface normal of tetrahedron mesh. 
+equals to zero. The Green - St. Venant strain tensor of the de- 
+formed object is deﬁned as 
+E = 1 
+2 
+
+F T F −I 
+(19) 
+The diagonal entries of E ij represent stretch and the off-diagonal 
+entries E ij = E ji shear both with respect the main axes in the ma- 
+terial frame [22] . The stretch constraints are incorporated into the 
+deformation model 
+C p ( x 1 , x 2 , x 3 , x 4 ) = S ii −s i 
+(20) 
+in which S = F T F and s i is the shrink ratio in each direction. From 
+a geometric point of view, these three constraints would force the 
+virtual object deform to the shrunk shape that the Green - St. 
+Venant strain tensor goes back to the desired state. 
+The energy potential of permanent deformation constraint can 
+be written as 
+U( x ) = 1 
+2 C ( x ) T γC ( x ) 
+(21) 
+in which γ can be set as I . When solving the optimization problem 
+(10) , the descent direction in each iteration can be calculated as 
+x (l) = −diag −1 H (l) ∇ϵC 
+
+x (l) 
+= −diag −1 H (l) ∇ ϵ
+x (l) 
++ ∇ U 
+x (l) 
+(22) 
+where ∇ϵ( x ( l ) ) is the gradient of total energy potential ϵ( x ) with- 
+out considering constraints evaluated at x ( l ) and H ( l ) is its Hessian 
+matrix. The gradient of energy function of permanent deformation 
+constraint is calculated as 
+∇U( x ) = ∇ C T γC 
+(23) 
+in which 
+∇ C ii = ∇ ( S ii −s i ) = 2 f i c T 
+i 
+(24) 
+where F = [ f 1 , f 2 , f 3 ] is the deformation gradient, and D −1 
+m = 
+[ c 1 , c 2 , c 3 ] is the reference shape matrix. 
+When the surgical instruments contact with brain tissue which 
+cause permanent deformation, the tissues surrounding the contact 
+point should shrink perpendicular to the contact surface. As shown 
+in Fig. 1 , the contact normal N c passes through the contact point 
+of surgical instrument and the center of the tetrahedron mesh in 
+brain tissue model. In order to calculate the shrink ratio in the 
+world coordinate, a new local coordinate system is established. 
+The direction of N c is set as one axis of the local coordinate sys- 
+tem. The other two axis ( N a , N b ) are generated through the face 
+normal ( N f ) of the brain tissue, as N a = N f × N c and N b = N c × N a . 
+The shrink ratio s l in world coordinate system can be calculated as 
+ s x 
+0 
+0 
+0 
+s y 
+0 
+0 
+0 
+s z 
+ 
+= R −1 
+ σx 
+0 
+0 
+0 
+σy 
+0 
+0 
+0 
+σz 
+ 
+R 
+(25) 
+where σ x , σ y and σ z are the shrink ratio in local coordinate sys- 
+tem and R is the rotation matrix which transforms the initial nor- 
+mal strain direction to the local coordinate system of the contact 
+point. 
+4. Simulation results 
+In order to demonstrate the effectiveness and validity of the 
+proposed deformation model, tests on three-dimensional geomet- 
+ric models are performed. Various kinds of hyperelastic material 
+models [35] that describe the elastic behavior of brain tissue can 
+be implemented in our proposed deformation model. In our tests, 
+the incompressible Mooney–Rivlin model is used to predict the de- 
+formation of brain tissue. Constraints of distance and permanent 
+deformation are incorporated into the examples respectively. The 
+proposed model is implemented with GPU using descent method 
+as describe in Algorithm 1 . The deformation model is incorporated 
+into the development of a neurosurgical simulator. 
+4.1. Simulation of distance constraint 
+Two examples of the proposed deformation model with dis- 
+tance constraint are presented. In the ﬁrst example, the cube 
+model contains 882 vertices and 2880 tetrahedrons. The top of the 
+cube model is attached on a ﬁxed plane. Distance constraints are 
+imposed on the attached vertices of the two cubes. In the sec- 
+ond example, a liver model, which contains 2578 vertices and 8837 
+tetrahedrons, is presented. A gallbladder is attached on the surface 
+of the liver. External manipulations are imposed on the models, as 
+shown in Figs. 2 and 3 . 
+In the ﬁrst example, the initial state of the cube model is shown 
+in Fig. 2 (a). Distance constraints are imposed, as indicated with 
+white lines. The initial distance d i between each pair of attached 
+vertices is 2 mm. External displacement are imposed on the bot- 
+tom edge of the cube model, as shown in Fig. 2 (b) and c. When the 
+external traction is released, the cube model goes back to its rest 
+state under the effect of gravity, as shown in Fig. 2 (d). The second 
+example is shown in Fig. 3 . When the liver model is manipulated 
+by a virtual instrument, the gallbladder keeps attached on the sur- 
+face of the liver under the effect of distance constraints. 
+Simulation results show that the distance constraints keep the 
+vertex pairs remain attached when external manipulation is per- 
+formed on the virtual objects. It provides a way to describe the 
+attachment of soft tissues in the surgical simulation. The distance 
+constraint has been incorporated into the development of a neuro- 
+surgical simulator. 
+4.2. Simulation of permanent deformation constraint 
+An example of a cube model of edge length 0.05 m with perma- 
+nent deformation constraint is presented. The cubic deformation 
+model contains 10,648 vertex and 46,305 tetrahedrons. Vertices in 
+the bottom of the cube model are ﬁxed. An inﬂuence area parame- 
+ter ξ is used to determine which tetrahedron mesh the permanent 
+deformation constraint is imposed on. When a virtual surgical in- 
+strument contacts with the cube model, permanent deformation 
+constraints are imposed on the tetrahedron meshes of which the 
+distance from the contact point is closer than ξ. In this example, 
+the inﬂuence area parameter ξ is set to 7.5 mm. Process of the per- 
+manent deformation as well as the elastic deformation of the cube 
+model are shown in Fig. 4 . 
+The initial state of undeformed cube model is shown in 
+Fig. 4 (a). When the hemostasis procedure is performed in neu- 
+rosurgery, the bipolar forceps is used to cauterize the brain tis- 
+sue, which cause permanent deformation of the brain tissue. As 
+shown in Fig. 4 (b) and (c), the virtual surgical instrument contacts 
+40 
+W. Hou, P.X. Liu and M. Zheng / Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+Fig. 2. Deformation of cube models with distance constraint: (a) shows the undeformed models, (b)–(d) show the deformation of cube models under external manipulation. 
+Fig. 3. Deformation of a liver model with distance constraint: (a) shows the undeformed liver model, (b) and (c) show the deformation of liver model under external 
+manipulation. 
+Fig. 4. Deformation of a cube model with permanent deformation constraint: (a) shows the undeformed brain tissue, (b)–(d) show the deformation of brain tissue under 
+the effect of permanent constraint. 
+with the cube model. The contact point is selected as the mesh 
+vertex of the virtual surgical instrument, which interacts with the 
+surface of the cubic model. Tetrahedron meshes in the inﬂuence 
+area are identiﬁed by the distance criterion. The permanent defor- 
+mation constraints are imposed into the tetrahedrons in the inﬂu- 
+ence area. The equivalent permanent deformation constraint forces 
+presses the cube model such that it is displaced and reaches a new 
+rest state. The shrink ratio of each tetrahedron mesh is calculated 
+as described in Section 3.2 . The contact normal ( N c ) can be calcu- 
+lated through the contact point and the center of the tetrahedron 
+mesh. The face normal N f of the cube model is calculated through 
+the coordinate of the triangle mesh in each time step. Then the 
+local coordinate system of contact point is created and the shrink 
+ratio s l is calculated respectively. The shrink ratio σ in local co- 
+ordinate system is 0.2. As shown in Fig. 4 (d), external traction is 
+imposed on the cube model and the distortion caused by cauteri- 
+zation keeps permanent. 
+4.3. Computational performance assessment 
+In order to assess the performance of our proposed deformation 
+model, the computation time of a single time step is measured. 
+As described in Algorithm 1 , the descent method with GPU-base 
+implementation is used to solve the optimization problem in our 
+proposed deformation model. In each time step, the vertex posi- 
+tion x (0) is initialed with an explicit time integration. The descent 
+direction is calculated and the vertex position is updated along the 
+descent direction in every iteration as descried in Section 3 . All of 
+the tests use t = 1 / 30 s as the time step and run 96 iterations per 
+time step. The tests ran on an personal computer with an Intel(R) 
+Core E5-2650 v4 CPU, 32GB RAM and a NVIDIA GeForce GTX TITAN 
+Xp graphics card with 3840 cores. 
+The solution time of our proposed deformation is provide in 
+Table 1 . Simulation results show that our proposed deformation 
+model with constraints achieves high computational eﬃciency. 
+Compared with FEM-based deformation model using implicit in- 
+tegration scheme, our model is compatible to GPU-based compu- 
+tation, makes it suitable for computation-intensive neurosurgical 
+simulation. The energy function of constraint incorporated into our 
+proposed deformation model costs few computational resources in 
+each time step. After the constraints are removed, they don’t in- 
+volve in the computation any more. In general, a visual refresh- 
+ment rate of 30 Hz can meet the requirement of real-time perfor- 
+mance in virtual surgical simulation. A refreshment of 31.1 frames 
+per second can be achieved in our developed neurosurgical simu- 
+lator. 
+W. Hou, P.X. Liu and M. Zheng / Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+41 
+Table 1 
+Solution time of the deformation model. 
+Method 
+Number of tetrahedron 
+Constraints number 
+Execution time (ms) 
+Our model 
+2880 
+0 
+20.47 
+13,169 
+0 
+31.46 
+Our model 
+2880 
+49 
+20.82 
+13,169 
+475 
+32.12 
+CPU-based model 
+2880 
+0 
+48.60 
+13,169 
+0 
+249.74 
+Fig. 5. The relative error of the deformation model in each iteration step. The 
+descent method with hyperelastic material model is used in model 1. The de- 
+scent method with anisotropy and viscoelasticity is used in model 2. In our de- 
+formation model, the constraints are incorporated. The relative error is deﬁned as 
+(ϵ( x (l) ) −ϵ( x ∗)) / (ϵ( x (0) ) −ϵ( x (∗) )) , where x ( l ) is the result in the lth iteration and 
+x ∗is the ground truth calculated by Vega [36] . 
+The solution of our developed deformation model can converge 
+to the exact result of the implicit Euler integration method given 
+suﬃcient number of iterations. In order to verify the accuracy of 
+the developed model, the relative error in each iteration step is 
+calculated. The relative errors of our developed deformation and 
+the descent method without considering constraint are shown in 
+Fig. 5 . Simulation results show that the solution of our developed 
+can converge as fast as the descent method without considering 
+constraint. In our developed method, 96 iterations are performed 
+to get the ﬁnal solution of the vertex position in each time step. 
+4.4. Simulation of neurosurgery 
+The deformation model proposed in this paper is incorporated 
+into the development of a neurosurgical simulator. Similar to [13] , 
+the FEM-based model with optimization implicit method is used 
+to simulate the deformation of brain tissue. Anisotropic and vis- 
+coelastic properties of the brain tissue are incorporated into the 
+deformation model. In this paper, constraints of distance and per- 
+manent deformation are incorporated into the deformation model. 
+Neurosurgical procedures such as microdissection and hemostasis 
+are simulated, which can help young neurosurgeons to gain sur- 
+gical experience through practising with the neurosurgical simula- 
+tor. The Mimics, which is a software for image processing, three- 
+dimensional designing and modeling, is used to reconstruct the 
+geometric models of brain and meningioma through CT images 
+of patients. The three-dimensional geometric model is converted 
+into tetrahedral elements with TetGen, which is a mesh genera- 
+tor developed by Si [37] . As the tumor adheres to the brain tissue, 
+the pairs of attached vertices in the geometric models are selected 
+manually. 
+As shown in Fig. 6 , the simulation of microdissection of a 
+meningioma is presented. There are 2179 nodes and 7461 tetra- 
+hedral elements in the brain tissue model, and 1773 nodes and 
+5708 tetrahedral elements in the meningioma model. The convex- 
+ity meningioma is attached on the surface of the brain tissue. Dis- 
+tance constraints are incorporated into 475 pairs of attached ver- 
+tices, and the initial distance d i is set to 1 mm. In the beginning 
+of meningioma dissection, the tumor is retracted by a gasper to 
+expose the tumor-brain interface. The scalpel is used to separate 
+the tumor from the brain tissue through cutting the arachnoid 
+bands within the tumor-brain interface. Distance constraints that 
+imposed on the attached vertex pairs are removed step by step, as 
+shown in Fig. 6 (b) and (c). Finally, the tumor model is separated 
+from the brain tissue model. 
+After the meningioma is removed, bipolar is usually used to 
+perform hemostasis. Simulation of the hemostasis procedure is 
+shown in Fig. 7 . The bleeding site is identiﬁed ﬁrstly. Then the 
+bipolar forceps is gently applied over the bleeding site and the 
+heat generated by the bipolar forceps results to cauterization of 
+bleed vessel, which leads to permanent deformation of brain tis- 
+sue because of high temperature. As shown in Fig. 7 (b), a virtual 
+surgical instrument is used to cauterize the bleed vessel as well 
+as the brain tissue. Collision detection between the virtual surgical 
+instrument and the brain tissue is performed. The contact point is 
+identiﬁed when the virtual surgical instrument touches the brain 
+tissue. The permanent deformation is imposed on the brain tissue 
+model. The simulation results of hemostasis is shown in Fig. 7 (d). 
+Several simulators for neurosurgery training have be proposed 
+[17,38] . NeuroTouch is a physics-based virtual simulator which pro- 
+vides a number of training tasks such as tumor-debulking, tu- 
+mor cauterization, endoscopic nasal navigation and microdissec- 
+tion. Compared with those simulators using FEM model and im- 
+plicit integration scheme, the neurosurgical simulator developed 
+using our proposed deformation model achieves a higher com- 
+putational eﬃciency. The neurosurgical simulator we developed is 
+shown in Fig. 8 . We integrated the simulated surgical scenes with 
+real surgical ones, making it more realistic. The 3–D scene of the 
+brain tissue can be observed on a 3-D monitor inside the cabinet. 
+Two Phantom Omni desktop interfaces are used as the haptic con- 
+trol consoles and a CHAI3D open source software package is em- 
+ployed to drive the haptic interface. 
+5. Discussion 
+The simulation of constraints with an energy function in the 
+proposed model is analogous to the penalty method [39] . As 
+shown in equation (9) , penalty forces are incorporated into the dy- 
+namic system of soft tissue. The penalty forces compete with all 
+other forces applied on the vertices, which makes the dynamic sys- 
+tem to be conformed by the constraints. When the constraints are 
+violated, the penalty forces will pull the vertex back to its desired 
+state. 
+However, the conventional penalty method [39] suffers the in- 
+stability problem when the restoring force is large. On the other 
+hand, the restoring force needs to be large enough in order to 
+overpower all other competing forces. This instability problem is 
+well avoided in our proposed model since the implicit integra- 
+tion scheme used is unconditionally stable. Moreover, the proposed 
+42 
+W. Hou, P.X. Liu and M. Zheng / Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+Fig. 6. Simulation of neurosurgical procedures base on augmented reality: dissection of convexity meningioma. 
+Fig. 7. Simulation of neurosurgical procedures base on augmented reality: hemostasis. 
+Fig. 8. The virtual-reality based neurosurgical simulator we developed. 
+model is relatively easy to implement and computationally eﬃ- 
+cient, making it suitable for simulating neurosurgical procedures 
+such as the dissection of convexity meningioma and hemostasis. 
+The simulation of constraints with an energy function, however, 
+may have the same drawback as the penalty method does [21] . 
+Note that the parameter γ represents the stiffness of constraints 
+and the restoring force applied on each vertex contains one or 
+more stiffness parameters. It is diﬃcult to tune stiffness parame- 
+ters in a complex system with many competing forces. The penalty 
+forces introduced into the dynamic system can also lead to unde- 
+sired oscillations. To solve this problem, the method of Lagrange 
+multipliers [40] can be used to calculate these parameters explic- 
+itly. 
+6. Conclusion 
+This paper presents a new brain tissue deformation model with 
+constraints for neurosurgical simulation. The deformation model 
+is based on the FEM model using the optimization implicit Euler 
+method. An energy function of constraint that characterizes the 
+interactions between the virtual instrument and soft tissue is in- 
+corporated into the deformation model. Distance and permanent 
+deformation constraints are proposed to characterize the interac- 
+tions in the convexity meningioma dissection and hemostasis. The 
+proposed deformation model has been incorporated into the devel- 
+opment of a neurosurgical simulator. The simulation results show 
+that the proposed deformation model provides a high degree of 
+visual realism and computational eﬃciency. While the proposed 
+method is focused on the simulation of neurosurgical procedures, 
+it can be well extended to other surgical procedures, such as la- 
+paroscopic surgery. 
+There are still a few types of interactions in neurosurgical simu- 
+lation that are not explicitly modeled in the proposed model, such 
+as ventriculostomy and tumor debulking. This is one direction that 
+we will look at in the future work. 
+Conﬂict of interest 
+None. 
+Acknowledgments 
+This work was supported in part by the National Science Foun- 
+dation of China ( 61773051 , 61761166011 , 51705016 ), Jiangxi Nat- 
+ural Science Foundation ( 20171ACB20 0 07 ), Beijing Natural Sci- 
+ence Foundation ( 4172048 ), Jiangxi Provincial Department of 
+Science and Technology ( 20121BBE50023 , 20133BCB22002 ), and 
+W. Hou, P.X. Liu and M. Zheng / Computer Methods and Programs in Biomedicine 175 (2019) 35–43 
+43 
+the Fundamental Research Funds for the Central Universities 
+( 2017JBZ003 ). 
+Supplementary material 
+Supplementary material associated with this article can be 
+found, in the online version, at doi: 10.1016/j.cmpb.2019.03.018 . 
+References 
+[1] N. Gélinas-Phaneuf , R.F. Del Maestro , Surgical expertise in neurosurgery: inte- 
+grating theory into practice, Neurosurgery 73 (Suppl. 1) (2013) 30–38 . 
+[2] N. Choudhury , N. Gélinas-Phaneuf , S. Delorme , R. Del Maestro , Fundamentals 
+of neurosurgery: virtual reality tasks for training and evaluation of technical 
+skills, World Neurosurg. 80 (5) (2013) 9–19 . 
+[3] S. Konakondla , R. Fong , C.M. Schirmer , Simulation training in neurosurgery: ad- 
+vances in education and practice, Adv. Med. Educ. Pract. 8 (2017) 465–473 . 
+[4] P.-Y. Lee , M.-H. Hu , M.-L. Wang , K.-C. Liu , J.-R. Wu , Real-time advanced spinal 
+surgery via visible patient model and augmented reality system, Comput. 
+Methods Programs Biomed. 113 (3) (2014) 869–881 . 
+[5] G.S. Ruthenbeck , K.J. Reynolds , Virtual reality for medical training: the 
+state-of-the-art, J. Simul. 9 (1) (2015) 16–26 . 
+[6] M.I.-P.H. Cobb , J.M. Taekman , A.R. Zomorodi , L.F. Gonzalez , D.A. Turner , Simu- 
+lation in neurosurgery: a brief review and commentary, World Neurosurg. 89 
+(2016) 583–586 . 
+[7] R. Rehder , M. Abd-El-Barr , K. Hooten , P. Weinstock , J.R. Madsen , A.R. Cohen , 
+The role of simulation in neurosurgery, Child’s Nerv. Syst. 32 (1) (2016) 43–54 . 
+[8] F.E. Alotaibi , G.A. AlZhrani , M.A. Mullah , A.J. Sabbagh , H. Azarnoush , A. Win- 
+kler-Schwartz , R.F. Del Maestro , Assessing bimanual performance in brain tu- 
+mor resection with neurotouch, a virtual reality simulator, Oper. Neurosurg. 11 
+(1) (2015) 89–98 . 
+[9] Y. Zou , P.X. Liu , A high-resolution model for soft tissue deformation based on 
+point primitives, Comput. Methods Programs Biomed. 148 (2017) 113–121 . 
+[10] J. Zhou , Z. Luo , C. Li , M. Deng , Real-time deformation of human soft tissues: 
+a radial basis meshless 3D model based on Marquardt’s algorithm, Comput. 
+Methods Programs Biomed. 153 (2018) 237–252 . 
+[11] N. Lauzeral , D. Borzacchiello , M. Kugler , D. George , Y. Rémond , A. Hostettler , 
+F. Chinesta , A model order reduction approach to create patient-speciﬁc me- 
+chanical models of human liver in computational medicine applications., Com- 
+put. Methods Programs Biomed. 170 (2019) 95–106 . 
+[12] H. Wang , Y. Yang , Descent methods for elastic body simulation on the GPU, 
+ACM Trans. Graph. 35 (6) (2016) 212:1–212:10 . 
+[13] W. Hou , P.X. Liu , M. Zheng , S. Liu , A new FEM-based brain tissue model for 
+neurosurgical simulation using the optimization implicit euler method, in: 
+2018 37th Chinese Control Conference (CCC), IEEE, 2018, pp. 8578–8582 . 
+[14] Ó. Civit Flores , Robust Interactive Simulation of Deformable Solids with De- 
+tailed Geometry Using Corotational FEM, Ph.D. thesis, Universitat Politècnica 
+de Catalunya, 2016 . 
+[15] A. Nealen , M. Müller , R. Keiser , E. Boxerman , M. Carlson , Physically based de- 
+formable models in computer graphics, in: Computer Graphics Forum, 25, Wi- 
+ley Online Library, 2006, pp. 809–836 . 
+[16] G.R. Joldes , A. Wittek , K. Miller , Real-time nonlinear ﬁnite element computa- 
+tions on GPU–application to neurosurgical simulation, Comput. Methods Appl. 
+Mech. Eng. 199 (49-52) (2010) 3305–3314 . 
+[17] S. Delorme , D. Laroche , R. DiRaddo , R.F. Del Maestro , Neurotouch: a physic- 
+s-based virtual simulator for cranial microneurosurgery training, Oper. Neuro- 
+surg. 71 (suppl.1) (2012) 32–42 . 
+[18] F. Faure , C. Duriez , H. Delingette , J. Allard , B. Gilles , S. Marchesseau , H. Talbot , 
+H. Courtecuisse , G. Bousquet , I. Peterlik , et al. , Sofa: A multi-model framework 
+for interactive physical simulation, in: Soft Tissue Biomechanical Modeling for 
+Computer Assisted Surgery, Springer, 2012, pp. 283–321 . 
+[19] S.F. Johnsen , Z.A. Taylor , M.J. Clarkson , J. Hipwell , M. Modat , B. Eiben , L. Han , 
+Y. Hu , T. Mertzanidou , D.J. Hawkes , et al. , Niftysim: a GPU-based nonlinear ﬁ- 
+nite element package for simulation of soft tissue biomechanics, Int. J. Comput. 
+Assist. Radiol. Surg. 10 (7) (2015) 1077–1095 . 
+[20] M. Müller , B. Heidelberger , M. Hennix , J. Ratcliff, Position based dynamics, J. 
+Vis. Commun. Image Represent. 18 (2) (2007) 109–118 . 
+[21] J. Bender , M. Müller , M.A. Otaduy , M. Teschner , M. Macklin , A survey on po- 
+sition-based simulation methods in computer graphics, in: Computer Graphics 
+Forum, 33, Wiley Online Library, 2014, pp. 228–251 . 
+[22] M. Müller , N. Chentanez , T.-Y. Kim , M. Macklin , Strain based dynamics, in: Pro- 
+ceedings of the ACM SIGGRAPH/Eurographics Symposium on Computer Ani- 
+mation, Eurographics Association, 2014, pp. 149–157 . 
+[23] T. Kugelstadt , E. Schömer , Position and orientation based cosserat rods, in: 
+Symposium on Computer Animation, 2016, pp. 169–178 . 
+[24] M. Camara , E. Mayer , A. Darzi , P. Pratt , Soft tissue deformation for surgical 
+simulation: a position-based dynamics approach, Int. J. Comput. Assist. Radiol. 
+Surg. 11 (6) (2016) 919–928 . 
+[25] Y. Duan , W. Huang , H. Chang , W. Chen , J. Zhou , S.K. Teo , Y. Su , C.K. Chui , 
+S. Chang , Volume preserved mass–spring model with novel constraints for soft 
+tissue deformation, IEEE J. Biomed. Health Inform. 20 (1) (2016) 268–280 . 
+[26] Y. Peng , Y. Ma , Y. Wang , J. Shan , The application of interactive dynamic vir- 
+tual surgical simulation visualization method, Multimedia Tools Appl. 76 (23) 
+(2017) 25197–25214 . 
+[27] Y. Sui , J.J. Pan , H. Qin , H. Liu , Y. Lu , Real-time simulation of soft tissue de- 
+formation and electrocautery procedures in laparoscopic rectal cancer radical 
+surgery, Int. J. Med. Rob. Comput. Assist. Surg. 13 (4) (2017) 1827:1–1827:12 . 
+[28] J. Bender , M. Müller , M. Macklin , Position-based simulation methods in com- 
+puter graphics, Eurographics (Tutorials), 2015 . 
+[29] T. Liu , A.W. Bargteil , J.F. O’Brien , L. Kavan , Fast simulation of mass-spring sys- 
+tems, ACM Trans. Graph. 32 (6) (2013) 214:1–214:7 . 
+[30] S. Bouaziz , S. Martin , T. Liu , L. Kavan , M. Pauly , Projective dynamics: fusing 
+constraint projections for fast simulation, ACM Trans. Graph. 33 (4) (2014) 
+154:1–154:11 . 
+[31] T.F. Gast , C. Schroeder , A. Stomakhin , C. Jiang , J.M. Teran , Optimization inte- 
+grator for large time steps, IEEE Trans. Vis. Comput. Graph. 21 (10) (2015) 
+1103–1115 . 
+[32] J. Cai , F. Lin , H.S. Seah , Graphical Simulation of Deformable Models, 2016 . 
+[33] M. Overby , G.E. Brown , J. Li , R. Narain , Admm ⊇projective dynamics: fast sim- 
+ulation of hyperelastic models with dynamic constraints, IEEE Trans. Vis. Com- 
+put. Graph. 23 (10) (2017) 2222–2234 . 
+[34] M. Macklin , M. Müller , N. Chentanez , Xpbd: position-based simulation of com- 
+pliant constrained dynamics, in: Proceedings of the 9th International Confer- 
+ence on Motion in Games, ACM, 2016, pp. 49–54 . 
+[35] R. De Rooij , E. Kuhl , Constitutive modeling of brain tissue: current perspectives, 
+Appl. Mech. Rev. 68 (1) (2016) 010801:1–010801:16 . 
+[36] F.S. Sin , D. Schroeder , J. Barbi ˇc , Vega: Non-linear FEM deformable object simu- 
+lator, in: Computer Graphics Forum, 32, Wiley Online Library, 2013, pp. 36–48 . 
+[37] H. Si , Tetgen, a delaunay-based quality tetrahedral mesh generator, ACM Trans. 
+Math. Softw. 41 (2) (2015) 11:1–11:36 . 
+[38] H.R. Malone , O.N. Syed , M.S. Downes , A.L. D’ambrosio , D.O. Quest , M.G. Kaiser , 
+Simulation in neurosurgery: a review of computer-based simulation environ- 
+ments and their surgical applications, Neurosurgery 67 (4) (2010) 1105–1116 . 
+[39] E. Drumwright , A fast and stable penalty method for rigid body simulation, 
+IEEE Trans. Vis. Comput. Graph. 14 (1) (2008) 231–240 . 
+[40] A. Bargteil , T. Shinar , An introduction to physics-based animation, in: ACM SIG- 
+GRAPH 2018 Courses, ACM, 2018, pp. 6:1–6:57 . 
