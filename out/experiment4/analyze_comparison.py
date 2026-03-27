@@ -4,6 +4,15 @@ import os
 import sys
 import glob
 
+plt.rcParams.update({
+    'font.size': 18,
+    'axes.titlesize': 20,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 16,
+    'ytick.labelsize': 16,
+    'legend.fontsize': 14
+})
+
 def read_csv_data(csv_path):
     data = []
     headers = []
@@ -93,8 +102,8 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
         x_v = [p[0] for p in vega_points]
         y_v = [p[1] for p in vega_points]
 
-    # Create figure with two subplots side by side
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    # Create figure with two subplots stacked vertically for double-column readability
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8.5, 11))
     
     # Left subplot: Log scale
     ax1.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
@@ -107,7 +116,7 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
     ax1.set_yscale('log')
     ax1.set_title('Performance Comparison (Log Scale)')
     ax1.grid(True, which="both", ls="-", alpha=0.3)
-    ax1.legend()
+    ax1.legend(loc='upper right')
     
     # Right subplot: Linear scale
     ax2.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
@@ -119,11 +128,11 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
     ax2.set_ylabel('FPS (Linear Scale)')
     ax2.set_title('Performance Comparison (Linear Scale)')
     ax2.grid(True, which="both", ls="-", alpha=0.3)
-    ax2.legend()
+    ax2.legend(loc='upper right')
     
     plt.tight_layout()
     output_file = os.path.join(output_dir, 'comparison_fps.png')
-    plt.savefig(output_file)
+    plt.savefig(output_file, dpi=220, bbox_inches='tight')
     plt.close()
     print(f"Saved comparison plot to {output_file}")
 
@@ -143,7 +152,7 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
         values = [xpbd_ref_20k[1], tet_20k[1]]
         colors = ['blue', 'red']
     
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(9, 6.5))
     bars = plt.bar(labels, values, color=colors)
     
     for bar in bars:
@@ -157,7 +166,8 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
     plt.ylim(0, max(values) * 1.3)
     
     output_file_bar = os.path.join(output_dir, 'comparison_bar_20k.png')
-    plt.savefig(output_file_bar)
+    plt.tight_layout()
+    plt.savefig(output_file_bar, dpi=220, bbox_inches='tight')
     print(f"Saved bar chart to {output_file_bar}")
 
 if __name__ == "__main__":

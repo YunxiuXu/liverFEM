@@ -2,6 +2,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
+plt.rcParams.update({
+    'font.size': 18,
+    'axes.titlesize': 20,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 16,
+    'ytick.labelsize': 16,
+    'legend.fontsize': 15
+})
+
 # Paths
 base_path = "/Users/yunxiuxu/Documents/tetfemcpp/out/experiment2"
 prop_path = os.path.join(base_path, "20251223_012834/experiment2_volume.csv")
@@ -86,7 +95,7 @@ prop_df = add_cumulative_time(prop_df)
 xpbd_df = add_cumulative_time(xpbd_df)
 
 # Prepare plot
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(10.5, 6.8))
 
 # Define colors and styles
 styles = {
@@ -124,7 +133,7 @@ plt.title('Volume Preservation Comparison under Large Deformation (nu=0.49)')
 plt.legend(loc='best')
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.tight_layout()
-plt.savefig(os.path.join(base_path, 'volume_preservation_comparison.png'))
+plt.savefig(os.path.join(base_path, 'volume_preservation_comparison.png'), dpi=220, bbox_inches='tight')
 
 print("Experiment 2 plots generated successfully.")
 

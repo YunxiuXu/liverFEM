@@ -3,6 +3,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+plt.rcParams.update({
+    'font.size': 18,
+    'axes.titlesize': 20,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 16,
+    'ytick.labelsize': 16,
+    'legend.fontsize': 15
+})
+
 # Paths
 base_path = "/Users/yunxiuxu/Documents/tetfemcpp/out/experiment1"
 ours_path = os.path.join(base_path, "20251223_011343/experiment1_sweep_summary.csv")
@@ -53,7 +62,7 @@ for accel in accels:
 summary_df = pd.DataFrame(summary)
 
 # --- Plot 1: Displacement Comparison ---
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 6.2))
 x = np.arange(len(accels))
 width = 0.2
 
@@ -68,10 +77,11 @@ plt.title('Displacement Comparison: Proposed Method vs XPBD vs VegaFEM')
 plt.xticks(x, accels)
 plt.legend()
 plt.grid(axis='y', linestyle='--', alpha=0.7)
-plt.savefig(os.path.join(base_path, 'displacement_comparison.png'))
+plt.tight_layout()
+plt.savefig(os.path.join(base_path, 'displacement_comparison.png'), dpi=220, bbox_inches='tight')
 
 # --- Plot 2: Relative Error Comparison ---
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 6.2))
 plt.plot(accels, summary_df['Proposed_Error_%'], marker='o', label='Proposed Method (Fast) Error %', color='blue', linewidth=2)
 plt.plot(accels, summary_df['XPBD_Fast_Error_%'], marker='s', label='XPBD (Fast) Error %', color='orange', linestyle='--')
 plt.plot(accels, summary_df['XPBD_Ref_Error_%'], marker='^', label='XPBD (Ref) Error %', color='red', linestyle='--')
@@ -82,10 +92,11 @@ plt.title('Relative Error to VegaFEM Ground Truth')
 plt.xticks(accels)
 plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
-plt.savefig(os.path.join(base_path, 'error_comparison.png'))
+plt.tight_layout()
+plt.savefig(os.path.join(base_path, 'error_comparison.png'), dpi=220, bbox_inches='tight')
 
 # --- Plot 3: Performance (Time) Comparison ---
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 6.2))
 methods = ['Proposed Method', 'XPBD (Fast)', 'XPBD (Ref)']
 times = [summary_df['Proposed_Time'].mean(), summary_df['XPBD_Fast_Time'].mean(), summary_df['XPBD_Ref_Time'].mean()]
 colors = ['blue', 'orange', 'red']
@@ -95,7 +106,8 @@ plt.axhline(y=16.67, color='green', linestyle='--', label='60 FPS Limit (16.7ms)
 plt.ylabel('Average Step Time (ms)')
 plt.title('Performance Comparison')
 plt.legend()
-plt.savefig(os.path.join(base_path, 'performance_comparison.png'))
+plt.tight_layout()
+plt.savefig(os.path.join(base_path, 'performance_comparison.png'), dpi=220, bbox_inches='tight')
 
 print("Plots generated successfully.")
 print(summary_df.to_string())
