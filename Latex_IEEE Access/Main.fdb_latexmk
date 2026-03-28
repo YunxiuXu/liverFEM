@@ -1,16 +1,16 @@
 # Fdb version 4
-["bibtex Main"] 1774638488.96254 "Main.aux" "Main.bbl" "Main" 1774638490.11939 0
+["bibtex Main"] 1774683665.23794 "Main.aux" "Main.bbl" "Main" 1774684159.11809 0
   "../Frontiers_LaTeX_Templates/bibtex/references.bib" 1774636289.7649 5781 bd8837202b81d44f743d278d4eb87720 ""
   "./IEEEtran.bst" 1714408405 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "Main.aux" 1774638489.97627 10431 67bd82c2025addf22a53cb3794f681c2 "pdflatex"
+  "Main.aux" 1774684158.98157 10429 abea0c1a11890151b817bbbb9d423ff7 "pdflatex"
   (generated)
   "Main.bbl"
   "Main.blg"
   (rewritten before read)
-["pdflatex"] 1774638489.01794 "Main.tex" "Main.pdf" "Main" 1774638490.11949 0
+["pdflatex"] 1774684158.1183 "Main.tex" "Main.pdf" "Main" 1774684159.11821 0
   "../out/experiment1/displacement_comparison.png" 1774638481.14773 145316 630fd0badc4c4e59c1b06ddcb69ebc9d ""
   "../out/experiment2/volume_preservation_comparison.png" 1774638481.17827 214247 cac505174f4e5f1c60c70ba6f4908e3e ""
-  "../out/experiment4/comparison_fps.png" 1774638481.16418 346702 aee89d7b32d3b9d2e4b2ccba6f6e7d54 ""
+  "../out/experiment4/comparison_fps.png" 1774682217.80546 347693 b151db47b1d5fad9faf38c2b42cf6426 ""
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/enc/dvips/base/8r.enc" 1741388039 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/map/fontname/texfonts.map" 1741388039 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/map/pdftex/updmap/pdftex.map" 1741388039 5466553 2748998d7db8078826afa1f272036265 ""
@@ -97,9 +97,9 @@
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/web2c/texmf.cnf" 1741388039 42151 79f67285bdd95beca4d137b380b4b9e5 ""
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-var/web2c/pdftex/pdflatex.fmt" 1741388039 3346141 1288109d02d1c772df65535881471649 ""
   "IEEEtran.cls" 1714408405 281957 5b2e4fa15b0f7eabb840ebf67df4c0f7 ""
-  "Main.aux" 1774638489.97627 10431 67bd82c2025addf22a53cb3794f681c2 "pdflatex"
-  "Main.bbl" 1774638489.01609 4802 df5bbd56fc67f653aa172bf351fb9643 "bibtex Main"
-  "Main.tex" 1774638457.54084 52321 5107ebf3f663aacbbcc03a27e7628646 ""
+  "Main.aux" 1774684158.98157 10429 abea0c1a11890151b817bbbb9d423ff7 "pdflatex"
+  "Main.bbl" 1774683665.29037 4802 df5bbd56fc67f653aa172bf351fb9643 "bibtex Main"
+  "Main.tex" 1774684156.54694 49244 35bc4b19115bad139967d783c16b2bde ""
   "bullet.png" 1714408405 430 e52d8fe748259de33fa611fdd6a099c1 ""
   "ieeeaccess.cls" 1714408405 50800 6e473d2a8652127c24e6e8af3d7a34f5 ""
   "img/expert_evaluation_setup.png" 1774594528.85295 1961681 4782d6e78c293c7bd4b30aada4f537b2 ""

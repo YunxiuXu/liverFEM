@@ -106,7 +106,7 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8.5, 11))
     
     # Left subplot: Log scale
-    ax1.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
+    ax1.plot(x_tet, y_tet, 'r-o', linewidth=2, label='Proposed Method (10 Threads)')
     ax1.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
     ax1.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
     if vega_points:
@@ -119,7 +119,7 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
     ax1.legend(loc='upper right')
     
     # Right subplot: Linear scale
-    ax2.plot(x_tet, y_tet, 'r-o', linewidth=2, label='TetGenFEM (Ours, 10 Threads)')
+    ax2.plot(x_tet, y_tet, 'r-o', linewidth=2, label='Proposed Method (10 Threads)')
     ax2.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
     ax2.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
     if vega_points:
@@ -144,11 +144,11 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
     # Find closest VegaFEM to 20k
     if vega_points:
         vega_20k = min(vega_points, key=lambda x: abs(x[0] - target))
-        labels = ['VegaFEM\n(GT)', 'XPBD Ref\n(High Acc.)', 'TetGenFEM\n(Ours)']
+        labels = ['VegaFEM\n(GT)', 'XPBD Ref\n(High Acc.)', 'Proposed\nMethod']
         values = [vega_20k[1], xpbd_ref_20k[1], tet_20k[1]]
         colors = ['green', 'blue', 'red']
     else:
-        labels = ['XPBD Ref\n(High Acc.)', 'TetGenFEM\n(Ours)']
+        labels = ['XPBD Ref\n(High Acc.)', 'Proposed\nMethod']
         values = [xpbd_ref_20k[1], tet_20k[1]]
         colors = ['blue', 'red']
     
