@@ -13,44 +13,44 @@ Database file #1: ../Frontiers_LaTeX_Templates/bibtex/references.bib
 -- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
 
 Done.
-You've used 16 entries,
+You've used 18 entries,
             4087 wiz_defined-function locations,
-            916 strings with 10754 characters,
-and the built_in function-call counts, 12735 in all, are:
-= -- 1020
-> -- 349
-< -- 104
-+ -- 186
-- -- 64
-* -- 627
-:= -- 1885
-add.period$ -- 34
-call.type$ -- 16
-change.case$ -- 16
-chr.to.int$ -- 234
-cite$ -- 16
-duplicate$ -- 917
-empty$ -- 985
-format.name$ -- 80
-if$ -- 2960
+            929 strings with 11233 characters,
+and the built_in function-call counts, 14423 in all, are:
+= -- 1168
+> -- 395
+< -- 117
++ -- 210
+- -- 73
+* -- 707
+:= -- 2133
+add.period$ -- 38
+call.type$ -- 18
+change.case$ -- 18
+chr.to.int$ -- 258
+cite$ -- 18
+duplicate$ -- 1044
+empty$ -- 1103
+format.name$ -- 91
+if$ -- 3358
 int.to.chr$ -- 0
-int.to.str$ -- 16
-missing$ -- 161
-newline$ -- 71
-num.names$ -- 16
-pop$ -- 379
+int.to.str$ -- 18
+missing$ -- 183
+newline$ -- 77
+num.names$ -- 18
+pop$ -- 426
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 2
-skip$ -- 973
+skip$ -- 1110
 stack$ -- 0
-substring$ -- 574
-swap$ -- 750
-text.length$ -- 26
+substring$ -- 644
+swap$ -- 859
+text.length$ -- 31
 text.prefix$ -- 0
 top$ -- 5
-type$ -- 16
+type$ -- 18
 warning$ -- 0
-while$ -- 58
-width$ -- 18
-write$ -- 176
+while$ -- 65
+width$ -- 20
+write$ -- 197
