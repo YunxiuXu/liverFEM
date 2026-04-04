@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex Main"] 1775141472.66829 "Main.aux" "Main.bbl" "Main" 1775141473.90102 0
+["bibtex Main"] 1775306731.38012 "Main.aux" "Main.bbl" "Main" 1775306732.46487 0
   "../Frontiers_LaTeX_Templates/bibtex/references.bib" 1775141469.54527 6492 b9992a217c4a2b0b84da25adbe4de217 ""
   "./IEEEtran.bst" 1714408405 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "Main.aux" 1775141473.71427 10570 33ade2eb92afb1a0e0aebb75bc3dcc85 "pdflatex"
+  "Main.aux" 1775306732.31479 10618 cc111e34c3dcc68ebecffbd767314f37 "pdflatex"
   (generated)
   "Main.bbl"
   "Main.blg"
   (rewritten before read)
-["pdflatex"] 1775141472.72081 "Main.tex" "Main.pdf" "Main" 1775141473.90117 0
+["pdflatex"] 1775306731.43091 "Main.tex" "Main.pdf" "Main" 1775306732.46498 0
   "../out/experiment1/displacement_comparison.png" 1774638481.14773 145316 630fd0badc4c4e59c1b06ddcb69ebc9d ""
   "../out/experiment2/volume_preservation_comparison.png" 1774638481.17827 214247 cac505174f4e5f1c60c70ba6f4908e3e ""
   "../out/experiment4/comparison_fps.png" 1774682217.80546 347693 b151db47b1d5fad9faf38c2b42cf6426 ""
@@ -97,9 +97,9 @@
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/web2c/texmf.cnf" 1741388039 42151 79f67285bdd95beca4d137b380b4b9e5 ""
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-var/web2c/pdftex/pdflatex.fmt" 1741388039 3346141 1288109d02d1c772df65535881471649 ""
   "IEEEtran.cls" 1714408405 281957 5b2e4fa15b0f7eabb840ebf67df4c0f7 ""
-  "Main.aux" 1775141473.71427 10570 33ade2eb92afb1a0e0aebb75bc3dcc85 "pdflatex"
-  "Main.bbl" 1775141472.71893 5291 9945d3ee8ba4cd3e00205631952fed67 "bibtex Main"
-  "Main.tex" 1775141147.96606 51366 9287af2d1391de6197e9ff5dcbb6b0c0 ""
+  "Main.aux" 1775306732.31479 10618 cc111e34c3dcc68ebecffbd767314f37 "pdflatex"
+  "Main.bbl" 1775306731.42888 5291 b0487664015ab4283ea1c6a135bbe205 "bibtex Main"
+  "Main.tex" 1775306583.68133 52648 1e8d1d45e292212c70919705314e042a ""
   "bullet.png" 1714408405 430 e52d8fe748259de33fa611fdd6a099c1 ""
   "ieeeaccess.cls" 1714408405 50800 6e473d2a8652127c24e6e8af3d7a34f5 ""
   "img/expert_evaluation_setup.png" 1774594528.85295 1961681 4782d6e78c293c7bd4b30aada4f537b2 ""
@@ -113,6 +113,7 @@
   "t1-formata-bold.tfm" 1714408405 1420 e49288584c4b6aedcaf3809078fdde27 ""
   "t1-formata-condmedium.pfb" 1714408405 63989 3ffb6dac82a54d61206da592adc666d4 ""
   "t1-formata-condmedium.tfm" 1714408405 1412 69835d9272a4cf9349297208bcc60045 ""
+  "t1-formata-italic.tfm" 1714408405 1680 d34027e258a8848ca1ab21845470a33a ""
   "t1-formata-medium.pfb" 1714408405 67701 47a57ee2678066d392f8aebdda0dba09 ""
   "t1-formata-medium.tfm" 1714408405 4720 f3dcbbd4c5991060387bb367b565796f ""
   "t1-formata-mediumitalic.pfb" 1714408405 62483 6a4f0719988b39391be7f3eafab5eeac ""

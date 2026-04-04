@@ -104,14 +104,14 @@ B.~Wisniewski, K.~Zierer, and J.~Hattie, ``The power of feedback revisited: A
   meta-analysis of educational feedback research,'' \emph{Frontiers in
   psychology}, vol.~10, p. 487662, 2020.
 
-\bibitem{hou2019new}
-W.~Hou, P.~X. Liu, and M.~Zheng, ``A new model of soft tissue with constraints
-  for interactive surgical simulation,'' \emph{Computer Methods and Programs in
-  Biomedicine}, vol. 175, pp. 35--43, 2019.
-
 \bibitem{xu2025lightweight}
 Y.~Xu, S.~Wang, and S.~Hasegawa, ``Lightweight fingernail haptic device:
   Unobstructed fingerpad force and vibration feedback for enhanced virtual
   dexterous manipulation,'' \emph{IEEE Transactions on Haptics}, 2025.
+
+\bibitem{hou2019new}
+W.~Hou, P.~X. Liu, and M.~Zheng, ``A new model of soft tissue with constraints
+  for interactive surgical simulation,'' \emph{Computer Methods and Programs in
+  Biomedicine}, vol. 175, pp. 35--43, 2019.
 
 \end{thebibliography}

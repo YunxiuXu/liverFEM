@@ -23,8 +23,21 @@
               "icon": "lucide-layout-dashboard",
               "title": "all_papers"
             }
+          },
+          {
+            "id": "7d7e49a7cb2d95ae",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.12.7"
+              },
+              "icon": "lucide-book-up",
+              "title": "版本说明 1.12.7"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -186,7 +199,7 @@
       "bases:新建数据库": false
     }
   },
-  "active": "b5694c29c6c5b4c6",
+  "active": "7d7e49a7cb2d95ae",
   "lastOpenFiles": [
     "Dashboards/Group-Based_Corotational_FEM_for_Real-Time_Large_Deformation_Simulation (1).pdf",
     "Dashboards/all_papers.canvas",

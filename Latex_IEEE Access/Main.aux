@@ -9,11 +9,12 @@
 \citation{bjelland2025haptic}
 \citation{chernikova2020simulation}
 \citation{wisniewski2020power}
+\citation{wang2025group}
+\citation{xu2025lightweight}
 \citation{overtoom2019haptic,rangarajan2020systematic,escobar2016review}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{}\protected@file@percent }
 \citation{bui2019corotational}
 \citation{wang2025group}
-\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Real-Time Soft-Tissue Modeling for Surgical Simulation}{2}{}\protected@file@percent }
 \citation{bouaziz2023projective,liu2016towards}
 \citation{hou2019new}
 \citation{bender2014survey,muller2007position,macklin2016xpbd}
@@ -23,28 +24,29 @@
 \citation{agboh2016six}
 \citation{xu2025lightweight}
 \citation{bjelland2025haptic}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Real-Time Soft-Tissue Modeling for Surgical Simulation}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Liver-Related Simulation Systems and Training Tasks}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Haptic Device Degrees of Freedom and Low-Dimensional Haptic Rendering}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-D}}Position of This Work}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {III}System Design and Implementation}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Overall System Architecture}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Real-Time Simulation Core}{3}{}\protected@file@percent }
 \citation{xu2025lightweight}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Real-Time Simulation Core}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Bimanual Input and Virtual Palpation Interaction}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}1-DOF Haptic Rendering Strategy}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-E}}Liver Model and Lesion Configuration}{4}{}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Hardware setup used in the experiment. The lower-right part shows the wrist-mounted fixture and driving circuit, while the upper part shows the fingertip haptic actuator. Together with Stereo IR-170 tracking, the system provides hand tracking and normal-force cues.}}{4}{}\protected@file@percent }
 \newlabel{fig:hardware}{{1}{4}{}{figure.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Liver Model and Lesion Parameters Under the Default Physician-Experience Configuration}}{4}{}\protected@file@percent }
-\newlabel{tab:model}{{1}{4}{}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-E}}Liver Model and Lesion Configuration}{4}{}\protected@file@percent }
 \citation{wang2025group}
 \citation{wang2025group}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Liver Model and Lesion Parameters Under the Default Physician-Experience Configuration}}{5}{}\protected@file@percent }
+\newlabel{tab:model}{{1}{5}{}{table.1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {IV}Experimental Design and Evaluation Metrics}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Application-Level Technical Validation Based on a Specific Liver Model}{5}{}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Runtime screenshot of the system. The red region is the liver model, and the outer light-blue shell is the liver-shaped collision cavity used to provide spatial constraint. One side is retained as an open region to approximate the local exposure window in open surgery. The colored wireframe capsules denote fingertip proxy bodies. The left-side region corresponds to the left hand, used for pushing and retracting tissue to maintain exposure, while the right-side region corresponds to the right hand, used for lesion palpation, pressing-based comparison, and localization search.}}{5}{}\protected@file@percent }
 \newlabel{fig:system}{{2}{5}{}{figure.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Anatomical fixation regions and fixed-node distribution in the liver model. The dotted markers denote node clusters with fixed-point constraints, corresponding to the Porta Hepatis, the Groove for the Inferior Vena Cava, and the Bare Area. These constraints approximate major anatomical attachments and suppress nonphysical rigid-body drift.}}{5}{}\protected@file@percent }
 \newlabel{fig:fixed}{{3}{5}{}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Application-Level Technical Validation Based on a Specific Liver Model}{5}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Formative Expert Evaluation and Observation of Lesion-Search Behavior}{6}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Profile of the Surgical Expert Participating in the Formative Evaluation}}{6}{}\protected@file@percent }
 \newlabel{tab:expert}{{2}{6}{}{table.2}{}}
@@ -52,36 +54,34 @@
 \newlabel{fig:eval}{{4}{6}{}{figure.4}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Task Design and Recorded Contents of the Formative Expert Evaluation}}{6}{}\protected@file@percent }
 \newlabel{tab:tasks}{{3}{6}{}{table.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Metric Construction for the Formative Evaluation}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {V}Results}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Technical Validation Results}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}1}Large-Deformation Accuracy and Real-Time Performance}{6}{}\protected@file@percent }
-\citation{wang2025group}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Metric Construction for the Formative Evaluation}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {V}Results}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Technical Validation Results}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}1}Large-Deformation Accuracy and Real-Time Performance}{7}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Comparison of Large-Deformation Accuracy and Real-Time Performance}}{7}{}\protected@file@percent }
 \newlabel{tab:disp}{{4}{7}{}{table.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}2}Near-Incompressible Volume Preservation}{7}{}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Comparison of large-deformation displacement. Relative to the VegaFEM reference, the proposed method exhibits more stable displacement response than both XPBD Fast and XPBD Ref under all three loading strengths.}}{7}{}\protected@file@percent }
 \newlabel{fig:disp}{{5}{7}{}{figure.5}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}2}Near-Incompressible Volume Preservation}{7}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Volume-Deviation Comparison Under Near-Incompressible Conditions}}{7}{}\protected@file@percent }
 \newlabel{tab:volume}{{5}{7}{}{table.5}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Comparison of volume preservation under near-incompressible conditions. The proposed method maintains small volume deviation under both Poisson-ratio settings and is overall close to the VegaFEM reference.}}{7}{}\protected@file@percent }
 \newlabel{fig:volume}{{6}{7}{}{figure.6}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}3}Real-Time Performance and Scalability}{7}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Comparison of Real-Time Performance Across Mesh Scales}}{7}{}\protected@file@percent }
-\newlabel{tab:fps}{{6}{7}{}{table.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Overall performance trend across mesh scales. The proposed method maintains clearly better real-time performance than VegaFEM over a broad tetrahedral range and still retains basic interactivity on larger-scale models.}}{8}{}\protected@file@percent }
+\citation{wang2025group}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}3}Real-Time Performance and Scalability}{8}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Comparison of Real-Time Performance Across Mesh Scales}}{8}{}\protected@file@percent }
+\newlabel{tab:fps}{{6}{8}{}{table.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Overall performance trend across mesh scales. The proposed method maintains better real-time performance than VegaFEM over a broad tetrahedral range and still retains basic interactivity on larger-scale models.}}{8}{}\protected@file@percent }
 \newlabel{fig:fps}{{7}{8}{}{figure.7}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Results of the Formative Expert Evaluation and System-Usability Feedback}{8}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}1}Interaction Fidelity During Free Exploration}{8}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}2}Behavioral Observation in the Lesion-Localization Task}{8}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}3}Diagnosis of Engineering Constraints and Evaluation of Force-Rendering Quality}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}3}Diagnosis of Engineering Constraints and Evaluation of Force-Rendering Quality}{9}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Likert-Scale Ratings of System Usability and Force-Rendering Quality}}{9}{}\protected@file@percent }
 \newlabel{tab:likert}{{7}{9}{}{table.7}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {VI}Discussion}{9}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}From Algorithm Validation to System-Prototype Evaluation}{9}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Application Focus and Future Evolution of the System}{9}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Future Research Directions}{9}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{9}{}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{../Frontiers_LaTeX_Templates/bibtex/references}
 \bibcite{overtoom2019haptic}{1}
@@ -100,7 +100,9 @@
 \bibcite{bjelland2025haptic}{14}
 \bibcite{chernikova2020simulation}{15}
 \bibcite{wisniewski2020power}{16}
-\bibcite{hou2019new}{17}
-\bibcite{xu2025lightweight}{18}
+\bibcite{xu2025lightweight}{17}
+\bibcite{hou2019new}{18}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Future Research Directions}{10}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{10}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{REFERENCES}{10}{}\protected@file@percent }
 \gdef \@abspage@last{10}
