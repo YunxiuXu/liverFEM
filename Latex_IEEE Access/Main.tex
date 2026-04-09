@@ -30,7 +30,7 @@
 \title{A Real-Time Haptic Simulation Prototype for Liver Lesion Localization Training: System Design, Technical Feasibility Validation, and Formative Expert Evaluation}
 \author{\uppercase{Siyu Wang}\authorrefmark{1},
 \uppercase{Yunxiu Xu}\authorrefmark{1},
-and \uppercase{Shoichi Hasegawa}\authorrefmark{1}}
+and \uppercase{Shoichi Hasegawa}\authorrefmark{1}, \IEEEmembership{Member, IEEE}}
 \address[1]{Department of Information and Communication Engineering, Institute of Science Tokyo, Yokohama, Japan (e-mail: siw131@haselab.net, yunxiu@haselab.net, hasevr@haselab.net)}
 \corresp{Corresponding author: Siyu Wang (e-mail: siw131@haselab.net).}
 
@@ -74,7 +74,7 @@ In soft-tissue modeling for surgical simulation, continuum FEM is a standard cla
 Beyond traditional FEM, Projective Dynamics and its extensions for hyperelastic materials also provide a balance between stability and real-time performance \cite{bouaziz2023projective,liu2016towards}, while soft-tissue models based on constraint energies further improve physical consistency in tool-tissue interaction \cite{hou2019new}. By comparison, PBD and XPBD are often used as engineering baselines in real-time systems because of their implementation simplicity and numerical robustness \cite{bender2014survey,muller2007position,macklin2016xpbd}. However, when anisotropy, near-incompressible volume preservation, and organ-level physical interpretability are required, FEM generally remains the more appropriate primary model.
 
 \subsection{Liver-Related Simulation Systems and Training Tasks}
-In interactive simulation for the liver and other abdominal organs, previous studies span both organ deformation and cutting workflows and palpation-based lesion exploration and training. Prior work has reported a liver-parenchymal transection system with haptic feedback \cite{hongyu2021interactive}, while another study presented a haptic simulation system for liver diagnosis through palpation \cite{westwood2012haptic}. These studies indicate that liver-related training is not limited to cutting. Palpation, localization, and stiffness comparison also have independent training value. Accordingly, the present work does not attempt to reproduce a full hepatectomy workflow, but instead focuses on the more clearly defined and more readily evaluable subtask of hidden-lesion palpation and localization.
+In interactive simulation for the liver and other abdominal organs, previous studies span organ deformation and cutting workflows, as well as palpation-based lesion exploration and training. Prior work has reported a liver-parenchymal transection system with haptic feedback \cite{hongyu2021interactive}, while another study presented a haptic simulation system for liver diagnosis through palpation \cite{westwood2012haptic}. These studies indicate that liver-related training is not limited to cutting. Palpation, localization, and stiffness comparison also have independent training value. Accordingly, the present work does not attempt to reproduce a full hepatectomy workflow, but instead focuses on the more clearly defined and more readily evaluable subtask of hidden-lesion palpation and localization.
 
 \subsection{Haptic Device Degrees of Freedom and Low-Dimensional Haptic Rendering}
 In medical haptic rendering, device degrees of freedom, force-mapping strategy, and system complexity are tightly coupled. Existing reviews describe both multi-DOF force-feedback interfaces and lightweight low-cost solutions \cite{overtoom2019haptic,rangarajan2020systematic,escobar2016review}. For example, Agboh \emph{et al.} proposed a six-DOF laparoscopic training interface, demonstrating the feasibility of high-DOF haptic reconstruction \cite{agboh2016six}. At the same time, growing evidence suggests that perceptual cues should be selected according to the task goal rather than assuming that full-dimensional, high-fidelity reconstruction is always necessary. Beyond traditional desktop devices, recent work has also proposed a lightweight fingernail-worn haptic device that provides force and vibration cues while minimizing obstruction of the natural fingerpad contact area, offering a new hardware path for low-burden bare-hand interaction \cite{xu2025lightweight}.
@@ -95,7 +95,7 @@ GB-cFEM is adopted as the real-time simulation core. The liver tetrahedral mesh 
 The system uses the Stereo IR-170 for bimanual tracking. Fingertips are mapped to capsule-shaped proxy bodies used for local pressing, lesion localization, and surgical-field exposure. The right hand is primarily responsible for palpation and comparison, while the left hand is used mainly to push and retract tissue so as to create a local exposure window for the right hand to enter. To reduce tracking noise and the numerical shock caused by instantaneous penetration, the proxy bodies are not set equal to the raw sensor positions. Instead, they are connected to the device-side positions through damped virtual couplings.
 
 \subsection{1-DOF Haptic Rendering Strategy}
-The contact-normal reaction force is used as the main input to the 1-DOF device. The fingertip-worn haptic device used here follows the lightweight fingernail haptic design proposed by the authors previously. In this design, a motor drives a fine wire to apply normal force on the fingerpad side, while the lightweight actuation mechanism is integrated on the fingernail side to minimize occlusion of the fingerpad and reduce interference with natural touching behavior \cite{xu2025lightweight}. Because optical hand tracking has difficulty accurately distinguishing little-finger motion and can generate erroneous feedback, the experimental haptic device was implemented on the four fingers of the right hand except the little finger. On this basis, the device is further integrated into the real-time GB-cFEM simulation loop to convey differences in stiffness during the lesion-search task. The system extracts the contact-force vector $\mathbf{F}_{contact}$ and the surface normal $\mathbf{n}$ from the simulation core and computes the normal reaction-force magnitude delivered to the haptic hardware as
+The contact-normal reaction force is used as the main input to the 1-DOF device. The fingertip-worn haptic device used here follows the lightweight fingernail haptic design proposed by the authors previously. In this design, a motor drives a fine wire to apply normal force on the fingerpad side, while the lightweight actuation mechanism is integrated on the fingernail side to minimize occlusion of the fingerpad and reduce interference with natural touching behavior \cite{xu2025lightweight}. Because optical hand tracking has difficulty accurately distinguishing little-finger motion and can generate erroneous feedback, the experimental haptic device was implemented on the four fingers of the right hand, excluding the little finger. On this basis, the device is further integrated into the real-time GB-cFEM simulation loop to convey differences in stiffness during the lesion-search task. The system extracts the contact-force vector $\mathbf{F}_{contact}$ and the surface normal $\mathbf{n}$ from the simulation core and computes the normal reaction-force magnitude delivered to the haptic hardware as
 \begin{equation}
 F_n = \left| \mathbf{F}_{contact} \cdot \mathbf{n} \right|.
 \end{equation}
@@ -230,7 +230,7 @@ Task C: System usability feedback & Evaluate engineering boundaries and physical
 \end{table}
 
 \subsection{Metric Construction for the Formative Evaluation}
-The formative evaluation in this paper records three kinds of indicators: behavioral indicators , subjective evaluation , and rating-scale scores . The assessment emphasizes qualitative observation and system-mechanism analysis in order to provide diagnostic and design guidance for the next generation of the system.
+The formative evaluation in this paper records three kinds of indicators: behavioral indicators, subjective evaluation, and rating-scale scores. The assessment emphasizes qualitative observation and system-mechanism analysis in order to provide diagnostic and design guidance for the next generation of the system.
 
 \section{Results}
 \subsection{Technical Validation Results}
@@ -401,6 +401,22 @@ ChatGPT (OpenAI) and Gemini (Google) were used for editorial support.
 
 \bibliographystyle{IEEEtran}
 \bibliography{../Frontiers_LaTeX_Templates/bibtex/references}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{img/Wang.pdf}}]{Siyu Wang}
+received the M.S. degree in Mechanical Engineering from the University of California, San Diego, in 2018. She is currently pursuing the Ph.D. degree with the Department of Information and Communication Engineering, Institute of Science Tokyo, Yokohama, Japan. Her research focuses on soft body simulations using finite element methods and virtual reality.
+\end{IEEEbiography}
+
+\vspace{-32pt} 
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{img/xu.pdf}}]{Yunxiu Xu} received the B.S. degree from Beijing Information Science and Technology University, Beijing, China, and the M.S. and Ph.D. degrees from the Department of Information and Communications Engineering, Institute of Science Tokyo, Yokohama, Japan, in 2022 and 2025, respectively. He is currently a JSPS Postdoctoral Fellow at The University of Tokyo, Tokyo, Japan, and a Researcher at Institute of Science Tokyo. His research focuses on haptics and interaction in virtual reality.
+\end{IEEEbiography}
+
+\vspace{-32pt} 
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{img/hase.pdf}}]{Shoichi Hasegawa}
+(Member, IEEE) received the D.Eng. degree in computational intelligence and systems from the Tokyo Institute of Technology, Japan. Since 2010, he has been an associate professor with the Institute of Science Tokyo. He was an Associate Professor with the University of Electro Communications, Tokyo.
+His research interests include haptics, realtime simulations, interactive characters, metaverse, and virtual reality.
+\end{IEEEbiography}
 
 \EOD
 
