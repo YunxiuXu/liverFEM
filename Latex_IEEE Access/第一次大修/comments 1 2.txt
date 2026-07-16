@@ -1,0 +1,126 @@
+18-Jun-2026
+
+Dear Ms. WANG:
+
+I am writing to you regarding manuscript # Access-2026-15540 entitled "A Real-Time Haptic Simulation Prototype for Liver Lesion Localization Training: System Design, Technical Feasibility Validation, and Formative Expert Evaluation" which you submitted to IEEE Access.
+
+Your article was peer reviewed with interest but has not been recommended for publication in its current form.  We strongly encourage you to address the reviewers’ concerns, which can be found at the bottom of this letter, and resubmit your article to IEEE Access once you have updated it accordingly.
+ 
+Please note that IEEE Access has a binary peer review process. Therefore, to uphold quality to IEEE standards, an article is rejected even if it requires minor edits.
+ 
+When updating your manuscript, you should elaborate on your points and clarify with references, examples, data, etc. If you disagree with any technical points the reviewers have made, please include your counterarguments in your response to the reviewers (more information detailed below) and work this into the updated manuscript. 
+
+Also, note that if a reviewer suggested references, you should only add those that are relevant to your work if you feel they strengthen your article. Recommending references to specific publications is not appropriate for reviewers and you should report excessive cases to ieeeaccessEIC@ieee.org.  Authors are not obligated to cite articles that are recommended by the reviewers, and the final decision on the article will not be influenced by whether or not authors cite these suggested references.
+ 
+IEEE Access allows one opportunity to resubmit. If the updated manuscript is determined not to have addressed all of the previous reviewers’ concerns, or if the Associate Editor still has substantial technical concerns, the article will be rejected and no further resubmissions will be allowed.
+ 
+When you are ready to resubmit your updated article, you can do so in the IEEE Author Portal.  When you log into the IEEE Author Portal you will see the title of the rejected article and the option to “Start Resubmission”.
+
+https://ieee.atyponrex.com/submission/submissionBoard/REX-PROD-2-1F00F44C-BD8A-45D7-9A6A-F3FA851A5356-38A442E1-FB86-4D1E-A724-C01E45CB00AC-50851/current?idtype=external
+ 
+Upon resubmission you will be asked to upload the following 3 files:
+
+1) A document containing your response to reviewers from the previous peer review.  The “response to reviewers” document (template attached) should have the following regarding each comment: a) Reviewer’s concern, b) your response to the concern, c) your action to remedy the concern. The document should be uploaded with your manuscript files under "Author's Response Files.”
+
+2) Your updated manuscript with all your individual changes highlighted, including grammatical changes (e.g. preferably with the yellow highlight tool within the pdf file). This file should be uploaded with your manuscript files as “Highlighted PDF.”
+
+3) A clean copy of the final manuscript (without highlighted changes) submitted as a Word or LaTeX file, and as a PDF, both submitted as the “Main Manuscript.”
+
+**IMPORTANT: Please see the attached Resubmission Checklist that details all the items listed above.  Please utilize this checklist to ensure you have made the necessary edits to your manuscript, and to ensure you have all the necessary files prepared prior to resubmission.
+
+*** AUTHOR LIST CHANGES: If your revised manuscript has an updated author list, you will need to submit a formal request to the Editor by completing the attachment labelled ‘Request for Byline Change,’ and uploading it as 'Request for byline change form.' This should include a DETAILED justification explaining each author’s contribution(s) to the work. You will also need to provide the justification for the author change during the submission process.  Change in the author list is considered rare and exceptional, and the decision to allow such changes rests with the Editor. Once the list and order of authors has been established, the list and order of authors should not be altered without permission of all living authors of that article.
+
+We sincerely hope you will update your manuscript and resubmit soon. Please contact me if you have any questions.
+
+Thank you for your interest in IEEE Access.
+
+Sincerely,
+
+Prof. Su Yan
+Associate Editor, IEEE Access
+su.yan@howard.edu, suyan@ieee.org
+
+Reviewers' Comments to Author:
+
+Reviewer: 1
+
+Comments:
+The paper presents an interesting real-time haptic simulation prototype for liver lesion localization. The integration of GB-cFEM, hand tracking, a fingertip haptic device, and a lesion-search task is potentially useful, and the technical validation provides encouraging evidence that the system can operate on consumer-grade hardware. The manuscript is also relatively transparent about several limitations, including simplified anatomy, lack of nonlinear tissue behavior, and the limited dimensionality of the haptic feedback. However, the current version should be revised before publication.
+
+(1) The contribution should be framed more clearly as a system-integration and technical-feasibility study, rather than as evidence of training effectiveness. The formative evaluation with one surgical expert is useful for identifying engineering limitations, but it cannot support strong claims about clinical-grade training, educational impact, or learning efficiency. Please revise the abstract, discussion, and conclusion to avoid overstatement.
+
+(2) The haptic rendering pipeline needs more technical detail. Please report the force range of the device, force calibration procedure, possible saturation, end-to-end latency, filtering or smoothing, and the way force commands are synchronized between the physics update rate and the 1000 Hz haptic loop. If possible, include measured force-output data rather than only the computed normal-force mapping.
+
+(3) The formative evaluation design also requires clarification. The haptics-off and haptics-on trials used different lesion positions, and the order appears fixed. This introduces possible differences in lesion difficulty and learning/familiarization effects. Please explain how lesion positions were selected and whether they were comparable in size, depth, and difficulty. The paper would be stronger if it included quantitative task metrics such as localization accuracy, time to localization, number of exploratory presses, trajectory, confidence, or error distance.
+
+(4) The comparison with XPBD and VegaFEM is useful, but more implementation details are needed to support reproducibility and fairness. Please specify substeps, iterations, timestep, material parameters, loading conditions, mesh properties, and stopping criteria. Since the mesh scales are not always matched, the conclusions should be phrased cautiously.
+
+(5) Finally, please perform a careful formatting and proofreading pass. Some spacing and typesetting artifacts appear in the manuscript, such as “ABSTRACTHaptic”, “INDEX TERMSLiver”, “V egaFEM”, “Y oung’s”, “RESUL TS”, “Chernikovaet al.”, and “Agbohet al.” These may be conversion artifacts in my version, but they should be corrected in the final submission.
+
+
+Additional Questions:
+Please confirm that you have reviewed all relevant files, including supplementary files and any author response files, which can be found in the "View Author's Response" link above (author responses will only appear for resubmissions): Yes, all files have been reviewed
+
+1) Does the paper contribute to the body of knowledge?: The paper makes a useful contribution if it is framed as a system-integration and technical-feasibility study. Its main value is not the proposal of a new FEM algorithm or a new haptic device, since both components are largely based on prior work by the authors, but the integration of a GB-cFEM soft-tissue simulation core, hand tracking, 1-DOF fingertip haptic feedback, and a liver lesion localization task into a working real-time prototype. This can contribute to the body of knowledge in medical haptic simulation by documenting practical engineering constraints and by identifying limitations through formative expert feedback. However, the contribution should be stated more cautiously, since the current evidence does not demonstrate training effectiveness or clinical validity.
+
+2) Is the paper technically sound?: The paper is technically plausible and the system architecture is generally well motivated. The comparison with XPBD and VegaFEM, the volume-preservation analysis, and the runtime measurements provide useful supporting evidence. However, several technical aspects require clarification before the paper can be considered fully sound. The haptic channel is insufficiently characterized: the authors report a 1000 Hz haptic loop and serial communication, but they do not report end-to-end latency, force range, force calibration, saturation, filtering, interpolation between physics and haptic updates, or measured output force. The formative evaluation is also very limited, involving only one surgical expert, and the haptics-off/haptics-on comparison is confounded by different lesion positions and fixed task order. Therefore, the study supports feasibility, but not efficacy.
+
+3) Is the subject matter presented in a comprehensive manner?: The paper is generally clear and covers the system architecture, physical simulation, interaction design, technical validation, and formative evaluation. The limitations are also discussed more openly than in many prototype papers. Nevertheless, some important details are missing. The lesion geometry, depth, size, and placement strategy should be described more precisely. The authors should explain how comparable the haptics-off and haptics-on conditions were, and whether lesion difficulty was controlled. More information is also needed about the haptic device specifications, the force mapping, and synchronization between the simulation frame rate and the haptic loop. The educational claims should be moderated unless supported by a structured user study with novices and experts, quantitative localization metrics, and learning outcomes.
+
+4) Are the references provided applicable and sufficient?: The references are broadly applicable. They cover haptic feedback in medical simulation, soft-tissue simulation, FEM, XPBD/PBD, liver palpation, and the authors’ previous work. However, the bibliography is relatively short for an IEEE Access article and could be strengthened with additional references on validation methodology for medical simulators, palpation training systems, haptic-rendering evaluation, and user-study design in surgical simulation. The paper would also benefit from a clearer comparison with recent liver or abdominal palpation simulators, not only with general haptic or FEM methods.
+
+5) Are there references that are not appropriate for the topic being discussed?: No
+
+5a) If yes, then please indicate which references should be removed.: I did not identify references that should clearly be removed. The cited educational feedback and simulation-based learning papers are somewhat general, but they are relevant if the authors use them only to motivate the educational context. They should not be used to imply that this prototype has demonstrated educational effectiveness. But no specific reference needs to be removed.
+
+
+Reviewer: 2
+
+Comments:
+The paper presents an interesting and well-implemented haptic simulation framework for liver lesion localization training. The integration of real-time GB-cFEM simulation with haptic feedback is technically valuable and clearly documented. However, the evaluation is limited to a single expert participant and does not provide evidence of educational effectiveness. The manuscript would be strengthened by expanding the discussion of clinical relevance, providing a deeper comparison with related systems, and further clarifying the limitations of the current haptic and anatomical models.
+
+Required Changes Before Acceptance
+Expand the discussion on clinical relevance and potential educational impact.
+Better justify the use of a single-expert formative evaluation.
+Clarify limitations regarding haptic realism and anatomical fidelity.
+Include a more detailed comparison with existing liver palpation simulators and training systems.
+
+
+
+Additional Questions:
+Please confirm that you have reviewed all relevant files, including supplementary files and any author response files, which can be found in the "View Author's Response" link above (author responses will only appear for resubmissions): Yes, all files have been reviewed
+
+1) Does the paper contribute to the body of knowledge?: Yes. The paper presents an integrated real-time haptic training prototype combining GB-cFEM simulation and haptic feedback for liver lesion localization, providing useful engineering insights for medical simulation systems.
+
+2) Is the paper technically sound?: Generally yes. The methodology is well described, technical validation is provided, and the system implementation appears consistent with the stated objectives.
+
+3) Is the subject matter presented in a comprehensive manner?: Mostly yes. The paper covers system architecture, implementation, validation, and expert evaluation. However, the evaluation remains limited in scale.
+
+4) Are the references provided applicable and sufficient?: Yes. The cited literature is relevant and covers haptics, FEM simulation, medical training, and soft-tissue modeling.
+
+5) Are there references that are not appropriate for the topic being discussed?: No
+
+5a) If yes, then please indicate which references should be removed.:
+
+
+Reviewer: 3
+
+Comments:
+Please find the "Comments1.docx"
+
+Additional Questions:
+Please confirm that you have reviewed all relevant files, including supplementary files and any author response files, which can be found in the "View Author's Response" link above (author responses will only appear for resubmissions): Yes, all files have been reviewed
+
+1) Does the paper contribute to the body of knowledge?: Yes, but the contribution is moderate.
+
+2) Is the paper technically sound?: Partially
+
+3) Is the subject matter presented in a comprehensive manner?: Partially
+
+4) Are the references provided applicable and sufficient?: Mostly yes.
+
+5) Are there references that are not appropriate for the topic being discussed?: No
+
+5a) If yes, then please indicate which references should be removed.:
+
+If you have any questions, please contact article administrator: Miss Aarthi Parthasarathy a.parthasarathy@ieee.org

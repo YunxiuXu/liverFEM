@@ -1,14 +1,6 @@
 {
-	"nodes": [
-		{
-			"id": "paper-Hou2019A",
-			"type": "file",
-			"file": "PapersMd/Hou2019A.md",
-			"x": 0,
-			"y": 0,
-			"width": 400,
-			"height": 400
-		}
+	"nodes":[
+		{"id":"paper-Hou2019A","type":"file","file":"PapersMd/Hou2019A.md","x":0,"y":0,"width":400,"height":400}
 	],
-	"edges": []
+	"edges":[]
 }

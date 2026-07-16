@@ -4,40 +4,20 @@
     "type": "split",
     "children": [
       {
-        "id": "3b901180df6a22ad",
+        "id": "c15c0b00edf7464b",
         "type": "tabs",
         "children": [
           {
-            "id": "b5694c29c6c5b4c6",
+            "id": "5cc204e53fbd6a74",
             "type": "leaf",
             "state": {
-              "type": "canvas",
-              "state": {
-                "file": "Dashboards/all_papers.canvas",
-                "viewState": {
-                  "x": 700,
-                  "y": 1315.9321241409177,
-                  "zoom": 0.35651431823493906
-                }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "all_papers"
-            }
-          },
-          {
-            "id": "7d7e49a7cb2d95ae",
-            "type": "leaf",
-            "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.12.7"
-              },
-              "icon": "lucide-book-up",
-              "title": "版本说明 1.12.7"
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -50,19 +30,6 @@
         "id": "7fc88f9eea9c96f0",
         "type": "tabs",
         "children": [
-          {
-            "id": "4d912e1bf78cf43d",
-            "type": "leaf",
-            "state": {
-              "type": "file-explorer",
-              "state": {
-                "sortOrder": "alphabetical",
-                "autoReveal": false
-              },
-              "icon": "lucide-folder-closed",
-              "title": "文件列表"
-            }
-          },
           {
             "id": "09bf3ac94f2b31ca",
             "type": "leaf",
@@ -199,10 +166,19 @@
       "bases:新建数据库": false
     }
   },
-  "active": "7d7e49a7cb2d95ae",
+  "active": "5cc204e53fbd6a74",
   "lastOpenFiles": [
-    "Dashboards/Group-Based_Corotational_FEM_for_Real-Time_Large_Deformation_Simulation (1).pdf",
+    "Dashboards/tactile_neuroanatomy.canvas",
     "Dashboards/all_papers.canvas",
-    "Dashboards/1-s2.0-S0045782518305267-main.pdf"
+    "Dashboards/1-s2.0-S1931720418300394-main.pdf",
+    "importQueue/1-s2.0-S0011384024001862-main.pdf",
+    "importQueue/1-s2.0-S0045782518305267-main.pdf",
+    "importQueue/1-s2.0-S0169260719302846-main.pdf",
+    "importQueue/1-s2.0-S209657962100070X-main.pdf",
+    "importQueue/1-s2.0-S1931720418300394-main.pdf",
+    "importQueue/1-s2.0-S1931720419306609-main.pdf",
+    "importQueue/1604.07378v1.pdf",
+    "importQueue/1903.03268v1.pdf",
+    "importQueue/2994258.2994272 (1).pdf"
   ]
 }
