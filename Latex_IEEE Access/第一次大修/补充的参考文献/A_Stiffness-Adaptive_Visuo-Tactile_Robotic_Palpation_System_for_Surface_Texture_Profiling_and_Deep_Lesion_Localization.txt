@@ -1,0 +1,623 @@
+SOURCE_FILE: A_Stiffness-Adaptive_Visuo-Tactile_Robotic_Palpation_System_for_Surface_Texture_Profiling_and_Deep_Lesion_Localization.pdf
+SOURCE_TYPE: pdf
+-----
+                     This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+                                        IEEE/ASME TRANSACTIONS ON MECHATRONICS                                                                                          1
+
+
+
+
+          A Stiffness-Adaptive Visuo-Tactile Robotic
+            Palpation System for Surface Texture
+           Profiling and Deep Lesion Localization
+ Dongliang Fan , Chunyu Liu, Yiding Nie, Canrui Yang, Kai Qiao, Li Shao, Guanhua Liu, Xianming Feng,
+                 Hanyu Yao, Weimin Zhu, Xin Ma , and Jian S. Dai , Fellow, IEEE
+
+
+   Abstract—Accurate intraoperative tissue characteriza-                              dynamic disturbances. These results confirm the system’s
+tion relies on the ability to resolve both surface micro-                             potential as a precise, quantitative platform for robotic sur-
+textures and deep-seated structures for comprehensive                                 gical palpation in complex pathological scenarios.
+diagnosis. However, achieving surface profiling and deep-
+tissue inspection remains a critical challenge due to the                               Index Terms—Medical robots, robotic palpation, tactile
+difficulty of combining variable stiffness and high-fidelity                          sensing, variable stiffness, visuo-tactile sensors.
+perception within a compact device. Here, we propose a
+robotic palpation system consisting of a novel visuo-tactile
+sensing probe (diameter: 10 mm) integrated into a robotic
+platform for accurate tissue characterization. This probe                                                           I. INTRODUCTION
+exhibits adaptive strain-stiffening behavior (achieving a
+                                                                                               ANUAL palpation is widely used as the primary exam-
+470-fold stiffness variation), applicable for various surgi-
+cal conditions. With our 3-D reconstruction and scanning
+framework, the palpation system achieves high-precision
+                                                                                      M        ination method for tissue characterization in traditional
+                                                                                      clinical practice. Surgeons typically perform a continuous pal-
+3-D reconstruction (MAE: 28 µm in the z-axis, 3.1 µm in the                           pation process: global surface sweeping to locate suspicious
+xy-plane), profiling surface textures (feature size: 150 µm),                         anomalies, followed by localized depth indentations using their
+and delineating the boundaries of complex deep-seated in-
+clusions (sensitivity > 0.92). Finally, an ex vivo porcine liver                      fingers to characterize the stiffness and boundaries of underlying
+model was prepared to demonstrate our system’s capability                             lesions. Over the past two decades, robot-assisted interventions
+to analyze and decouple microscale superficial irregulari-                            have been deployed in various clinical procedures in general
+ties from macroscale lobulated deep-seated lesions under                              surgery [1], [2], [3], [4]. Despite the rapid development of
+                                                                                      minimally invasive surgery (MIS), most robotic platforms rely
+                                                                                      on noncontact visual endoscopes [5]. Without quantitative haptic
+   Received 12 January 2026; revised 30 March 2026; accepted 27
+April 2026. Recommended by Technical Editor W. Li and Senior Editor                   feedback, these systems are not only susceptible to interferences
+Z. Sun. This work was supported in part by the Key Program of the                     such as blood and dynamic occlusion but also fail to perceive
+National Natural Science Foundation of China under Grant 52335003,                    subsurface mechanical properties, such as tumor stiffness and
+in part by Guangdong S&T Program under Grant 2023ZT10Z002, in
+part by the Science, Technology and Innovation Commission of Shen-                    3-D boundaries. From an engineering perspective, a robotic
+zhen Municipality under Grant KQTD20240729102052065 and Grant                         palpation system must provide an objective, quantitative mecha-
+ZDCY20250901101959006, and in part by the High Level of Special                       tronic measurement process to resolve mechanically coupled,
+Funds under Grant G03034K003. (Dongliang Fan and Chunyu Liu
+contributed equally to this work.) (Corresponding author: Jian S. Dai.)               multiscale pathological challenges. The palpation system should
+   Dongliang Fan, Chunyu Liu, Yiding Nie, Canrui Yang, Kai                            be able to resolve superficial irregularities, such as the fibrotic
+Qiao, Li Shao, Guanhua Liu, Xianming Feng, and Xin Ma                                 micronodules in early-stage cirrhosis [6] and the miliary peri-
+are with the Department of Mechanical and Energy Engineer-
+ing, Institute for Robotics Research, Southern University of                          toneal implants with ovarian metastasis [7]. It also requires
+Science and Technology, Shenzhen 518055, China (e-mail:                               penetration of tissues to localize deep-seated tumors, e.g., en-
+fandl@sustech.edu.cn; 12532332@mail.sustech.edu.cn; nieyd@mail.                       dophytic tumors that are embedded within tissues [8]. Hence,
+sustech.edu.cn; 12412837@mail.sustech.edu.cn; qiaok2022@mail.
+sustech.edu.cn;       shaol@sustech.edu.cn;       ghliu358@gmail.com;                 advancing MIS requires a high-precision quantitative robotic
+fengxm3@mail.sustech.edu.cn; max6@sustech.edu.cn).                                    platform capable of decoupling superficial irregularities from
+   Hanyu Yao and Weimin Zhu are with Shenzhen Second                                  deep subsurface features for precise surgical navigation.
+People’s Hospital (Shenzhen University First Affiliated Hospital),
+Shenzhen 518025, China (e-mail: hanyuyao@link.cuhk.edu.hk;                               Integrating tactile sensing into surgical end-effectors is the
+szhzwm@email.szu.edu.cn).                                                             primary strategy to endow the haptic feedback during surgi-
+   Jian S. Dai is with the Department of Mechanical and Energy En-                    cal operations. Commercial force/torque sensors are the most
+gineering, Southern University of Science and Technology, Shenzhen
+518055, China, and also with Department of Engineering, King’s College                prevalent solution for robotic palpation [9], [10]. These strain-
+London, WC2R 2LS London, U.K. (e-mail: jian.dai@kcl.ac.uk).                           gauge-based sensors are widely employed to measure local
+   This article has supplementary material provided by the au-                        tissue stiffness via contact force and indentation depth analy-
+thors and color versions of one or more figures available at
+https://doi.org/10.1109/TMECH.2026.3691370.                                           sis. Although these sensors facilitate the generation of global
+   Digital Object Identifier 10.1109/TMECH.2026.3691370                               stiffness maps through continuous robotic scanning [9], [11],
+1083-4435 © 2026 IEEE. All rights reserved, including rights for text and data mining, and training of artificial intelligence and similar technologies.
+   Personal use is permitted, but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html
+                                                                 for more information.
+
+         Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+                   This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+2                                                                                                                  IEEE/ASME TRANSACTIONS ON MECHATRONICS
+
+
+
+their rigid and bulky structures are incompatible for operation in
+confined surgical spaces. To overcome dimensional constraints
+and enhance sensory feedback, researchers have employed fiber
+Bragg grating sensors [12], [13], planar capacitive sensor pat-
+terns [14], [15], and vision-based tactile sensors [16] to achieve
+compact integration and multimodal perception. These sensors
+have demonstrated modulus estimation and localization during
+robotic palpation; however, they are limited to discrete single-
+point sensing feedback, suffering from low scanning accuracy.
+   To address the limitations of rigid probes restricted to single-
+point contact, efforts have been devoted to flexible sensing
+arrays. Recent advances in tactile sensing have focused on
+developing flexible electronic and magnetic skins, which lever-
+age high-density and force-decoupled sensing, enabling com-
+prehensive tactile perception [17], [18]. Electric-based sensing
+principles have been employed for various medical applications,
+ranging from smart surgical grippers [19] and robotic guidewires
+[20]. Moreover, biomimetic capacitive arrays utilize pyramid
+microstructures, which are designed to enhance sensitivity and                        Fig. 1. Overview of the robotic palpation system. (a) Composition of
+                                                                                      the robotic platform, sensing probe, and scanning process. (b) Two
+mechanical stability [21]. Distributed sensing networks with                          palpation modes of surface profiling and subsurface tracking.
+resistive microchannels, resembling 3-D innervation structures,
+were developed to decouple complex external stimuli [22].
+However, the current sensing array relies on complex wiring,                          [28], layer jamming [29], and fluidic modulation techniques
+which imposes constraints within the limited space of surgical                        [30], have been explored in flexible devices. However, imple-
+instruments.                                                                          menting these mechanisms requires bulky actuation systems or
+   Vision-based tactile sensors offer a viable approach to sur-                       complex active material structures, making them incompatible
+face analysis with a microscale spatial resolution [23], [24].                        within miniature end-effectors. To circumvent these limits, pas-
+The integration of the imaging unit eliminates the complex                            sive variable-stiffness approaches, such as shear stiffening gels
+wiring of a discrete sensing strategy, presenting great poten-                        [31] and adaptive structures [32], eliminate external tethers, yet
+tial for robotic palpation. Conventional visuo-tactile sensors                        they still require specific triggering conditions or specialized
+rely on photometric stereo to reconstruct 3-D topography via                          structural designs for stiffness tuning. Therefore, an urgent
+multidirectional illumination. These systems generally utilize                        demand for a tactile sensing system with tunable stiffness capa-
+a solid elastomer suspended over an air cavity as the contact                         ble of characterizing superficial microtextures and identifying
+interface. To minimize sensor dimensions, optical fiber bundles                       deep-seated tumors to advance robotic palpation in MIS.
+were employed for transmitting illumination and imaging with                             To achieve variable stiffness and high-fidelity perception dur-
+a diameter of 15 mm, separating the sensing interface from the                        ing tissue inspection, we propose a novel visuo-tactile robotic
+supporting circuitry [25]. However, optical fiber bundles limit                       palpation system, comprising a stiffness-adaptive sensing probe
+the spatial resolution of the system. In addition, an ultracompact                    and a robotic platform for surface texture profiling and deep
+vision-based sensor with a diameter of 8 mm was realized by                           lesion localization (see Fig. 1). The main contributions of this
+employing a mechanoresponsive elastomer for depth analysis                            work are as follows.
+[26]. Still, the sensor presents insufficient spatial resolution                          1) A compact, integrated high-precision sensing unit: We
+due to the nonlinear color variation of the stimulated material                              developed a miniature visuo-tactile unit with a diameter
+response.                                                                                    of 10 mm and a length of 25 mm. By employing a
+   In clinical scenarios, existing tactile sensors in robotic pal-                           spectral filtering model for 3-D reconstruction, this design
+pation focus on the localization of deep-seated tumors via bulk                              integrates an endoscope for imaging and illumination.
+stiffness estimation, suffering from coarse spatial resolution and                           The integrated system achieves high-precision 3-D re-
+poor conformability for surface tissue inspection. Conventional                              construction with an MAE of 28 μm in the z-axis and
+vision often fails to resolve textural pathologies due to poor                               3.1 μm in the xy-plane.
+contrast and specular reflections. To overcome this challenge, the                        2) A passive stiffness-adaptive mechanism via fluid-
+robotic palpation system should allow for characterizing rigid                               structure interaction: We proposed a compact sensing
+micronodules on the soft tissue surface and rigid tumors embed-                              structure, composed of a stretchable membrane enclosing
+ded in tissue simultaneously. However, realizing this capability                             a fluidic medium. Through fluid-structure coupling, the
+presents an inherent conflict: the sensor interface must be highly                           sensing probe achieves a 470-fold passive stiffness vari-
+compliant for texture profiling, yet sufficiently rigid to deform                            ation under external loading, enabling texture profiling
+and analyze deep tissues.                                                                    and deep tumor analysis by two interaction modes.
+   In response to these conflicting stiffness requirements, various                       3) High-fidelity robotic palpation of various pathologies:
+variable-stiffness mechanisms [27], such as granular jamming                                 We integrated the sensing probe into a robotic platform
+
+       Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+                    This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+FAN et al.: STIFFNESS-ADAPTIVE VISUO-TACTILE ROBOTIC PALPATION SYSTEM FOR SURFACE TEXTURE PROFILING                                                                    3
+
+
+
+       to establish a palpation scanning framework for accurate                      spatial resolution along the z-axis is determined by the dye
+       inspection. This system enables high-fidelity character-                      concentration. The hyperelasticity of the membrane induces a
+       ization of fine surface textures and boundaries of deep-                      strain-stiffening effect, which serves for the system’s stiffness-
+       seated inclusions and presents the capacity to decouple                       tuning capability. The dyed liquid was prepared by mixing the
+       surface and subsurface anomalies, validating its potential                    deionized water with the aqueous dye at volume ratios from
+       for versatile pathological assessments.                                       1600:1 to 800:1 to generate a stable solution.
+                                                                                        3) Illumination and Imaging: Unlike conventional visuo-
+ II. MIS-COMPATIBLE ROBOTIC PALPATION SYSTEM DESIGN                                  tactile sensors that require a complex array of RGB LEDs,
+                                                                                     our system utilized a standard commercial endoscope for in-
+   This section presents the comprehensive design of the robotic
+                                                                                     tegrated illumination and imaging. In the illustration system,
+palpation system to address the dimensional and functional con-
+                                                                                     the white LED provides a continuous emission spectrum. Given
+straints of MIS. First, the structural design, fabrication process,
+                                                                                     the negligible LED-camera baseline in the compact endoscope,
+and functions of the sensing probe are described. Then the sys-
+                                                                                     we simplify the optical model using a coaxial approximation.
+tem integration is presented, combining the probe with a robotic
+                                                                                     The illumination and detection paths are treated as collinear.
+platform to perform various palpation tasks [see Fig. 1(a)].
+                                                                                     Furthermore, assuming the sensing membrane exhibits ideal
+                                                                                     diffuse reflection, a robust one-to-one spatial correspondence is
+A. Fluid-Structure-Coupled Visuo-Tactile Probe                                       established between the CMOS of the camera and the membrane
+   To meet the requirements of modern MIS, the design of tactile                     surface. The endoscope features a 3.9 mm outer diameter with
+sensors should consider the challenges in miniature dimen-                           a resolution of 1280 × 720. The field of view of the camera
+sions, stiffness tunability, and high-density sensing capacity. As                   module is 88°, and the depth of field ranges from 5 to 30 mm,
+compared in Table S1 of the Supplementary Material, existing                         ensuring that the entire surface is in focus.
+miniature visuo-tactile sensors generally suffer from tradeoffs
+among these critical requirements. To overcome this limitation,                      B. Robotic Platform Assembly
+our probe features an integrated optomechanical structure with-
+out external functional devices. We analyzed the design details                         The robotic palpation system utilizes a high-precision motion
+for the liquid-structure coupling interface, the compact optical                     platform for precise manipulation tasks. This platform can elim-
+system, and the robotic scanning platform.                                           inate mechanical vibrations during surface contact, providing
+    1) Stretchable Bilayer Membrane: A stretchable membrane                          a stable kinematic structure for data acquisition. The tactile
+serves as the primary sensing interface at the distal tip of the sens-               sensing probe is attached to the system via a customized 3D-
+ing probe. The membrane is fabricated with a silicone bilayer                        printed mount. To complement the local tactile sensing with
+structure. The proximal surface is designed with a microscale                        global visual feedback, a monocular camera is integrated onto
+roughness to induce a Lambertian diffusive effect, and the                           the side of the sensing probe to facilitate autonomous navigation
+distal interface possesses a smooth surface to optimize optical                      toward the region of interest (ROI). This setup establishes an
+reflection and enhance the reflected light intensity. This outer                     integrated visuo-tactile perception system, in which the camera
+layer also functions as a protective barrier, shielding against                      guides the probe to the target region, enabling the subsequent
+ambient light interference and enhancing the durability during                       high-resolution tactile exploration.
+contact with biological tissues. Furthermore, the membrane
+thickness should be thin enough to resolve surface textures and                         III. CONTACT MECHANICS AND STIFFNESS MODELING OF
+possess robustness to support the high contact forces for tumor                                        THE SENSING PROBE
+localization.                                                                           This section develops an analytical model to describe the
+   The bilayer membrane was fabricated via a two-step molding                        fluid–structure interaction between the internal incompressible
+process. First, a white silicone precursor (Ecoflex 00-30 mixed                      fluid and the stretchable membrane based on continuum mechan-
+with white pigment at a 1:1:0.35 mass ratio) was injected be-                        ics. By combining the geometric nonlinearity of the contact area
+tween a release-agent-treated 1000-mesh matte glass substrate                        and the fluid’s volume conservation, we derive the relationship
+and a top glass plate, spaced by 0.2 mm spacers. Upon curing,                        between the applied load and the variable stiffness. This the-
+a black protective layer (Ecoflex 00-30 with black pigment,                          oretical model is essential for understanding the probe’s sens-
+identical ratio) was cast directly onto the white layer following                    ing capabilities for various conditions and guiding its control
+the same protocol to ensure uniform thickness.                                       strategies in palpation tasks.
+    2) Dyed Liquid: The dyed liquid works as the optical sensing
+medium and stiffness-tuning agent in this tactile sensing probe.
+Moreover, the stretchable membrane and dyed liquid constitute                        A. Load-Adaptive Dual-Mode Perception
+an active sensing medium rather than a passive compliant buffer.                        Mode I is in the bending stiffness-dominated regime for
+To transform standard RGB images into quantitative 3-D RGB-                          light-touch profiling. At low contact loads, the mechanical re-
+D data, we employed our previous sensing model to build a linear                     sponse of the membrane is dominated by local bending stiffness.
+relationship between output color and length [33]. The aqueous                       The noncontact region remains stable without bulging, enabling
+red dye (Zhanyi Company) was selected to align with the color                        high-fidelity reconstruction of surface microtextures without
+response of the camera for high-precision measurement. The                           compressing the tissue.
+
+        Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+                   This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+4                                                                                                                  IEEE/ASME TRANSACTIONS ON MECHATRONICS
+
+
+
+                                                                                      C. Stiffness Analysis in Bending and Strain-Stiffening
+                                                                                      Regime
+                                                                                         1) Model I: Bending Stiffness-Dominated Regime: In small
+                                                                                      indentation (δ ∼ t) condition (Mode I), the fluid pressure change
+                                                                                      is negligible, and the deformation is determined by the mem-
+                                                                                      brane’s local bending stiffness D and pretension N0 . Subjected
+                                                                                      to a distributed load q(r), the governing partial differential
+                                                                                      equation for the deflection of a thin elastic plate is as follows:
+                                                                                                        D∇4 w (r) − N0 ∇2 w (r) = q (r) .                             (5)
+                                                                                         The stiffness of KI in the bending regime is
+                                                                                                                ∂F      4πEm t3
+                                                                                                       KI =        =                + 4πN0                            (6)
+                                                                                                                ∂δ   3 (1 − νm
+                                                                                                                             2 ) R2
+
+Fig. 2. Stiffness response of the sensing probe. (a) Schematic of the                 where t is the thickness of the membrane, and Em and νm are
+probe in two stiffness regimes. (b) Experimental characterization of the              Young’s modulus and Poisson’s ratio of the membrane.
+adaptive strain-stiffening behavior. The inset shows the linear response
+of Mode I. (c) Effect of internal liquid viscosity on stiffness.                         In this regime, the interaction force is governed by the bending
+                                                                                      stiffness of the silicone membrane, and the force-displacement
+                                                                                      relationship follows a linear response. Therefore, t is designed to
+   Mode II is in the inflation-dominated regime for deep-                             be thin and N0 is low; KI remains low and constant. This endows
+indentation palpation. At higher loads, the incompressible fluid                      the sensor with high conformability, enabling it to conformally
+transfers the displaced volume to the noncontact region, causing                      contact microtextures.
+                                                                                          2) Mode II: Strain-Stiffening-Dominated Regime: In large in-
+elastic expansion and generating a bulge. This large deformation
+induces a strain-stiffening effect within the membrane, actively                      dentation (δ  t) condition (Mode II), this deformation process
+tuning the effective stiffness of the probe. This mechanism                           is governed by volume conservation of the internal fluid and
+allows the sensing interface to indent into the soft tissue to reveal                 fluid-structure interaction of the probe.
+the deep-seated structure [see Fig. 2(a)].                                               As the indentation δ increases, the contact area of the probe
+                                                                                                                Ac (δ) = πa2 ≈ 2πRδ.                                  (7)
+B. Contact Mechanics of the Sensing Probe
+                                                                                      Cv is the volumetric compliance of the system, and the contact
+   To validate the sensing performance and variable stiffness                         force F (δ) is derived from the product of the pressure and the
+of the probe, we build a contact mechanics model to analyze                           contact area
+the force response in combination with membrane theory, fluid                                                                               2π 2 R2 3
+incompressibility, and Pascal’s principle.                                                           F (δ) = Δp (δ) · Ac (δ) =                     δ .                (8)
+                                                                                                                                             Cv
+   Based on the deformation condition, and considering it as a
+series system, the total displacement δ consists of δp from the                          The stiffness KII in the inflation regime is as follows:
+probe’s compression and δs from measured sample                                                                              ∂F   6π 2 R2 2
+                                                                                                           KII (δ) =            =        δ .                          (9)
+                              δ = δp + δs .                                   (1)                                            ∂δ    Cv
+                                                                                         This equation reveals that the stiffness scales quadratically
+   Assuming a flexible spherical cap contact with a rigid plate
+                                                                                      with depth, while the force scales cubically. This capability
+(a  R)
+                                                                                      enables the probe to deform soft surface tissue and detect
+                                           a2                                        deep-seated hard nodules.
+                  δp = R − R 2 − a2 ≈                       (2)
+                                            2R                                           To verify the stiffness variation of the model, the force–
+where a is the contact radius, and R is the initial radius of                         displacement response of the fluid-structure coupled probe dur-
+curvature of the probe.                                                               ing compression against a rigid flat surface is shown in Fig. 2(b).
+   Treating the target tissue as an elastic body, the central                         In the initial compression range (δ < 0.2 mm), the response
+displacement is given by                                                              is linear (R2 > 0.96) and the stiffness is 56.36 N/mm, where
+                                                                                    the force is governed by the bending stiffness of the silicone
+                           2a 1 − νs2                                                 membrane. As the indentation increases, the force presents a
+                     δs =               pin                 (3)
+                              2Es                                                     cubic response (Mode II) and a 2.66 × 104 N/mm at 0.88 mm
+                                                                                      displacement, which has increased by 470× compared with
+where Es and νs are Young’s modulus and Poisson’s ratio of the
+                                                                                      mode I. Moreover, changes in fluid viscosity (1–1000 mPa·s)
+target tissue, and pin is the internal pressure of the probe.
+                                                                                      have minimal impact on stiffness responses since the elastomer
+   The fundamental state equation of contact
+                                                                                    membrane dominates the overall stiffness variation (see Fig. 2(c)
+                            a2     F 1 − νs2                                          and Supplementary Material, Fig. S1), while the high specific
+                     δ=         +              .              (4)
+                           2R         2Es a                                           heat capacity of water prevents heat-induced optical distortion.
+
+       Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+                    This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+FAN et al.: STIFFNESS-ADAPTIVE VISUO-TACTILE ROBOTIC PALPATION SYSTEM FOR SURFACE TEXTURE PROFILING                                                                       5
+
+
+
+                                                                                     governed by
+                                                                                                                                          
+                                                                                                                Ri      Ri,base                    zbase
+                                                                                                      ri = k ln    − ln                        +                       (11)
+                                                                                                                Gi      Gi,base                    cosθi
+                                                                                     where k is the absorption coefficient, and Ri and Ri,base are the
+                                                                                     red channel intensity of the membrane and base surface. Gi and
+                                                                                     Gi,base are the green channel intensity of membrane and base
+                                                                                     surface.
+                                                                                        Combining the angular parameters (θi , ϕi ) and the radial dis-
+                                                                                     tance ri , the point cloud (xi , yi , zi ) in the Cartesian coordinate
+                                                                                     system is calculated via spherical transformation
+Fig. 3. Schematic of (a) proposed tactile 3-D reconstruction method-                                ⎧
+ology and (b) adaptive robotic scanning framework.                                                  ⎪
+                                                                                                    ⎪ xi = ri sinθi cos ϕi = √ 2ri ui2 2
+                                                                                                    ⎪
+                                                                                                    ⎨                                 ui +vi +f
+                                                                                                      yi = ri sinθi sin ϕi = √ 2ri vi2 2               (12)
+                                                                                                                                      ui +vi +f
+                                                                                                    ⎪
+                                                                                                    ⎪
+                                                                                                    ⎪
+                                                                                                    ⎩zi = ri cosθi =      √     ri f
+                                                                                                                                           .
+To simulate realistic clinical interactions, 0–10° off-axis in-                                                               2    ui +vi +f
+                                                                                                                                    2    2
+
+dentations (see Supplementary Material, Fig. S2) reveal that
+increasing inclination reduces sensor stiffness due to asymmetric                      This strategy allows measurement of the membrane’s defor-
+membrane yielding under lateral shear. This strain-stiffening and                    mation, providing high-fidelity geometric reconstruction.
+incompressibility of the system contribute to a rapid increase in
+hydrostatic pressure. These results demonstrate the probe’s vari-                    B. Robotic Scanning Control Framework
+able stiffness to passive tuning for different palpation situations.                    To achieve autonomous characterization, we developed a task-
+                                                                                     driven visuo-tactile control framework. Guided by the contact
+ IV. 3-D SENSING METHODOLOGY AND ADAPTIVE ROBOTIC                                    modeling and target tissue modulus detailed in Section III,
+           SCANNING CONTROL FRAMEWORK                                                the system tunes the z-axis indentation depth to match various
+                                                                                     diagnostic demands: Mode I (0.3–0.4 mm indentation) targets
+   After analysis of contact and stiffness tuning mechanisms,                        for surface profiling, and Mode II (1.0–1.2 mm indentation)
+we propose a sensing methodology for 3-D reconstruction and                          targets for subcutaneous tumor palpation. For analysis of un-
+an autonomous robotic framework for adaptive scanning. We                            known tissues, a sequential execution of both modes ensures the
+introduce a geometric mapping algorithm that converts pixel-                         decoupling of multilayer features.
+level chromatic shifts into 3-D topographical data. Moreover,                           A monocular camera first identifies the ROI and compensates
+we develop a task-driven, closed-loop scanning strategy that                         for the camera-probe spatial offset to align the starting point.
+guides the probe to perform continuous, large-area palpation,                        During scanning, the z-axis employs closed-loop control based
+enabling the accurate analysis of surface texture and localization                   on real-time depth analysis with the task-defined value. Guided
+of subsurface anomalies (see Fig. 3).                                                by real-time tactile image feedback, the system executes a
+                                                                                     discrete lift-shift-press trajectory in the xy-plane, employing a
+A. 3-D Topography Sensing Methodology                                                step-size adaptive scanning strategy with a 3 mm coarse and
+                                                                                     1 mm fine spatial resolution.
+   To acquire the angular information, we define the optical cen-                       During global exploration, the system navigates the ROI
+ter of the camera as the origin Oc of the coordinate system. Based                   following a 3 mm coarse raster scanning trajectory with a
+on the pinhole camera model, any point Pi on the membrane                            scanning rate of 900 mm2 /min. Upon reaching the target depth,
+surface corresponds to a pixel coordinate (ui , vi ) on the image                    an adaptive decision-making mechanism evaluates the tactile
+plane. Given the calibrated focal length f , the directional vector                  heatmap. In surface profiling (Mode I), the system calculates
+of the incident light ray can be defined in the spherical coordinate                 the absolute deviations of the raw heatmap to identify surface
+system. The angle θi with the z-axis and the ϕi are calculated                       textures since a smooth surface generates near-zero deviation. In
+by                                                                                   subcutaneous tracking (Mode II), a bilateral filter is first applied
+                                                                                 to suppress the homogeneous tissue background, after which the
+                            f                                      vi                absolute deviations are computed to isolate deep-seated local de-
+ θi = arccos                                , ϕi = arctan                  . (10)
+                       u2i + vi2 + f 2                             ui                formations. If this deviation exceeds an empirical threshold (see
+                                                                                     Supplementary Material, Fig. S3), indicating significant surface
+   The distance between the CMOS sensor and the LED is much                          textures or deep anomalies, the system autonomously triggers a
+smaller than the sensing distance ri ; thus, a coaxial approxima-                    localized 3 × 3 fine scanning grid (scanning rate: 120 mm2 /min)
+tion is adopted where the illumination and observation paths are                     for high-fidelity reconstruction and targeted boundary delin-
+considered collinear. We set zbase = 5500 μm as the base plate                       eation. Conversely, if the deviation remains below the threshold,
+for calibration, determined by the camera focal length. Based                        the probe directly proceeds to the next coarse measurement
+on our previous sensing model [33], the radial distance ri is                        point.
+
+        Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+                   This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+6                                                                                                                  IEEE/ASME TRANSACTIONS ON MECHATRONICS
+
+
+
+   For global reconstruction, we implement a center-crop mosaic
+approach. The system prioritizes extracting the low-distortion
+1.5 × 1.5 mm2 central region from the fine tactile images for spa-
+tial arrangement, and subsequently inserts the coarse scanning
+images to fill the remaining gaps. Through the seamless stitching
+of these multiresolution image segments, a precise global profile
+reconstruction is achieved.
+
+
+    V. EXPERIMENTAL EVALUATION AND EX VIVO VALIDATION
+   In this section, we conducted a series of experiments to charac-
+terize and validate the sensing performance of the sensing probe
+and robotic palpation system. Experiments aim to demonstrate
+the measurement fidelity for high-precision 3-D reconstruction,
+the dual-mode perception capability across different stiffness
+regimes, and the system integration for automated large-scale
+scanning tasks.
+
+
+A. Sensor Characterization                                                            Fig. 4. Characterization of the spatial performance. (a) Z-axis sensing
+                                                                                      response under different dye concentrations. The central solid line and
+   To calibrate the z-axis performance of the sensing probe,                          the shaded region indicate the mean value ±deviation. (b) Calculated
+                                                                                      versus actual position of the xy-plane response. (c) Spatial response un-
+vertical indentation experiments were performed by a rigid                            der cyclic testing. (d) Robust performance under different interferences.
+flat indenter (diameter: 3 mm) installed on a high-precision
+linear stage, along the z-axis with a step size of 10 μm. A
+100 × 100 pixel window was extracted from the contact re-
+gion, where the RGB intensities were averaged to generate
+the representative color values. The logarithmic intensity ratio
+ln(R/G) was calculated for each step. Tests across aqueous
+dye solutions at concentrations of 0.1250%, 0.0833%, and
+0.0625% (v/v) indicate that increasing the concentration im-
+proves sensitivity, and excessively high concentrations reduce
+effective measurement ranges. The 0.1250% (v/v) solution was
+selected as the optimal concentration for subsequent tests.
+The experimental data reveals a linear (R2 > 0.99) response
+between the optical data and the z-axis displacement across
+three repeated trials. This evaluation demonstrates consistent
+                                                                                      Fig. 5. 3-D reconstruction of standard spheres. (a) Raw images (top)
+performance of the sensor with an average MAE of 28 μm                                and point clouds (bottom). (b) Test setup. (c) True value, mean value ±
+[see Fig. 4(a)].                                                                      standard deviation, and MAE of reconstruction.
+   The spatial resolution in the xy-plane is determined by the
+pixel density of the CMOS sensor. To calibrate this, we em-
+ployed the linear stage to generate lateral motions, following a                      B. Validation of 3-D Reconstruction Accuracy
+procedure similar to the z-axis characterization. The probe was
+moved laterally from -500 to 500 μm using the linear stage.                              To evaluate the 3-D reconstruction accuracy, experiments
+By correlating the measured lateral pixel displacements against                       were conducted using standard ceramic spheres with varying
+the known stage coordinates, we established a precise mapping                         diameters (3, 4, 6, 8 mm) as ground-truth targets. The sensing
+between the image space and physical lengths with an average                          probe was installed on a linear stage to contact the spheres
+MAE of 3.1 μm, achieving high-fidelity planar calibration [see                        and generate dense 3-D point clouds of the deformed surface
+Fig. 4(b)]. The reliability of the sensing probe was verified                         [see Fig. 5(a) and (b)]. An algebraic least-squares fitting al-
+through 500-cycle intensity and force testing, confirming its                         gorithm was employed to reconstruct the spherical geometry
+spatial sensing stability and membrane durability (see Fig. 4(c)                      from the point cloud data of the selective region, and each test
+and Supplementary Material, Fig. S4). To validate its practical                       was repeated three times to generate the average results. The
+applicability in surgical environments, our tests confirmed that                      reconstruction error exhibits an increasing trend as the diameter
+ambient light interference, cleaning procedures, and simulated                        increases. Larger spheres present a flatter contact profile, provid-
+blood with actual physiological viscosity do not compromise the                       ing fewer curvature constraints for the algorithm to reconstruct.
+sensing performance (see Fig. 4(d) and Supplementary Material,                        The deviation remains small (MAE < 70.7 μm), guaranteeing an
+Fig. S5).                                                                             accurate sensing performance for tissue analysis [see Fig. 5(c)].
+
+
+
+       Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+                    This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+FAN et al.: STIFFNESS-ADAPTIVE VISUO-TACTILE ROBOTIC PALPATION SYSTEM FOR SURFACE TEXTURE PROFILING                                                                    7
+
+
+
+
+Fig. 6. Surface texture reconstruction (photograph, raw image, and
+reconstructed profile). (a) Microspheres. (b) Two woven meshes.
+(c) Silicone semicylindrical ridges.
+
+
+
+
+C. Surface Texture Profiling
+   Surface texture profiling is important for tissue inspection
+since many pathological conditions often appear as roughness
+or granular microstructures on the organ surface. We leveraged
+the Mode I regime to map the surface textural structures of
+compliant and rigid targets. The discrete microspheres (diam-
+eter: 700 μm) were characterized to validate their capacity for                      Fig. 7. Characterization of soft complex phantom inclusions. (a) Anal-
+analyzing irregular surface protrusions. A 30-mesh (wire diam-                       ysis of spheres with different diameters and embedded depths in soft
+                                                                                     substrates. (b) Tactile heatmap with actual and estimated outlines of
+eter: 350 μm) and a 50-mesh (wire diameter: 150 μm) woven                            the soft stellate and lobulated inclusions. (c) Evaluation metrics for the
+fabric were employed to test the fine-grid spatial resolution for                    phantom tests.
+microstructure measurement. Moreover, characterization of a
+silicone substrate featuring two raised semicylindrical ridges
+was also performed to resolve the surface morphology with                            intersection over union (IoU) surpassing 0.92 confirms its high
+diameters of 1 and 1.1 mm. This ability to capture microscale                        fidelity in precisely delineating tumor boundaries.
+texture on different moduli and curvatures enables the sensor to
+detect subtle tissue anomalies on the tissue surface (see Fig. 6).                   E. Integrated Phantom Demonstration
+                                                                                        Before evaluating the sensing system in complex biological
+D. Depth Estimation and Localization of Deep-Seated
+                                                                                     environments, preliminary validations were conducted using
+Tumors                                                                               a controlled multilayered silicone phantom (detailed in Sup-
+   Detecting hard nodules or tumors beneath soft tissue is also                      plementary Material, Fig. S8). Building upon these results,
+critical for clinical palpation. Experiments were performed by                       to replicate a realistic, dynamic surgical scenario, an ex vivo
+embedding different standard spheres (diameter: 3, 4, 6 mm) and                      porcine liver tissue block was prepared to simulate multilayered
+depths (1, 2 mm) under a constant indentation (2 mm) into the                        pathologies [see Fig. 8(a)]. A freshly excised porcine liver was
+Ecoflex-0030 silicone bulk. The heatmaps present distinct in-                        procured from a local commercial vendor. A flexible fibrous
+tensity distributions, where signal area increases with diameter,                    mesh (3 × 25 mm) was adhered to the liver surface to mimic
+while peak intensity decreases with depth [see Fig. 7(a)].                           fibrotic stiffening. A planar lobulated silicone structure (diam-
+   Unlike conventional single-point palpation by force sensors,                      eter: ∼7 mm) was fixed 5 mm beneath the surface to represent
+our visuo-tactile sensing unit enables high-density and high-                        a complex deep-seated tumor. Furthermore, to emulate adjacent
+fidelity scanning (see Supplementary Material, Fig. S6). A                           vascular pulsation, a 4-mm silicone tube was embedded 2 cm
+three-axis Cartesian motion system was employed to achieve                           from the inclusion and actuated with a pulsatile fluid flow at
+a stable, precise scanning process. To validate its capability in                    1 Hz.
+characterizing complex simulated tumors (see Supplementary                              The palpation system performed a two-stage scanning: an ini-
+Material, Fig. S7), we embedded stellate and lobulated-shaped                        tial light-touch scan (Mode I) for surface profiling, followed by
+inclusions (Dragon Skin 30) into an elastomeric matrix (Ecoflex                      a deep-perception scan (Mode II) for 3-D tactile reconstruction,
+30). This tenfold stiffness difference simulates the biomechanics                    to decouple microscale surface textures from the macroscale
+of stiff tumors within healthy tissues. After continuous adaptive                    deep pathology. The fine grid pattern of the mesh is captured on
+scanning and reconstruction image stitching, the resulting tactile                   the surface layer via Mode I, presenting its high sensitivity to
+heatmap is visualized in Fig. 7(b). The positions and boundaries                     epidermal irregularities. The 3-D tactile heatmap from Mode II
+of the complex tumor phantoms are delineated owing to differ-                        reveals the high-stiffness region and boundary due to the more
+ences in stiffness. The system achieves a sensitivity exceeding                      rigid target. The distinct color in the 3-D heatmap outlines the
+0.92 and a specificity over 0.99, indicating its reliability in                      subcutaneous complex object, demonstrating that the presence
+distinguishing tumors from healthy tissues. Furthermore, an                          of the surface texture and the dynamic perturbations did not
+
+        Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+                   This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+8                                                                                                                  IEEE/ASME TRANSACTIONS ON MECHATRONICS
+
+
+
+                                                                                      and reconstruction accuracy. Finally, future work will also inte-
+                                                                                      grate machine learning to automate pathology characterization
+                                                                                      and incorporate real-time motion compensation for adapting to
+                                                                                      dynamic in vivo environments, establishing this robotic pal-
+                                                                                      pation system as a robust quantitative tool for intraoperative
+                                                                                      diagnosis.
+
+                                                                                                                      REFERENCES
+                                                                                       [1] A. Gerald and S. Russo, “Soft sensing and haptics for medical procedures,”
+                                                                                           Nature Rev. Mater., vol. 9, no. 2, pp. 86–88, Jan. 2024.
+                                                                                       [2] C. H. Kuo, J. S. Dai, and P. Dasgupta, “Kinematic design considerations
+                                                                                           for minimally invasive surgical robots: An overview,” Int. J. Med. Robot.
+                                                                                           Comput. Assist. Surg., vol. 8, no. 2, pp. 127–145, Jan. 2012.
+                                                                                       [3] M. Salerno, K. Zhang, A. Menciassi, and J. S. Dai, “A novel 4-DOF origami
+                                                                                           grasper with an SMA-actuation system for minimally invasive surgery,”
+                                                                                           IEEE Trans. Robot., vol. 32, no. 3, pp. 484–498, Jun. 2016.
+                                                                                       [4] X. Wang et al., “Design, optimization, and experimental validation of a
+                                                                                           handheld nonconstant-curvature hybrid-structure robotic instrument for
+                                                                                           maxillary sinus surgery,” IEEE/ASME Trans. Mechatron., vol. 29, no. 4,
+                                                                                           pp. 3074–3082, Aug. 2024.
+                                                                                       [5] G. M. Minopoulos, V. A. Memos, K. D. Stergiou, C. L. Stergiou, and K. E.
+Fig. 8. Reconstruction of the multilayered tissue model. (a) Ex vivo                       Psannis, “A medical image visualization technique assisted with AI-based
+porcine liver tissue with surface texture and an embedded tumor model.                     haptic feedback for robotic surgery and healthcare,” Appl. Sci., vol. 13, no.
+(b) Tactile heatmaps by two modes.                                                         6, Mar. 2023, Art. no. 3592.
+                                                                                       [6] S. M. Martinez, G. Crespo, M. Navasa, and X. Forns, “Noninvasive
+                                                                                           assessment of liver fibrosis,” Hepatology, vol. 53, no. 1, pp. 325–335,
+                                                                                           Med, 2011.
+compromise the analysis of the deep-seated inclusion boundaries                        [7] D. A. Bell, M. A. Weinstock, and R. E. Scully, “Peritoneal implants
+[see Fig. 8(b)].                                                                           of ovarian serous borderline tumors: Histologic features and prognosis,”
+                                                                                           Cancer, vol. 62, no. 10, pp. 2212–2222, Nov. 1988.
+                                                                                       [8] V. Ficarra et al., “Preoperative aspects and dimensions used for an anatomi-
+                                                                                           cal (PADUA) classification of renal tumours in patients who are candidates
+               VI. DISCUSSION AND CONCLUSION                                               for nephron-sparing surgery,” Eur. Urol., vol. 56, no. 5, pp. 786–793,
+                                                                                           Aug. 2009.
+    In this work, we present a visuo-tactile robotic palpation                         [9] Y.-J. Lee, S.-W. Bang, J.-B. Hong, and S. Park, “Image-free tumor segmen-
+system for multiscale tissue characterization in minimally in-                             tation of soft tissue using a minimally invasive robotic palpation system,”
+vasive environments. The sensing system features a compact                                 IEEE Trans. Biomed. Eng., vol. 72, no. 12, pp. 3621–3631, Dec. 2025.
+                                                                                      [10] B. Xiao et al., “Depth estimation of hard inclusions in soft tissue by
+visuo-tactile probe (10 mm in diameter, 25 mm in length)                                   autonomous robotic palpation using deep recurrent neural network,” IEEE
+that integrates an endoscope and a dyed fluidic medium for                                 Trans. Automat. Sci. Eng., vol. 17, no. 4, pp. 1791–1799, Oct. 2020.
+3-D reconstruction, with a fluid-structure coupling mechanism.                        [11] J. Hong, Y. Lee, Y. Ryu, H. Lee, J. Park, and S. Park, “Intraoperative
+                                                                                           tumor localization using sweeping palpation in robot-assisted minimally
+By exploiting the geometric constraints of an incompressible                               invasive surgery (RMIS),” IEEE Robot. Automat. Lett., vol. 10, no. 9,
+fluid, the probe achieves adaptive strain-stiffening, transitioning                        pp. 8898–8905, Sep. 2025.
+between low-stiffness compliance (Mode I) for surface pro-                            [12] U. Kim, Y. B. Kim, D.-Y. Seok, J. So, and H. R. Choi, “A surgical palpation
+                                                                                           probe with 6-axis force/torque sensing capability for minimally invasive
+filing and high-stiffness indentation (Mode II) for deep tissue                            surgery,” IEEE Trans. Ind. Electron., vol. 65, no. 3, pp. 2755–2765,
+penetration.                                                                               Mar. 2018.
+    Combined with 3-D reconstruction and step-size adaptive                           [13] T. Li, C. Shi, and H. Ren, “A high-sensitivity tactile sensor array based
+                                                                                           on fiber Bragg grating sensing for tissue palpation in minimally invasive
+scanning algorithms, the system achieves an average MAE of                                 surgery,” IEEE/ASME Trans. Mechatron., vol. 23, no. 5, pp. 2306–2315,
+28 μm in the z-axis and 3.1 μm in the xy-plane across three                                Oct. 2018.
+trials. The system profiles microscale surface textures (fine size:                   [14] W. Qu, C. Ma, Y. Chen, D. Peng, S. Liu, and L. Luo, “A high-sensitivity
+                                                                                           force sensor for minimally invasive surgery palpation based on Fabry-Pérot
+150 μm) with soft and rigid features. It also delineates soft,                             cavity and rectangular slot hollow structure,” IEEE Trans. Instrum. Meas.,
+deep-seated tumors with complex stellate and lobulated mor-                                vol. 74, 2025, Art. no. 7007110.
+phologies, achieving high sensitivity (> 0.92) and IoU (> 0.92).                      [15] U. Kim, Y. B. Kim, J. So, D.-Y. Seok, and H. R. Choi, “Sensorized surgical
+                                                                                           forceps for robotic-assisted minimally invasive surgery,” IEEE Trans. Ind.
+Moreover, the system’s clinical potential was validated on an ex                           Electron., vol. 65, no. 12, pp. 9604–9613, Dec. 2018.
+vivo porcine liver model. By integrating light touch and deep                         [16] T. Liu, T. Zhang, J. Katupitiya, J. Wang, and L. Wu, “Haptics-enabled
+indentation, the platform decoupled multilayered pathologies,                              forceps with multimodal force sensing: Toward task-autonomous surgery,”
+                                                                                           IEEE/ASME Trans. Mechatron., vol. 29, no. 3, pp. 2208–2219, Jun. 2024.
+characterizing superficial fibrosis and underlying inclusions.                        [17] Y. Yan et al., “Soft magnetic skin for super-resolution tactile sensing with
+    While the proposed robotic palpation system demonstrates                               force self-decoupling,” Sci. Robot., vol. 6, no. 51, Feb. 2021, Art. no.
+robust performance, there remain certain limitations to be ad-                             eabc8801.
+                                                                                      [18] M. J. Yang, K. Park, W. D. Kim, and J. Kim, “Robotic skin mimicking hu-
+dressed. Future research will investigate the system’s quan-                               man skin layer and Pacinian corpuscle for social interaction,” IEEE/ASME
+titative detection limits across lesions with varying stiffness                            Trans. Mechatron., vol. 29, no. 4, pp. 2709–2719, Aug. 2024.
+contrasts and ambiguous margins. Furthermore, comprehensive                           [19] C. Hou et al., “A piezoresistive-based 3-axial MEMS tactile sensor and
+                                                                                           integrated surgical forceps for gastrointestinal endoscopic minimally in-
+system-level evaluations will be conducted to assess long-term                             vasive surgery,” Microsyst. Nanoeng., vol. 10, no. 1, Sep. 2024, Art. no.
+repeatability and the inherent tradeoffs between scanning speed                            141.
+
+
+       Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+                      This article has been accepted for inclusion in a future issue of this journal. Content is final as presented, with the exception of pagination.
+
+
+FAN et al.: STIFFNESS-ADAPTIVE VISUO-TACTILE ROBOTIC PALPATION SYSTEM FOR SURFACE TEXTURE PROFILING                                                                      9
+
+
+
+[20] F. Guan et al., “Iontronic tip-sensing guidewires,” Nature Biomed. Eng.,          [28] M. Li, X. Huang, Q. Liu, and Z. Yin, “A variable stiffness bioinspired
+     vol. 9, no. 10, pp. 1215–1227, Oct. 2025.                                              swallowing gripper based on particle jamming,” Soft Robot., vol. 12, no.
+[21] C. M. Boutry et al., “A hierarchically patterned, bioinspired e-skin able to           1, pp. 56–67, Jul. 2025.
+     detect the direction of applied pressure for robotics,” Sci. Robot., vol. 3,      [29] C. Chen, D. Fan, H. Ren, and H. Wang, “Comprehensive model
+     no. 24, Nov. 2018, Art. no. eaau6914.                                                  of laminar jamming variable stiffness driven by electrostatic adhe-
+[22] D. Fan et al., “Innervation of sensing microchannels for three-dimensional             sion,” IEEE/ASME Trans. Mechatron., vol. 29, no. 3, pp. 1670–1679,
+     stimuli perception,” Adv. Mater. Technol., vol. 8, no. 17, Apr. 2023, Art.             Jun. 2024.
+     no. 2300185.                                                                      [30] D. G. Raitt, M. Huseynov, S. Homer-Vanniasinkam, H. A. Wurdemann,
+[23] K. He, “A survey of vision-based tactile sensors: Hardware, algorithm,                 and S.-A. Abad, “Soft-tipped sensor with compliance control for elasticity
+     application and future direction,” IEEE Trans. Instrum. Meas., vol. 74,                sensing and palpation,” IEEE Trans. Robot., vol. 40, pp. 2430–2441,
+     2025, Art. no. 9533221.                                                                2024.
+[24] A. C. Abad and A. Ranasinghe, “Visuotactile sensors with emphasis on              [31] W. Chen, X. Fang, J. Che, and C. Xiong, “Design and analysis of passive
+     gelsight sensor: A review,” IEEE Sensors J., vol. 20, no. 14, pp. 7628–7638,           variable stiffness device based on shear stiffening gel,” Smart Mater.
+     Jul. 2020.                                                                             Struct., vol. 31, no. 12, Nov. 2022, Art. no. 125007.
+[25] J. Di et al., “Using fiber optic bundles to miniaturize vision-based tactile      [32] D. D. K. Arachchige, Y. Chen, I. D. Walker, and I. S. Godage, “A novel
+     sensors,” IEEE Trans. Robot., vol. 41, pp. 62–81, 2025.                                variable stiffness soft robotic gripper,” in Proc. IEEE 17th Int. Conf.
+[26] W. Li et al., “MiniTac: An ultra-compact 8 mm vision-based tac-                        Automat. Sci. Eng., Aug. 2021, pp. 2222–2227.
+     tile sensor for enhanced palpation in robot-assisted minimally invasive           [33] Y. Nie, D. Fan, J. Huang, C. Liu, and J. S. Dai, “Stretchable and
+     surgery,” IEEE Robot. Automat. Lett., vol. 9, no. 12, pp. 11170–11177,                 high-precision optical tactile sensor for trajectory tracking of parallel
+     Dec. 2024.                                                                             mechanisms,” in Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst., Oct. 2025,
+[27] A. Ghafoor, J. S. Dai, and J. Duffy, “Stiffness modeling of the soft-finger            pp. 7376–7382.
+     contact in robotic grasping,” J. Mech. Des., vol. 126, no. 4, pp. 646–656,
+     Jul. 2004.
+
+
+
+
+         Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:44 UTC from IEEE Xplore. Restrictions apply.
+

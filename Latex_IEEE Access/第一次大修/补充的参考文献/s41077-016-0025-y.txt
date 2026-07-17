@@ -1,0 +1,842 @@
+SOURCE_FILE: s41077-016-0025-y.pdf
+SOURCE_TYPE: pdf
+-----
+Cheng et al. Advances in Simulation (2016) 1:25
+DOI 10.1186/s41077-016-0025-y
+
+
+
+
+ RESEARCH                                                                                                                                        Open Access
+
+Reporting guidelines for health care
+simulation research: extensions to the
+CONSORT and STROBE statements
+Adam Cheng1*, David Kessler2, Ralph Mackinnon3,4, Todd P. Chang5, Vinay M. Nadkarni6, Elizabeth A. Hunt7,
+Jordan Duval-Arnould7, Yiqun Lin8, David A. Cook9, Martin Pusic10, Joshua Hui11, David Moher12, Matthias Egger13,
+Marc Auerbach14 and for the International Network for Simulation-based Pediatric Innovation, Research, and
+Education (INSPIRE) Reporting Guidelines Investigators
+
+
+  Abstract
+  Background: Simulation-based research (SBR) is rapidly expanding but the quality of reporting needs improvement.
+  For a reader to critically assess a study, the elements of the study need to be clearly reported. Our objective was to
+  develop reporting guidelines for SBR by creating extensions to the Consolidated Standards of Reporting Trials
+  (CONSORT) and Strengthening the Reporting of Observational Studies in Epidemiology (STROBE) Statements.
+  Methods: An iterative multistep consensus-building process was used on the basis of the recommended steps
+  for developing reporting guidelines. The consensus process involved the following: (1) developing a steering
+  committee, (2) defining the scope of the reporting guidelines, (3) identifying a consensus panel, (4) generating
+  a list of items for discussion via online premeeting survey, (5) conducting a consensus meeting, and (6) drafting
+  reporting guidelines with an explanation and elaboration document.
+  Results: The following 11 extensions were recommended for CONSORT: item 1 (title/abstract), item 2 (background),
+  item 5 (interventions), item 6 (outcomes), item 11 (blinding), item 12 (statistical methods), item 15 (baseline
+  data), item 17 (outcomes/ estimation), item 20 (limitations), item 21 (generalizability), and item 25 (funding).
+  The following 10 extensions were recommended for STROBE: item 1 (title/abstract), item 2 (background/rationale), item
+  7 (variables), item 8 (data sources/measurement), item 12 (statistical methods), item 14 (descriptive data), item 16 (main
+  results), item 19 (limitations), item 21 (generalizability), and item 22 (funding). An elaboration document was created to
+  provide examples and explanation for each extension.
+  Conclusions: We have developed extensions for the CONSORT and STROBE Statements that can help improve
+  the quality of reporting for SBR (Sim Healthcare 00:00-00, 2016).
+  Keywords: Simulation, Research, Reporting guidelines, Extension, Health care
+
+
+Background                                                                            care has been accompanied by an expanding body of
+Simulation has seen growing use in health care as a                                   simulation-based research (SBR) addressing both edu-
+“tool, device, and/or environment (that) mimics an as-                                cational and clinical issues [6–15]. Broadly speaking,
+pect of clinical care” [1] to improve health care provider                            SBR can be broken down into 2 categories: (1) research
+performance, health care processes, and ultimately pa-                                addressing the efficacy of simulation as a training meth-
+tient outcomes [1–5]. The use of simulation in health                                 odology (ie, simulation-based education as the subject
+                                                                                      of research) and (2) research using simulation as an in-
+* Correspondence: chenger@me.com
+                                                                                      vestigative methodology (ie, simulation as the environ-
+1
+ Section of Emergency Medicine, Department of Pediatrics, Alberta Children’s          ment for research) [16, 17]. Many features of SBR
+Hospital, University of Calgary KidSim-ASPIRE Research Program, 2888                  overlap with traditional clinical or educational research.
+Shaganappi Trail NW, Calgary, Alberta T3B 6A8, Canada
+Full list of author information is available at the end of the article
+                                                                                      However, the use of simulation in research introduces a
+
+                                        © 2016 Society for Simulation in Healthcare. Open Access Advances in Simulation is pleased to co-publish this article jointly
+                                        with Simulation in Healthcare. The article is published here under the terms of the Creative Commons Attribution-
+                                        NonCommercial-NoDerivatives 4.0 International License (http://creativecommons.org/licenses/by-nc-nd/4.0/).
+Cheng et al. Advances in Simulation (2016) 1:25                                                                Page 2 of 13
+
+
+
+
+unique set of features that must be considered when           process on the basis of previously described steps for
+designing the methodology and reported when publish-          developing health research reporting guidelines [42].
+ing the study [16–19].                                        These steps involved the following: (1) developing a
+  As has been shown in other fields of medicine [20],         steering committee, (2) defining the scope of the
+the quality of reporting in health professions education      reporting guidelines, (3) identifying a consensus panel,
+research is inconsistent and sometimes poor [1, 11, 21–23].   (4) generating a list of items for discussion, (5) conducting
+Systematic reviews in medical education have quantita-        a consensus meeting, and (6) drafting reporting guidelines
+tively documented missing elements in the abstracts           and an explanation and elaboration document.
+and main texts of published reports, with particular
+deficits in the reporting of study design, definitions of     Development of the steering committee
+independent and dependent variables, and study limita-        A steering committee was formed consisting of 12 mem-
+tions [21–23]. In research specific to simulation for         bers with expertise in simulation-based education and
+health care professions education, a systematic review        research, medical education research, study design, sta-
+noted many studies failing to “clearly describe the con-      tistics, epidemiology, and clinical medicine. The steering
+text, instructional design, or outcomes.” [1] Another         committee defined the scope of the reporting guidelines,
+study found that only 3 % of studies incorporating            identified participants for the consensus process, gener-
+debriefing in simulation education reported all the es-       ated a premeeting survey, planned and conducted the
+sential characteristics of debriefing [11]. Failure to ad-    consensus meeting, and ultimately drafted and refined
+equately describe the key elements of a research study        the final version of the reporting guidelines and the ex-
+impairs the efforts of editors, reviewers, and readers to     planation and elaboration document.
+critically appraise strengths and weaknesses [24, 25] or
+apply and replicate findings [26]. As such, incomplete        Defining the scope of the reporting guidelines
+reporting represents a limiting factor in the advance-        To clarify the scope of the reporting guideline exten-
+ment of the field of simulation in health care.               sions, we defined simulation as encompassing a diverse
+  Recognition of this problem in clinical research has        range of products including computer-based virtual
+led to the development of a growing number of report-         reality simulators, high-fidelity and static mannequins,
+ing guidelines in medicine and other fields, including the    plastic models and task trainers, live animals, inert ani-
+Consolidated Standards of Reporting Trials (CONSORT)          mal products, human cadavers, and standardized or
+Statement for randomized trials [27–30], the Strengthen-      simulated patients (ie, individuals trained to portray a
+ing the Reporting of Observational Studies in Epidemi-        patient). Our definition excluded research using com-
+ology (STROBE) Statement for observational studies            putational simulation and mathematical modeling, be-
+[31, 32], and the Preferred Reporting Items for System-       cause the guidelines were developed for research using
+atic Review and Meta-Analyses Statement [33–35],              human participants, either as learners or health care
+among more than 250 others [36]. Transparent report-          providers [1]. The steering committee determined to
+ing of research allows readers to clearly identify and        create reporting guidelines encompassing the following
+understand “what was planned, what was done, what             2 categories of SBR: (1) studies evaluating simulation
+was found, and what conclusions were drawn.” [31] In          for educational use and (2) studies using simulation as in-
+addition to these statements, experts have encouraged         vestigative methodology [16]. We identified the CON-
+[37] and published extensions to existing statements          SORT [28] and STROBE [31, 32] Statements as reflecting
+that focus on specific methodological approaches [38, 39]     the current reporting standards in health care research
+or clinical fields [40, 41]. In this study, we aimed to de-   and aimed to develop extensions of these 2 statements for
+velop reporting guidelines for SBR by creating exten-         quantitative SBR. The CONSORT Statement and exten-
+sions to the CONSORT Statement and the STROBE                 sions were developed for randomized trials, and the
+Statement specific to the use of simulation in health         STROBE Statement and extensions were developed for
+care research. These reporting guidelines are meant to        observational studies (cohort, case–control, and cross-
+be used by authors submitting manuscripts involving           sectional study designs). Our guideline extensions are
+SBR and to assist editors and journal reviewers when          not intended for qualitative research, mixed methods
+assessing the suitability of simulation-based studies for     research, or validation studies.
+publication.
+                                                              Identification of consensus panel participants
+Methods                                                       The steering committee aimed to identify a consensus
+The study protocol was reviewed by Yale University            group with a broad range of expertise in SBR, including ex-
+Biomedical Institutional Review Board and was granted         perience in conducting single and multicenter simulation-
+exempt status. We conducted a multistep consensus             based studies, expertise in educational research, statistics,
+Cheng et al. Advances in Simulation (2016) 1:25                                                                 Page 3 of 13
+
+
+
+
+clinical epidemiology, and research methodology, and           Consensus panel participants were evenly distributed
+with varying clinical backgrounds. We invited the              among small groups and specifically assigned to review
+editor-in-chief and editorial board members of the fol-        items on the basis of their area of expertise. High priority
+lowing 3 health care simulation journals: Simulation in        items were discussed at length, but all other checklist
+Healthcare, BMJ Simulation and Technology-Enhanced             items were also discussed in the small groups.
+Learning, and Clinical Simulation in Nursing, and edi-            After small group discussion, the recommended
+torial board members from the following 2 medical              simulation-specific extensions for both the CONSORT
+education journals: Medical Education and Advances in          and STROBE Statements were presented to the entire
+Health Sciences Education. In total, 60 expert partici-        group of participants. Each proposed extension was dis-
+pants were invited to complete the online survey.              cussed before recommended wording was established.
+                                                               Minutes from the small and large group discussions
+Generating a list of items for discussion                      were used to inform the development of the explan-
+Before the consensus meeting, we surveyed the expert           ation and elaboration document [42].
+participants via a premeeting survey (www.surveymon-
+key.com) to identify items in the CONSORT and STROBE
+Statements that required an extension for SBR. The survey      Drafting reporting guidelines
+included all items from both the CONSORT and STROBE            The proposed extensions were circulated for comment
+Statements and was pilot tested among steering commit-         among all meeting participants and consensus panel par-
+tee members before being posted online. Participants were      ticipants who could not attend the meeting. The steering
+asked to provide suggested wording for the items they          committee used the comments to further refine the ex-
+identified as requiring an extension. Participants were also   tension items. To evaluate these items in practice, 4
+given the option of suggesting new simulation-specific         members of the steering committee independently pilot
+items for both the CONSORT and STROBE Statements.              tested both the CONSORT and STROBE Statements
+On the basis of methods previously used to develop exten-      with simulation-specific extensions. They used 2 pub-
+sions to the CONSORT Statement [40], we used a cutoff          lished SBR studies (ie, one for each type of SBR), while
+of endorsement by at least one third of respondents to         ensuring that 1 study was a randomized trial and the
+identify high priority items for discussion during the con-    other an observational study. Feedback from pilot testing
+sensus meeting.                                                informed further revisions. The final reporting guidelines
+                                                               with extensions were circulated to the steering commit-
+Consensus meeting                                              tee 1 last time to ensure the final product accurately rep-
+A 5-h consensus conference was conducted in January            resented discussion during and after the consensus
+2015 in New Orleans, during the annual International           conference. An explanation and elaboration document
+Network for Simulation-Based Pediatric Innovation,             was developed by the steering committee to provide fur-
+Research and Education (INSPIRE) meeting. The initial          ther detail for each item requiring a simulation-specific
+60 consensus panel participants were invited to attend         extension [42].
+the consensus conference as well as INSPIRE network
+members (ie, clinicians, researchers, educators, psychol-
+ogists, statisticians, and epidemiologists). The INSPIRE       Results
+network is the world’s largest health care simulation re-      Premeeting survey
+search network with a proven track record of conduct-          There was a 75 % response rate for the survey, with
+ing rigorous simulation-based studies in health care           45 of the 60 participants completing the entire survey.
+[43–50].                                                       An additional 12 other participants (20 %) partially
+  The results of the online survey were circulated to          completed the survey. Of the 57 participants who
+each member of the steering committee, who were then           responded to the survey, 17 were medical journal edi-
+assigned to review specific items from the CONSORT             tors or editorial board members, 24 had advanced de-
+and STROBE statements on the basis of their expertise.         grees (Masters, PhD), 16 with advanced degrees in
+The consensus meeting started with a brief didactic            medical education or educational psychology, 6 were
+presentation reviewing the CONSORT and STROBE                  nurses, 1 was a psychologist, and 54 were physicians
+Statements, followed by a description of the study ob-         (representing anesthesiology, critical care, emergency
+jectives and consensus process. In small groups, each          medicine, pediatrics, and surgery). Of the 3 partici-
+steering committee member led a discussion with 4 or 5         pants who did not complete the survey, 2 were physi-
+individuals tasked with determining whether a simulation-      cians and 1 was a scientist. The results of the survey
+specific extension was required for their assigned items       are described in Additional file 1: Supplemental Digital
+and if so to recommend wording for the extension.              Content 1.
+Cheng et al. Advances in Simulation (2016) 1:25                                                                Page 4 of 13
+
+
+
+
+Consensus meeting                                               reviews of SBR [1, 5–8, 11] to address this issue
+In total, 35 consensus panel participants who completed         (Table 3). Table 3 offers an additional checklist of key
+the premeeting survey attended the consensus confer-            elements specific to SBR, for item 5 (interventions) on
+ence. An additional 30 attendees were INSPIRE network           the CONSORT Statement and item 7 (variables) on the
+members. Of the 65 total attendees at the consensus             STROBE Statement, that should be reported for all
+conference, 12 were medical journal editors or editorial        simulation studies, for both the intervention and con-
+board members, 18 had advanced degrees (Masters,                trol groups (if applicable).
+PhD), 4 were nurses, 1 was a psychologist, and 60 were            In modeling the explanation and elaboration docu-
+physicians (representing anesthesiology, critical care,         ment after other similar documents published in con-
+emergency medicine, pediatrics, and surgery).                   junction with reporting guidelines [28, 32], we provide
+   The following 11 simulation-specific extensions were         a specific example for each item requiring a new ex-
+recommended for the CONSORT Statement: item 1                   tension coupled with the background and rationale
+(title and abstract), item 2 (background), item 5 (inter-       for including that information for that item. We en-
+ventions), item 6 (outcomes), item 11 (blinding), item 12       courage readers to refer to the explanation and elab-
+(statistical methods), item 15 (baseline data), item 17         oration document to seek further detail about the
+(outcomes and estimation), item 20 (limitations), item          nature and type of recommended reporting for each
+21 (generalizability), and item 25 (funding). Participants      new extension (see Additional file 2: Supplemental
+agreed on the importance of describing the rationale for        Digital Content 2).
+and design of the simulation-based intervention. Because
+many simulation-based studies use assessment tools as           Discussion
+an outcome measure, participants thought that it was            We have developed reporting guidelines for SBR by
+important to report the unit of analysis and evidence           creating extensions to both the CONSORT [28] and
+supporting the validity and reliability of the assessment       STROBE [31] Statements. These new extensions were
+tool(s) when available. In the discussion section,              developed via a consensus-building process with
+participants thought that it was important to describe          multiple iterative steps involving an international
+the limitations of SBR and the generalizability of the          group of experts with diverse backgrounds and ex-
+simulation-based outcomes to clinical outcomes (when            pertise. By creating extensions to both the CON-
+applicable). Participants also agreed that it was important     SORT and STROBE Statements that can be applied
+to identify the simulator brand used in the study and if        to studies in both categories of SBR, we have devel-
+conflicts of interest for intellectual property existed among   oped reporting guidelines that are applicable to most
+investigators. The group did not feel that modifications to     studies involving simulation in health care research.
+the CONSORT flow diagram were required for SBR. See             To further assist authors in reporting SBR studies,
+Table 1 for CONSORT extensions for SBR.                         we have published an explanation and elaboration
+   The following 10 extensions were drafted for the             document as an appendix that provides specific ex-
+STROBE Statement: item 1 (title and abstract), item 2           amples and details for all the new simulation-specific
+(background/ rationale), item 7 (variables), item 8 (data       extensions for both the CONSORT and STROBE
+sources/measurement), item 12 (statistical methods), item       Statements.
+14 (descriptive data), item 16 (main results), item 19 (limi-     The CONSORT and STROBE Statements with ac-
+tations), item 21 (generalizability), and item 22 (funding).    companying SBR extensions are meant to serve as a
+A similar emphasis was placed on the importance of de-          guide to reporting. As with other CONSORT and
+scribing all simulation-specific exposures, confounders,        STROBE Statements, the items are not meant to “pre-
+and effect modifiers, as was discussed for the CONSORT.         scribe the reporting in a rigid format,” but rather the
+Other extensions for the STROBE were under similar cat-         “order and format for presenting information depend
+egories as the proposed extensions for the CONSORT.             on author preferences, journal style, and the traditions
+See Table 2 for STROBE extensions for SBR.                      of the research field.” [28, 31] We encourage authors to
+   For both the CONSORT and STROBE Statements,                  refer to the explanation and elaboration document that
+extensive discussion occurred in the consensus meeting          provides details regarding specific elements related to
+related to the educational intervention and controlling         individual items that should be reported for SBR. The
+for simulation-specific variables that pose as potential        use of reporting guidelines can have positive effects on
+threats to the internal validity of simulation studies. A       various health care simulation stakeholders, including
+group of consensus panel participants with expertise in         funders of SBR and those applying for funding (ie, use
+simulation-based education and instructional design             as a template for grant applications), educators (ie, use
+used their knowledge of educational theory, existing            as a training tool), and students (ie, use to develop pro-
+educational research guidelines [51], and systematic            tocols for coursework or research) [33]. The application
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                              Page 5 of 13
+
+
+
+
+Table 1 Simulation-Based Research Extensions for the CONSORT Statement
+Item                        Item number           CONSORT description                                     Extension for SBR
+                                                  (Randomized Controlled Trials)
+Title and abstract          1                     a. Identification as a randomized trial in the title In abstract or key terms, the MESH or
+                                                  b. Structured summary of trial design, methods, searchable keyword term must have the word
+                                                     results, and conclusions                          “simulation” or “simulated.”
+Introduction
+  Background                2                     a. Scientific background and explanation of             Clarify whether simulation is subject of
+                                                     rationale                                            research or investigational method for
+                                                  b. Specific objectives or hypotheses                    research.
+Methods
+  Trial design              3                     a. Description of trial design (such as parallel,
+                                                     factorial) including allocation ratio
+                                                  b. Important changes to methods after trial
+                                                     commencement (such as eligibility criteria),
+                                                     with reasons
+  Participants              4                     a. Eligibility criteria for participants
+                                                  b. Settings and locations where the data were
+                                                     collected
+  Interventions             5                     The interventions for each group with sufficient Describe the theoretical and/or conceptual
+                                                  details to allow for replication, including how  rationale for the design of each intervention.
+                                                  and when they were actually administered.        Clearly describe all simulation-specific expo-
+                                                                                                   sures, potential confounders, and effect
+                                                                                                   modifiers.
+  Outcomes                  6                     a. Completely defined prespecified primary and          In describing the details of methods of
+                                                     secondary outcome measures, including how            assessment, include (when applicable) the
+                                                     and when they were assessed                          setting, instrument, simulator type, timing in
+                                                  b. Any changes to trial outcomes after the trial        relation to the intervention, along with any
+                                                     commenced, with reasons                              methods used to enhance the quality of
+                                                                                                          measurements.
+                                                                                                          Provide evidence to support the validity and
+                                                                                                          reliability of assessment tools in this context
+                                                                                                          (if available).
+  Sample size/study size    7                     a. How sample size was determined
+                                                  b. When applicable, explanation of any interim
+                                                     analyses and stopping guidelines
+  Randomization:            8                     a. Method used to generate the random
+  sequence generation                                allocation sequence
+                                                  b. Type of randomization and details of any
+                                                     restriction (such as blocking and block size)
+  Randomization:            9                     Mechanism used to implement the random
+  allocation concealment                          allocation sequence (such as sequentially
+  mechanism                                       numbered containers), describing any steps
+                                                  taken to conceal the sequence until
+                                                  interventions were assigned
+  Randomization:            10                    Who generated the random allocation
+  implementation                                  sequence, who enrolled participants, and who
+                                                  assigned participants to interventions
+  Blinding (masking)        11                    a. If done, who was blinded after assignments to        Describe strategies to decrease risk of bias,
+                                                     interventions (e.g., participants, care providers,   when blinding is not possible.
+                                                     those assessing outcomes) and how
+                                                  b. If relevant, description of the similarity of
+                                                     interventions
+  Statistical methods       12                    a. Statistical methods used to compare groups           Clearly indicate the unit of analysis
+                                                     for primary and secondary outcomes                   (e.g., individual, team, system), identify
+                                                  b. Methods for additional analyses, such as             repeated measures on subjects, and describe
+                                                     subgroup analyses and adjusted analyses              how these issues were addressed.
+Results
+  Participant flow          13                    a. For each group, the numbers of participants
+  (a diagram is strongly                             who were randomly assigned, received
+  recommended)                                       intended treatment, and were analyzed for
+                                                     the primary outcome
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                             Page 6 of 13
+
+
+
+
+Table 1 Simulation-Based Research Extensions for the CONSORT Statement (Continued)
+                                                  b. For each group, losses and exclusions after
+                                                     randomization, together with reasons
+  Recruitment                   14                a. Dates defining the periods of recruitment
+                                                     and follow-up
+                                                  b. Why the trial ended or was stopped
+  Baseline data                 15                A table showing baseline demographic and               In describing characteristics of study
+                                                  clinical characteristics of each group                 participants, include their previous experience
+                                                                                                         with simulation and other relevant features as
+                                                                                                         related to the intervention(s).
+  Numbers analyzed              16                For each group, number of participants
+                                                  (denominator) included in each analysis and
+                                                  whether analysis was by original assigned
+                                                  groups
+  Outcomes and                  17                a. For each primary and secondary outcome,             For assessments involving >1 rater, interrater
+  estimation                                         results for each group, and the estimated           reliability should be reported.
+                                                     effect size and its precision (such as 95 %
+                                                     confidence interval)
+                                                  b. For binary outcomes, presentation of both
+                                                     absolute and relative effect sizes is
+                                                     recommended
+  Ancillary analyses            18                Results of any other analyses performed,
+                                                  including subgroup analyses and adjusted
+                                                  analyses, distinguishing prespecified from
+                                                  exploratory
+  Adverse events                19                All important harms or unintended effects in
+                                                  each group (for specific guidance, see
+                                                  CONSORT for harms)
+Discussion
+  Limitations                   20                Trial limitations, addressing sources of potential     Specifically discuss the limitations of SBR.
+                                                  bias, imprecision, and, if relevant, multiplicity of
+                                                  analyses
+  Generalizability              21                Generalizability (external validity, applicability) of Describe generalizability of simulation-based
+                                                  the trial findings                                     outcomes to patient-based outcomes
+                                                                                                         (if applicable).
+  Interpretation                22                Interpretation consistent with results, balancing
+                                                  benefits and harms, and considering other
+                                                  relevant evidence
+Other information
+  Registration                  23                Registration number and name of trial registry
+  Protocol                      24                Where the full trial protocol can be accessed,
+                                                  if available
+  Funding                       25                Sources of funding and other support (such as          List simulator brand and if conflict of interest
+                                                  supply of drugs), role of funders                      for intellectual property exists.
+MESH Medical Subject Headings
+
+
+of these reporting guidelines will help enhance quality                     First, there are a wide variety of simulators and simula-
+of reporting for quantitative SBR and assist journal re-                    tion modalities available for use in research [16]. This,
+viewers and editors when faced with assessing the                           coupled with a plethora of instructional design features
+strengths and weaknesses of simulation-based studies                        in simulation-based educational research, makes describ-
+in health care [24, 52, 53]. We encourage journals pub-                     ing the simulation intervention a critically important
+lishing SBR to consider endorsing the simulation-                           component of any educational study involving simula-
+specific extensions for the CONSORT and STROBE                              tion (Table 3) [6, 8, 19]. Second, SBR provides opportunity
+Statements and adding these to their “instructions for                      for the investigator to standardize the simulated environ-
+authors.”                                                                   ment and/or simulated patient condition. Standardization
+   Simulation-based research has several unique factors                     of the environment and patient condition allows the inves-
+that prompted us to develop simulation-specific exten-                      tigator to account for many of the potential threats to
+sions for both the CONSORTand STROBE Statements.                            internal validity that are associated with simulation. Clear
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                             Page 7 of 13
+
+
+
+
+Table 2 Simulation-Based Research Extensions for the STROBE Statement
+Item                          Item number         STROBE description (Observational Studies)                Extension for SBR
+Title and abstract            1                   a. Indicate the study’s design with a commonly            In abstract or key terms, the MESH or
+                                                     used term in the title or the abstract.                searchable keyword term must have the
+                                                  b. Provide in the abstract an informative and             word simulation or simulated.
+                                                     balanced summary of what was done and what
+                                                     was found.
+Introduction
+  Background/rationale        2                   Explain the scientific background and rationale for       Clarify whether simulation is subject of
+                                                  the investigation being reported.                         research or investigational method for
+                                                                                                            research.
+  Objectives                  3                   State specific objectives, including any
+                                                  prespecified hypotheses.
+Methods
+  Study design                4                   Present key elements of study design early in the
+                                                  paper.
+  Setting                     5                   Describe the setting, locations, and relevant dates,
+                                                  including periods of recruitment, exposure, follow-
+                                                  up, and data collection.
+  Participants                6                   a. Cohort study: give the eligibility criteria and the
+                                                     sources and methods of selection of
+                                                     participants. Describe methods of follow-up.
+                                                     Case–control study: give the eligibility criteria
+                                                     and the sources and methods of case
+                                                     ascertainment and control selection. Give the
+                                                     rationale for the choice of cases and controls.
+                                                     Cross-sectional study: give the eligibility criteria
+                                                     and the sources and methods of selection of
+                                                     participants.
+                                                  b. Cohort study: for matched studies, give
+                                                     matching criteria and number of exposed and
+                                                     unexposed.
+                                                     Case–control study: for matched studies, give
+                                                     matching criteria and the number of controls
+                                                     per case.
+  Variables                   7                   Clearly define all outcomes, exposures, predictors,       Describe the theoretical and/or conceptual
+                                                  potential confounders, and effect modifiers.              rationale for the design of the intervention/
+                                                  Give diagnostic criteria, if applicable.                  exposure.
+                                                                                                            Describe the intervention/exposure with
+                                                                                                            sufficient detail to permit replication.
+                                                                                                            Clearly describe all simulation-specific
+                                                                                                            exposures, potential confounders, and
+                                                                                                            effect modifiers.
+  Data sources/measurement    8                   For each variable of interest, give sources of data       In describing the details of methods of
+                                                  and details of methods of assessment                      assessment, include (when applicable) the
+                                                  (measurement).                                            setting, instrument, simulator type, timing in
+                                                  Describe comparability of assessment methods if           relation to the intervention, along with any
+                                                  there is >1 group.                                        methods used to enhance the quality of
+                                                                                                            measurements.
+                                                                                                            Provide evidence to support the validity
+                                                                                                            and reliability of assessment tools in this
+                                                                                                            context (if available).
+  Bias                        9                   Describe any efforts to address potential sources
+                                                  of bias.
+  Study size                  10                  Explain how the study size was arrived.
+  Quantitative variables      11                  Explain how quantitative variables were handled
+                                                  in the analyses. If applicable, describe which
+                                                  groupings were chosen and why.
+  Statistical methods         12                  a. Describe all statistical methods, including those      Clearly indicate the unit of analysis (e.g.,
+                                                     used to control for confounding.                       individual, team, system), identify repeated
+                                                  b. Describe any methods used to examine                   measures on subjects, and describe how
+                                                     subgroups and interactions.                            these issues were addressed.
+                                                  c. Explain how missing data were addressed.
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                             Page 8 of 13
+
+
+
+
+Table 2 Simulation-Based Research Extensions for the STROBE Statement (Continued)
+                                                  d. Cohort study: if applicable, explain how loss to
+                                                     follow-up was addressed.
+                                                     Case–control study: if applicable, explain how
+                                                     matching of cases and controls was addressed.
+                                                     Cross-sectional study: if applicable, describe
+                                                     analytical methods taking account of sampling
+                                                     strategy.
+                                                  e. Describe any sensitivity analyses.
+Results
+  Participants                  13                a. Report the numbers of individuals at each stage
+                                                     of the study (e.g., numbers potentially eligible,
+                                                     examined for eligibility, confirmed eligible,
+                                                     included in the study, completing follow-up,
+                                                     and analyzed).
+                                                  b. Give reasons for nonparticipation at each stage.
+                                                  c. Consider use of a flow diagram.
+  Descriptive data              14                a. Give characteristics of study participants (e.g.,    In describing characteristics of study
+                                                     demographic, clinical, social) and information       participants, include their previous
+                                                     on exposures and potential confounders.              experience with simulation and other
+                                                  b. Indicate the number of participants with             relevant features as related to the
+                                                     missing data for each variable of interest.          intervention(s).
+                                                  c. Cohort study: summarize follow-up time (e.g.,
+                                                     average and total amount).
+  Outcome data                  15                Cohort study: report numbers of outcome events
+                                                  or summary measures over time.
+                                                  Case–control study: report numbers in each
+                                                  exposure category or summary measures of
+                                                  exposure.
+                                                  Cross-sectional study: report numbers of outcome
+                                                  events or summary measures.
+  Main results                  16                a. Give unadjusted estimates and, if applicable,        For assessments involving >1 rater,
+                                                     confounder-adjusted estimates and their preci-       interrater reliability should be reported.
+                                                     sion (e.g., 95 % confidence intervals).
+                                                     Make clear which confounders were adjusted
+                                                     for and why they were included.
+                                                  b. Report category boundaries when continuous
+                                                     variables were categorized.
+                                                  c. If relevant, consider translating estimates of
+                                                     relative risk into absolute risk for a meaningful
+                                                     time period.
+  Other analyses                17                Report other analyses done (e.g., analyses of
+                                                  subgroups and interactions and sensitivity analyses).
+Discussion
+  Key results                   18                Summarize key results with reference to study
+                                                  objectives.
+  Limitations                   19                Discuss limitations of the study, taking into           Specifically discuss the limitations of SBR.
+                                                  account sources of potential bias or imprecision.
+                                                  Discuss both direction and magnitude of any
+                                                  potential bias.
+  Interpretation                20                Give a cautious overall interpretation of results
+                                                  considering objectives, limitations, multiplicity of
+                                                  analyses, results from similar studies, and other
+                                                  relevant evidence.
+  Generalizability              21                Discuss the generalizability (external validity) of     Describe generalizability of simulation-based
+                                                  the study results.                                      outcomes to patient-based outcomes
+                                                                                                          (if applicable).
+Other information
+  Funding                       22                Give the source of funding and the role of the          List simulator brand and if conflict of
+                                                  funders for the present study and, if applicable, for   interest for intellectual property exists.
+                                                  the original study on which the present article is
+                                                  based.
+MESH Medical Subject Headings
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                     Page 9 of 13
+
+
+
+
+Table 3 Key Elements to Report for Simulation-Based Research
+Elementsa                               Subelementsb                        Descriptor
+Participant orientation                 Orientation to the simulator        Describe how participants were oriented to the simulator
+                                                                            (e.g., method, content, duration).
+                                        Orientation to the environment      Describe how participants were oriented to the environment
+                                                                            (e.g., method, content, duration).
+Simulator type [16]                     Simulator make and model            Describe the simulator make and model.
+                                        Simulator functionality             Describe functionality and/or technical specifications that are
+                                                                            relevant to the research question. Describe modifications,
+                                                                            if any. Describe limitations of the simulator.
+Simulation environment [16]             Location                            Describe where the simulation was conducted (e.g., in situ
+                                                                            clinical environment, simulation center, etc.).
+                                        Equipment                           Describe the nature of the equipment available (e.g., type,
+                                                                            amount, location, size, etc.).
+                                        External stimuli                    Describe any external stimuli (e.g., background noise).
+Simulation event/scenario [16]          Event description                   Describe if the event was programmed and/or scripted
+                                                                            (e.g., orientation to event, scenario progression, triggers). If a
+                                                                            scenario was used, the scenario script should be provided as
+                                                                            an appendix.
+                                        Learning objectives                 List the learning objectives and describe how they were
+                                                                            incorporated into the event.
+                                        Group vs. individual practice       Describe if the simulation was conducted in groups or as
+                                                                            individuals.
+                                        Use of adjuncts                     Describe if adjuncts (e.g., moulage, media, props) were used.
+                                        Facilitator/operator                Describe experience (e.g., clinical, educational), training
+                                        characteristics                     (e.g., fellowship, courses), profession.
+                                        Pilot testing                       Describe if pilot testing was conducted (e.g., number, duration,
+                                                                            frequency).
+                                        Actors/confederates/standardized/   Describe experience (e.g., clinical, educational), training
+                                        simulated patients [16]             (e.g., fellowship, courses), profession, sex. Describe various roles,
+                                                                            including training, scripting, orientation, and compliance with roles.
+Instructional design                    Duration                            Describe the duration of the educational intervention. If the
+(for educational interventions)                                             intervention involves more than one segment, describe the
+[53] or exposure                                                            duration of each segment.
+(for simulation as investigative
+                                        Timing                              Describe the timing of the educational intervention relative to
+methodology) [16]
+                                                                            the time when assessment/data collection occurs
+                                                                            (e.g., just-in-time training).
+                                        Frequency/repetitions               Describe how many repetitions were permitted and/or the
+                                                                            frequency of training (e.g., deliberate practice).
+                                        Clinical variation                  Describe the variation in clinical context (e.g., multiple different
+                                                                            patient scenarios).
+                                        Standards/assessment                Describe predefined standards for participant performance (e.g.,
+                                                                            mastery learning) and how these standards were established.
+                                        Adaptability of intervention        Describe how the training was responsive to individual learner
+                                                                            needs (e.g., individualized learning).
+                                        Range of difficulty                 Describe the variation in difficulty or complexity of the task.
+                                        Nonsimulation interventions and     Describe all other nonsimulation interventions (e.g., lecture,
+                                        adjuncts                            small group discussion) or educational adjuncts (e.g.,
+                                                                            educational video), how they were used, and when they were
+                                                                            used relative to the simulation intervention.
+                                        Integration                         Describe how the intervention was integrated into curriculum.
+Feedback and/or debriefing [11]         Source                              Describe the source of feedback (e.g., computer, simulator,
+                                                                            facilitator).
+                                        Duration                            Describe the amount of time spent.
+                                        Facilitator presence                Describe if a facilitator was present (yes/no), and if so, how
+                                                                            many facilitators.
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                                    Page 10 of 13
+
+
+
+
+Table 3 Key Elements to Report for Simulation-Based Research (Continued)
+                                              Facilitator characteristics                    Describe experience (e.g., clinical, educational), training
+                                                                                             (e.g., fellowship, courses), profession, sex.
+                                              Content                                        Describe content (e.g., teamwork, clinical, technical skills, and/or
+                                                                                             inclusion of quantitative data, etc.).
+                                              Structure/method                               Describe the method of debriefing/feedback and debriefing
+                                                                                             framework used (ie, phases).
+                                              Timing                                         Describe when the feedback and/or debriefing was conducted
+                                                                                             relative to the simulation event (e.g., terminal vs. concurrent).
+                                              Video                                          Describe if video was used (yes/no) and how it was used.
+                                              Scripting                                      Describe if a script was used (yes/no) and provide script details
+                                                                                             as an appendix.
+a
+ These elements may apply for the simulation intervention (e.g., randomized controlled trial or observational study with simulation as an educational intervention)
+or when simulation is the environment for research (e.g., randomized controlled trial or observational study using simulation as an investigative methodology).
+Elements should be described in sufficient detail to permit replication
+b
+ Description is required only if applicable
+
+
+reporting of standardization strategies helps the reader                            start with reporting guidelines that were applicable to all
+understand how the independent variable was isolated                                types of research, thus providing us more flexibility in
+(Table 3) [16]. Third, many simulation studies involve                              generating extensions for both types of SBR. Cross-
+capturing outcomes from a variety of data sources                                   checking against the American Education Research
+(e.g., observation, video review, simulator data cap-                               Association guideline does not reveal areas that we
+ture). When assessment instruments are used (e.g., ex-                              might have missed. Although we tried to develop report-
+pert raters assessing performance), it is imperative to                             ing guidelines for all types of SBR, we recognize that
+discuss the psychometric properties of these instru-                                there may be specific types of research that may require
+ments [5]. Existing guidelines fall short in this regard,                           new items or different extensions. For example, studies
+and these new guidelines help address this issue.                                   designed to evaluate the validity of simulation-based as-
+Lastly, simulation-based studies assessing outcomes in                              sessments vary in their reporting requirements. The
+the simulated environment only (e.g., clinical perform-                             Standards for Reporting of Diagnostic Accuracy State-
+ance) should attempt to provide evidence to support                                 ment addresses these points [55], and a recent review
+how the findings in the simulated environment trans-                                operationalized these standards and applied them to
+late to a valid representation of performance in the                                SBR [56]. Other reporting guidelines that might be
+real clinical environment [3]. By doing so, authors help                            amenable for simulation-specific extensions include the
+convey the relevance and importance of their findings.                              Consolidated Criteria for Reporting Qualitative Research
+                                                                                    [57], and the Standards for Quality Improvement
+Limitations                                                                         Reporting Excellence [58] guidelines for reporting qual-
+Our consensus process has several limitations. Although                             ity improvement studies. Because the field of SBR grows,
+we had a 75 % response rate for our survey, an add-                                 the simulation-specific extensions for the CONSORT
+itional 20 % of participants only partially completed the                           and STROBE Statements may need to be revised or re-
+survey. This may have potentially introduced a selection                            fined. We encourage authors, reviewers, and editors to
+bias, although the survey represented only 1 step in our                            visit our Web site (http://inspiresim.com/simreporting/)
+consensus-building process. We include a wide variety                               and provide feedback that will be used to inform subse-
+of experts in our consensus meeting, but many of them                               quent revisions to these reporting guidelines.
+had a pediatric clinical background. We minimized this
+potential bias by ensuring that each breakout group had                             Conclusions
+at least 1 expert participant with a background outside                             The unique features of SBR highlight the importance of
+of pediatrics. Furthermore, the principles of SBR are                               clear and concise reporting that helps readers under-
+common across specialties and professions, and IN-                                  stand how simulation was used in the research. Poor
+SPIRE network members represent researchers who are                                 and inconsistent reporting makes it difficult for readers
+recognized internationally for being leaders in SBR. We                             to interpret results and replicate interventions and
+based our reporting guidelines on the CONSORT and                                   hence less likely for research to inform change that will
+STROBE guidelines developed by clinical researchers.                                positively influence patient outcomes. The use of stan-
+Other guidelines could have been used as a starting                                 dardized reporting guidelines will serve as a guide for
+point such as the American Education Research Associ-                               authors wishing to submit manuscripts for publication,
+ation standards developed in 2006 [54]. Our logic was to                            and in doing so, it draws attention to the important
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                                       Page 11 of 13
+
+
+
+
+elements of SBR and ultimately improves the quality of                              Einstein College of Medicine; John Rice, PhD(c), US Department of the
+simulation studies conducted in the future.                                         Navy (retired); Tobias Everett, MBChB, FRCA, The Hospital for Sick Children;
+                                                                                    Wendy Van Ittersum, MD, Akron Children’s Hospital; Daniel Scherzer, MD,
+                                                                                    Nationwide Children’s Hospital; Elsa Vazquez Melendez, MD, FAAP, FACP,
+Additional files                                                                    University of Illinois College of Medicine at Peoria; Chris Kennedy, MD, University
+                                                                                    of Missouri Kansas School of Medicine; Waseem Ostwani, MD, University of
+                                                                                    Michigan Health System; Zia Bismilla, MD, MEd, The Hospital for Sick
+ Additional file 1: Supplemental Digital Content 1. (DOCX 111 kb)                   Children; Pavan Zaveri, MD, MEd, Children’s National Health System;
+ Additional file 2: Supplemental Digital Content 2. (DOCX 205 kb)                   Anthony Scalzo, MD, FACMT, FAAP, FAACT, Saint Louis University School of
+                                                                                    Medicine; aniel Lemke, MD, Baylor College of Medicine; Cara Doughty, MD,
+                                                                                    MEd, Baylor College of Medicine; Modupe Awonuga, MD, MPH, MRCP(UK),
+Acknowledgments                                                                     FRCPCH, FAAP, Michigan State University; Karambir Singh, MD, Johns
+We would like to thank the Society for Simulation in Healthcare that provided       Hopkins University School of Medicine; and Melinda Fiedor-Hamilton,
+funding to support the consensus meeting. The authors thank and                     MD, MSc, Children’s Hospital of Pittsburgh.
+acknowledge the contributions of the following individuals, comprising              Supported by the Laerdal Foundation for Acute Medicine that has previously
+the INSPIRE Reporting Guidelines Investigators, who participated in the             provided infrastructure support for the INSPIRE network.
+consensus-building process by either completing the premeeting survey,              A.C. (study design, writing, editing, and reviewing of manuscript) is supported
+attending the consensus meeting, or both: Dylan Bould, MBChB, MRCP,                 by KidSIM-ASPIRE Simulation Infrastructure Grant, Alberta Children’s Hospital
+FRCA, Med, University of Ottawa; Ryan Brydges, PhD, University of Toronto;          Foundation, Alberta Children’s Hospital Research Institute, and the Department
+Michael Devita, MD, FCCM, FACP, Harlem Hospital Center; Jonathan Duff, MD,          of Pediatrics, University of Calgary; V.M.N. (study design, writing, editing, and
+MEd, University of Alberta; Sandeep Gangadharan, MD, Hofstra University             reviewing of manuscript) is supported by Endowed Chair, Critical Care Medicine,
+School of Medicine; Sharon Griswold-Theodorson, MD, MPH, Drexel University          Children’s Hospital of Philadelphia, and the following research grants:
+College of Medicine; Pam Jeffries, PhD, RN, FAAN, ANEF, George Washington           AHRQ RO3HS021583; Nihon Kohden America Research Grant; NIH/NHLBI
+University; Lindsay Johnston, MD, Yale University School of Medicine; Suzan         RO1HL114484; NIH U01 HL107681; NIH/NHLBI 1U01HL094345-01; and NIH/
+Kardong-Edgren, PhD, RN, ANEF, CHSE, Robert Morris University; Arielle              NINDS 5R01HL058669-10.
+Levy, MD, MEd, University of Montreal; Lori Lioce, DNP, FNP-BC, CHSE,               D.M. (data interpretation, writing, editing, and reviewing of manuscript) is
+FAANP, The University of Alabama in Huntsville; Marco Luchetti, MD, MSc,            funded by a University Research Chair. Nick Sevdalis (collaborator) is funded
+A. Manzoni General Hospital; Tensing Maa, MD, Ohio State University College of      by the National Institute for Health Research Collaboration for Leadership in
+Medicine; William McGaghie, PhD, Northwestern University Feinberg School of         Applied Health Research and Care South London at King’s College Hospital
+Medicine; Taylor Sawyer, DO, MEd, University of Washington School of                NHS Foundation Trust.
+Medicine; Dimitrios Stefanidis, MD, PhD, FACS, Carolinas HealthCare System;
+Kathleen Ventre, MD, Children’s Hospital Colorado; Barbara Walsh, MD,
+                                                                                    Authors’ contributions
+University of Massachusetts School of Medicine; Mark Adler, MD, Feinberg
+                                                                                    The principal investigator, AC, had full access to all the data in the study and
+School of Medicine, Northwestern University; Linda Brown, MD, MSCE,
+                                                                                    takes responsibility for the integrity of the data and the accuracy of the data
+Alpert Medical School of Brown University; Aaron Calhoun, MD, University
+                                                                                    analysis. AC, DK, RM, TPC, VMN, EAH, JD-A, DC, MP, JH, and MA participated
+of Louisville; Aaron Donoghue, MD, MSCE, The Children’s Hospital of Philadelphia;
+                                                                                    in study design, the consensus-building process, drafting and revising
+Tim Draycott, MD, FRCOG, Southmead Hospital; Walter Eppich, MD, MEd, Feinberg
+                                                                                    the manuscript, and approving the final version of the manuscript for
+School of Medicine, Northwestern University; Marcie Gawel, MSN, BSN, MS,
+                                                                                    publication. YL, DM, and ME contributed to interpretation of data, critically
+Yale University; Stefan Gisin, MD, University Hospital Basel; Lou Halamek,
+                                                                                    revising the manuscript for intellectual content, and approving the final version
+MD, Stanford University; Rose Hatala, MD, MSc, University of British Columbia;
+                                                                                    of the manuscript. All authors agree to be accountable for all aspects of the
+Kim Leighton, PhD, RN, ANEF, DeVry Medical International’s Institute for
+                                                                                    work in ensuring that questions related to the accuracy of the work are
+Research and Clinical Strategy; Debra Nestel, PhD, Monash University; Mary
+                                                                                    appropriately resolved. All authors read and approved the final manuscript.
+Patterson, MD, MEd, Cincinnati Children’s Hospital; Jennifer Reid, MD, University
+of Washington School of Medicine; Elizabeth Sinz, MD, FCCM, Penn State
+University College of Medicine; G. Ulufer Sivrikaya, MD, Antalya Training           Competing interests
+and Research Hospital; Kimberly Stone, MD, MS, MA, University of Washington         The views expressed are those of the author(s) and not necessarily those of
+School of Medicine; Anne Marie Monachino, MSN, RN, CPN, Children’s Hospital         the NHS, the National Institute for Health Research, or the Department of
+of Philadelphia; Michaela Kolbe, PhD, University Hospital Zurich; Vincent Grant,    Health. Sevdalis delivers safety and team skills training on a consultancy basis
+MD, FRCPC, University of Calgary; Jack Boulet, PhD, Foundation for                  to hospitals in the United Kingdom and internationally via the London Safety
+Advancement of International Medical Education and Research; David                  and Training Solutions Ltd.
+Gaba, MD, Stanford University School of Medicine; Peter Dieckmann,                  The remaining authors declare no conflict of interest.
+PhD, Dipl-Psych, Danish Institute for Medical Simulation; Jeffrey Groom, PhD,
+CRNA, Florida International University; Chris Kennedy, MD, University of Missouri   Author details
+                                                                                    1
+Kansas City School of Medicine; Ralf Krage, MD, DEAA, VU University Medical          Section of Emergency Medicine, Department of Pediatrics, Alberta Children’s
+Center; Leah Mallory, MD, The Barbara Bush Children’s Hospital at Maine             Hospital, University of Calgary KidSim-ASPIRE Research Program, 2888
+Medical Center; Akira Nishisaki, MD, MSCE, The Children’s Hospital of               Shaganappi Trail NW, Calgary, Alberta T3B 6A8, Canada. 2Columbia University
+Philadelphia; Denis Oriot, MD, PhD, University Hospital of Poitiers; Christine      College of Physicians and Surgeons, New York, NY, USA. 3Royal Manchester
+Park, MD, Feinberg School of Medicine, Northwestern University; Marcus Rall,        Children’s Hospital, Central Manchester University Hospitals NHS Foundation
+MD, InPASS Institute for Patient Safety and Teamtraining; Nick Sevdalis, PhD,       Trust, Manchester, UK. 4Department of Learning, Informatics, Management
+King’s College London; Nancy Tofil, MD, MEd, University of Alabama at               and Ethics, Karolinska Institute, Stockholm, Sweden. 5Children’s Hospital Los
+Birmingham; Debra Weiner, MD, PhD, Boston Children’s Hospital; John                 Angeles, University of Southern California, Los Angeles, CA, USA. 6The
+Zhong, MD, University of Texas Southwestern Medical Center; Donna                   Children’s Hospital of Philadelphia, University of Pennsylvania Perelman
+Moro-Sutherland, MD, Baylor College of Medicine; Dalit Eyal, DO, St.                School of Medicine, Philadelphia, PA, USA. 7Johns Hopkins University School
+Christopher’s Hospital for Children; Sujatha Thyagarajan, DCH, FRCPCH,              of Medicine, Baltimore, MD, USA. 8Alberta Children’s Hospital, Cumming
+PediSTARS India; Barbara Ferdman, MD, University of Rochester Medical               School of Medicine, University of Calgary, Calgary, Alberta, Canada.
+                                                                                    9
+Center; Grace Arteaga, MD, FAAP, Mayo Clinic (Rochester); Tonya Thompson,            Multidisciplinary Simulation Center, Mayo Clinic Online Learning, and
+MD, MA, The University of Arkansas for Medical Sciences; Kim Rutherford, MD,        Division of General Internal Medicine, Mayo Clinic College of Medicine,
+St. Christopher’s Hospital for Children; Frank Overly, MD, Alpert Medical School    Rochester, USA. 10Institute for Innovations in Medical Education, Division of
+of Brown University; Jim Gerard, MD, Saint Louis University School of Medicine;     Education Quality and Analytics, NYU School of Medicine, New York, NY,
+Takanari Ikeyama, MD, Aichi Children’s Helath and Medical Center; Angela            USA. 11Department of Emergency Medicine, David Geffen School of
+Wratney, MD, MHSc, Children’s National Medical Center; Travis Whitfill,             Medicine at UCLA, Los Angeles, CA, USA. 12Ottawa Methods Centre, Clinical
+MPH, Yale University School of Medicine; Nnenna Chime, MD, MPH, Albert              Epidemiology Program, Ottawa Hospital Research Institute, Ottawa, Ontario,
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                                           Page 12 of 13
+
+
+
+
+Canada. 13Institute of Social and Preventive Medicine, University of Bern,             26. Begley CG, Ioannidis JP. Reproducibility in science: improving the standard
+Bern, Switzerland. 14Department of Pediatrics, Section of Emergency                        for basic and preclinical research. Circ Res. 2015;116:116–26.
+Medicine, Yale University School of Medicine, New Haven, CT, USA.                      27. Moher D, Schulz KF, Altman DG. The CONSORT statement: revised
+                                                                                           recommendations for improving the quality of reports of parallel-group
+Received: 23 March 2016 Accepted: 8 July 2016                                              randomized trials. Lancet. 2001;357:1191–4.
+Published: 25 July 2016                                                                28. Moher D, Hopewell S, Schulz KF, et al. CONSORT 2010 Explanation and
+                                                                                           Elaboration: updated guidelines for reporting parallel group randomised
+                                                                                           trials. BMJ. 2010;340:c869.
+References                                                                             29. Moher D, Altman DG, Schulz KF. Opportunities and challenges for
+1. Cook DA, Hatala R, Brydges R, et al. Technology-enhanced simulation for                 improving the quality of reporting clinical research: CONSORT and beyond.
+    health professions education: a systematic review and meta-analysis. JAMA.             CMAJ. 2004;171:349–50.
+    2011;306:978–88.                                                                   30. Plint AC, Moher D, Morrison A, et al. Does the CONSORT checklist improve
+2. Zendejas B, Brydges R, Wang AT, et al. Patient outcomes in simulation-based             the quality of reports of randomised controlled trials? A systematic review.
+    medical education: a systematic review. J Gen Intern Med. 2013;28:1078–89.             Med J Aust. 2006;185:263–7.
+3. Brydges R, Hatala R, Zendejas B, et al. Linking simulation-based educational        31. Von Elm E, Altman DG, Egger M, et al. The Strengthening the Reporting of
+    assessments and patient-related outcomes: a systematic review and                      Observational Studies in Epidemiology (STROBE) statement: guidelines for
+    meta-analysis. Acad Med. 2015;90:246–56.                                               reporting observational studies. Ann Intern Med. 2007;147:573–7.
+4. Cheng A, Grant V, Auerbach M. Using simulation to improve patient safety:           32. Vandenbroucke JP, von Elm E, Altman DG, et al. Strengthening the
+    dawn of a new era. JAMA Pediatr. 2015;169:419–20.                                      Reporting of Observational Studies in Epidemiology (STROBE): explanation
+5. Cook DA. How much evidence does it take? A cumulative meta-analysis of                  and elaboration. PLoS Med. 2007;4, e297.
+    outcomes of simulation-based education. Med Educ. 2014;48:750–60.                  33. Moher D, Shamseer L, Clarke M, et al. Preferred reporting items for
+6. McGaghie WC, Issenberg SB, Petrusa ER, et al. A critical review of simulation-          systematic review and meta-analysis protocols (PRISMA-P) 2015 statement.
+    based medical education research: 2003–2009. Med Educ. 2010;44:50–63.                  Syst Rev. 2015;4:1.
+7. McGaghie WC, Issenberg SB, Cohen ER, et al. Translational educational research: a   34. Moher D, Liberati A, Tetzlaff J, et al. Preferred reporting items for systematic
+    necessity for effective health-care improvement. Chest. 2012;142:1097–103.             reviews and meta-analyses: the PRISMA statement. Ann Intern Med. 2009;
+8. Issenberg SB, McGaghie WC, Petrusa ER, et al. Features and uses of high-                151:264–9.
+    fidelity medical simulations that lead to effective learning: a BEME               35. Liberati A, Altman DG, Tetzlaff J, et al. The PRISMA statement for reporting
+    systematic review. Med Teach. 2005;27:10–28.                                           systematic reviews and meta-analyses of studies that evaluate health
+9. Cheng A, Lockey A, Bhanji F, et al. The use of high-fidelity manikins for               care interventions: explanation and elaboration. Ann Intern Med.
+    advanced life support training – a systematic review and meta-analysis.                2009;151:W65–94.
+    Resuscitation. 2015;93:142-9. Accessed 14 Apr 2015.                                36. Enhancing the Quality and Transparency of Health Research. Equator
+10. Cheng A, Lang T, Starr S, et al. Technology-enhanced simulation and                    Network library for health research reporting. Available at: http://www.
+    pediatric education: a meta-analysis. Pediatrics. 2014;133:e1313–23.                   equator-network.org/library/. Accessed 28 May 2015.
+11. Cheng A, Eppich W, Grant V, et al. Debriefing for technology-enhanced              37. Golub RM, Fontanarosa PB. Researchers, readers, and reporting guidelines:
+    simulation: a systematic review and meta-analysis. Med Educ. 2014;48:657–66.           writing between the lines. JAMA. 2015;313:1625–6.
+12. Ilgen JS, Sherbino J, Cook DA. Technology-enhanced simulation in                   38. Campbell MK, Elbourne DR, Altman DG, CONSORT group. CONSORT
+    emergency medicine: a systematic review and meta-analysis. Acad Emerg                  statement: extension to cluster randomised trials. BMJ. 2004;328:702–8.
+    Med. 2013;20:117–27.                                                               39. Piaggio G, Elbourne DR, Altman DG, et al. Reporting of noninferiority and
+13. Lorello GR, Cook DA, Johnson RL, et al. Simulation-based training in                   equivalence randomized trials: an extension of the CONSORT statement.
+    anaesthesiology: a systematic review and meta-analysis. Br J Anaesth. 2014;            JAMA. 2006;295:1152–60.
+    112:231–45.                                                                        40. Boutron I, Moher D, Altman DG, et al. Methods and processes of the
+14. Zendejas B, Brydges R, Hamstra SJ, et al. State of the evidence on                     CONSORT group: example of an extension for trials assessing
+    simulation-based training for laparoscopic surgery: a systematic review. Ann           nonpharmacologic treatments. Ann Intern Med. 2008;148:W60–6.
+    Surg. 2013;257:586–93.                                                             41. Little J, Higgins JP, Ioannidis JP, et al. Strengthening the reporting of
+15. Dilaveri CA, Szostek JH, Wang AT, et al. Simulation training for breast and            genetic association studies (STREGA)Van extension of the STROBE
+    pelvic physical examination: a systematic review and meta-analysis. BJOG.              statement. Eur J Clin Invest. 2009;39:247–66.
+    2013;120:1171–82.                                                                  42. Moher D, Schulz KF, Simera I, et al. Guidance for Developers of Health
+16. Cheng A, Auerbach M, Chang T, et al. Designing and conducting                          Research Reporting Guidelines. PLoS Med 2010;7(2):e1000217. Available at:
+    simulation-based research. Pediatrics. 2014;133:1091–101.                              doi:10.1371/journal.pmed.1000217
+17. LeBlanc VR, Manser T, Weinger MB, et al. The study of factors affecting            43. Cheng A, Hunt EA, Donoghue A, et al. Examining pediatric resuscitation
+    human and systems performance in healthcare using simulation. Simul                    education using simulation and scripted debriefing: a multicenter,
+    Healthc. 2011;6:S24–9.                                                                 randomized-controlled trial. JAMA Pediatr. 2013;167:528–36.
+18. Raemer D, Anderson M, Cheng A, et al. Research regarding debriefing as             44. Cheng A, Brown LL, Duff JP, et al. Improving cardiopulmonary resuscitation
+    part of the learning process. Simul Healthc. 2011;6:S52–7.                             with a CPR feedback device and refresher simulations (CPR CARES Study): a
+19. Cook DA, Hamstra SJ, Brydges R, et al. Comparative effectiveness of                    randomized clinical trial. JAMA Pediatr. 2015;169(2):137–44.
+    instructional design features in simulation-based education: systematic            45. Cheng A, Overly F, Kessler D, et al. Perception of CPR quality: influence of CPR
+    review and meta-analysis. Med Teach. 2013;35:e867–98.                                  feedback, just-in-time training and provider role. Resuscitation. 2015;87:44–50.
+20. Glasziou P, Altman DG, Bossuyt P, et al. Reducing waste from incomplete or         46. Kessler DO, Arteaga G, Ching K, et al. Interns’ success with clinical
+    unusable reports of biomedical research. Lancet. 2014;383:267–76.                      procedures in infants after simulation training. Pediatrics. 2013;131:e811–20.
+21. Cook DA, Beckman TJ, Bordage G. A systematic review of titles and                  47. Gerard JM, Kessler DO, Braun C, et al. Validation of global rating scale and
+    abstracts of experimental studies in medical education: many informative               checklist instruments for the infant lumbar puncture procedure. Simul
+    elements missing. Med Educ. 2007;41:1074–81.                                           Healthc. 2013;8:148–54.
+22. Cook DA, Beckman TJ, Bordage G. Quality of reporting of experimental studies       48. Kessler D, Pusic M, Chang TP, et al. Impact of Just-in-Time and Just-in-Place
+    in medical education: a systematic review. Med Educ. 2007;41:737–45.                   simulation on intern success with infant lumbar puncture. Pediatrics. 2015;
+23. Cook DA, Levinson AJ, Garside S. Method and reporting quality in health                135:e1237–46.
+    professions education research: a systematic review. Med Educ. 2011;45:            49. Chang TP, Kessler D, McAninch B, et al. Script concordance testing:
+    227–38.                                                                                assessing residents’ clinical decision-making skills for infant lumbar
+24. Jüni P, Altman DG, Egger M. Systematic reviews in health care: assessing the           punctures. Acad Med. 2014;89:128–35.
+    quality of controlled clinical trials. BMJ. 2001;323:42–6.                         50. Haubner LY, Barry JS, Johnston LC, et al. Neonatal intubation performance:
+25. Begg C, Cho M, Eastwood S, et al. Improving the quality of reporting of                room for improvement in tertiary neonatal intensive care units.
+    randomized controlled trials. The CONSORT statement. JAMA. 1996;276:637–9.             Resuscitation. 2013;84:1359–64.
+Cheng et al. Advances in Simulation (2016) 1:25                                                                                                Page 13 of 13
+
+
+
+
+51. Common guidelines for education research and development. A Report
+    from the Institute for Education Sciences, US Department of Education and
+    the National Science Foundation. Available at: http://www.nsf.gov/
+    publications/pub_summ.jsp?ods_key=nsf13126. Accessed 10 Jan 2015.
+52. Cobo E, Cortes J, Ribera JM, et al. Effect of using reporting guidelines during
+    peer review on quality of final manuscripts submitted to a biomedical
+    journal: masked randomised trial. BMJ. 2011;343:d6783.
+53. Egger M, Schneider M, Davey Smith G. Spurious precision? Meta-analysis of
+    observational studies. BMJ. 1998;316:140–4.
+54. American Education Research Association. Standards for reporting on empirical
+    social science research in AERA publications. Educ Res. 2006;35:33–40.
+55. Bossuyt PM, Reitsma JB, Bruns DE, Standards for Reporting of Diagnostic
+    Accuracy. Towards complete and accurate reporting of studies of diagnostic
+    accuracy: the STARD initiative. BMJ. 2003;326:41–4.
+56. Cook DA, Brydges R, Zendejas B, et al. Technology-enhanced simulation to
+    assess health professionals: a systematic review of validity evidence,
+    research methods, and reporting quality. Acad Med. 2013;88:872–83.
+57. Tong A, Sainsbury P, Craig J. Consolidated criteria for reporting qualitative
+    research (COREQ): a 32-item checklist for interviews and focus groups. Int J
+    Qual Health Care. 2007;19(6):349–57.
+58. Davidoff F, Batalden P, Stevens D, et al. Publication guidelines for
+    improvement studies in health care: evolution of the SQUIRE Project. Ann
+    Intern Med. 2008;149(9):670–6.
+
+
+
+
+                                                                                      Submit your next manuscript to BioMed Central
+                                                                                      and we will help you at every step:
+                                                                                       • We accept pre-submission inquiries
+                                                                                       • Our selector tool helps you to find the most relevant journal
+                                                                                       • We provide round the clock customer support
+                                                                                       • Convenient online submission
+                                                                                       • Thorough peer review
+                                                                                       • Inclusion in PubMed and all major indexing services
+                                                                                       • Maximum visibility for your research
+
+                                                                                       Submit your manuscript at
+                                                                                       www.biomedcentral.com/submit
+

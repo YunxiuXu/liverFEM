@@ -1,0 +1,1242 @@
+SOURCE_FILE: 20-0411_02_MS.pdf
+SOURCE_TYPE: pdf
+-----
+                                          CONFIDENTIAL. Limited circulation. For review only                                                  1
+                                               IEEE T-RO Submission no.: 20-0411.2
+
+
+ An Abdominal Phantom with Tunable Stiffness
+Nodules and Force Sensing Capability for Palpation
+                    Training
+          Liang He1 , Nicolas Herzig2 , Simon de Lusignan3 , Luca Scimeca4 , Perla Maiolino5 , Fumiya Iida4 ,
+                                           and Thrishantha Nanayakkara1
+
+
+
+   Abstract—Robotic phantoms enable advanced physical exam-                   manikins, and engagement with real patients, have the lim-
+ination training before using human patients. In this paper,                  itations of irregular accessibility, limited conditions, non-
+we present an abdominal phantom for palpation training with                   repeatability, and insufficient quantified feedback. This poses
+controllable stiffness liver nodules that can also sense palpation
+forces. The coupled sensing and actuation approach is achieved                the need for a robotic abdominal phantom that can simulate a
+by pneumatic control of positive-granular jammed nodules for                  variety of physiological conditions and sense palpation force
+tunable stiffness. Soft sensing is done using the variation of                and position to provide comparative feedback. Such a robotic
+internal pressure of the nodules under external forces. This paper            phantom can also reduce the risk of causing complications
+makes original contributions to extend the linear region of the               on patients due to inexperienced trainees [5]. Medical training
+neo-Hookean characteristic of the mechanical behavior of the
+nodules by 140% compared to no-jamming conditions and to                      simulators are designed with the aim of increasing training
+propose a method using the organ level controllable nodules as                efficiency and improving learning outcomes. Currently, major
+sensors to estimate palpation position and force with a root-mean-            works focus on designing virtual-reality (VR) training systems
+square error (RMSE) of 4% and 6.5%, respectively. Compared                    [6], [7], physical training models for simulation [8], or com-
+to conventional soft sensors, the method allows the phantom                   bining VR or augmented reality (AR) with a physical model
+to sense with no interference to the simulated physiological
+conditions when providing quantified feedback to trainees, and                in the design [9], [10].
+to enable training following current bare-hand examination                       Hyde et al. designed a human-like physical abdominal
+protocols without the need to wear data gloves to collect data.               simulator with pre-casted replaceable diseased liver made of
+   Index Terms—Soft organ simulation, tunable stiffness, soft                 silicone that only simulates limited static symptoms [11].
+sensing, abdominal palpation, robotic training phantom.                       Inoue et al. used stretchable rubber sheets to simulate different
+                                                                              stiffness for the abdomen through variable tension focusing
+                                                                              only on the surface, not the organs [12]. Current abdominal
+                         I. I NTRODUCTION                                     simulators do not integrate sensors at the level of physiological
+      ENERAL practitioners (GPs), along with other clini-                     abnormalities to monitor how palpation is done around them.
+G     cians, use abdominal palpation as a key technique in
+physical examination. During this procedure, a GP palpates
+                                                                              By integrating soft sensing into the system, it would not only
+                                                                              present realistic training scenarios via haptic feedback but also
+the patient’s body with their fingers and palms to feel the                   enable the possibility of the system to include other modalities
+texture, stiffness, size, form, position, and dullness of the                 of feedback related to the sensor readings (visual, vocal, etc.).
+internal organs [1], [2]. Unlike diagnosis that only requires                 This type of actuation and sensing builds as the foundation of
+visual or auditory cues, palpation also focuses on haptic                     the robotic replica to ensure multimodal sensory simulation
+information, which is difficult to be trained and requires                    and communication within the human-robot system.
+a considerable amount of time spent on hands-on practice                         The challenge for such an approach is to design a sensing
+[3]. A good understanding of the palpation technique and                      system that introduces minimum interference to the physi-
+organ texture can not only ensure the GP to have accurate                     ological condition being presented and the GP’s bare-hand
+diagnosis with manual palpation, but also helps practitioners to              examination protocol. For instance, most tactile sensor skins
+interpret other investigation methods such as ultrasonography,                may introduce an electronic crust alien to the simulated soft
+computed tomography, and magnetic resonance imaging [4].                      organ [13], and a sensing glove could affect the bare-hand
+   Conventional palpation training methods, such as the-                      examination protocol the GPs perform.
+atre type demonstration, role-play of healthy subjects, static                   Currently, tunable stiffness and soft sensing tend to be
+                                                                              studied separately in the field of robotics. Tunable stiffness
+  1 L. He, and T. Nanayakkara are with Dyson School of Design Engineering,
+                                                                              actuation approaches such as granular jamming [14] and layer
+Imperial College London, SW7 2AZ, UK l.he17@imperial.ac.uk
+  2 N. Herzig is with School of Engineering and Informatics, University of    jamming [15] are suitable for human-interaction due to the
+Sussex, UK                                                                    high flexibility, wide-stiffness range, and low cost. Magneto-
+  3 S. de Lusignan is with Nuffield Department of Primary Care Health
+                                                                              Rheological (MR) fluid [16] and phase-change material [17]
+Sciences, University of Oxford, UK                                            have the advantages of physical simulation accuracy but need
+  4 L. Scimeca and F. Iida are with Department of Engineering, University
+of Cambridge, UK                                                              complex control conditions. Pneumatic inflation, on the other
+  5 P. Maiolino is with Oxford Robotics Institute, University of Oxford, UK   hand, is compact in control and flexible to be integrated
+             Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                   CONFIDENTIAL. Limited circulation. For review only                                                                                                                                            2
+                                        IEEE T-RO Submission no.: 20-0411.2
+
+into diverse systems [18]. However, the elastomeric material                                                      Visual feedback
+is prone to exhibit non-linear deformation when stiffness is                                             1
+                                                                                                                        nodule 1
+
+
+
+
+                                                                                       Pressure [kPa]
+                                                                                                                        nodule 2
+                                                                                                                        nodule 3
+                                                                                                        0.5             nodule 4
+
+
+controlled [19]. Conventional sensing methods focused on                                                 0
+                                                                                                                        nodule 5
+
+
+
+
+adding additional sensors in the actuation system. With the                                                   0     1              2      3
+                                                                                                                                   Time [s]
+                                                                                                                                              4   5
+
+                                                                                                                                                             Position and Force
+                                                                                                                                                                Estimation
+use of capacitive [20], piezoelectric [21], and piezo-resistive                                 Direct sensor reading
+                                                                                                 at the nodule level                                                                 0
+
+
+[22] sensors, tactile information can be accurately obtained,
+
+
+
+
+                                                                                                                                                                      y Position
+                                                                                                                                                                                    -50
+
+
+
+but those sensors are difficult to be manufactured as flexible                                                                                                                     -100
+                                                                                                                                                                                                           Estimated Positions
+
+                                                                                                                                                                                          0     50         100
+
+
+and soft as human tissue. Optical [23], magnetic [24], carbon                Sensor readings
+                                                                                                                                                                                              x Position
+
+
+
+                                                                                                                                                             Archive palpation
+nanotubes [25], conductive liquids [26], and conductive poly-                                                                                                  trajectory for
+                                                                      Control for simulated                                                                    playback and
+mers [27] sensors show good flexibility, but the electronics and     physiological conditions                                      Abdominal phantom            comparison
+                                                                                                                                   with controllable liver
+specific fabrication process make it difficult to be embedded
+in soft phantom with complex geometry.                             Fig. 1: Possible training scenarios with the abdominal phan-
+   Adding an additional soft sensing system to the tunable         tom with soft robotic liver. Haptic feedback of diverse liver
+stiffness design not only requires additional hardware but         conditions can be simulated through the phantom control.
+also could affect the simulated physiological conditions. In       Meanwhile, the embedded soft sensor readings of the dual-
+addition, only having the force information at the surface         functional system allow the possible representation of other
+level would limit the potential of the simulator as it is          modalities of feedback during palpation, such as patient fa-
+more important to understand how the patient feels at the          cial expression, vocal feedback. One example type of visual
+organ level during the palpation according to the palpation        feedback that indicates pressures applied to individual nodules
+protocol [3]. These difficulties reveal a gap for an integrated    is shown in the figure. The system enabled the closed-loop
+soft actuation and sensing technique for abdominal simulator       information cycle for the training as the trainee regulates their
+designs that required both presenting various organ abnor-         action based on the provided multimodal feedbacks similar
+malities and monitoring palpation force and its location for       to the doctor communicate to the patient during practical
+multimodal feedback such as location and force-dependent           palpation. In addition, the palpation force and trajectory can
+visual feedback.                                                   also be recorded during the training for playback, comparison,
+   Thus, we explored the sensing capability of the existing        and further studies.
+fluid-based actuation system instead of adding additional sen-
+sors to the tunable-stiffness organ design. Building on the
+advanced development of the pneumatic deformation [28] and
+hydraulic [29] pressure sensing, the tunable stiffness effect      sensing approach in soft materials with complex geometry was
+of granular jamming was studied. We combined the sensing           also presented to show the estimation of palpation position and
+and actuation techniques in such a pneumatic approach and          force.
+designed a dual-functional soft nodule that couples tunable           The physiological concerns and motivations are described
+stiffness and soft sensing with a single control system.           in Section II. Section III gives the details of the design and
+   The nodule actuator/sensor is made of two layers of rubber      manufacturing procedure for the nodules and the abdominal
+membrane with ground coffee in between. When the internal          phantom. Section IV discusses the experimental characteri-
+layer is inflated, the ground coffee will form a hard crust with   zation of stiffness tuning and sensing capability of a single
+“craggy” surface due to the effect of granular jamming [30].       nodule. A demonstration of the robotic abdominal phantom
+When an external force is applied to the nodule, the internal      with multiple nodules is tested and analyzed in Section V with
+pressure will change in regard to the applied force. In [30], we   a proposed methodology to obtain the generalized model via
+presented a controllable organ design with granular jamming        sensor pre-characterization. Potential applications and future
+based nodules for stiffness changing, focusing on the liver        works are discussed in depth in Section VI.
+design with the physiological consideration in size, weight,
+stiffness, texture, and appearance. In this paper, we deeply       II. P HYSIOLOGICAL D ESIGN O BJECTIVES AND P OSSIBLE
+characterized the stiffness control of the single nodule and                       T RAINING S CENARIOS
+further explored its inherent sensing capabilities by comparing       The liver is usually the first palpation site in a typical
+the granular jamming state and the no-jamming state. Results       abdominal examination procedure. In [30], we studied the
+validate the hypothesis that the granular jamming effect can       size and shape of the liver and characterized the material
+help to extend the linear region of the Neo-Hookean mechan-        properties for the design of controllable liver phantom (the
+ical behavior of pure rubber membranes (by 140% of the no-         weight of the liver is around 1200g; the length of the liver
+jamming condition).                                                span was 16cm; the height of the liver span was 10cm; the
+   Such actuators/sensors were experimentally supported and        normal liver texture were designed to be smooth without any
+tested using an abdominal phantom consisting of a soft robotic     irregularities [3]). The same design parameters and material
+liver with multiple nodules. Each nodule can be controlled and     properties were used in this study. Most parts of the liver
+tuned to a range of stiffness, and therefore, can dynamically      are concealed by the right rib cage and difficult to be felt
+simulate a number of diseased liver conditions. Individual         by the GPs. However, in diseased conditions such as fatty
+nodules can be used as force sensors for specific target tumors    infiltration, active hepatitis, cirrhosis, and hepatic neoplasm,
+of the liver. A methodology to generalize the multi-nodule         the abnormality can be physically detected through physical
+           Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                     CONFIDENTIAL. Limited circulation. For review only                                                                         3
+                                          IEEE T-RO Submission no.: 20-0411.2
+
+examination of the lower edge of the liver [31]. The physical
+                                                                                                                        Granularj  ng Bal
+                                                                                                                                ammi     l
+                                                                                                                                         oon
+simulations in our design were, therefore, focused on the lower                                                         nodule        nodule
+
+part of the liver and the liver edge. Liver tumor stiffness varies
+according to tumor pathology. In this paper, we demonstrate
+the physical simulation of T1 and T2 stage tumors (according
+to the TNM classification) via two types of tunable spherical
+nodules with an assumption that early-stage tumors can be
+modeled as spherical incursion [32], [33]. With the measure-
+ment of transient elastography, data shows the stiffness of
+liver tumors is between 16.9 kPa and 75 kPa [34]. The above
+stiffness range was used as the reference for the tumor stiffness
+simulation in our study. By changing the design of the size
+and positions of the nodules, T3 tumors can also be simulated
+with the same methodology.
+   According to the physical examination protocol, physicians        Fig. 2: (a) The process of making the single positive granular
+make the diagnosis by associating their exteroceptive tactile        jamming nodule. 1. silicone tube with reinforcement, 2. inner
+sensation with proprioception of their palpation motions and         layer rubber membrane, 3. 1.5g ground coffee, 4. external
+information gained via other types of sensations (such as visual     rubber membrane. (b) Structure of the single nodule silicone
+from patient facial expression and vocal communications with         sample with ground coffee. (c) Comparison between the
+the patient [1]). With training tasks through static manikins,       sample with a granular jamming nodule and the sample with
+it is difficult for the trainee to learn such a multimodal           balloon nodule (both were pressurized around 110 kPa).
+information integration. An abdominal phantom with coupled
+actuation and sensing provides the potential to allow train-                      140
+
+ing with integrated multiple sensations. In the programmed                        135
+
+training scenarios, high-fidelity physical haptic features can                    130
+                                                                     Pressure [kPa]
+
+
+
+
+be simulated with interaction data recorded to present sim-                       125
+
+ulations of additional modalities. In Fig. 1, an example of                       120
+
+
+visual feedback of the pressure applied to individual tumors                      115
+                                                                                                                Granular jamming nodule
+was presented to allow the trainee to practice visual/haptic                      110                           Granular jamming nodule equilibrium pressure
+                                                                                                                Granular jamming nodule MCP
+                                                                                                                Balloon nodule
+dual-modality sensation during the training. The trainee can,                     105
+                                                                                                                Balloon nodule equilibrium pressure
+                                                                                                                Balloon nodule MCP
+therefore, regulate their motions to gain maximum information                     100
+                                                                                        0   5   10              15                   20                    25
+                                                                                                     Time [s]
+about the mechanical properties of the organ while keeping
+the stress on the organ to a minimum. With such a sensorized         Fig. 3: Internal pressure change of the single nodules after
+system, palpation data such as the palpation trajectory and          casting in silicone. The pressure reaches equilibrium at around
+force distribution of the trainees and experts are also archivable   134.7 kPa and 116.9 kPa for samples with positive granular
+for playback and comparison.                                         jamming nodule and samples with balloon nodule, respec-
+                                                                     tively. Maximum control pressure (MCP) was defined as 2 kPa
+        III. D ESIGN OF THE A BDOMINAL P HANTOM                      less than the measured equilibrium pressure; The mean value
+                                                                     and the standard deviation errors (indicated by the shaded area)
+   In this section, the design and fabrication of the single         of the 21 trials of experiments show good repeatability of both
+positive granular jamming nodule and the proposed abdominal          samples during the inflation.
+phantom are presented and discussed. Each positive granular
+jamming nodule couples the function of actuation (tunable
+stiffness) and sensing.
+                                                                     study for providing positive granular jamming due to its high
+   It is known that rubber under certain conditions exhibits         strength-to-weight ratio, stiffness-to-density, and yield stress
+neo-Hookean behavior [35]. Experimental data also shows a            [38]. Ground coffee also exhibits stress-strain response of an
+rubber balloon experiences an initial linear stage where the in-     elastic regime followed by a plateau regime under compression
+ternal pressure increases with the circumferential stretch [36].     test [38], which is suitable for our application in tunable-
+After the pressure reaches its maximum, the rubber balloon           stiffness.
+will expand suddenly with a drop of pressure. This dynamic
+character caused by the deformation dependent pressure load
+is known as snap buckling [37]. Thus, to use such a pressurized      A. Design of the Single Nodule
+nodule as a soft actuator/sensor, the range of the linear pressure      The positive granular jamming nodule was created by
+controlled region of the dual-functional soft nodule in the liver    combining two layers of rubber membrane with 1.5 g ground
+phantom is a key design criterion. We predict that positive          coffee in between (see Fig. 2a). The inner membrane is 5 mm
+pressure granular jamming will help to extend the linear             in diameter and 10 mm in length. The external membrane
+region of the neo-Hookean behavior of the rubber balloon             has a spherical shape with a diameter of 15 mm. A flexible
+in pressure control. Ground coffee has been chosen in the            silicone tube with an outer diameter of 6.4 mm (bore size
+            Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                   CONFIDENTIAL. Limited circulation. For review only                                               4
+                                        IEEE T-RO Submission no.: 20-0411.2
+
+3.2 mm) was used as the air channel for the pneumatic                                t
+                                                                             versuppor
+                                                                            Li                                      tt
+                                                                                                                 nser
+                                                                                                                 I    hesupport
+operation. By inserting a section of polyamide tube (1025P              a.withnodule                 b.          nt
+                                                                                                                 i helvermol
+                                                                                                                      i     d
+                                                                            i
+                                                                            f        s
+                                                                              nganchor
+                                                                             xi
+series, Parker Legris) 4 mm in diameter and 5 mm in length
+inside the silicone tube, the membranes were fixed and made
+airtight by cable ties. The silicone tube has a good sealing
+property in pneumatic connection while it is flexible enough
+to make air channels in the model. A single nodule with only                            l
+                                                                                      nsi
+                                                                                  Pouri  cone
+                                                                                         i
+two layers of membranes was also created for comparison.                c.                           d.
+Fig. 2c shows the two types of nodules in deflated and
+inflated states, respectively. The nodule with positive granular                         Vent
+jamming effect formed a spherical crust with “craggy” surface,
+while the nodule without ground coffee inflated to a larger
+size with a smooth surface at the same pressure condition.                                                       di
+                                                                                                             Demol ng
+The two nodules were then cast in silicone rubber (Smooth-
+                                                                        e.                           .
+                                                                                                     f
+on Ecoflex 00-10 with part A, part B, and Slacker maxing
+ratio of 1:1:2) for studying their performance in a physically
+simulated in-organ environment. Both samples were embedded                 ot
+                                                                          Sl s
+at 5 mm depth from the surface in the in 3D printed boxes
+(60×60×30mm; ABS plastic; designed to fix the nodule with
+                                                                                                           dassembl
+                                                                                                         Mol          t
+                                                                                                                   edwih
+increased robustness), see Figs. 2b. Fig. 3 shows the internal                     nt
+                                                                                acei
+                                                                               Pl    hecase                    nl
+                                                                                                           erski
+                                                                                                         out     ayer
+pressure change of the two single nodule samples during                 g.                           h.
+continuous inflation with a constant pumping flow rate of
+2L/min. 21 trials of data were collected for each sample. The
+internal pressure of the samples first increases rapidly, then
+maintains steady at a certain pressure, which we name to be the
+equilibrium pressure in this paper. The equilibrium pressures
+of the two samples were measured as the point where the                              l
+                                                                                   nsi
+                                                                               Pouri  cone
+                                                                                      i                              di
+                                                                                                                 Demol ng
+
+increase of pressure was less than 0.05 kPa per second during      Fig. 4: Layered fabrication process of the abdominal phantom
+the continuous constant flow rate inflation. The threshold 0.05    with liver nodules providing coupled force sensing and tunable
+kPa/s is defined based on the noise of the signal (around 0.1      stiffness actuation. (a) Place the pre-made nodules on the
+KPa under 1k Hz sampling rate) and the closed-loop pressure        support structure by the fixing anchors. (b) Insert the support
+controller performance (see section. III-C). From Fig. 3, we       in the liver mold. Fasten the mold with nuts and bolts and seal
+can notice that sample with positive granular jamming nodule       it with a hot glue gun. (c) Pour in pre-mixed silicone slowly
+reaches the equilibrium pressure at approximately 134.7 kPa,       (Ecoflex 00-10 part A, part B, and Slacker with a mixing ratio
+while sample with balloon nodule reaches the equilibrium           of 1:1:2). The silicone mixing ratio was chosen due to the
+pressure at a lower pressure condition (around 116.9 kPa).         close stiffness to ex-vivo porcine liver [30]. (d) Remove the
+   According to the ideal gas law, P V = nRT (where, P , V ,       liver from the mold carefully and wrap it with cling film. (e)
+and T are the pressure, volume, and absolute temperature,          Fix the liver in the laser-cut transparent acrylic case and make
+n, R are the number of moles of gas and the ideal gas              sure the silicone tubes go through the slots. (f) Prepare the
+constant, respectively), if the internal pressure P remains        skin layer (3 mm thick; Smooth-on Ecoflex 00-30; skin color
+steady, the nodule size V will continue to increase when air       pigment added) on a separate mold. Remove the inner layer
+n is pumped in. Significant size increases were observed after     of the mold and assemble it with the acrylic case. (g) Pour in
+the samples reached their equilibrium pressures. The pressure-     Ecoflex 00-30 to create 3 mm wall on each side of the acrylic
+based control also becomes invalid when the internal pressure      case first and then pour in Ecoflex Gel with Slacker (Ecoflex
+reaches the equilibrium pressure. Thus, a maximum control          Gel part A, part B, and Slacker with a mixing ratio of 1:1:2)
+pressure (MCP) was defined as 2 kPa less than the measured         to fill the abdominal cavity with a very soft jelly-like material.
+equilibrium pressure (sample with granular jamming nodule          (h) Demold the out skin layer mold and apply baby powder
+M CP = 132.7; sample with balloon nodule M CP = 114.9).            (Johnson and Johnson) to ensure a non-stick surface.
+The valid pressure-based control region is defined as from the
+atmospheric pressure to the MCP.
+
+                                                                   are designed to be placed at the lower-left lobe surface, the
+B. Design and Fabrication of the Abdominal Phantom                 edge of the left lobe, lower-right lobe surface, and lower-
+   The prototyping of the abdominal phantom simulator con-         right lobe edge for physical tumor simulations. One balloon
+sists of soft robotic liver fabrication, abdominal phantom         nodule is placed on the bottom of the right lobe of the liver
+casting, pneumatic actuation, and sensing electronics. Due to      support structure for representing smooth-surfaced right lobe
+the natural geometry of the human liver and the importance         liver enlargement. The proposed layered fabrication process is
+of liver edge in palpation, the four granular jamming nodules      described in Fig. 4 a-h.
+           Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                                             CONFIDENTIAL. Limited circulation. For review only                                                          5
+                                                                  IEEE T-RO Submission no.: 20-0411.2
+
+                                                                                                                  IV. S INGLE N ODULE C HARACTERIZATION
+                                                                                                            To characterize how positive granular jamming nodules
+                                                                                                         show different properties from nodules with only membranes
+                                                                                                         after embedding them in silicone, the indentation test was
+                                                                                                         performed on the two types of samples: sample with granular
+                                                                                                         jamming nodule and sample with balloon nodule (Figs. 2b
+                                                                                                         and 2c). It is well known that the initial stress-strain curve of
+                                                                                                         rubbers determined from the first deformation is unique and
+                                                                                                         cannot be reproduced. According to the Mullins effect, the
+                                                                                                         stress-strain curve of the rubber membrane would approach
+                                                                                                         a steady-state through further repeated inflation [39]. The
+                                                                                                         steady-state stress-strain curves after the repeated inflation
+                                                                                                         treatment will also show little hysteresis at lower strains. In
+                                                                                                         our experiments, all rubber membranes were inflated 10 times
+                                                                                                         to reach the steady-state of the stress-strain behavior before
+                                                                                                         the sample making to ensure repeated performance [40]. The
+                                                                                                         rubber membranes also show a small standard deviation of
+                                                                                                         pressure during inflation across trials after the treatment, as
+                                                                                                         reported in Fig. 3.
+
+                                                                                                         A. Methodology and Experiment
+c.                    130                                           measured pressure under controller
+                                                                    set presure error upper bands           Fig. 5 (a) shows the indentation experiment set-up. A 3D
+                      125                                           set presure error lower bands
+                                                                                                         printed spherical-tipped probe with a length of 30 mm and
+     Pressure [kPa]
+
+
+
+
+                      120
+                                                                                                         a tip diameter of 20 mm was mounted on an ANT130 XY-
+                      115                                                                                stage (Aerotech Inc., accuracy of 2.5 µm) to perform the
+                      110                                                                                indentation test. The probe dimension was designed similar
+                      105                                                                                to the size of a human finger with a spherical tip for safe
+                      100              t1   t2                      t3                                   interaction with the silicone samples. The position and velocity
+                            2      4             6   8        10         12         14         16
+                                                                                                         data of the XY-stage were acquired at the frequency of 20 Hz.
+                                                         time [s]
+                                                                                                         Additionally, with an ATI Mini40-E Force/Torque sensor (SI-
+Fig. 5: (a) Indentation experiment set-up for signal nodule                                              40-2, ATI Industrial Automation, USA, resolution of 0.02 N),
+samples. (b) Connection diagram of the set-up (P1 stands for                                             force data was collected through a National Instruments data
+pressure sensor 1; S1 and S2 stand for solenoid valve 1 and                                              acquisition board (PCIe-6320) during the test. Meanwhile, the
+2; N stands for the nodule cast in the sample). (c) Pressure                                             sample was connected with a gauge pressure sensor (0 − 100
+convergence of the controller to set pressures (104, 107, and                                            PSI,40PC100G2A, Honeywell), two solenoid valves (S1, S2,
+121.5 kPa). The error band for set pressures are within 0.4                                              VDW10AA, SMC), an air reservoir (rigid plastic, with the
+kPa. t1 , t2 , and t3 are the time took for converging to the set                                        volume of 250 ml), and an air pump (SIMILK, mini air
+pressures with the controller.                                                                           pump, rated airflow of 2L/min) during the experiment for
+                                                                                                         pressure control. A National Instrument DAQ (USB-6341)
+                                                                                                         with Labview 2018 was used to acquire the signals and control
+                                                                                                         the experiment. The pneumatic diagram is shown in Fig. 5 (b).
+                                                                                                         The air pump was used for inflating the internal membrane
+C. Pressure Control                                                                                      of the samples. Solenoid valve S1 was used for maintaining
+                                                                                                         the internal air mass, while solenoid valve S2 can release the
+                                                                                                         air of the air reservoir through connecting to the environment
+   A closed-loop pressure controller was designed in order                                               (atmospheric pressure).
+to control the internal pneumatic pressure of the nodule. A                                                 During the experiment, the nodule was first inflated and
+proportional controller is used to increase the pressure while                                           maintained at a certain driving pressure, followed by the
+the computer-controlled valve opening is used to decrease the                                            closing of solenoid valve S1. The pressure controller was
+pressure. An air reservoir is added to stabilize the internal                                            turned off after the internal pressure of the nodule reached
+pressure without overshoot. The proportional controller adapts                                           its MCP. The nodule was continually inflated to test the
+the flow rate of the air pump and the valve opening in order                                             performance after it reaches the equilibrium pressure, with
+to reach a desired pressure in the nodule. Fig. 5c shows the                                             time steps of 0.5s and a constant rated airflow of 2L/min of the
+convergence of the internal pressure of the nodule to the                                                pump. The probe then performs the indentation on the sample
+desired set pressure value due to the controller action. The                                             from the depth of 4 mm to 10 mm with the step of 1 mm. The
+controller was only used when the driving pressure is less                                               gauge pressure sensor recorded the internal pressure change
+than the MCP.                                                                                            during indentation with S1 closed. Based on the amount of
+                                Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                                                                CONFIDENTIAL. Limited circulation. For review only                                                                                6
+                                                                                     IEEE T-RO Submission no.: 20-0411.2
+
+ a.                                  20
+                                                                                                                                          100
+                                                                                                                                                                             Silicone original stiffness
+                                                                                                                                                                             Granular jamming nodule
+                                                                                                                                           90                                Granular jamming nodule over MCP
+                                     15                                                                                                                                      Granular jamming nodule model
+                                                                                                                                                                             Balloon nodule
+          Stress [kPa]
+
+
+
+
+                                                                                                                                           80                                Balloon nodule over MCP
+
+
+
+
+                                                                                                                      Stiffness E [kPa]
+                                     10                                                                                                                                      Balloon nodule model
+                                                                                                                                           70
+                                                                      Granular jamming nodule
+                                      5
+                                                                      Granular jamming nodule linear regression                            60
+                                                                      Balloon nodule
+                                                                      Balloon nodule linear regression
+                                      0                                                                                                    50
+                                       0.1      0.15         0.2         0.25          0.3         0.35       0.4
+ b.                                                                     Strain
+                                      1                                                                                                    40
+  Coefficient of determination R 2
+
+
+
+
+                                     0.9                                                                                                   30
+                                                                                                                                            100   105   110    115     120     125       130      135      140
+                                                                                                                                                              Driving pressure [kPa]
+                                     0.8
+                                                                                                                    Fig. 7: During inflation, the samples show different stiffness at
+                                                                                                                    different pressure. The figure describes the change of material
+                                     0.7
+                                               Granular jamming nodule Average R2 =0.97481                          stiffness E [kPa] with the increase of driving pressure during
+                                               Balloon nodule Average R 2 =0.97165
+                                                                                                                    inflation for sample with granular jamming nodule and balloon
+                                     0.6
+                                       100    105      110      115      120         125     130      135    140    nodule. The stiffness E was calculated based on the linear
+                                                               Driving pressure [kPa]
+                                                                                                                    regression of the stress and strains as shown in Fig. 6
+Fig. 6: (a) Example linear regressions of stress and strain at a
+driving pressure of 123.88 kPa for the sample with granular
+jamming nodule and 103.79 kPa for the sample with balloon                                                           the stiffness E of the phantom.
+nodule. (b) The coefficient of determination R2 for the linear
+regression of stress and strain for samples at different driving                                                                                              σ   F (L0 + Lsz )
+pressures.                                                                                                                                              E=      =                                               (1)
+                                                                                                                                                                    A(∆L)
+
+                                                                                                                    where, E is the stiffness of the phantom, σ is the stress,  is the
+infilled air and different driving pressure conditions, 3 trials                                                    strain, F is the mean steady force measurement of a 1-second
+of experiments were performed on each sample.                                                                       steady force response after the material relaxation of the peak
+   With the indentation tests performed at different driving                                                        force response, A is the contact area between the probe and
+pressure conditions, the nodule stiffness, size changing, and                                                       the sample (illustrated in Fig. 5a), L0 is the initial thickness
+sensing capability were evaluated separately. Stiffness was                                                         of the sample, ∆L is the measured indentation depth, and
+calculated as Young’s modulus based on the applied force                                                            Lsz is the measured peak surface deformation of the phantom
+(measured by the Force/Torque sensor) and displacement                                                              along the x-direction. The mean of steady force response of
+(measured by the XY-stage). The size-changing were measured                                                         each indentation was chosen instead of peak value with the
+by the XY-stage. Results are discussed in Section IV-B. The                                                         consideration that manual palpation is based on low-frequency
+nodule sensing capability at different pressure conditions was                                                      movement [3], [41].
+measured by the applied force (measured by the Force/Torque                                                            The coefficient of determination R2 of the linear regression
+sensor) and related internal pressure change (measured by the                                                       at different driving pressures is shown in Fig. 6b. From
+gauge pressure sensor), shown in Section IV-C.                                                                      the figure, we can observe that in general the stress-strain
+                                                                                                                    curves of the samples have good linear fits with R2 > 0.95.
+                                                                                                                    This implies that nodules can be treated as Hookean objects
+B. Nodule stiffness change                                                                                          for the given pressure conditions. The Hookean assumption
+   The indentation tests provided a method to analyze how the                                                       helps to simplify the modeling for stiffness control with
+stiffness of the phantom and the volume of the nodules change                                                       pressure conditions up to their MCP. Example stress-strain
+in regard to the increase of nodule driving pressure. The                                                           linear regressions at a driving pressure of 123.9 kPa for
+stiffness of the original silicone without any nodule (Ecoflex                                                      granular jamming nodule and 103.8 kPa for balloon nodule
+00-10 part A, part B, and Slacker with a mixing ratio of 1:1:2,                                                     are shown in Fig. 6a. Fig. 7 shows that the internal pressure
+thickness 30 mm, stiffness E = 38.7 kPa) is indicated by a                                                          becomes saturated when the internal pressure approaches the
+flat line in Fig. 7.                                                                                                equilibrium pressure. Thus, the model for pressure-stiffness
+   Neo-Hookean model was used to describe the stress-strain                                                         control is limited from atmosphere pressure to the MCP of
+curve of the material in this study. In the small strain regime                                                     the sample. An extension of the pressure control region can
+(less than 0.4), we performed a linear approximation of the                                                         be clearly observed with the positive granular jamming effect
+stress and strain relation to determine the material stiffness.                                                     compared to nodules with only rubber membranes. We fitted a
+   With the stress and the strain of 7 indentation steps at each                                                    linear model for the pressure-stiffness relation of the granular
+pressure condition, linear regression was applied to calculate                                                      jamming nodule and the balloon nodule. The model is shown
+                                             Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                                              CONFIDENTIAL. Limited circulation. For review only                                                                                                                         7
+                                                                   IEEE T-RO Submission no.: 20-0411.2
+
+                         22
+                                                                   Granular jamming nodule STD
+                                                                                                              a.                                   7
+                                                                   Granular jamming nodule (mean)                                                            Granular jamming nodule
+                                                                                                                                                   6
+                         21                                        Granular jamming nodule over MCP                                                          Granular jamming nodule linear regression
+
+
+
+
+                                                                                                                          Pressure change [kPa]
+                                                                   Granular jamming nodule model                                                   5         Balloon nodule
+                                                                   Balloon nodule STD                                                                        Balloon nodule linear regression
+                                                                                                                                                   4
+  Nodule diameter [mm]
+
+
+
+
+                         20                                        Balloon nodule (mean)
+                                                                   Balloon nodule over MCP
+                                                                                                                                                   3
+                                                                   Balloon nodule model
+                         19
+                                                                                                                                                   2
+
+                         18                                                                                                                        1
+
+                                                                                                                                                   0
+                         17                                                                                                                        -1
+                                                                                                                                                        0     1            2          3         4           5          6           7
+                                                                                                                                                                                      Force [N]
+                         16                                                                                   b.                                   1
+
+
+
+
+                                                                                                               Coefficient of determination R 2
+                         15
+                          100   105   110      115      120       125       130       135        140
+                                                                                                                                                  0.9
+                                               Driving pressure [kPa]
+
+Fig. 8: The size change of the nodules during inflation. 21                                                                                       0.8
+trials of data were tested for each pressure condition. The mean
+value and the standard deviation errors of the 21 trials were                                                                                     0.7
+                                                                                                                                                             Granular jamming nodule
+shown in the figure.                                                                                                                                         Balloon nodule
+                                                                                                                                                  0.6
+                                                                                                                                                    100     105      110        115       120       125         130    135         140
+                                                                                                                                                                               Driving pressure [kPa]
+                                                                                                              c.                                   5
+as follow:                                                                                                                                                  granular jamming nodule at 117.8 kPa
+                                                                                                                                                            granular jamming nodule 2nd order polynomial regression at 117.8 kPa
+                                                                                                                                                   4
+
+
+
+
+                                                                                                                          Pressure change [kPa]
+                                                                                                                                                            granular jamming nodule at 124.4 kPa
+                                            EA = 0.77P − 47.7                                         (2)                                                   granular jamming nodule 2nd order polynomial regression at 124.4 kPa
+                                                                                                                                                   3
+                                            EB = 1.27P − 97.7                                         (3)
+                                                                                                                                                   2
+
+   where, EA and EB are the stiffness of the granular jamming                                                                                      1
+nodule, and the balloon nodule at pressure P (P is from                                                                                            0
+atmosphere pressure to the MCP). The R2 of the linear fit for
+                                                                                                                                                   -1
+the sample of granular jamming nodule and balloon nodule                                                                                                0     1            2          3         4           5          6           7
+are 0.92 and 0.89, respectively.                                                                                                                                                      Force [N]
+                                                                                                              d.                                   1
+   The samples also exhibit a volume change during inflation
+                                                                                                               Coefficient of determination R 2
+
+
+
+
+besides the increase of stiffness. The samples are cast in a                                                                                      0.9
+box structure (see methods in section III-A and Fig. 2) and
+only have the capability to change size in the x-direction. We                                                                                    0.8
+assume the nodules maintain spherical shape during initial
+inflation with low strain conditions [40]. Considering the                                                                                        0.7
+                                                                                                                                                             Granular jamming nodule
+incompressibility of the silicone material, the change of the                                                                                                Balloon nodule
+nodule diameter was measured as the center of the silicone                                                                                        0.6
+                                                                                                                                                    100     105      110        115       120       125         130    135         140
+surface change along the x-axis (Fig. 5a). The surface position                                                                                                                Driving pressure [kPa]
+of the sample is calculated as the position of the first contact
+                                                                                                            Fig. 9: (a) Example linear regressions of pressure change and
+point of the probe by aligning the force data and probe
+                                                                                                            applied force at driving pressure of 115.6 kPa for the sample
+position data. 21 trials of data were used for determining the
+                                                                                                            with granular jamming nodule and 103.8 kPa for the sample
+nodule size at each pressure condition for each type of sample.
+                                                                                                            with balloon nodule. (c) Example 2nd order polynomial regres-
+The diameter change of the nodules in regard to pressure
+                                                                                                            sions of pressure change and applied force at a driving pressure
+change is shown in Fig. 8. The original nodule diameter is
+                                                                                                            of 117.8 kPa and 124.4 kPa for the sample with granular
+being considered as the reference 16 mm in the figure. The
+                                                                                                            jamming nodule. (b) (d) The coefficient of determination R2
+repeatability of both of the samples under pressure control,
+                                                                                                            for the linear and the 2nd order polynomial regression of
+represented by the standard deviation data in Fig. 8, are
+                                                                                                            pressure change and applied force for samples at different
+suitable for our application.
+                                                                                                            driving pressure conditions, reported as the mean value of 3
+   In order to better describe the correlation and estimate the
+                                                                                                            trials.
+nodule size with different driving pressures, we also fitted a
+linear model for the sample with a granular jamming nodule
+and the sample with a balloon nodule for the valid pressure
+control region. The model is as follows:                                                                    is from atmosphere pressure to the MCP). The R2 of the
+                                            DA = 0.024P − 2.3                                         (4)   linear fit for the sample of granular jamming nodule and
+                                                                                                            balloon nodule are 0.87 and 0.75, respectively. The experiment
+                                            DB = 0.089P − 9.1                                         (5)
+                                                                                                            shows that positive pressure granular jamming nodules exhibit
+  where, DA and DB are the diameter change of the granular                                                  a much lower expansion rate in size compared to nodules
+jamming nodule, and the balloon nodule at pressure P (P                                                     with only rubber membranes under the same pressure. Balloon
+                                Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                                                             CONFIDENTIAL. Limited circulation. For review only                                                        8
+                                                                                  IEEE T-RO Submission no.: 20-0411.2
+
+                                          1.5                                                                         and an average R2 = 0.99 for sample with balloon nodule).
+                                                                        Granular jamming nodule
+                                                                                                                      Fig. 9a shows the example linear regressions at 115.6 kPa for
+         Presssure Change/Force [kPa/N]
+                                                                        Granular jamming nodule over MCP
+                                                                        Granular jamming nodule model fitting
+                                                                        Balloon nodule
+                                                                                                                      granular jamming nodule and 103.8 kPa for balloon nodule.
+                                           1                            Balloon nodule over MCP
+                                                                                                                      The linear model allows us to better interpret how the overall
+                                                                                                                      sensitivity changed across all valid driving pressures. When
+                                          0.5                                                                         the driving pressure is above 120 kPa, a drop of linearity of
+                                                                                                                      the sensor can be observed when it approaches the equilibrium
+                                                                                                                      pressure for the sample with granular jamming nodules. A 2nd
+                                           0
+                                           100   105   110   115      120      125       130       135          140   order polynomial fit was also tested to evaluate the nodules,
+                                                             Driving pressure [kPa]
+                                                                                                                      as shown in Fig. 9d. Although the 2nd order polynomial
+Fig. 10: Sensitivity (change of internal pressure per unit                                                            models show better fit for determining local sensitivity of the
+external force) for different driving pressure conditions. The                                                        nodules at all given driving pressures, the 2nd order coefficient
+sensitivity of each driving pressure condition was calculated                                                         (a median of 0.01) is nearly 0 and very small compared
+based on the linear approximation shown in Fig. 9                                                                     to the 1st order coefficient (a median of 0.62). This shows
+                                                                                                                      the feasibility of using the linear assumption to evaluate the
+                                                                                                                      overall sensitivity changes across different driving pressures.
+nodule presents increased stiffness coupled with significant                                                          The gradient analysis also allows us to understand how the
+deformation during inflation due to the material elasticity.                                                          overall sensitivity changes with different driving pressures.
+The granular jamming effect, on the other hand, compensates                                                               Based on the linear approximation between the pressure
+the deformation with the increased jamming of the granular                                                            change and applied force, slope K was defined as the sen-
+particles. This can be used for applications where only tunable                                                       sitivity of the nodules with the unit of [kPa/N]. Fig. 10 shows
+stiffness is needed with a small change in deformation. The                                                           the relation between the sensitivity and the driving pressure of
+gradually increased granular jamming effect also acts as an                                                           the nodules with the mean value of 3 trials. The relations were
+additional constrain to the soft nodule, which flattens the sud-                                                      fitted with third-order polynomial models based on Akaike’s
+den deformation when the internal driving pressure approaches                                                         Information Criterion (AIC) [42] as:
+the equilibrium. The positive granular jamming effect can not                                                           SA = 0.06342P 3 + 0.1203P 2 − 0.2993P + 0.4633              (6)
+only simulate a similar texture to tumors [1], [3] but also can                                                                            3             2
+                                                                                                                        SB = −0.01395P + 0.1115P − 0.07702P + 0.6632 (7)
+simulate a wider linear range of stiffness in pressure compared
+to nodules with only rubber membranes within the valid                                                                   where, SA and SB are the sensitivity of pressure change to
+pressure-based control regime. The result of 140% of extended                                                         applied force for the granular jamming nodule and the balloon
+pressure-based control regime validates the prediction that                                                           nodule at pressure P (where P is normalized by mean 123.1
+positive pressure granular jamming helps to extend the linear                                                         and std 8.814 for SA , and mean 109.5 and std 4.404 for SB ).
+region of the neo-Hookean characteristic of the mechanical                                                               The results show that both types of nodules exhibit higher
+behavior of the nodule compared to no-jamming conditions.                                                             sensitivity at lower driving pressure conditions when they are
+The results can also be used for estimating nodule stiffness                                                          at their softest states. The sensitivity decreases as the internal
+during the physical tumor simulation.                                                                                 pressure approach the equilibrium pressure with the linear
+                                                                                                                      assumption. The characterized model can be used in estimating
+C. Nodule sensing capability                                                                                          the changes of sensitivity with different driving pressure in
+                                                                                                                      a broader system with more complex geometry, shown in
+   The previous section shows that the nodule embedded
+                                                                                                                      Section V.
+in silicone can be used to simulate fibrosis in soft tissue
+with tunable stiffness. During the fibrosis physical simulation
+process, the nodule also serves as an embedded soft sensor                                                             V. E VALUATION ON M ULTIPLE - NODULE P HANTOM WITH
+with fluid pressure variations. At this stage, the solenoid valve                                                                  C OMPLEX O RGAN G EOMETRY
+(S1) was closed, and the pressure was not regulated during                                                               The singular nodule design shows the dual-function of tun-
+the sensing period. When an external force is applied to the                                                          able stiffness and soft sensing in fibrosis physical simulation.
+nodule, the internal pressure changes can be used to measure                                                          By embedding multiple nodules in the soft organ design,
+the exerted force.                                                                                                    it is possible not only to simulate different tumor locations
+   A linear model was first used to study the relation between                                                        but also to sense the indentation force and positions through
+the pressure and applied force within our compression test                                                            multiple sensor readings. The following section first described
+range (strain less than 0.4). Regression fits were applied to                                                         the methodology and experiment used for characterizing the
+each set of data (pressure change against applied force) at                                                           multiple nodule phantom sensing properties. With the help
+each selected driving pressure condition. 3 times experiments                                                         of previously characterized signal nodule sensitivity, machine
+were done for each driving pressure, and the average data were                                                        learning tools were used to generalize the model to be able to
+used for the regression. The experiment set-up was described                                                          estimate the palpation force and position even with complex
+in Section IV-A. Fig. 9b shows the coefficient of determination                                                       geometry and dynamic driving pressures. Then, we discuss
+R2 of the linear fit for different driving pressure conditions (an                                                    the result of the point-by-point palpation and palpation with
+average R2 = 0.94 for sample with granular jamming nodule                                                             different complex motions from direct sensor readings. Finally,
+                                           Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                    CONFIDENTIAL. Limited circulation. For review only                                           9
+                                         IEEE T-RO Submission no.: 20-0411.2
+
+                a.                                                  c.
+
+
+
+
+                b.                                                  d.
+
+
+
+
+Fig. 11: (a) Multiple nodule abdominal phantom calibration experiment set-up. (b) Connection diagram with nodules N1,
+N2, N3, N4, N5 embedded in the phantom. (c) Top view of the abdominal phantom. The yellow square indicates the area
+(100mm × 100mm) used for indentation in the multiple nodule calibration experiments. (d) Side view of the abdominal
+phantom. The shaded yellow line shows the trajectory of the indentations. Positions of the nodules are shown in (c) and (d),
+and all dimensions are in [mm].
+
+
+
+we validated and tested the model with multi-axis palpation              used as a generalized sensing model. The generalized
+performed with a robotic arm.                                            sensing model allows the multiple-nodule abdominal
+                                                                         phantom to estimate force and position of palpation even
+A. Methodology and experiment for calibration                            with pressurized conditions (corresponds to the inflating
+                                                                         pressures of the nodules) that never been experimentally
+   The approach for the calibration of the sensing model of
+                                                                         calibrated.
+the multi-nodule phantom with embedded liver followed three
+steps:                                                                 Fig. 11a shows the experiment set up for the calibration.
+   1) Point-by-point calibration to generate ground truth loca-     The abdominal phantom was placed underneath an XY-stage,
+       tion and force data of indentation for selected driving      where a 3D printed probe (diameter of 20 mm) is attached
+       internal pressure of each nodule.                            with an ATI Mini40-E Force/Torque sensor to an L16-P
+   2) With assumption 1: the nodules do not interfere with          Miniature Linear Actuator (Actuonix Motion Devices Inc.,
+       the sensing model of each other with the currently dis-      Canada) for the indentation. The abdominal phantom was
+       tributed distance during the indentation; and assumption     connected with 5 pressure sensors (±100kP a, PSE 543-R06,
+       2: the nodules follow the same sensitivity curvature         SMC Corporation, Japan), 6 solenoid valves (Z031C, Sirai,
+       as previously characterized signal nodule models (same       Italy), one air reservoir (rigid plastic, with the volume of
+       nodule design, membrane material, and silicone material      250 ml), and an air pump (SIMILK, mini air pump, rated
+       were used), an enlarged set of training data that covers     airflow of 2L/min). The pressure sensors used in the multiple
+       the entire range of driving pressures combinations of the    nodule experiment are from a different manufacturer as the
+       nodules can be simulated based on the calibrated ground      single nodule characterization experiment due to availability.
+       truth data in step 1 and the sensitivity models in Eq. (6)   However, both of the sensors give the required accuracy and
+       and (7).                                                     sensing range for the application. The driving pressures and
+   3) The experimental calibration training data from step 1        sensing range in the experiment were expected to be less than
+       and the simulated training data from step 2 were then        +50 Kpa relative to atmospheric pressure. The control and
+       combined and shuffled to train a neural network to be        measurement of the experiment were achieved with a National
+            Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                                                       CONFIDENTIAL. Limited circulation. For review only                                           10
+                                                                            IEEE T-RO Submission no.: 20-0411.2
+
+      a.                0
+                                                         Ground Truth Position
+                                                         Estimated Position
+                       -10
+                                                         x estimated position standard deviation
+                       -20                               y estimated position standard deviation
+
+
+                       -30
+
+                       -40
+y Position
+
+
+
+
+                       -50
+
+                       -60
+
+                       -70
+
+                       -80
+
+                       -90
+
+                  -100
+
+                  -110
+                             0   20    40         60              80          100
+                                            x Position
+b.
+                                                                       Ground Truth x Position
+     x Position [mm]
+
+
+
+
+                       100                                             Estimated x Position
+                                                                       Prediction Error
+
+
+                       50
+
+
+
+                         0
+                             0   20   40        60           80         100         120          140
+                                                  Time [s]
+
+c.
+                                                                       Ground Truth y Position
+                                                                                                       Fig. 13: (a) Maximum pressure change during the 20mm-depth
+     y position [mm]
+
+
+
+
+                       100                                             Estimated y Position
+                                                                       Prediction Error
+                                                                                                       indentation at different positions. x-axis and y-axis are the x
+                       50
+                                                                                                       and y position of the probe in regard to the phantom reference
+                                                                                                       frame. The pressure change caused by the indentation is
+                         0
+                                                                                                       indicated by the color bar. Pressure change for nodule 1-5
+                             0   20   40        60           80         100         120          140   is shown in N1-5, respectively. (b) 3D plot of the indentation
+                                                  Time [s]
+                                                                                                       force after the relaxation from the force/torque sensor during
+d.                     25
+                                                                           Ground Truth Force          the indentation. The force map matches the shape of the liver
+                       20                                                  Estimated Force
+                                                                           Prediction Error
+                                                                                                       because the organ is designed to be stiffer than the filling
+                       15
+             Fz [N]
+
+
+
+
+                                                                                                       material in the phantom
+                       10
+
+                         5
+
+                         0
+                             0   20   40        60           80         100         120          140   simulation. Controller described in section III-C were used for
+                                                  Time [s]
+                                                                                                       controlling the internal driving pressure of the nodules.
+Fig. 12: Test with a new indentation experiment with randomly                                             To perform the point-by-point calibration, the phantom was
+selected driving pressure combinations. (a) Ground truth test-                                         palpated with repeated indentation by the probe on a grid of
+ing indentation positions and the estimated indentation posi-                                          around 100 × 100 mm with the steps of 10 mm from the left
+tions with the trained neural network. Standard deviations are                                         top corner of the phantom to the right bottom corner. A clear
+shown as the error bars for x and y positions. The data when                                           correlation was observed between the indentation position and
+the robot was not being palpated were excluded. (b) Ground                                             the reading from the pressure sensors, which supports the
+truth testing indentation x positions and the estimated x                                              methodology and hypotheses stated previously. The reference
+positions. (c) Ground truth testing indentation y positions and                                        frame and indentation region (the square with yellow lines)
+the estimated y positions. (d) Ground truth testing indentation                                        used in the calibration experiment are shown on Figs. 11c
+force and the estimated force. Prediction errors are shown with                                        and 11d. The x and y positions of the indentations were
+shading in b, c, and d.                                                                                controlled by the XY-stage. Within each trial of each point
+                                                                                                       on the phantom, 4 random depth indentations were performed
+                                                                                                       within the range of (5 to 30 mm depth) to acquire a wider
+                                                                                                       range of force responses to generalize the model. Palpation
+Instrument DAQ (USB-6341) and Labview 2018. Fig. 11b                                                   force was kept within a similar range of manual palpation
+shows the detailed connection of the set-up. The positions                                             based on the previous study in [41]. Surface detection through
+of the five nodules are shown in Figs. 11c and 11d. N2 and                                             the Force/Torque sensor was used to determine the indentation
+N4 are designed for left and right lobe lower surface fibrosis                                         depth prior to the indentation. The pressure data (1000 Hz) of
+simulation. N1 and N3 are designed for left and right lobe                                             the embedded nodules and the force (100 Hz) and position
+edge fibrosis simulation. N5 is for the right lobe enlargement                                         (20 Hz) data of the probe were collected simultaneously for
+                                 Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                     CONFIDENTIAL. Limited circulation. For review only                                              11
+                                          IEEE T-RO Submission no.: 20-0411.2
+
+calibration. The data were later being processed and resampled        combinations. The average estimation error for x position, y
+to 20 Hz for training purposes. In the experimental calibration,      position, and z-direction force is 2.1 mm, 3 mm, and 0.55
+6 combinations of selected driving pressure conditions of             N, respectively. The estimation with the generalized sensing
+the nodules were tested (3 combinations were selected with            model and the errors are shown in Figs. 12b-12d. x-direction
+extreme conditions where the driving pressure was either              force and y-direction force were used in the sensing model for
+equal to the atmospheric pressure or the MCP of the nodule;           generalization purposes. Only the z-direction force estimation
+3 combinations were selected with randomly picked driving             error was evaluated and reported due to the small force applied
+pressures in between). This 6 combinations of data formed             in the other two axes. In Fig. 12d, the relaxation mainly
+the experimental training set.                                        comes from the viscoelastic behavior of the silicone. This
+   The simulated training data were then computed based on            can also be observed in palpation of soft tissue without any
+the experimental training data and previously characterized           soft nodules [44]. A position estimation was also presented
+sensing models (Fig. 10, Eq. (6) and (7)). The absolute               in Fig. 12 a, shows the ground truth indentation positions,
+sensitivity value is not being used here since it depends on          estimated positions, and prediction errors in a 2D scale with
+the silicone thickness. However, the relative sensitivity curve       regards to the phantom size and the calibrated indentation area
+of the driving pressure was assumed to remain the same.               on the top surface. Data are presented with only non-zero
+This method based on assumptions 1 and 2 was validated by             position estimations, and outliers have been removed based on
+comparing the measured pressure response of the phantom               the median value. The testing trial shows a root-mean-square
+during indentations of randomly selected driving pressures to         error (RMSE) of 4 mm (in the testing area around 100 × 100
+the simulated pressure response of the same driving pressure          mm) and 1.18 N (for the applied force up to 18 N) for the
+based on the sensing models and the experimental training             position and force estimation of palpation, respectively.
+data. The experimental data show a similar response to the
+simulated data with an average RMSE less than 0.02kP a
+across five trials of tests. This validates that the proposed         B. Direct sensor reading from the nodule
+methodology based on the assumptions can be used to general-             Fig.13a shows the pressure change of the embedded soft
+ize the model by supplementing the experimental training data         nodules at each indentation position from nodule 1 to nodule
+with the simulated training data. A 0.2 N threshold has been          5 with a trial of 10 × 10 grid point-by-point indentation with
+applied on the training ground truth z-direction force data f z,      the indentation depth of 20mm. The individual value shows the
+where the xy-positions were set to be (0, 0) if the indentation       maximum pressure variations (∆P = P − N) of the point-
+force is less than the threshold. The pressure response from the      by-point palpation. Greater pressure variation indicates that the
+nodules P was determined by: 1. the geometry, material, and           indentation applied greater pressure on the nodule. Fig. 13 also
+nodule locations of the phantom, 2. the driving pressures of          shows that the indentation from the top surface affects more
+the nodules N, 3. indentation force f , and indentation position      on N2, N3, and N4 compared to N1 and N5. The simulated
+u.                                                                    physical tumors embedded from distinctive regions of the liver
+   The experimental training set and simulated supplemental           would respond differently to the indentation. The presented
+training were then shuffled to train a neural network model           pressure maps in Fig. 13 of the nodules can be used as one
+to estimate the hypothesis ψ(P, N, u, f ) for the pressure            type of visual feedback to show the trainee which tumor on
+response, the driving pressure, the position, and the 3-axis          the liver experiences the highest pressure during the palpation.
+force [43]. Multi-Layer Perceptron Neural Network (MLP)                  To test the phantom with more complex palpation motions,
+with Bayesian regularization function from MATLAB deep                rather than single-direction indentations, a robotic arm (UR5)
+learning toolbox was used to fit the hypothesis with three            with a sensorised probe (a capacitive tactile sensor adapted
+hidden layers [7, 20, 8]. The data for the neural network             from [20], 2Hz sampling rate) was used to perform the pal-
+training was formed as:                                               pation tasks. The capacitive tactile sensor has been calibrated
+        h
+           (i)   (i)  (i)   (i)  (i)    (i)   (i)     (i) (i) (i)
+                                                                  i   to provide a force value. The validation set-up is shown in
+I(i) = P1 P2 P3 P4 P5 N1 N2 N3 N4 N5                                  Fig. 14a. The palpation experiments were conducted through
+                                                               (8)    probing the abdominal phantom with a designed motion. Three
+                          h                          i                types of motions were tested, as demonstrated in Figs. 14b-
+                 O(i) = fx(i) fy(i) fz(i) x(i) y (i)           (9)    14d for palpation normal to the surface, palpation with lateral
+                                                                (i)
+                                                                      motion, and palpation with rotational motion. The sensor
+   where, I(i) is the input vector of the neutral network, P1         readings from the abdominal phantom and the sensor reading
+      (i)                                                 (i)
+to P5 are the pressure response of the nodule 1 to 5, N1 to           from the sensorised probe are both shown in Fig. 14e-14g. The
+  (i)
+N5 are the driving pressures of the nodule 1 to 5, O(i) is the        palpation was performed on the same location on the phantom
+                                        (i) (i)       (i)
+output vector of the neutral network, fx fy , and fz are the          for the three types of demonstrated motions. A significant
+                            (i) (i)
+3-axis indentation force, x y are the indentation position.           difference in the pressure reading profiles from the embedded
+All positions are based on the phantom reference frame shown          nodules can be observed due to the different motions of
+in Figs. 11c and 11d.                                                 palpation. The direct sensor readings from the phantom can,
+   The performance of the trained neural network was then             therefore, reflect the palpation motions and strategies. We also
+tested with a set of pressure data obtained by a new in-              demonstrated this as one of the methods to present visual
+dentation experiment with randomly selected driving pressure          feedback simultaneously to the trainee.
+            Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                           CONFIDENTIAL. Limited circulation. For review only                                                                                                                                                                               12
+                                                IEEE T-RO Submission no.: 20-0411.2
+                                                                                                 normal                                                                                                       normal
+                                                       b.                        0                                                           e.               1                                                                                  10
+
+
+
+
+                                                            z position [mm]
+                                                                                                                                                                             nodule 1
+                                                                               -10                                                                          0.8              nodule 2                                                            8
+
+
+
+
+                                                                                                                                                                                                                                                      Palpation force [N]
+                                                                                                                                           Pressure [kPa]
+                                                                                                                                                                             nodule 3
+                                                                               -20                                                                          0.6
+                                                                                                                                                                             nodule 4                                                            6
+                                                                                                                                                                             nodule 5
+                                                                                                                                                            0.4
+                                                                                -30                                                                                          Palpatoin force
+                                                                                                                                                                                                                                                 4
+                                                                              -10                                                                           0.2
+
+                                                                                                                                                              0                                                                                  2
+                                                                                  0
+
+                                                                                                                                                            -0.2                                                                                 0
+                                                       Ry [deg]                   10                                    -5             -10                         0        0.5        1       1.5        2          2.5   3         3.5   4   4.5
+                                                                                       10   5         0
+                                                                                                   Rx [deg]                                                                                                   Time [s]
+
+                                                       c.                                        lateral                                     f.                                                               lateral
+                                                                                 0                                                                            1                                                                                  10
+                                                                                                                                                                             nodule 1
+
+
+
+
+                                                            z position [mm]
+                                                                               -10                                                                          0.8              nodule 2                                                            8
+
+
+
+
+                                                                                                                                                                                                                                                      Palpation force [N]
+                                                                                                                                           Pressure [kPa]
+                                                                                                                                                                             nodule 3
+                                                                                                                                                            0.6
+                                                                               -20                                                                                           nodule 4                                                            6
+                                                                                                                                                                             nodule 5
+                                                                                                                                                            0.4
+                                                                                -30                                                                                          Palpatoin force
+                                                                                                                                                                                                                                                 4
+                                                                              -10                                                                           0.2
+
+                                                                                                                                                              0                                                                                  2
+                                                                                  0
+                                                                                                                                                            -0.2                                                                                 0
+                                                       Ry [deg]                   10                                    -5             -10                         0        0.5        1       1.5        2          2.5   3         3.5   4   4.5
+                                                                                       10   5         0
+                                                                                                   Rx [deg]                                                                                                   Time [s]
+
+                                                                                                rotational                                                                                                rotational
+                                                                                 0                                                                            1                                                                                  10
+                                                       d.   z position [mm]                                                                  g.                              nodule 1
+                                                                               -10                                                                          0.8              nodule 2                                                            8
+
+
+
+
+                                                                                                                                                                                                                                                      Palpation force [N]
+                                                                                                                                           Pressure [kPa]
+                                                                                                                                                                             nodule 3
+                                                                                                                                                            0.6
+                                                                               -20                                                                                           nodule 4                                                            6
+                  initial end-effector pose                                                                                                                                  nodule 5
+                                                                                                                                                            0.4
+                                                                                -30                                                                                          Palpatoin force
+                  end-effector pose during palpation                                                                                                                                                                                             4
+                                                                              -10                                                                           0.2
+                  final end-effector pose
+                                                                                                                                                              0                                                                                  2
+                  Rx, Ry, and z robot control                                     0
+                                                                                                                                                            -0.2                                                                                 0
+                                                                                  10                                                                               0        0.5        1       1.5        2          2.5   3         3.5   4   4.5
+                                                       Ry [deg]                        10   5         0                 -5             -10
+                                                                                                   Rx [deg]                                                                                                   Time [s]
+
+
+
+Fig. 14: (a) Validation set-up for palpation with complex motions performed with UR5 robot; (b) palpation trajectory with
+the motion normal to the surface; (c) palpation trajectory with the lateral motion; (d) palpation trajectory with the rotational
+motion. (e), (f), (g) Direct sensor reading from the phantom (5 embedded nodules) and force sensor reading from the probe
+with palpation with different motions performed at the same location.
+
+
+C. Force and Position Estimation for Palpation with Complex                                                                       0
+
+Motions                                                                                                                          -10
+
+   A validation test was performed to test the position estima-                                                                  -20
+
+tion accuracy of palpation with complex motions, through the                                                                     -30
+set-up shown in Fig. 14a. Following the same methodology
+                                                                                                                                 -40
+                                                                                                              y Position [mm]
+
+
+
+
+described in section V-A, a generalized neural network was
+                                                                                                                                 -50
+trained based on the UR5 robot experimental training data and
+simulated training data. The driving pressures of the nodules                                                                    -60
+are selected randomly for the test. The results show that the                                                                    -70
+phantom can estimate the palpation position in regards to the                                                                                                                                    ground truth positions
+                                                                                                                                 -80                                                             estimated positions for palpation-normal motion
+palpation motions. Fig. 15 shows the result of the position                                                                                                                                      estimated STD for palpation-normal motion
+estimation from a test trial palpation with normal, lateral, and                                                                 -90                                                             estimated positions for palpation-lateral motion
+                                                                                                                                                                                                 estimated STD for palpation-lateral motion
+rotational motions. The position estimation RMSE are 4.6mm,                                                                     -100                                                             estimated positions for palpation-rotational motion
+6.2mm, and 2mm for normal, lateral, and rotational palpation,                                                                   -110
+                                                                                                                                                                                                 estimated STD for palpation-rotational motion
+
+respectively.                                                                                                                          0                               20            40              60              80        100
+                                                                                                                                                                                       x Position [mm]
+
+                                                                                                              Fig. 15: Position estimation with the trained sensing model
+                        VI. D ISCUSSION
+                                                                                                              for testing palpation with the normal, lateral, and rotational
+   Soft nodules with positive-pressurized cavities show a dual                                                motion.
+function of coupled actuation and sensing. The increased
+internal pressure can be used to control the stiffness of
+the nodule and dynamically simulate fibrosis in soft tissue.
+However, the nodule with only rubber membranes exhibits a                                                     pressure saturated at its equilibrium state. The positive gran-
+very limited control region in pressure due to hyperelasticity.                                               ular jamming layer can also be used to decouple the stiffness
+The nodule also shows inevitable significant deformation with                                                 change and deformation by compensating the non-linearity of
+the increase of stiffness during inflation. Experimental results                                              the elastomeric material. Thus, the design guideline for soft
+denoted that the positive pressure granular jamming approach                                                  tumor physical simulation can be concluded as: 1) positive
+helps to extend the linear pressure-based control region of the                                               granular jamming nodules are suitable for applications where
+material with a neo-Hookean assumption. It has the advantage                                                  minimum size change is required for high range of stiffness
+of presenting a wide range of stiffness before the driving                                                    simulation such as cirrhosis or hepatocellular carcinoma [34],
+           Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                    CONFIDENTIAL. Limited circulation. For review only                                                          13
+                                         IEEE T-RO Submission no.: 20-0411.2
+
+and 2) balloon nodules are suitable for applications where size     nodules in the abdominal tissue, soft sensing within complex
+changing is the major symptom, such as the enlarged liver..         3D geometry can be achieved. Since the complex geometry
+   The method introduced in Section V provides an effective         and multi-material soft tissue have already incorporated non-
+solution to design soft robots with complex geometry and            linearity, keeping the single nodule sensing model within a
+composite materials that can not only tune the stiffness distri-    linear range can significantly simplify the computation for
+bution but also sense the interactions with multiple embedded       generalizing the sensing model. Finally, we show results of
+nodules. This low-pressurized pneumatic solution poses great        estimating external palpation positions and forces even during
+potential in the field of human-robot interaction with its          driving pressures of the nodules (correspond to the simulated
+advantages in safety, low-cost, high-flexibility, high-design       tumor conditions) not used to train the deep neural network
+freedom, and robustness. The technique can be used, but not         used to generalize the model in Section V-A and Fig. 12.
+limited to, the application of haptic surface, soft grippers, and   Testing trial with linear indentation palpation shows a root-
+soft sensorized simulators.                                         mean-square error (RMSE) of 4 mm (in the testing area around
+   In this paper, we experimentally support its application in      100 × 100 mm) and 1.18 N (for the applied force up to 18 N)
+designing an abdominal phantom for the purpose of palpation         for the position and force estimation of palpation, respectively.
+training. Compared to existing soft sensing technologies used       The position estimation RMSE of the complex palpation
+in haptic interaction such as sensing skins, the proposed           testing trial is 4.6mm, 6.2mm, and 2mm for normal, lateral,
+concept: 1) introduces no interference to the physiological         and rotational palpation in the same testing area, respectively.
+condition being presented by integrating pneumatic sensing          The accuracy is adequate for applications within the current
+and actuation, and 2) directly evaluates the effect of the          study.
+tactile interaction on the organ by measuring pressure at the
+nodule level. These advantages allow a higher fidelity and                           ACKNOWLEDGMENT
+more complex geometry of the simulator design. Together with          This work was supported in part by the Engineering and
+the ability to present different stiffness and symptoms of the      Physical Sciences Research Council (EPSRC) MOTION grant
+abnormal liver, the phantom can be used to train physicians to      EP/N03211X/2 and EP/N03208X/1, and EPSRC RoboPatient
+have a seamless transition to examine real patients using the       grant EP/T00603X/1.
+same examination protocol. Organ level sensing also allows
+physicians to explore new external palpation techniques to                                        R EFERENCES
+detect organ conditions given force constraints imposed at the       [1] L. Bickley and P. Szilagyi, Bates’ guide to physical examination and
+organ level. Compared to palpation training simulators that              history-taking, 12th ed. Philadelphia : Wolters Kluwer, 2012, vol. 13.
+                                                                     [2] S. Ramani, “Twelve tips for excellent physical examination teaching,”
+involve VR glasses and exoskeleton data gloves, the proposed             Medical Teacher, vol. 30, no. 9-10, pp. 851–856, 2008.
+concept requires no change to the existing manual palpation          [3] C. Jarvis, Physical examination & health assessment, 7th ed. Elsevier
+process with bare hands.                                                 B.V., 2015.
+                                                                     [4] C. L. Moore and J. A. Copel, “Point-of-care ultrasonography,” New
+   Through quantifying simulated conditions (tumor stiffness)            England Journal of Medicine, vol. 364, no. 8, pp. 749–757, 2011, pMID:
+and applied pressure on the simulated tumors, the proposed               21345104.
+design can also provide a practical solution to understand           [5] J. B. Cooper and V. R. Taqueti, “A brief history of the development of
+                                                                         mannequin simulators for clinical education and training,” Quality and
+the action and perception in haptic interaction. In future               Safety in Health Care, vol. 13, no. SUPPL. 1, pp. 11–18, 2004.
+studies, systematic training solutions can be designed based         [6] G. Burdea, G. Patounakis, V. Popescu, and R. E. Weiss, “Virtual reality
+on the abdominal phantom, allowing the trainees to record the            training for the diagnosis of prostate cancer,” Ieee 1998 Virtual Reality
+                                                                         Annual International Symposium, Proceedings, vol. 46, no. 10, pp. 190–
+technique, understand their behavior, and learn from expert              197, 1998.
+demonstrations. We will also study the potential of multi-           [7] G. J. Gerling, S. Rigsbee, R. M. Childress, and M. L. Martin, “The
+contact position estimation of the phantom via additional                design and evaluation of a computerized and physical simulator for
+                                                                         training clinical prostate exams,” IEEE Transactions on Systems, Man,
+calibration and training of new neural networks.                         and Cybernetics Part A:Systems and Humans, vol. 39, no. 2, pp. 388–
+                                                                         403, 2009.
+                      VII. C ONCLUSION                               [8] G. J. Gerling, A. M. Weissman, G. W. Thomas, and E. L. Dove,
+                                                                         “Effectiveness of a dynamic breast examination training model to
+   This paper characterized a coupled action-perception solu-            improve clinical breast examination (CBE) skills,” Cancer Detection
+tion that will ultimately help to close the perception response          and Prevention, vol. 27, no. 6, pp. 451–456, 2003.
+loop in a robotic patient simulator to train physicians on how       [9] A. Filippeschi, F. Brizzi, E. Ruffaldi, J. M. Jacinto, and C. A. Avizzano,
+                                                                         “Encountered-type haptic interface for virtual interaction with real
+to regulate palpation forces and movements of fingers [1], [3].          objects based on implicit surface haptic rendering for remote palpation,”
+However, this poses the challenge of being able to control the           IEEE International Conference on Intelligent Robots and Systems, vol.
+stiffness of the hard formations in soft tissue with internal            2015-Decem, pp. 5904–5909, 2015.
+                                                                    [10] J. Spillmann, S. Tuchschmid, and M. Harders, “Adaptive space warping
+pressure in a linear way without affecting the accuracy of               to enhance passive haptics in an arthroscopy surgical simulator,” IEEE
+sensing. To address this problem, we introduce a granular jam-           Transactions on Visualization and Computer Graphics, vol. 19, no. 4,
+ming approach to extend the linear region of the neo-Hookean             pp. 626–633, 2013.
+                                                                    [11] L. Hyde, C. Erolin, and J. Ker, “Creation of abdominal palpation model
+behavior of pneumatically controlled soft actuators to present           prototype for training of medical students in detection and diagnosis of
+hard regions. Experimental results show the linear region of             liver disease,” Journal of Visual Communication in Medicine, vol. 35,
+the neo-Hookean nodules can be extended by 140% with the                 no. 3, pp. 104–114, 2012.
+                                                                    [12] K. Inoue, K. Ujiie, and S. Lee, “Development of haptic devices using
+positive pressure granular jamming approach compared to no-              flexible sheets for virtual training of abdominal palpation,” Advanced
+jamming conditions. Furthermore, by distributing the sensing             Robotics, 2014.
+
+            Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+                                             CONFIDENTIAL. Limited circulation. For review only                                                                    14
+                                                  IEEE T-RO Submission no.: 20-0411.2
+
+[13] X. Tan, L. He, J. Cao, W. Chen, and T. Nanayakkara, “A soft pressure                versus hyperelasticity considerations in quasistatic modeling of a soft
+     sensor skin for hand and wrist orthoses,” IEEE Robotics and Automation              finger-like robotic appendage for real-time position and force estima-
+     Letters, vol. 5, no. 2, pp. 2192–2199, 2020.                                        tion,” Soft Robotics, vol. 6, no. 2, pp. 228–249, 2019, pMID: 30702390.
+[14] A. A. Stanley and A. M. Okamura, “Controllable Surface Haptics                 [36] R. W. Ogden, “Large deformation isotropic elasticity–on the correlation
+     via Particle Jamming and Pneumatics,” IEEE Transactions on Haptics,                 of theory and experiment for incompressible rubberlike solids,” Pro-
+     vol. 8, no. 1, pp. 20–30, 2015.                                                     ceedings of the Royal Society of London. A. Mathematical and Physical
+[15] Y. J. Kim, S. Cheng, S. Kim, and K. Iagnemma, “A novel layer                        Sciences, vol. 326, no. 1567, pp. 565–584, 1972.
+     jamming mechanism with tunable stiffness capability for minimally              [37] A. G. Holzapfel, “Nonlinear solid mechanics ii,” 2000.
+     invasive surgery,” IEEE Transactions on Robotics, vol. 29, no. 4, pp.          [38] N. G. Cheng, “Design and analysis of jammable granular systems,”
+     1031–1042, 2013.                                                                    Ph.D. dissertation, Massachusetts Institute of Technology, 2013.
+[16] G. A. Dominguez, A. Schmitz, M. Kamezaki, and S. Sugano, “A                    [39] L. Mullins, “Softening of rubber by deformation,” Rubber Chemistry
+     Haptic interface with adjustable stiffness using MR fluid sophon somlor,”           and Technology, vol. 42, no. 1, pp. 339–362, 1969.
+     IEEE/ASME International Conference on Advanced Intelligent Mecha-              [40] R. Jiusheng, “Elastic instability of pseudo-elastic rubber balloons,”
+     tronics, AIM, vol. 2015-August, pp. 1132–1137, 2015.                                Computers, Materials and Continua, vol. 7, pp. 25–31, 02 2008.
+[17] M. J. Telleria, M. Hansen, D. Campbell, A. Servi, and M. L. Culpepper,         [41] J. Konstantinova, G. Cotugno, P. Dasgupta, K. Althoefer, and
+     “Modeling and implementation of solder-activated joints for single-                 T. Nanayakkara, “Palpation force modulation strategies to identify hard
+     actuator, centimeter-scale robotic mechanisms,” Proceedings - IEEE                  regions in soft tissue organs,” PLoS ONE, 2017.
+     International Conference on Robotics and Automation, pp. 1681–1686,            [42] L. Ljung, System identification : theory for the user, 2nd ed., ser. Prentice
+     2010.                                                                               Hall information and system science series. Upper Saddle River, N.J.
+[18] A. Tzemanaki, G. A. Al, C. Melhuish, and S. Dogramadzi, “Design of                  ; London: Prentice Hall, 1998.
+     a Wearable Fingertip Haptic Device for Remote Palpation: Characteri-           [43] T. G. Thuruthel, B. Shih, C. Laschi, and M. T. Tolley, “Soft robot
+     sation and Interface with a Virtual Environment,” Frontiers in Robotics             perception using embedded soft sensors and recurrent neural networks,”
+     and AI, vol. 5, no. June, pp. 1–15, 2018.                                           Science Robotics, vol. 1488, p. accepted, 2018.
+[19] L. He, Q. Lu, S.-A. Abad, N. Rojas, and T. Nanayakkara, “Soft fingertips       [44] N. Sornkarn, P. Dasgupta, and T. Nanayakkara, “Morphological compu-
+     with tactile sensing and active deformation for robust grasping of                  tation of haptic perception of a controllable stiffness probe,” PLoS ONE,
+     delicate objects,” IEEE Robotics and Automation Letters, vol. 5, no. 2,             2016.
+     pp. 2714–2721, 2020.
+[20] P. Maiolino, M. Maggiali, G. Cannata, G. Metta, and L. Natale, “A
+     flexible and robust large scale capacitive tactile system for robots,” IEEE
+     Sensors Journal, vol. 13, no. 10, pp. 3910–3917, 2013.
+[21] L. Seminara, L. Pinna, M. Valle, L. Basiric, A. Loi, P. Cosseddu,
+     A. Bonfiglio, A. Ascia, M. Biso, A. Ansaldo, D. Ricci, and G. Metta,
+     “Piezoelectric polymer transducer arrays for flexible tactile sensors,”
+     IEEE Sensors Journal, vol. 13, no. 10, pp. 4022–4029, Oct 2013.
+[22] S. Stassi, V. Cauda, G. Canavese, and C. F. Pirri, “Flexible tactile sensing
+     based on piezoresistive composites: A review,” Sensors (Switzerland),
+     vol. 14, no. 3, pp. 5296–5332, 2014.
+[23] H. Zhao, K. O’Brien, S. Li, and R. F. Shepherd, “Optoelectronically
+     innervated soft prosthetic hand via stretchable optical waveguides,”
+     Science Robotics, vol. 1, no. 1, 2016.
+[24] M. Goka, H. Nakamoto, and S. Takenawa, “A magnetic type tactile
+     sensor by gmr elements and inductors,” in 2010 IEEE/RSJ International
+     Conference on Intelligent Robots and Systems, Oct 2010, pp. 885–890.
+[25] T. Giffney, M. Xie, A. Yong, A. Wong, P. Mousset, A. McDaid, and
+     K. Aw, “Soft Pneumatic Bending Actuator with Integrated Carbon
+     Nanotube Displacement Sensor,” Robotics, vol. 5, no. 1, p. 7, 2016.
+[26] Y. L. Park, B. R. Chen, and R. J. Wood, “Design and fabrication of soft
+     artificial skin using embedded microchannels and liquid conductors,”
+     IEEE Sensors Journal, vol. 12, no. 8, pp. 2711–2718, 2012.
+[27] J. Hughes and F. Iida, “Tactile Sensing Applied to the Universal Gripper
+     Using Conductive Thermoplastic Elastomer,” Soft Robotics, vol. 5, no. 5,
+     pp. 512–526, 2018.
+[28] H. Yang, Y. Chen, Y. Sun, and L. Hao, “A novel pneumatic soft sensor
+     for measuring contact force and curvature of a soft gripper,” Sensors
+     and Actuators, A: Physical, vol. 266, pp. 318–327, 2017.
+[29] Y. Tanaka, K. Doumoto, A. Sano, and H. Fujimoto, “Development of
+     a sensor system with syringe based on tactile sensing using balloon
+     expansion,” in 2010 IEEE International Conference on Robotics and
+     Automation, May 2010, pp. 4861–4866.
+[30] L. He, N. Herzig, S. de Lusignan, and T. Nanayakkara, “Granular
+     jamming based controllable organ design for abdominal palpation,” in
+     2018 40th Annual International Conference of the IEEE Engineering in
+     Medicine and Biology Society (EMBC), July 2018, pp. 2154–2157.
+[31] A. Reuben, “Examination of the abdomen,” CLINICAL LIVER DIS-
+     EASE, vol. 7, no. 6, pp. 143–150, 2016.
+[32] S. K. Venkatesh, M. Yin, J. F. Glockner, N. Takahashi, A. Philip, J. A.
+     Talwalkar, and R. L. Ehman, “Magnetic Resonance Elastography of
+     Liver Tumors- Preliminary Results,” pp. 1534–1540, 2008.
+[33] S. B. Edge, D. R. Byrd, C. C. Compton, A. G. Fritz, F. L. Greene,
+     and A. Trotti III, “7th ed 2010 AJCC Cancer Staging Manual Seventh
+     Edition,” pp. 21–57, 2010.
+[34] R. Masuzaki, R. Tateishi, H. Yoshida, T. Sato, T. Ohki, T. Goto,
+     H. Yoshida, S. Sato, Y. Sugioka, H. Ikeda, S. Shiina, T. Kawabe,
+     and M. Omata, “Assessing liver tumor stiffness by transient elastog-
+     raphy.pdf,” Hepatology international, vol. 1, no. 3, 2007.
+[35] A. Shiva, S. H. Sadati, Y. Noh, J. Fra, A. Ataka, H. Wrdemann,
+     H. Hauser, I. D. Walker, T. Nanayakkara, and K. Althoefer, “Elasticity
+
+              Preprint submitted to IEEE Transactions on Robotics. Received: October 6, 2020 16:00:17 PST
+

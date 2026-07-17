@@ -1,0 +1,134 @@
+SOURCE_FILE: i1949-8357-5-4-541.pdf
+SOURCE_TYPE: pdf
+-----
+EDITORIAL
+
+
+   Analyzing and Interpreting Data From
+                                                                                                       Gail M. Sullivan, MD, MPH
+   Likert-Type Scales                                                                                  Anthony R. Artino Jr, PhD
+
+
+
+
+L
+        ikert-type scales are frequently used in medical                      converted to numbers, can be treated as interval data.2 That
+        education and medical education research. Common                      is, can means, standard deviations, and parametric
+        uses include end-of-rotation trainee feedback, faculty                statistics, which depend upon data that are normally
+evaluations of trainees, and assessment of performance                        distributed (F I G U R E 2), be used to analyze ordinal data?
+after an educational intervention. A sizable percentage of                         When conducting research, we measure data from a
+the educational research manuscripts submitted to the                         sample of the total population of interest, not from all
+Journal of Graduate Medical Education employ a Likert
+                                                                              members of the population. Parametric tests make
+scale for part or all of the outcome assessments. Thus,
+                                                                              assumptions about the underlying population from which
+understanding the interpretation and analysis of data
+                                                                              the research data have been obtained—usually that these
+derived from Likert scales is imperative for those working
+in medical education and education research. The goal of                      population data are normally distributed. Nonparametric
+this article is to provide readers who do not have extensive                  tests do not make this assumption about the ‘‘shape’’ of the
+statistics background with the basics needed to understand                    population from which the study data have been drawn.
+these concepts.                                                               Nonparametric tests are less powerful than parametric tests
+     Developed in 1932 by Rensis Likert1 to measure                           and usually require a larger sample size (n value) to have
+attitudes, the typical Likert scale is a 5- or 7-point ordinal                the same power as parametric tests to find a difference
+scale used by respondents to rate the degree to which they                    between groups when a difference actually exists. De-
+agree or disagree with a statement (T A B L E). In an ordinal                 scriptive statistics, such as means and standard deviations,
+scale, responses can be rated or ranked, but the distance                     have unclear meanings when applied to Likert scale
+between responses is not measurable. Thus, the differences                    responses. For example, what does the average of ‘‘never’’
+between ‘‘always,’’ ‘‘often,’’ and ‘‘sometimes’’ on a                         and ‘‘rarely’’ really mean? Does ‘‘rarely and a half’’ have a
+frequency response Likert scale are not necessarily equal. In                 useful meaning?3 Furthermore, if responses are clustered at
+other words, one cannot assume that the difference                            the high and low extremes, the mean may appear to be the
+between responses is equidistant even though the numbers                      neutral or middle response, but this may not fairly
+assigned to those responses are. This is in contrast to                       characterize the data. This clustering of extremes is
+interval data, in which the difference between responses                      common, for example, in trainee evaluations of experiences
+can be calculated and the numbers do refer to a measure-                      that may be very popular with one group and perceived as
+able ‘‘something.’’ An example of interval data would be                      unnecessary by others (eg, an epidemiology course in
+numbers of procedures done per resident: a score of 3                         medical school). Other non-normal distributions of re-
+means the resident has conducted 3 procedures. Interest-                      sponse data can similarly result in a mean score that is not a
+ingly, with computer technology, survey designers can                         helpful measure of the data’s central tendency.
+create continuous measure scales that do provide interval                          Because of these observations, experts over the years
+responses as an alternative to a Likert scale. The various                    have argued that the median should be used as the measure
+continuous measures for pain are well-known examples of                       of central tendency for Likert scale data.3 Similarly, experts
+this (F I G U R E 1).                                                         have contended that frequencies (percentages of responses
+                                                                              in each category), contingency tables, x2 tests, the
+The Controversy
+In the medical education literature, there has been a long-
+standing controversy regarding whether ordinal data,
+
+Gail M. Sullivan, MD, MPH, is Editor-in-Chief of the Journal of Graduate
+Medical Education, and Anthony R. Artino Jr, PhD, is Associate Professor of
+Medicine and Preventive Medicine and Biometrics, Uniformed Services
+University of the Health Sciences.
+
+Corresponding author: Gail M. Sullivan, MD, MPH, University of Connecticut,
+253 Farmington Avenue, Farmington, CT 06030-5215,                              FIGURE 1          Continuous Measure Example
+gsullivan@nso1.uchc.edu
+                                                                               Please tell us your current pain level by sliding the pointer to the
+DOI: http://dx.doi.org/10.4300/JGME-5-4-18                                     appropriate point along the continuous pain scale above.
+
+
+
+                                                                                       Journal of Graduate Medical Education, December 2013 541
+EDITORIAL
+
+
+
+     TABLE       Typical Likert Scales
+
+ 1                          2                          3                          4                                5
+
+ Never                      Rarely                     Sometimes                  Often                            Always
+
+ Completely disagree        Disagree                   Neutral                    Agree                            Completely agree
+
+
+
+Spearman rho assessment, or the Mann-Whitney U test                less concrete concepts, such as trainee motivation,
+should be used for analysis instead of parametric tests,           patient satisfaction, and physician confidence—where a
+which, strictly speaking, require interval data (eg, t tests,      single survey item is unlikely to be capable of fully
+analysis of variance, Pearson correlations, regression).3          capturing the concept being assessed.5 In these cases,
+However, other experts assert that if there is an adequate         experts suggest using the Cronbach alpha or Kappa test
+sample size (at least 5–10 observations per group) and if the      or factor analysis technique to provide evidence that the
+data are normally distributed (or nearly normal), para-            components of the scale are sufficiently intercorrelated
+metric tests can be used with Likert scale ordinal data.3          and that the grouped items measure the underlying
+    Fortunately, Dr. Geoff Norman, one of world’s leaders          variable.
+in medical education research methodology, has compre-
+hensively reviewed this controversy. He provides compel-           The Bottom Line
+ling evidence, with actual examples using real and                 Now that many experts have weighed in on this debate, the
+simulated data, that parametric tests not only can be used         conclusions are fairly clear: parametric tests can be used to
+with ordinal data, such as data from Likert scales, but also       analyze Likert scale responses. However, to describe the
+that parametric tests are generally more robust than               data, means are often of limited value unless the data
+nonparametric tests. That is, parametric tests tend to give        follow a classic normal distribution and a frequency
+‘‘the right answer’’ even when statistical assumptions—            distribution of responses will likely be more helpful.
+such as a normal distribution of data—are violated, even to        Furthermore, because the numbers derived from Likert
+an extreme degree.4 Thus, parametric tests are sufficiently        scales represent ordinal responses, presentation of a mean
+robust to yield largely unbiased answers that are acceptably       to the 100th decimal place is usually not helpful or
+close to ‘‘the truth’’ when analyzing Likert scale responses.4     enlightening to readers.
+    Educators and researchers also commonly create                     In summary, we recommend that authors determine
+several Likert-type items, group them into a ‘‘survey              how they will describe and analyze their data as a first step
+scale,’’ and then calculate a total score or mean score            in planning educational or research projects. Then they
+for the scale items. Often this practice is recommended,           should discuss, in the Methods section or in a cover letter if
+particularly when researchers are attempting to measure            the explanation is too lengthy, why they have chosen to
+                                                                   portray and analyze their data in a particular way.
+                                                                   Reviewers, readers, and especially editors will greatly
+                                                                   appreciate this additional effort.
+
+
+                                                                   References
+                                                                   1 Likert R. A technique for the measurement of attitudes. Arch Psychology.
+                                                                     1932;22(140):55.
+                                                                   2 Carifio L, Perla R. Resolving the 50-year debate around using and misusing
+                                                                     Likert scales. Med Educ. 2008;42(12):1150–1152.
+                                                                   3 Jamieson S. Likert scales: how to (ab)use them. Med Educ. 2004;38(12):1217–
+                                                                     1218.
+                                                                   4 Norman G. Likert scales, levels of measurement and the ‘‘laws’’ of statistics.
+                                                                     Adv Health Sci Educ Theory Pract. 2010;15(5):625–632.
+                                                                   5 Rickards G, Magee C, Artino AR Jr. You can’t fix by analysis what you’ve
+ FIGURE 2         A Normal Distribution                              spoiled by design: developing survey instruments and collecting validity
+                                                                     evidence. J Grad Med Educ. 2012;4(4):407–410.
+
+
+
+
+542 Journal of Graduate Medical Education, December 2013
+

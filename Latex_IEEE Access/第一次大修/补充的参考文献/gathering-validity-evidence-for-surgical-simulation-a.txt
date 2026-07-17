@@ -1,0 +1,699 @@
+SOURCE_FILE: gathering-validity-evidence-for-surgical-simulation-a.pdf
+SOURCE_TYPE: pdf
+-----
+                                                                       REVIEW PAPER
+
+
+                 Gathering Validity Evidence for Surgical Simulation
+                                                               A Systematic Review
+         Nanna Jo Borgersen, MBBS,  yz Therese M. H. Naur, MBBS,  z Stine M. D. Sørensen, MBBS,  z
+     Flemming Bjerrum, PhD,  § Lars Konge, PhD,  z Yousif Subhi, MD,yz and Ann Sofia S. Thomsen, PhD  ô
+
+
+
+Objective: To identify current trends in the use of validity frameworks in
+surgical simulation, to provide an overview of the evidence behind the
+                                                                                     T    he field of surgical simulation is characterized by innovative
+                                                                                          approaches that support the acquisition and assessment of surgi-
+                                                                                     cal technical skills.1 Simulation models, such as virtual-reality
+assessment of technical skills in all surgical specialties, and to present
+                                                                                     simulators, offer safe environments for the training and evaluation
+recommendations and guidelines for future validity studies.
+                                                                                     of surgical technical skills without compromising patient safety. As
+Summary of Background Data: Validity evidence for assessment tools used
+                                                                                     part of continued efforts to establish competency-based training,
+in the evaluation of surgical performance is of paramount importance to
+                                                                                     simulation-based assessments have demonstrated several advan-
+ensure valid and reliable assessment of skills.
+                                                                                     tages, including automated feedback and assessments provided by
+Methods: We systematically reviewed the literature by searching 5 databases
+                                                                                     virtual-reality simulators during training.2 Currently, the majority of
+(PubMed, EMBASE, Web of Science, PsycINFO, and the Cochrane Library)
+                                                                                     credentialing standards for technical performance in surgery have
+for studies published from January 1, 2008, to July 10, 2017. We included
+                                                                                     been established in simulated environments.3 Furthermore, evidence
+original studies evaluating simulation-based assessments of health profes-
+                                                                                     suggests that simulation-based assessments can substitute the often
+sionals in surgical specialties and extracted data on surgical specialty,
+                                                                                     more cumbersome workplace-based assessments, for example, direct
+simulator modality, participant characteristics, and the validity framework
+                                                                                     observations in the clinic.4 The opportunity to perform assessments
+used. Data were synthesized qualitatively.
+                                                                                     in a simulated setting has additional potential benefits, including
+Results: We identified 498 studies with a total of 18,312 participants.
+                                                                                     decreased time commitments for faculty members, as well as the
+Publications involving validity assessments in surgical simulation more than
+                                                                                     ability to obtain objective assessments without the possible influence
+doubled from 2008 to 2010 (30 studies/year) to 2014 to 2016 (70 to
+                                                                                     of observer bias.5,6
+90 studies/year). Only 6.6% of the studies used the recommended contempo-
+                                                                                             However, solid evidence of validity is essential and the use
+rary validity framework (Messick). The majority of studies used outdated
+                                                                                     of outdated terms and methods when assessing validity evidence
+frameworks such as face validity. Significant differences were identified
+                                                                                     for surgical simulation metrics may lead to unfounded, and even
+across surgical specialties. The evaluated assessment tools were mostly
+                                                                                     incorrect decisions with respect to physicians’ competence.7,8
+inanimate or virtual reality simulation models.
+                                                                                     Similar to diagnostic testing and health technology assessments,
+Conclusion: An increasing number of studies have gathered validity evi-
+                                                                                     it is essential to ensure that our tools are assessing the relevant
+dence for simulation-based assessments in surgical specialties, but the use of
+                                                                                     competency/skills. The theoretical basis for the assessment of
+outdated frameworks remains common. To address the current practice, this
+                                                                                     technical surgical skills has undergone substantial development
+paper presents guidelines on how to use the contemporary validity framework
+                                                                                     during the past 2 decades.9 Different types of validity (face,
+when designing validity studies.
+                                                                                     content, criterion, and concurrent) have been replaced by a unified
+Keywords: Messick framework, surgical simulation, validity framework,                model, in which different sources of validity are explored. Messick
+validity                                                                             modern validity framework has become the gold standard when
+                                                                                     evaluating validity evidence for performance assessments. It was
+(Ann Surg 2018;267:1063–1068)                                                        formally adopted by a number of well-recognized associations
+                                                                                     (American Educational Research Association, American Psycho-
+                                                                                     logical Association, and National Council on Measurement in
+                                                                                     Education) in 1999 and the recommendation of this framework
+From the Copenhagen Academy for Medical Education and Simulation, the               was repeated in the most recent edition of Standards for Education
+    Capital Region of Denmark, Copenhagen, Denmark; yDepartment of Oph-              and Psychological Testing in 2014.10 Messick framework consists
+    thalmology, Zealand University Hospital, Roskilde, Denmark; zFaculty of
+    Health and Medical Sciences, University of Copenhagen, Copenhagen,
+                                                                                     of 5 different sources of validity evidence: content, response
+    Denmark; §Department of Surgery, Herlev Gentofte Hospital, Herlev,               process (ie, quality control), internal structure (eg, reliability),
+    Denmark; and ôDepartment of Ophthalmology, Rigshospitalet-Glostrup,              relations with other variables, and consequences of the assessment/
+    Copenhagen, Denmark.                                                             test.11,12
+This project was supported by a grant from the University of Copenhagen fund
+    ‘‘Undervisningskvalitetspuljen,’’ which is dedicated for initiatives in educa-
+                                                                                             In 2010, Korndorffer et al8 published a review evaluating the
+    tional quality. Author NJB has received a scholarship grant from Novo Nordisk    use of validity frameworks in literature concerning laparoscopic
+    Foundation to conduct research in simulation. The funding bodies had no          education, and found that none of the included studies from 1996
+    influence on the design of the study, analysis of the data, preparation of the   to 2008 used a modern validity framework (Messick) for the investi-
+    manuscript, or the decision to publish.
+The authors report no conflicts of interest.
+                                                                                     gation of validity evidence.
+Reprints: Nanna Jo Borgersen, MBBS, Copenhagen Academy for Medical Edu-                      In this systematic review, we identified trends in the use of
+    cation and Simulation, the Capital Region of Denmark, Section 5404, Rig-         validity frameworks in all fields of surgical simulation from 2008 to
+    shospitalet, Blegdamsvej 9, DK-2100 Copenhagen, Denmark.                         July 10, 2017. The aims of this study were to provide an overview of
+    E-mail: nanna-jo@hotmail.com.
+Copyright ß 2018 Wolters Kluwer Health, Inc. All rights reserved.
+                                                                                     the evidence behind the assessment of technical skills in all surgical
+ISSN: 0003-4932/18/26706-1063                                                        specialties and to present practical guidelines for future validity
+DOI: 10.1097/SLA.0000000000002652                                                    studies.
+
+Annals of Surgery  Volume 267, Number 6, June 2018                                                                www.annalsofsurgery.com | 1063
+
+                                  Copyright © 2018 Wolters Kluwer Health, Inc. All rights reserved.
+Borgersen et al                                                                   Annals of Surgery  Volume 267, Number 6, June 2018
+
+
+
+                            METHODS                                                                      RESULTS
+Eligibility Criteria                                                       Study Selection and Characteristics
+        We conducted a systematic review and followed the Preferred               We screened a total of 4600 studies of which 701 were read in
+Reporting Items for Systematic Reviews and Meta-Analyses                   full-text. Of those, we excluded 203 studies due to the following main
+(PRISMA) guidelines.13 We included original studies investigating          exclusion criteria: only descriptive, not involving simulation, or
+validity evidence for the assessment of health professionals using         evaluating nonsurgical skills. Hence, 498 studies were included in
+surgical simulation in surgical specialties, defined as general surgery    the final data synthesis (Fig. 1) (see Supplemental Digital Content for
+(including colon and rectal surgery), urology, orthopedic surgery,         a complete list of references to all of the included studies).
+obstetrics and gynecology (including gynecologic oncology), vascu-                A total of 18,312 participants were included in the 498
+lar surgery, otorhinolaryngology, neurological surgery, ophthalmic         included studies (Median 28 participants, range 3 to 344 partici-
+surgery, cardiothoracic surgery, pediatric surgery, and plastic and        pants). Specialist surgeons were included in 80.1% of all studies.
+maxillofacial surgery. Studies including surgical tasks across spe-        Other participants were fellows (in 17.7% of studies), residents (in
+cialties, and studies explicitly including more than one specialty,        40.0% of studies), interns (in 5.0% of studies), or medical students (in
+were also included in the review. We did not limit eligibility based on    27.3% of studies). In 132 studies (26.5%), the participant information
+study design. We only included studies published from 2008 to July         provided was insufficient to categorize them, or the participants
+10, 2017. Studies were excluded if they (1) evaluated nonsurgical          represented other health care personnel (eg, nurses). Participant
+simulation-based assessments; (2) were only descriptive without any        characteristics and surgical specialties in review are summarized
+attempt to provide evaluation; (3) investigated training or transfer of    in Table 1.
+skills without assessment of validity evidence, or; (4) were published
+in non-English language.                                                   Validity Frameworks Used
+                                                                                  Publications of validity assessments in surgical simulation
+Search Strategy                                                            more than doubled in numbers from 2008 to 2010 (28 to 35 studies/
+       We searched 5 databases (PubMed, EMBASE, Web of Sci-                year, totaling 93 studies) to 2014 to 2016 (68 to 93 studies/year,
+ence, PsycINFO, and the Cochrane Library) from January 1, 2008, to         totaling 233 studies) (Fig. 2). Messick validity framework was used
+July 10, 2017, using the following search strategy: (valid AND            in 6.6% of all studies. No studies used Messick validity framework
+(surger OR surgeon) AND (simulation OR simulator)) AND                 from 2008 to 2012, but its use has experienced a systematic increase
+(‘‘2008’’[Date - Publication]: ‘‘3000’’[Date - Publication]). We           in subsequent years (6.7% in 2013, 10.3% in 2014, 10.8% in 2015,
+used Endnote X7.7 (Thomson Reuters, New York, NY) to manage                and 12.5% in 2016) with the exception of 2017 (9.3%). We also
+references and eliminate duplicate reports.                                observed a gradual increase in the frequency of studies not mention-
+                                                                           ing any validity framework or using incorrect nomenclature from
+Study Selection                                                            2.1% in 2012 to 23.3% in 2017.
+       One author (NJB) screened all references, removed obviously
+irrelevant references based on title and abstract, and retrieved full-     Use of Messick Contemporary Framework
+text of all remaining references. Two authors (NJB and TMHN) then                  Of the 33 studies (6.6%) using Messick validity framework,
+independently read all potentially eligible manuscripts in full-text       only 5 (15.2%) evaluated all 5 sources of validity evidence (Fig. 3).
+and assessed study eligibility. Any disagreements were resolved by         Internal structure (n ¼ 25, 75.8%), content (n ¼ 22, 66.7%), and
+discussion. If consensus could not be reached, a third author (ASST)       relations to other variables (n ¼ 21, 63.6%) were most frequently
+made the final decision.                                                   evaluated, whereas consequences was evaluated least frequently as a
+                                                                           source of validity of evidence (n ¼ 7, 21.2%) (Fig. 4).
+Data Collection, Synthesis, and Analysis                                           Use of Messick framework differed substantially between
+       The data extraction was performed independently by 2                different surgical specialties. Its use was most prevalent in cardio-
+authors (NJB and TMHN) based on a pilot-tested data extraction             thoracic surgery (30.0%) and pediatric surgery (25.8%); less preva-
+chart. We extracted following data: year of publication, surgical          lent in ophthalmic surgery (13.3%), plastic and maxillofacial surgery
+specialty, surgical procedure, simulator modality, participant char-       (11.1%), neurosurgery (8.3%), general surgery (7.8%), orthopedic
+acteristics, and validity framework used for the assessment of             surgery (5.5%), surgery in obstetrics and gynecology (2.8%), and
+validity evidence. Studies were categorized according to the validity      urology (1.2%); and completely absent in otorhinolaryngology and
+framework that was used: contemporary validity framework (Mes-             vascular surgery.
+sick), outdated validity frameworks (eg, criterion, construct, and
+face validity), or others (no validity framework or concept of validity    Use of Older Frameworks
+is defined outside of general scientific norms). For studies applying              Overall, 93.4% of the studies used outdated or unspecified
+Messick validity framework, we noted which of the 5 sources of             validity frameworks. Of these, 80% of the studies had components
+validity evidence were investigated (ie, content, response process,        that were partly transferable to the new framework (construct
+internal structure, relation to other variables, and consequences).        validity, content validity, reliability, or consequences), while 20%
+For studies applying older validity frameworks, we noted the               were not directly transferable to the new framework (face validity,
+specific method used and explored transferability to Messick               criterion validity, or concurrent validity). In 207 studies (41.6% of all
+validity framework.                                                        studies evaluated), face validity was assessed and considered an
+       Microsoft Excel 2016 (Microsoft Corp, Redmond, WA) was              acceptable source of validity.
+used to manage the extracted data. Risk of bias within individual
+studies or across studies was not specifically assessed, as this was not   Surgical Specialties
+found relevant for the subsequent analysis. It was not possible to                The surgical interventions investigated were categorized
+conduct a meta-analysis due to the heterogeneity of the included           according to surgical specialty: Eleven different surgical specialties
+studies. A qualitative data synthesis was performed.                       (classified according to the American College of Surgeons); studies
+
+
+1064 | www.annalsofsurgery.com                                                        ß 2018 Wolters Kluwer Health, Inc. All rights reserved.
+
+
+                             Copyright © 2018 Wolters Kluwer Health, Inc. All rights reserved.
+Annals of Surgery  Volume 267, Number 6, June 2018                                                                         Surgical Simulation: Validity Frameworks
+
+
+
+
+                                                         Identification
+                                                                               Records idenﬁed through                             Addional records idenﬁed
+                                                                                  database searching                                  through other sources
+                                                                                       (n = 7532)                                            (n = 31)
+
+
+
+
+                                                                                                      Records aer duplicates removed
+                                                                                                                (n = 4600)
+
+
+
+
+                                                         Screening
+                                                                                                                                                               Obviously irrelevant
+                                                                                                               Records screened                                 records excluded
+                                                                                                                  (n = 4600)                                       (n = 3899)
+
+
+
+                                                                                                           Full-text arcles assessed                       Full-text arcles excluded,
+                                                                                                                  for eligibility                                  with reasons
+                                                         Eligibility
+
+
+
+
+                                                                                                                    (n = 701)                                         (n = 203)
+                                                                                                                                                             Not simulaon (n = 23)
+                                                                                                                                                               Not surgical (n = 39)
+                                                                                                                                                            Congress abstract (n = 15)
+                                                                                                               Studies included in                              Descripve (n = 87)
+                                                                                                              qualitave synthesis                               Duplicate (n = 16)
+                                                                                                                    (n = 498)                                     Review (n = 10)
+                                                                                                                                                                 Not English (n = 5)
+                                                                                                                                                               Commentary (n = 3)
+                                                         Included
+
+
+
+
+                                                                                                                                                             Self-assessment (n = 5)
+
+
+
+
+FIGURE 1. PRISMA flow diagram of study
+                                                        From: Moher D, Liberati A, Tetzlaff J, Altman DG, The PRISMA Group (2009). Preferred Reporting Items for Systematic Reviews and Meta-
+selection process.                                                         Analyses: The PRISMA Statement. PLoS Med 6(7): e1000097. doi:10.1371/journal.pmed1000097
+
+
+
+
+that included tasks across specialties; and studies that explicitly
+included more than one specialty. The studies were most often                         TABLE 1. Distribution of Studies Across Specialties and Par-
+performed in the specialties of general surgery (28.3%) and urology                   ticipant Characteristics
+(16.9%), while 6.8% of the studies included more than one specialty
+                                                                                      Surgical Specialty                                                No. of Studies                  %
+in their assessment (Table 1).
+                                                                                      General surgery                                                           141                    28.3
+Simulator Modalities                                                                  Urology                                                                    84                    16.9
+      Simulator modalities were divided into 5 categories: (1)                        Orthopedic surgery                                                         55                    11.0
+Inanimate models; (2) Animal models; (3) Augmented Reality                            Otorhinolaryngology                                                        41                     8.2
+                                                                                      Obstetrics and gynecology                                                  36                     7.2
+(AR) models; (4) Virtual Reality (VR) models; and (5) Cadaveric                       Pediatric surgery                                                          31                     6.2
+simulation models. Forty-five studies (9.0%) assessed more than one                   Neurological surgery                                                       24                     4.8
+simulator modality making a total of 537 simulator assessments.                       Ophthalmic surgery                                                         15                     3.0
+Inanimate and VR simulation models were used most frequently,                         Vascular surgery                                                           14                     2.8
+49.9% and 38.7%, respectively. Three studies did not specify the                      Cardiothoracic surgery                                                     10                     2.0
+simulation model used. See Fig. 5 for an overview of simulator                        Plastic and maxillofacial surgery                                           9                     1.8
+modality distribution in the included studies.                                        Studies including tasks across specialties                                  4                     0.8
+                                                                                      2 specialties                                                             34                     6.8
+                           DISCUSSION                                                 Total                                                                     498                   100
+
+       In this systematic review, we evaluated trends in the use of                   Participant Characteristics                                         No. of Studies                 %
+validity frameworks in all fields of surgical simulation from 2008 and                Surgeons                                                                   399                    80.1
+onwards. We found that the majority of evidence behind the assess-                    Fellows                                                                      88                   17.7
+ment of surgical technical skills in all surgical specialties is based on             Residents                                                                  252                    40.0
+outdated validity frameworks. The use of the recommended frame-                       Interns                                                                      25                    5.0
+work by Messick is increasing slowly, but still more than 9 out of 10                 Medical students                                                           136                    27.3
+studies (93.4%) rely on outdated methods for the investigation of                     Other healthcare personnel                                                 132                    26.5
+validity evidence in performance assessments.                                         Not specified                                                                16                    3.2
+       Korndorffer et al8 found that between 1996 and 2008, all                       Participants in each study, median (range)                           28 (3 to 344)                 –
+                                                                                      Total number of participants                                            18,312                     –
+validity studies in laparoscopic simulator education referred to the
+
+
+ß 2018 Wolters Kluwer Health, Inc. All rights reserved.                                                                            www.annalsofsurgery.com | 1065
+
+                              Copyright © 2018 Wolters Kluwer Health, Inc. All rights reserved.
+Borgersen et al                                                                                                                               Annals of Surgery  Volume 267, Number 6, June 2018
+
+
+
+                         100                                                                           100
+                          90                                                                            90
+
+
+
+
+                                                                          Percentage of publications
+Number of publications
+
+
+
+
+                          80                                                                            80
+                          70                                                                            70
+                                                                                                                                         Messick's framework
+                          60                                                                            60
+                                                                                                                                         Old frameworks
+                          50                                                                            50
+                          40                                                                            40                               No framework or
+                          30                                                                            30                               incorrect nomenclature
+                          20                                                                            20
+                                                                                                                                                                                 FIGURE 2. Annual number of validity
+                          10                                                                            10
+                                                                                                                                                                                 studies in surgical simulation from
+                           0                                                                             0                                                                       January 2008 to July 2017. Distribution
+                                                                                                                                                                                 of used validity frameworks is shown in
+                            20 8
+                            20 9
+                            20 0
+                            20 1
+                               12
+
+                            20 3
+                            20 4
+                            20 5
+                           20 16
+                                 *
+
+
+
+
+                                                                                                          20 8
+                                                                                                          20 9
+                                                                                                          20 0
+                                                                                                          20 1
+                                                                                                          20 2
+                                                                                                          20 3
+                                                                                                             14
+
+                                                                                                          20 5
+                                                                                                         20 16
+                                                                                                               *
+                             17
+
+
+
+
+                                                                                                           17
+                               1
+
+
+
+
+                                                                                                             1
+                               0
+                               0
+                               1
+
+
+
+                               1
+                               1
+                               1
+
+
+
+
+                                                                                                             0
+                                                                                                             0
+                                                                                                            1
+
+                                                                                                             1
+                                                                                                             1
+
+                                                                                                             1
+                            20
+
+
+
+
+                            20
+
+
+
+
+                                                                                                          20
+
+
+
+
+                                                                                                          20
+                                                                                                                                                                                 number of publications (left) and per-
+                                                Year of publication                                              Year of publication                                             centage of total publications (right).
+
+
+
+old validity framework. Similar results were reported in 2011 by                                                                       evidence. Consequences of the applied assessment/test has been
+Cook et al11 who found that only 3% of studies involving technology-                                                                   explored least frequently and only in approximately one-fifth of
+enhanced simulation used Messick validity framework. According to                                                                      the studies.
+Ghaderi et al,7 Messick’s validity framework has only been used for 3                                                                         A study by Cook et al9 published in 2013 reports a trend
+of 23 assessment tools (13%), in the evaluation of procedures/skills                                                                   toward a slight decrease in the number of validity evidence sources
+that are included in the surgical skills curriculum created by the                                                                     investigated after 2008. Especially consequences of the applied
+American College of Surgeons (ACS)/Association of Program Direc-                                                                       assessment/test are rarely investigated, despite the fact that it is a
+tors in Surgery (APDS). On the basis of a comparison with our                                                                          highly relevant source of validity evidence.15 Goldenberg et al3
+current results, we conclude that the use of a contemporary validity                                                                   identified only 37 studies that established absolute standards for
+framework has improved only slightly. Also, the majority of validity                                                                   technical performance in surgery. In addition, several of the included
+studies investigating the assessment of nontechnical and nonsurgical                                                                   studies investigated sources of validity evidence, which are of limited
+skills use outdated frameworks.9                                                                                                       relevance.16 For example, medical students participated in approxi-
+       In 207 (41.6%) of the studies in this review, face validity was                                                                 mately one-quarter of the studies, even though the performance of
+identified either as the only type of validity or as a part of the overall                                                             medical students rarely has any relevance for the assessment of
+validity assessment. Face validity is a subjective evaluation of                                                                       surgical skills. When evaluating an assessment tool, it is imperative
+appearance. It is one of the major threats to modern validity assess-                                                                  to clearly define the goals of the assessment.17 If the purpose of the
+ment and is an invalid source of validity evidence.14                                                                                  assessment is to discriminate between competent and noncompetent
+       Our findings also show that there is a general increase in                                                                      practitioners of a surgical skill, then performing expert-novice
+validity assessments published within all surgical specialties, and                                                                    comparisons with medical students as the noncompetent participants,
+that the greatest number of studies have been conducted in either
+general surgery or urology. Most often, studies have included
+inanimate or VR simulation models. Of the few studies using the                                                                                                       25
+contemporary framework (6.6%), the majority (75.8%) considered 1
+to 3 sources, while only 24.2% explored 4 or all 5 sources of validity
+                                                                                                                                                                      20
+                                                                                                                                                  Number of studies
+
+
+
+
+                                                       40                                                                                                             15
+                                                       35
+                               Percentage of studies
+
+
+
+
+                                                       30                                                                                                             10
+                                                       25
+                                                                                                                                                                       5
+                                                       20
+                                                       15                                                                                                              0
+                                                                                                                                                                              t
+
+                                                                                                                                                                                       s
+
+
+
+                                                                                                                                                                                                        se les
+                                                                                                                                                                                                e
+
+
+
+                                                                                                                                                                                                                   s
+
+
+
+
+                                                       10
+                                                                                                                                                                           ten
+
+                                                                                                                                                                                   es
+
+
+
+
+                                                                                                                                                                                                                ce
+                                                                                                                                                                                                r
+                                                                                                                                                                                            ctu
+
+                                                                                                                                                                                                    iab
+                                                                                                                                                                                  oc
+
+
+
+
+                                                                                                                                                                                                             en
+                                                                                                                                                                          n
+                                                                                                                                                                       Co
+
+
+
+                                                                                                                                                                                        tru
+                                                                                                                                                                                pr
+
+
+
+                                                                                                                                                                                                   ar
+
+                                                                                                                                                                                                          qu
+
+
+
+
+                                                        5
+                                                                                                                                                                                       ls
+
+                                                                                                                                                                                                rv
+                                                                                                                                                                            se
+
+                                                                                                                                                                                     na
+
+                                                                                                                                                                                             the
+                                                                                                                                                                           on
+
+
+
+
+                                                                                                                                                                                                       n
+                                                                                                                                                                                                    Co
+                                                                                                                                                                                  er
+
+
+
+
+                                                        0
+                                                                                                                                                                       sp
+
+
+
+                                                                                                                                                                                           oo
+                                                                                                                                                                                 Int
+                                                                                                                                                                      Re
+
+
+
+                                                                                                                                                                                        st
+                                                            1
+
+                                                                      2
+
+                                                                                     3
+
+                                                                                                             4
+
+                                                                                                                     l
+                                                                                                                   Al
+
+
+
+
+                                                                                                                                                                                     ion
+                                                                                                                                                                                  lat
+
+
+
+
+                                                            Sources of validity explored
+                                                                                                                                                                                Re
+
+
+
+
+FIGURE 3. Explored sources of validity (within Messick frame-                                                                          FIGURE 4. Specific sources of validity (within Messick frame-
+work) in studies reviewed.                                                                                                             work) in studies reviewed.
+
+
+1066 | www.annalsofsurgery.com                                                                                                                        ß 2018 Wolters Kluwer Health, Inc. All rights reserved.
+
+
+                                                                      Copyright © 2018 Wolters Kluwer Health, Inc. All rights reserved.
+Annals of Surgery  Volume 267, Number 6, June 2018                                                          Surgical Simulation: Validity Frameworks
+
+
+
+                                                                                  participants who are experienced with the procedure of interest. Data
+                                            50% Inanimate                         can be collected using questionnaires or by conducting a Delphi
+                                            4% Animate                            study. One example is the development and validation of a theoretical
+                                            2% Augmented reality                  proficiency test for video-assisted thoracoscopic surgery lobectomy,
+                                                                                  during which experts were interviewed to construct test-items, and
+                                            39% Virtual reality                   subsequently rated these items based on their relevance (a modified
+                                            4% Cadaveric                          Delphi study) 20 Response process consists of efforts taken to
+                                            1% Not specified                      minimize bias in the assessment process, such as standardized
+                                                                                  instructions and blinded raters. For example, one can achieve this
+FIGURE 5. Distribution of simulator modalities used in the                        by video recording a surgical procedure of interest and asking raters
+included studies. In 45 studies, more than one simulator modal-                   to assess anonymized videos using a standardized video-solu-
+ity was used, and in these cases, all are included (N ¼ 537).                     tion.21,22 Internal structure explores the reliability of scores that
+                                                                                  intend to measure the same construct and can be evaluated statisti-
+                                                                                  cally using methods, such as Cronbach alpha or generalizability and
+                                                                                  decision (G- and D-) studies.23 Reliability statistics can provide
+has little relevance, if the intended goal of the assessment is the               insight regarding the applicability of an assessment tool for exami-
+evaluation of surgical residents.18 Also, the required reliability                nations of different stake levels.19 Relations to other variables
+coefficient of the assessment should reflect the purpose of the                   include the correlation between assessment scores and external
+assessment.19                                                                     independent measures, such as proficiency level and experience,
+       It is not possible to provide infinite and universal evidence for          which have a theoretical relationship to the assessment scores. These
+an assessment tool; on the contrary, an assessment tool is only valid             analyses can be made using appropriate statistics for correlation
+for a specifically defined goal. Thus, collecting validity evidence is a          (Pearson correlation or Spearman rank-order correlation), and com-
+continuous process. On the basis of the results of this systematic                parisons of 2 groups (independent samples t test or Mann-Whitney U
+review, we would like to emphasize the need for exhaustive and                    test) or 3 or more groups (1-way analysis of variance or Kruskal-
+methodologically sound investigations of validity evidence for                    Wallis test).20,21,24 Finally, consequential validity explores potential
+assessments tools used in surgical specialties. In this paper, we also            and actual consequences of the developed assessment. Assessment
+wish to provide practical guidelines to be used for the design of future          scores stratified by groups of competency can be used to define a
+validity studies in surgery and as support for the interpretation of              standard (eg, using the contrasting groups’ method) and explore the
+existing studies. Table 2 presents an overview of Messick 5 sources of            consequences of the defined standard on assessment out-
+validity evidence, including examples relevant for simulation-based               comes.3,20,21,24 All 5 sources of validity evidence do not necessarily
+assessments, and serves as practical guidelines for future validity               need to be addressed in a single study, and in some cases, not all
+studies. The 5 sources of validity are content, response process,                 sources of validity evidence are relevant for a clearly defined
+internal structure, relations to other variables, and consequences of             purpose. As with all fields of research, the researcher has to critically
+the assessment.7 Evaluation of content must be based on input from                consider which aspects are relevant for the specific purpose.
+
+
+TABLE 2. Practical Guidelines for the Use of Messick Validity Framework
+Plan                                 Process                                       Example                                      Analyses
+Items to be        Define goal of assessment                    Implement assessment                         Conduct appropriate analyses/actions
+    considered
+Content            Ensure that test content reflects the        Only use expert opinions                     Questionnaire
+                      characteristic it intends to measure                                                      Interview
+                                                                                                                Delphi method
+Response process Quality control of the assessment              Minimize bias in your assessment             Standardized written instructions
+                                                                                                                Blinded raters
+Internal structure Reliability of scores across tasks that      Calculate inter-item reliability             Cronbach alpha
+                      intend to measure the same construct         and/or test-retest reliability.
+                                                                                                                 G- and D-study (generalizability- and
+                                                                    Establish how many items are needed          decision-study)
+                                                                    to ensure an appropriate level of
+                                                                    reliability.
+
+                                                                   Reflect on the obtained reliability
+                                                                   coefficient
+Relations to other Correlation between test scores and          Compare scores between groups with             ANOVA
+   variables          external independent measures with a         different proficiency in the tested skills.
+                      theoretical relationship to test scores      Ensure enough participants to achieve          Independent sample t test
+                                                                   normality.
+Consequences of Consequences of the developed                   Establish a pass-fail score                    Contrasting groups method
+   the test        assessment
+                                                                    Determine the consequences of this           Consequence analysis
+                                                                    score.
+                                                                                                                 ROC-analysis (receiver operating
+                                                                                                                 characteristic)
+   Based on Downing and Yudkowsky,11 Downing,19 and Bloch and Norman23.
+
+
+
+ß 2018 Wolters Kluwer Health, Inc. All rights reserved.                                                           www.annalsofsurgery.com | 1067
+
+                               Copyright © 2018 Wolters Kluwer Health, Inc. All rights reserved.
+Borgersen et al                                                                              Annals of Surgery  Volume 267, Number 6, June 2018
+
+
+
+Therefore, we also believe that manuscripts using the old framework                   6. Scott DJ, Rege RV, Bergen PC, et al. Measuring operative performance after
+                                                                                         laparoscopic skills training: edited videotape versus direct observation.
+still have value, as construct validity, reliability, and content validity               J Laparoendosc Adv Surg Tech A. 2000;10:183–190.
+are partly transferable to the new framework.                                         7. Ghaderi I, Manji F, Park YS, et al. Technical skills assessment toolbox:
+        The limitations of this review include the fact that we did not                  a review using the unitary framework of validity. Ann Surg. 2015;261:
+apply specific quality measures to the included studies. Also, we only                   251–262.
+considered 1 contemporary validity framework (Messick), despite the                   8. Korndorffer JR Jr, Kasten SJ, Downing SM. A call for the utilization of
+fact that there are other contemporary validity frameworks, such as                      consensus standards in the surgical education literature. Am J Surg.
+                                                                                         2010;199:99–104.
+Kane’s.25,26 For this study, we chose to focus only on Messick validity
+                                                                                      9. Cook DA, Brydges R, Zendejas B, et al. Technology-enhanced simulation to
+framework, as this remains the most widely accepted contemporary                         assess health professionals: a systematic review of validity evidence, research
+validity framework. We cannot exclude the possibility of publication                     methods, and reporting quality. Acad Med. 2013;88:872–883.
+bias, which is a relevant limitation for most systematic reviews. Further-           10. American Educational Research Association, American Psychological Asso-
+more, we omitted interpretation of validity evidence for specific assess-                ciation, the National Council on Measurement in Education, eds. Standards for
+ment tools. The strengths of this review include the representation of all               Educational and Psychological Testing. Washington, DC: American Educa-
+                                                                                         tional Research Association; 2014.
+surgical specialties, as well as all types of simulation models.
+                                                                                     11. Cook DA, Zendejas B, Hamstra SJ, et al. What counts as validity evidence?
+        Validity studies in surgery demonstrate a significant need for                   Examples and prevalence in a systematic review of simulation-based assess-
+improvement before simulation-based assessments can be systemati-                        ment. Adv Health Sci Educ Theory Pract. 2014;19:233–250.
+cally integrated for high stakes assessments, including the selection of             12. Downing SM, Yudkowsky R, eds. Assessment in Health Professions Educa-
+surgical trainees.27 One reason for slow adoption of a contemporary                      tion. New York: Routledge; 2009.
+framework is possibly that many validation studies are conducted by                  13. Moher D, Liberati A, Tetzlaff J, et al. Preferred reporting items for systematic
+clinicians and, thus, research teams do not necessarily include educa-                   reviews and meta-analyses: the PRISMA statement. BMJ. 2009;339:b2535.
+tional specialists or clinicians with a background in medical education.             14. Downing SM, Haladyna TM. Validity and its threats. In: Downing SM,
+                                                                                         Yudkowsky R, eds. Assessment in Health Professions Education. New York:
+Clinicians may continue to use outdated frameworks, simply because                       Routledge; 2009:21–56.
+they are unaware of new developments in this field.                                  15. Cook DA, Lineberry M. Consequences validity evidence: evaluating the
+        The use of the contemporary validity framework is especially                     impact of educational assessments. Acad Med. 2016;91:785–795.
+important in the specialties with a limited number of published validity             16. Cook DA. When I say. . . validity. Med Educ. 2014;48:948–949.
+studies, as the early introduction of this framework could have a high               17. Schuwirth LW, van der Vleuten CP. General overview of the theories used in
+impact and influence future publications. By contrast, a gradual shift                   assessment: AMEE Guide No. 57. Med Teach. 2011;33:783–797.
+toward Messick framework in general surgery and urology, which have                  18. Cook DA. Much ado about differences: why expert-novice comparisons add
+the greatest number of publications, could prove more difficult. To                      little to the validity argument. Adv Health Sci Educ Theory Pract.
+                                                                                         2015;20:829–834.
+improve the quality of validity studies, scientific journals should
+                                                                                     19. Downing SM. Reliability: on the reproducibility of assessment data. Med
+consider adopting a policy that mandates the use of a contemporary                       Educ. 2004;38:1006–1012.
+validity framework, like Messick. We, therefore, call for a moratorium               20. Savran MM, Hansen HJ, Petersen RH, et al. Development and validation of a
+on the publication of papers containing no or an outdated validity                       theoretical test of proficiency for video-assisted thoracoscopic surgery (VATS)
+framework. Similar initiatives, such as recommending or requiring the                    lobectomy. Surg Endosc. 2015;29:2598–2604.
+use of the CONSORT statement for randomized trials, have improved                    21. Henriksen MJV, Wienecke T, Thagesen H, et al. Assessment of residents
+the quality of reporting.28 Similar initiatives could help accelerate the                readiness to perform lumbar puncture: a validation study. J Gen Intern Med.
+                                                                                         2017;32:610–618.
+widespread use of the contemporary framework.
+                                                                                     22. Subhi Y, Todsen T, Konge L. An integrable, web-based solution for easy
+                                                                                         assessment of video-recorded performances. Adv Med Educ Pract. 2014;5:
+                        ACKNOWLEDGMENT                                                   103–105.
+    The authors thank Kirsten G. Engel MD, researcher at                             23. Bloch R, Norman G. Generalizability theory for the perplexed: a practical
+CAMES, for language editing.                                                             introduction and guide: AMEE Guide No. 68. Med Teach. 2012;34:
+                                                                                         960–992.
+                                                                                     24. Todsen T, Tolsgaard MG, Olsen BH, et al. Reliable and valid assessment of
+                              REFERENCES                                                 point-of-care ultrasonography. Ann Surg. 2015;261:309–315.
+ 1. Stefanidis D, Sevdalis N, Paige J, et al. Simulation in surgery: what’s needed   25. Cook DA, Brydges R, Ginsburg S, et al. A contemporary approach to
+    next? Ann Surg. 2015;261:846–853.                                                    validity arguments: a practical guide to Kane’s framework. Med Educ.
+ 2. Cook DA, Hatala R, Brydges R, et al. Technology-enhanced simulation for              2015;49:560–575.
+    health professions education: a systematic review and meta-analysis. JAMA.       26. Hatala R, Cook DA, Brydges R, et al. Constructing a validity argument for the
+    2011;306:978–988.                                                                    Objective Structured Assessment of Technical Skills (OSATS): a systematic
+ 3. Goldenberg MG, Garbens A, Szasz P, et al. Systematic review to establish             review of validity evidence. Adv Health Sci Educ Theory Pract.
+    absolute standards for technical performance in surgery. Br J Surg.                  2015;20:1149–1175.
+    2017;104:13–21.                                                                  27. Gardner AK, Ritter EM, Paige JT, et al. Simulation-based selection of surgical
+ 4. Brydges R, Hatala R, Zendejas B, et al. Linking simulation-based educational         trainees: considerations, challenges, and opportunities. J Am Coll Surg.
+    assessments and patient-related outcomes: a systematic review and meta-              2016;223:530–536.
+    analysis. Acad Med. 2015;90:246–256.                                             28. Devereaux PJ, Manns BJ, Ghali WA, et al. The reporting of methodological
+ 5. Vogt VY, Givens VM, Keathley CA, et al. Is a resident’s score on a videotaped        factors in randomized controlled trials and the association with a journal
+    objective structured assessment of technical skills affected by revealing the        policy to promote adherence to the Consolidated Standards of Reporting Trials
+    resident’s identity? Am J Obstet Gynecol. 2003;189:688–691.                          (CONSORT) checklist. Control Clin Trials. 2002;23:380–388.
+
+
+
+
+1068 | www.annalsofsurgery.com                                                                    ß 2018 Wolters Kluwer Health, Inc. All rights reserved.
+
+
+                                 Copyright © 2018 Wolters Kluwer Health, Inc. All rights reserved.
+

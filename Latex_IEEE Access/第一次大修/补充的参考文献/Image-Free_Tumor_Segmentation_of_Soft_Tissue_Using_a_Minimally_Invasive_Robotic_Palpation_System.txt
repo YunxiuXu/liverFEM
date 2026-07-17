@@ -1,0 +1,629 @@
+SOURCE_FILE: Image-Free_Tumor_Segmentation_of_Soft_Tissue_Using_a_Minimally_Invasive_Robotic_Palpation_System.pdf
+SOURCE_TYPE: pdf
+-----
+          IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 72, NO. 12, DECEMBER 2025                                                                       3621
+
+
+
+
+ Image-Free Tumor Segmentation of Soft Tissue
+      Using a Minimally Invasive Robotic
+              Palpation System
+          Yun-jeong Lee , Sang-won Bang , Jeong-bin Hong , and Sukho Park , Member, IEEE
+
+
+   Abstract—Tumor segmentation is crucial for surgical                            image-based methods utilizing medical images such as CT,
+planning and precise tumor resection for effective treat-                         MRI, and PET and palpation-based methods are used for tumor
+ment. Traditionally, tumor localization has been performed                        segmentation.
+using medical imaging techniques such as CT and MRI or
+through direct palpation by surgeons. However, in mini-                              Medical imaging is a widely used technique to assist in
+mally invasive robotic surgery (MIS), these methods have                          surgical planning by visualizing internal organs and identifying
+limitations, including registration errors with imaging and                       tumors within them [4], [5]. Through the image processing,
+inaccuracies caused by the subjectivity of palpation by sur-                      these images help distinguish tumor regions and reconstruct the
+geons. In this study, we introduce a robotic palpation sys-
+                                                                                  3D shapes of organs and tumors. However, image-based tumor
+tem and an image-free process for MIS tumor segmentation
+using a robot. Our proposed system enables precise tumor                          segmentation has several limitations. One major drawback is the
+shape differentiation through direct robotic palpation. For                       significant time and cost required for medical image acquisition.
+this, the robotic palpation system collects surface shape                         The process typically takes between 10 to 50 minutes, increasing
+information through the proposed process, allowing tissue                         the likelihood of patient movement and associated errors [6].
+palpation at specific depths according to surface curvature.
+                                                                                  Additionally, discrepancies can arise when aligning medical
+Additionally, it visualizes stiffness maps, enabling image-
+free tumor segmentation. In experiments using this system,                        images obtained through different modalities, such as CT and
+evaluation of planar and curved phantom models demon-                             MRI. Furthermore, due to the nature of soft tissue deformation
+strates precise segmentation at targeted sites, with sen-                         and movement during surgery, the actual intraoperative tumor
+sitivities of 0.9634 and 0.9729, and specificities of 0.9646                      location may differ from the segmented tumor location in med-
+and 0.9878, respectively. Validation on ex-vivo porcine liver
+                                                                                  ical imaging.
+models further confirms the efficacy of our approach.
+                                                                                     Additionally, palpation has been utilized to enhance the accu-
+  Index Terms—Image-free, robotic palpation, robot-                               racy of tumor segmentation during tumor resection surgery [7],
+assisted minimally invasive surgery (RMIS), surface                               [8]. This technique involves the physician’s tactile assessment
+reconstruction, tumor segmentation.
+                                                                                  of organ properties, helping to identify abnormal tissue charac-
+                                                                                  teristics such as size, location, and shape - key factors for disease
+                           I. INTRODUCTION                                        diagnosis and surgical planning. Palpation plays a crucial role in
+                                                                                  ensuring effective and safe surgical procedures, particularly for
+      UMOR segmentation is the process of identifying the
+T     regions where tumors are present within tissues and dis-
+tinguishing tumor regions from normal tissues. This process is
+                                                                                  radical tumor removal [9]. However, its reliance on physician’s
+                                                                                  subjective assessment presents challenges to accuracy [10].
+                                                                                     Recently, minimally invasive surgery (MIS) has been
+essential for accurate diagnosis and surgical planning, partic-
+                                                                                  recognized as a suitable approach for various tumor resection
+ularly in tumor resection procedures [1], [2], [3]. In general,
+                                                                                  procedures [11], [12], [13], [14]. MIS offers several advantages,
+                                                                                  including shorter recovery times, reduced patient discomfort,
+   Received 7 May 2025; accepted 22 May 2025. Date of publication 26              and minimal scarring [15], [16], [17]. Due to these benefits,
+May 2025; date of current version 14 November 2025. This work was
+supported in part by the National Research Foundation (NRF), through              MIS is becoming increasingly prevalent in clinical practice, and
+the Ministry of Science & ICT, under Grant NRF2021R1A2C3007817,                   research focused on improving tumor segmentation accuracy
+in part by the Industrial Strategic Technology Development Program                in MIS is actively ongoing [18], [19]. However, this approach
+through the Ministry of Trade, Industry & Energy (MOTIE, Korea), under
+Grant 20017903, in part by the Daegu Gyeongbuk Institute of Science               introduces challenges such as friction at the trocar port and
+and Technology R&D Program of the Ministry of Science, and in part by             restrictions on device movement, which may compromise
+ICT under Grant 23-PCOE-02. (Corresponding author: Sukho Park.)                   palpation accuracy. Integrating force sensors into MIS instru-
+   Yun-jeong Lee, Sang-won Bang, and Jeong-bin Hong are with the
+Daegu Gyeongbuk Institute of Science and Technology, South Korea.                 ments enables a quantitative assessment of organ properties by
+   Sukho Park is with the Daegu Gyeongbuk Institute of Science and                measuring force values during contact. However, the clinical
+Technology, Daegu 42988, South Korea (e-mail: shpark12@dgist.ac.kr).              adoption of force-sensing capabilities remains limited [20].
+   This article has supplementary downloadable material available at
+https://doi.org/10.1109/TBME.2025.3573666, provided by the authors.                  To overcome these challenges, recent research has actively
+   Digital Object Identifier 10.1109/TBME.2025.3573666                            explored palpation-based tumor segmentation using robots [21],
+
+
+0018-9294 © 2025 IEEE. All rights reserved, including rights for text and data mining, and training of artificial intelligence and similar technologies.
+   Personal use is permitted, but republication/redistribution requires IEEE permission. See https://www.ieee.org/publications/rights/index.html
+                                                                 for more information.
+
+         Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+3622                                                               IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 72, NO. 12, DECEMBER 2025
+
+
+
+[22], [23], [24]. Robotic palpation has the advantage of pro-                    The measured force F and the corresponding pend ef f ector go
+viding more objective and quantitative assessments compared                      through post-processing to estimate the stiffness value E(p) of
+to conventional palpation methods. However, existing robotic                     the tissue at each position along the probe path. The estimated
+palpation-based tumor segmentation studies also have limita-                     stiffness is densely interpolated to create a stiffness map, and by
+tions. One major challenge is that most of existing robotic                      setting a threshold based on the stiffness values, specific bound-
+palpation requires prior acquisition of the organ’s surface shape,               aries above a certain stiffness can be segmented to distinguish
+which typically relies on medical imaging or cameras. However,                   the tumor. All the aforementioned processes are performed by
+the use of medical images may lead to the previously mentioned                   a single robotic system. Since the reference coordinate system
+issues related to time and cost. Moreover, in robot-assisted MIS                 is the same, there is no need for separate kinematic calibration
+(RMIS) environments, reconstructing surface geometry using                       or coordinate system registration. Therefore, image-free tumor
+cameras is highly challenging due to difficulties in obtaining                   segmentation could be accurately performed.
+high-quality images and aligning them accurately. In addition,                      The concepts underlying each process are succinctly eluci-
+some existing studies have attempted to detect tumors using                      dated in Fig. 1(b). As illustrated in Fig. 1(b)(i), the probe is
+specially designed sensors or deep learning-based palpation data                 directly in contact with the tissue in an image-free method, per-
+analysis without the use of medical imaging [25], [26], [27],                    forming the point cloud acquisition along the probe’s movement
+[28], [29]. However, most of these methods are limited to flat                   to obtain the tissue surface. Additionally, Fig. 1(b)(ii) shows that
+tissue surfaces and are still limited in terms of applicability and              when the robot’s probe is indented in the normal direction of the
+generality in real curved tissues or MIS environments.                           tissue surface, the reaction force transmitted to the probe can
+   To overcome the limitations of previous studies, this study                   be measured. Since the typical difference in stiffness between
+proposes a robotic palpation system capable of tumor seg-                        tumor and normal tissue, reaction forces are different from
+mentation without relying on medical imaging or cameras.                         each tissue type. Hence, by correlating the reaction force with
+Unlike existing methods that require prior medical image ac-                     indentation depth, the stiffness of each tissue can be estimated,
+quisition or surface reconstruction using external sensors, the                  typically expressed as Young’s modulus. Finally, Fig. 1(b)(iii)
+proposed method introduces a novel approach in which a single                    illustrates the process of segmenting the tumor by setting a
+robotic system directly obtains the tissue surface information                   threshold in the visualized stiffness map, using the stiffness
+and performs objective palpation to generate a stiffness map.                    difference between normal tissue and the tumor tissue.
+This enables precise tumor segmentation without the need for
+coordinate alignment. Additionally, the system allows for the
+objective measurement of tissue stiffness without prior knowl-                   A. Robotic Palpation System
+edge of the tissue shape, facilitating accurate tumor segmenta-                     In this study, the robotic palpation system consists of a mas-
+tion in RMIS environments. The effectiveness of the proposed                     ter device, a slave device, and a palpation tool, illustrated in
+robotic palpation system is validated through phantom and                        Fig. 2(a). First, the master device, named Touch by 3D Systems,
+ex vivo experiments, demonstrating its potential for clinical                    is a haptic device with 6 degrees of freedom (DOF) and is
+application.                                                                     controlled by the physician. Second, the slave device, named
+                                                                                 UR5e from Universal Robots, is a 6-DOF robot manipulator ex-
+                                                                                 ecuting tasks on the patient’s side under the manipulation of the
+                             II. METHODS                                         physician. These devices operate in a tele-operated master-slave
+   Fig. 1(a) illustrates the overall process flow for image-free                 configuration, with control achieved at a loop speed of 2 millisec-
+segmentation using the proposed robotic palpation method.                        onds using real-time task scheduling facilitated by Linux 5.4.89
+To perform the proposed robotic palpation, the first process,                    and Xenomai 3.2 kernel on Ubuntu 18.04.01 LTS OS. Both the
+surface reconstruction, is performed through a master-slave                      master and slave devices are fixed on an optical table alongside a
+tele-operation system. First, point cloud acquisition is performed               phantom model. Finally, the palpation tool is attached to the end
+by scanning the surface of the soft tissue with the slave robot’s                of the slave device, comprising a long rod, a 6-axis force/torque
+end effector to obtain the position pend ef f ector of the robot’s               sensor named HEX12 by Resense, and a ball probe, as depicted
+end-effector. Next, using the obtained position information, the                 in Fig. 2(b). Here, the elongated rod of the tool is constructed
+surface is reconstructed to generate the surface normal vector N                 from SUS340 material, measuring approximately 210 mm in
+and the reconstructed point precon , thereby acquiring the surface               length. Its design is optimized to handle a wider area within
+geometry. Secondly, a robotic palpation process is performed.                    the patient’s body, specifically tailored for applications in min-
+Using the N and precon obtained from the previous process,                       imally invasive surgery. Additionally, the force/torque sensor
+a probe path with a specific indentation depth is generated                      incorporated in the system exhibits a narrow force range coupled
+through MATLAB programming. The end-effector of the slave                        with high resolution, showcasing commendable performance
+robot follows the generated probe path, applying pressure to the                 characteristics suitable for the precise control of soft organs,
+soft tissue during palpation. Lastly, the third process, Tumor                   in low-noise environments. Furthermore, a 2 mm diameter ball
+segmentation, is performed. In the previous process, when the                    probe is attached to the end of the force/torque sensor which
+robot’s end-effector presses the tissue, the 3-axis force is mea-                senses the reaction force from the tissue as the ball probe moves
+sured by the force-torque sensor attached to the robot’s tool.                   on the tissue surface and stores this data at a pace at the same
+
+
+       Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+LEE et al.: IMAGE-FREE TUMOR SEGMENTATION OF SOFT TISSUE USING A MINIMALLY INVASIVE ROBOTIC PALPATION SYSTEM                                               3623
+
+
+
+
+Fig. 1. (a) Overall procedural framework for image-free segmentation using the proposed robotic palpation technique and (b) concept underlying
+each process of the proposed method.
+
+
+
+speed as the robot control loop speed. The sphere-shaped probe
+used not only ensures a consistent contact area during soft tissue               B. Surface Reconstruction Process
+probing but also serves to minimize tissue damage. Moreover, in                     Generally, the surface information of the targeted tissue is
+estimating the precise point of contact between the palpation tool               delineated by the positions and orientations of a collection of
+and the tissue surface, the end coordinates of the ball probe are                points constituting its surface. The initial point cloud generated
+utilized. It is worth noting that employing a smaller diameter ball              by the proposed robotic palpation system represents partial
+probe, such as the 2mm variant employed in this setup, aids in                   and raw data, capturing only a portion of the tissue surface
+reducing location errors, thereby enhancing the overall precision                information. To achieve a comprehensive understanding of the
+of the system.                                                                   tissue surface, it is imperative to undertake a reconstruction
+
+        Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+3624                                                               IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 72, NO. 12, DECEMBER 2025
+
+
+
+                                                                                 control, as shown in the right figure of Fig. 3(a)(i), constructs
+                                                                                 a virtual damper and spring between the tissue and ball probe
+                                                                                 with constants M, C, K, and external force Fext . This allows
+                                                                                 the actual slave to control the position x without damaging the
+                                                                                 tissue, even if the master side gives an input xd to contact deeper
+                                                                                 than necessary into the tissue. With the two control techniques
+                                                                                 introduced, the raw data of the tissue surface information can be
+                                                                                 obtained in the form of a point cloud.
+                                                                                    The point cloud obtained through the introduced point cloud
+                                                                                 acquisition is generated by the ball probe attached at the end
+                                                                                 of the slave robot directly contacting the tissue, so it does not
+                                                                                 contain information about a significant area that did not make
+                                                                                 contact. Therefore, a surface reconstruction process is required
+                                                                                 to reconstruct the point cloud using the Point2Mesh deep learn-
+                                                                                 ing algorithm. The Point2Mesh deep learning algorithm is an
+                                                                                 unsupervised deep learning algorithm that takes as input a point
+                                                                                 cloud and a rough initial mesh [30]. This algorithm is robust to
+                                                                                 noise and has the feature of effectively supplementing missing
+                                                                                 data. To reconstruct the surface, the point cloud is down-sampled
+                                                                                 and used as input data and is trained as a uniform point cloud with
+                                                                                 an initial mesh generated based on it. Through this mesh-based
+                                                                                 learning, not only the position information of the points but also
+                                                                                 information of the surface normal vector is obtained. Finally,
+Fig. 2. (a) Robotic palpation system, (b) ball probe and force-torque            the reconstructed surface information of the patient area can
+sensor in palpation tool, and (c) phantom test setup.                            be obtained image-free from the point cloud data, as shown in
+                                                                                 Fig. 3(a)(ii), after undergoing the smoothing procedure. Previous
+process to extrapolate the complete surface information. Con-                    research reported that this surface reconstruction process has an
+sequently, both point cloud acquisition and subsequent surface                   accuracy of up to 0.35 mm [6].
+reconstruction procedures are indispensable for obtaining pre-
+cise and comprehensive tissue surface data.
+   Initially, the proposed robotic palpation system performs                     C. Robotic Palpation Process
+point cloud acquisition to acquire the positional information of                    The proposed robotic palpation is the process of estimating
+points on the surface of the organ. Throughout this process, when                the quantitative stiffness of the tissue surface by probing the
+positional input is provided from the master side, the slave robot               tissue by a robot based on the reconstructed surface of the
+instantly tracks and follows these specified positions. As the ball              tissue obtained in the Section II-B. In this study, to probe the
+probe situated at the end of the robot moves on(over) the tissue                 tissue uniformly and accurately, the probe path is generated by
+surface, it instantaneously records the positional information of                utilizing the tissue reconstructed surface information. Then, as
+the ball probe’s end, thereby storing points in real-time. This                  the robot’s probe tip moves along the generated path and probes
+collection of points is termed a point cloud. This study per-                    the tissue, the force values measured from the force-torque
+formed the point cloud acquisition process through the remote                    sensor connected to the probe tip can be used to estimate the
+center of motion (RCM) constraint control and position-based                     stiffness of the tissue along the probe path.
+impedance control, as described in our previous research [6].                       In the robotic palpation process, a probe path is created to
+First, RCM constraint control involves the remote control of the                 ensure uniform probing of the entire tissue and a certain depth
+robot’s rotational and translational motion relative to a fixed                  of probing in the surface’s normal direction. First, to achieve
+point in minimally invasive surgery, as shown on the left in                     uniform probing of the entire tissue, a regression line is generated
+Fig. 3(a)(i). At this time, the fixed point is set based on the hole             for each sector at regular intervals on the entire surface, as shown
+in the human body for inserting surgical tools during minimally                  in the left image of Fig. 3(b)(i), and points are extracted from
+invasive surgery. This point is defined to as a virtual RCM point                the generated line at equally spaced intervals and set as probing
+on the robot. RCM constraint control is a method used to control                 points. Since the reconstructed surface of the tissue is composed
+the position of the probe tip and RCM point by converting a total                of points arranged disorderly, a regression line is generated by
+of five task control variables into five joint velocities using the              applying the least square method to the points within one sector.
+alternative Jacobian [6]. With this control, the robot’s tool moves              Here, sector n is a specific range set along the y-axis. Once
+constrained to the RCM point and follows the position input                      n regression lines are generated at regular intervals, points are
+from the master. Second, position-based impedance control                        uniformly extracted on all regression lines. After that, among
+is to control the position of the slave according to the input                   these extracted points, the point closest to the points on the
+to the master while controlling the slave to move in contact                     reconstructed surface is set as the probing point. Second, to
+with the tissue without damaging it. Position-based impedance                    maintain the same indentation depth at all set probing points,
+
+       Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+LEE et al.: IMAGE-FREE TUMOR SEGMENTATION OF SOFT TISSUE USING A MINIMALLY INVASIVE ROBOTIC PALPATION SYSTEM                                                 3625
+
+
+
+
+Fig. 3.   (a) Surface reconstruction process, (b) robotic palpation process, and (c) tumor segmentation process.
+
+
+the end point of the indentation is set at a certain depth in the                  torque sensor. The mechanical properties of the tissue can be
+internal direction of the tissue from the probing point using the                  estimated from the force measured due to the contact of the
+surface normal vector N , as shown on the right in Fig. 3(b)(i).                   ball probe with the tissue [18]. Specifically, this study aims to
+The end point of the indentation is defined as the inner point, and                estimate the stiffness of a viscoelastic tissue from the contact
+the point in the direction away from the tissue is defined as the                  between a spherical rigid ball probe and a viscoelastic tissue,
+outer point. For a single probing point, moving from the outer                     considering the complex characteristics of the tissue. In partic-
+point to the inner point and then from the inner point to the outer                ular, according to the Hertz solution, when a rigid sphere with
+point constitutes one indentation process. By repeating the same                   radius R presses on a viscoelastic object, Young’s modulus (E)
+process for the next probing point, uniform robotic palpation can                  of the tissue is expressed as (1) [31]. Under these conditions, the
+be performed across the entire tissue surface when applied to n                    stiffness of the tissue is an absolute value rather than a relative
+sectors. Eventually, a final probe path can be generated for all                   one.
+probing points that move in the order of outer point, inner point,                                                          
+                                                                                                                3FN 1 − ν 2
+and outer point.                                                                                          E=         √         .                   (1)
+   Subsequently, the force exerted by the palpation tool on the                                                     4 Rδ 3
+tissue is generated when the robot’s probe tip follows the probe                   Here, ν represents Poisson’s ratio, δ denotes indentation depth,
+path generated by the robotic palpation process and indents the                    R signifies the radius of the indenter, and FN denotes the force
+tissue in the surface’s normal direction. During this process,                     projected from the sensing force onto the surface normal vector
+a reaction force is exerted on the palpation tool by the action                    N . As shown in Fig. 3(b)(ii), N is a normal vector generated
+reaction, and this reaction force is sensed through the force                      with respect to the base coordinate system {B}, but the force
+
+          Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+3626                                                               IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 72, NO. 12, DECEMBER 2025
+
+
+
+F sensed by the force-torque sensor is a vector generated with                   during minimally invasive surgeries. Throughout all stages of
+respect to the coordinate system {T } of the palpation tool where                this study, the positioning of the hole is meticulously controlled
+the sensor is located. Also, N and F are not parallel to each                    to coincide with the RCM point, ensuring the prevention of the
+other due to friction forces, control errors, etc. This means that               hole’s damage.
+F contains other force components such as friction forces other                     In the experiment for point cloud acquisition, the operator vi-
+than the indentation force, so only FN , the projection of F in                  sually monitors the scanning area, similar to using an endoscopic
+the N direction, is used for stiffness estimation. In the end, the               camera to secure an internal view of the human body in MIS [8],
+stiffness of the tissue can be estimated using the force FN in the               [34], [35]. Once the surface of the scanned area is reconstructed,
+direction normal to the surface of the tissue.                                   regression lines and points are created to establish the paths for
+                                                                                 palpation. In this experiment, eight regression lines are initially
+D. Tumor Segmentation Process                                                    created at regular intervals across the entire area, followed by
+                                                                                 the addition of seven more lines between the initial eight. This
+   Through the robotic palpation process described in
+                                                                                 method generates 6 paths from which approximately 50 points
+Section II-C, the position of the probing point and its correspond-
+                                                                                 per line are extracted. Thus, this process ensures that stiffness
+ing stiffness value along the tissue’s surface normal direction can
+                                                                                 measurements are obtained at uniformly spaced locations across
+be obtained. Using these stiffness values, a stiffness map of the
+                                                                                 the entire area.
+target area is generated. However, since the probe position and
+                                                                                    In this experiment, the indentation depth, a crucial factor in
+stiffness values represent only a localized region of the target
+                                                                                 the robotic palpation process, is set to 1 mm, in which the ball
+area, interpolation is required to estimate the stiffness values in
+                                                                                 probe of the robotic palpation system has a diameter of 2 mm.
+areas beyond the actual probe points and construct a compre-
+                                                                                 Another research on estimating the stiffness of soft tissues using
+hensive stiffness map. With these interpolated stiffness values,
+                                                                                 a ball probe validated that when the indentation depth is less than
+a rough raw stiffness map, like the left image of Fig. 3(c)(i),
+                                                                                 1 mm and the model thickness is at least 9.09 mm, the stiffness
+can be created by generating a mesh. By interpolating more
+                                                                                 of soft tissues is most accurately estimated with a 2 mm ball
+compactly, a dense processed stiffness map, like the right image
+                                                                                 probe. Therefore, in this study, the indentation depth is set to
+of Fig. 3(c)(i), can be created, and through this, it is possible to
+                                                                                 1 mm, and the model thickness is set to at least 10 mm [36].
+ultimately visualize the stiffness information of the tissue.
+                                                                                    The palpation experiments for the tumor segmentation pro-
+   On the other hand, it is generally known that tissues with
+                                                                                 cess were conducted twice each and the quantitative results are
+tumors have higher stiffness compared to normal tissues [32].
+                                                                                 the averages of each experiment’s results. For the phantom test,
+Therefore, in the stiffness map, normal and tumor tissues can be
+                                                                                 we utilized both a planar phantom model and a curved phantom
+distinguished visually through the color map. In this study, we
+                                                                                 model, each measuring 40 mm × 40 mm. The planar phantom
+aim to separate the stiffness area above a certain stiffness value
+                                                                                 model included square and circular virtual tumor tissues, while
+among the interpolated stiffness values from the stiffness map
+                                                                                 the curved phantom model featured an elliptical virtual tumor
+and define its boundary as the outline of the tumor. This certain
+                                                                                 tissue. These phantom models are fabricated using EcoflexTM
+stiffness value represents the threshold for the tumor stiffness.
+                                                                                 00-30 product in conjunction with silicone thinner. The virtual
+As shown in Fig. 3(c)(ii), by adjusting the threshold, we could
+                                                                                 tumor tissues are formulated with a ratio of base to hardener to
+distinguish a wider tumor area when the threshold is small, and
+                                                                                 softener of 1:1:0, while the normal tissue is composed with a
+a narrower tumor area when the threshold is large. Here, the
+                                                                                 ratio of base to hardener to softener of 1:1:1.
+threshold can be determined according to the stiffness of normal
+                                                                                    Second, for the ex-vivo test, two distinct artificial tumor
+tissue. In general, it is known that tissues with tumors have a
+                                                                                 models are fabricated using porcine liver tissue with a 40 mm
+stiffness that is about 2-3 times higher than normal tissue [33].
+                                                                                 × 40 mm area designated as the target region. As illustrated
+Therefore, a threshold can be set as a multiple of the stiffness of
+                                                                                 in Fig. 6(a), one type of artificial tumor model is generated
+the area that is judged to be normal tissue.
+                                                                                 by injecting agar solution into the porcine liver tissue from a
+                                                                                 depth of 10 mm beneath the liver surface at a single location. In
+E. Performance Evaluation (Phantom Test and Ex-Vivo                              contrast, as depicted in Fig. 6(b), another artificial tumor model
+Test)                                                                            is created by injecting agar solution into the porcine liver tissue
+   To assess the efficacy of the proposed robotic palpation sys-                 from a depth of 10 mm beneath the liver surface in a linear
+tem, two types of tests, namely phantom and ex-vivo tests, are                   direction, repeating the injection process multiple times. The
+conducted. All test was conducted utilizing a robotic palpation                  agar solution utilized for tumor production is prepared by boiling
+system to simulate a minimally invasive surgery (MIS) scenario,                  a mixture consisting of agar powder and deionized water in a
+devoid of surface information on the models. The procedure                       microwave for 30 seconds, maintaining a ratio of 1:25 of agar
+encompassed point cloud acquisition for surface reconstruction,                  powder to DI water [27].
+robotic palpation guided by probe path generation for assessing
+tissue stiffness, and tumor segmentation utilizing the stiffness                                      III. EXPERIMENTAL RESULTS
+map generated from the tissue. As depicted in Fig. 2(c), the tests
+                                                                                 A. Phantom Tests
+are executed utilizing an acrylic dome that encloses the model.
+The hole situated atop the acrylic dome simulates the entry point                   Firstly, we present the outcomes of the planar phantom model
+of the human body for the insertion of surgical instruments                      test. The planar phantom model, as detailed in the Section II-E
+
+       Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+LEE et al.: IMAGE-FREE TUMOR SEGMENTATION OF SOFT TISSUE USING A MINIMALLY INVASIVE ROBOTIC PALPATION SYSTEM                                               3627
+
+
+
+
+Fig. 4. Planar phantom model test, (a) planar phantom model, (b) point           Fig. 5. Curved phantom model test, (a) curved phantom model, (b)
+cloud raw data and reconstructed surface of planar phantom model, (c)            point cloud raw data and reconstructed surface of curved phantom
+stiffness map, estimated tumor outline (red dotted line) and actual tumor        model, (c) stiffness map, estimated tumor outline (red dotted line) and
+outline (blue solid line) of planar phantom model, and (d) sensitivity           actual tumor outline (blue solid line) of curved phantom model, and (d)
+and specificity of actual tumor area and estimated tumor area (TP: True          sensitivity & specificity of actual tumor area and estimated tumor area
+Positive, FP: False Positive, and FN: False Negative).                           (TP: True Positive, FP: False Positive, and FN: False Negative).
+
+
+
+
+and depicted in Fig. 4(a), incorporates artificial tumor regions                 artificial tumor. In addition, a qualitative evaluation of the seg-
+represented by a square and a circle. These tumors, highlighted                  mentation via thresholding of approximately 1.48 times can be
+in red, are fabricated with greater stiffness compared to the                    conducted by assessing the ratio of the actual tumor area to the
+surrounding normal tissue. Initially, the probe moves on the                     estimated tumor area. Illustrated in Fig. 4(d), areas where the
+model surface utilizing an image-free technique, capturing po-                   actual and estimated areas intersect are defined as True Positive
+sitional data at the probe tip. Subsequently, shape information                  (TP), where the actual area intersects with the non-overlapping
+is acquired in the form of a point cloud relative to the robot’s                 estimated area as False Negative (FN), where the estimated area
+base coordinate, depicted in the upper part of Fig. 4(b). Dur-                   intersects with the non-overlapping actual area as False Positive
+ing this process, the probe tip made uniform contact with the                    (FP), and where neither the estimated nor actual areas intersect
+model, transmitting an average contact force of 0.068 N and                      as True Negative (TN). With these definitions, the sensitivity
+applying a pressure of approximately 10.892 kPa. The raw point                   and specificity of the estimated tumor segmentation can be
+cloud data undergoes uniformization through the Point2Mesh                       computed. In the tumor segmentation experiment utilizing the
+deep learning algorithm, resulting in a surface characterized by                 planar phantom model, the achieved values are about 0.9634 for
+uniformly distributed points, as illustrated in the lower part of                sensitivity and about 0.9729 for specificity.
+Fig. 4(b). Employing the obtained surface data, a probe path is                     Secondly, we present the outcomes from the curved phantom
+generated, which guides the probe during robotic palpation along                 model test. The curved phantom model, illustrated in Fig. 5(a), is
+this path. During this process, stiffness at each indentation point              manufactured to resemble the complex 3D shape of a real organ,
+is calculated by employing relationships between sensed force,                   thereby validating surface characteristics with a curved model
+indentation depth, and various parameters. Post-processing and                   distinct from the planar phantom model. As with the planar
+interpolation of these stiffness values enable the creation and                  phantom model, the probe tip made uniform contact with the
+visualization of a stiffness map, demonstrated in Fig. 4(c). Fur-                model, transmitting an average contact force of 0.063 N and
+thermore, the precise position of the artificial tumor is denoted                applying a pressure of approximately 10.131 kPa. Surface data
+by a solid blue line on the stiffness map and the estimated tumor                for the curved model is acquired using an image-free approach.
+boundary obtained through thresholding is indicated by a dashed                  As depicted in the upper part of Fig. 5(b), positional data from
+red line. The stiffness map displays areas of high stiffness in                  the probe tip is captured in the form of a point cloud, representing
+red, where it’s evident that the estimated regions, corresponding                surface information. After a point2mesh learning, a uniformized
+to high stiffness, closely align with the actual location of the                 surface featuring evenly distributed points, as depicted in the
+
+        Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+3628                                                               IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 72, NO. 12, DECEMBER 2025
+
+
+
+                                                                                 is created in a specific region of the porcine liver, while porcine
+                                                                                 liver model 2, illustrated in Fig. 6(b), represents a linearly shaped
+                                                                                 tumor on the porcine liver. Both liver models are fixed within
+                                                                                 acrylic boxes. As in the phantom experiment, in the ex-vivo
+                                                                                 experiment, the same point cloud acquisition process was fol-
+                                                                                 lowed and the position-based impedance control using the robot
+                                                                                 was well-executed for the real tissue. During the experiments,
+                                                                                 an average contact force of 0.0411 N was transmitted, and a
+                                                                                 pressure of approximately 6.536 kPa was applied. Subsequently,
+                                                                                 after learning, surface reconstruction outcomes for each model
+                                                                                 are presented in Fig. 6(c)–(d), and (e)–(f) showcase the over-
+                                                                                 lay of stiffness maps generated via robotic palpation and the
+                                                                                 estimated tumor outlines derived from image-free tumor seg-
+                                                                                 mentation for each model. During the ex-vivo test, the stiffness
+                                                                                 contrast between the normal porcine liver tissue and the artificial
+                                                                                 tumor was discernible through the stiffness map generated by
+                                                                                 robotic palpation. This underscores the feasibility of employing
+                                                                                 an appropriate threshold of 2.86 and 1.79 times, respectively, for
+                                                                                 conducting image-free tumor segmentation on actual tissue.
+
+
+                                                                                                              IV. DISCUSSION
+                                                                                    This paper proposes a robotic palpation system to segment tu-
+                                                                                 mors in Robot-assisted Minimally Invasive Surgery (RMIS) and
+                                                                                 to reduce errors in the image-matching process. Furthermore, we
+                                                                                 suggest a method of tumor segmentation that does not rely on
+                                                                                 images. To implement this, three main processes were presented:
+                                                                                 surface reconstruction process, robotic palpation process, and
+                                                                                 tumor segmentation process. Through experiments with planar
+                                                                                 and curved phantoms, we successfully generated a stiffness map,
+                                                                                 and based on this, we were able to verify that tumor segmen-
+                                                                                 tation is possible. Through this process, the accuracy of tumor
+                                                                                 segmentation was verified using sensitivity and specificity. The
+Fig. 6. Ex-vivo test, (a)–(b) porcine liver models, (c)–(d) point cloud
+raw data and reconstructed surfaces of porcine liver models, and (e)–(f)         planar phantom test resulted in a sensitivity of 0.9634 and a
+stiffness maps and estimated tumor outlines (red dotted line) of porcine         specificity of 0.9729, while the curved phantom test resulted in
+liver models.                                                                    a sensitivity of 0.9646 and a specificity of 0.9878. For reference,
+                                                                                 the image-based tumor segmentation method by Kirk A. Nichols
+                                                                                 et al. [2], reported a sensitivity of 0.9565 and a specificity of
+lower part of Fig. 5(b), is attained. Subsequently, a stiffness                  0.9484. Additionally, Ranran Sun et al. [37], reported mean
+map is generated through robotic palpation, depicted in Fig. 5(c).               values of sensitivity as 0.92 ± 0.01 and mean values of specificity
+Analogous to the outcomes of the planar model test, the solid                    as 0.88 ± 0.05. Therefore, compared to other related studies, it
+blue line delineates the actual artificial tumor location, and the               was confirmed that the tumor segmentation conducted in this
+dashed red line indicates the estimated tumor boundary obtained                  study shows similar levels of sensitivity and specificity. Such
+through thresholding of approximately 1.85 times. Eventually,                    accuracy evaluation is only possible when we know the ground
+segmentation results, as displayed in Fig. 5(d), exhibit a close                 truth values of the surface shape of the phantom model and the
+correspondence between actual and estimated areas, confirming                    location and shape of the tumor. The model used in the phantom
+highly accurate tumor segmentation with an average sensitivity                   test was made using a 3D mold produced by a 3-dimensional
+of 0.9646 and an average specificity of 0.9878.                                  printer. Because we knew the surface shape and the location
+                                                                                 and shape information of the tumor, we were able to verify
+                                                                                 the accuracy of the tumor segmentation. On the other hand, the
+B. Ex-Vivo Tests                                                                 porcine liver model used in the ex-vivo test, which was made
+   To ensure that the introduced method can be applied to real                   by hardening with an agar solution using the liver extracted
+tissue, we conducted ex-vivo experiments using a porcine liver.                  from a slaughtered pig, does not allow us to know the exact
+Similar to the phantom test, an ex-vivo test was conducted uti-                  surface shape of the liver and the actual location and shape of
+lizing porcine liver tumor models, applying the aforementioned                   the created tumor. Therefore, in the ex-vivo test, as there was
+three-step process. As outlined in the Section II-E, porcine liver               no ground truth for the porcine liver model, no evaluation of
+model 1, depicted in Fig. 6(a), represents a model where a tumor                 accuracy was conducted. However, it was confirmed that the
+
+       Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+LEE et al.: IMAGE-FREE TUMOR SEGMENTATION OF SOFT TISSUE USING A MINIMALLY INVASIVE ROBOTIC PALPATION SYSTEM                                               3629
+
+
+
+shape of the segmented tumor was divided as intended during                      as the learning computer used in the surface reconstruction
+the fabrication stage. Therefore, tumor segmentation through                     process, it is anticipated that hardware/software improvements
+image-free robotic palpation was successfully performed using                    could significantly reduce the increase in surgical time.
+the proposed robotic palpation system and tumor segmentation                        Fourthly, in the proposed robotic palpation process, it is es-
+method on real soft tissue.                                                      sential to assess the safety regarding as the robot’s tissue contact,
+   Also, the following considerations should be taken for clinical               as the probe attached to the robot makes multiple contacts with
+application. First, in clinical applications, it is important to                 the tissue to estimate its stiffness. Referring to another study
+consider how the organ we want to palpate is connected and fixed                 considering damage due to pressure and indentation speed on
+to the human body. In actual clinical settings, the tissue of the                tissues, T. Fujikawa et al. [41] reported that there was no damage
+target organ can move. So, to prevent movement, a surgical towel                 to tissue capillary if the contact pressure on soft tissue is below
+is sometimes used to fix the organ [38]. But it is very difficult                1.3 MPa. Additionally, it was mentioned that, when contacting
+to use a device such as a surgical towel in MIS. Therefore, in                   the tissue with a vertical impact speed of 1.03 m/s, erythro-
+order to minimize movement during contact in MIS settings, the                   cytes are not observed outside the capillary if the maximum
+deformation during contact must be kept at a very low level.                     contact pressure does not exceed a certain threshold. In our
+   The deformation observed in this experiment is caused by an                   study, when the robot’s probe indents the tissue, the indentation
+applied pressure of about 6.536 kPa, a contact force of 0.0411                   depth is approximately 1.0 mm, and the indentation speed is
+N, and an indentation depth of 1 mm, resulting in only localized                 about 1.2 mm/s. Under these conditions, an average force of
+deformation of the tissue. Therefore, the overall movement of                    0.0772 N and a maximum force of 0.1590 N were applied in
+the organ can be minimized. Furthermore, with higher control                     indentation experiments on normal tissues. The corresponding
+performance achieved through position-based impedance con-                       pressures were an average of 12.281 kPa and a maximum of
+trol used in this study, it is possible to minimize the overall                  25.307 kPa. It is significantly lower than the mentioned safe
+movement of the organ and reduce position errors. Therefore,                     contact pressure value or contact speed value in the reference.
+the position-based impedance control used in this study needs                    Therefore, it can be considered that the proposed palpation
+to have good control performance. In this way, it is possible to                 process has a high level of safety in tissue contact. Additionally,
+minimize the movement of the soft tissue of the target organ and                 during experiments, a safety mode was implemented in which
+reduce the location error caused by it. In addition, reducing the                the robot was programmed to cease operation and move away
+depth of indentation in the robotic palpation process is a way to                from the tissue when a force exceeding a specific threshold was
+prevent movement and damage of the organ.                                        detected by a 1000 Hz force/torque sensor. This measure was
+   Secondly, in this study, we designed a robotic palpation sys-                 introduced to enhance stability and safety. However, there is a
+tem for MIS, and proposed a method of tumor segmentation                         risk of tissue damage compared to non-contact cases, so it would
+that does not rely on images with this system. However, in                       be safer if palpation was performed by methods such as mini-
+actual clinical practice, medical imaging is already essential for               mizing the number of contacts, reducing the indentation speed
+diagnosing patients’ diseases and planning surgery. In addition,                 to prevent peak force on viscoelastic materials, and lowering the
+in surgery using a robot, the registration process of matching                   indentation depth.
+the coordinate system of the robot, the coordinate system of                        Finally, the estimated stiffness of the normal porcine liver in
+the patient, and the image of the patient is inevitable. However,                this study is approximately 7–10 kPa for porcine liver model 1
+magnetic resonance imaging (MRI) can cause image distortion,                     and around 10–15 kPa for porcine liver model 2. When referring
+making it difficult to accurately represent the internal structures              to other studies estimating or measuring tissue stiffness, Evren
+of the human body [39]. Also, metal devices embedded in the                      Samur et al. [42] reported the elastic modulus of porcine liver to
+human body or implants made of metal can distort CT and                          be around 10–15 kPa for indentation depths of 2–8 mm. Blake
+MRI images [40]. As such, there may be limitations of medical                    Johnson et al. [43] reported the elastic modulus of porcine liver
+images in certain situations. In such cases, the introduction of the             at strain rates of 1%/s and 25%/s to be 0.0175 and 0.0232 MPa,
+image-free tumor segmentation method proposed in this study                      respectively. Additionally, F.J. Carter et al. [33] reported a mean
+should be actively considered.                                                   elastic modulus of approximately 4.0 MPa for porcine liver with
+   Thirdly, reducing surgical time is an important issue to allevi-              a thickness of 20 mm. These studies indicate different ranges
+ate the burden on both patients and surgeons during the surgical                 of stiffness as they estimate under different conditions, and the
+process. In the case of medical imaging, it is mostly performed                  probing methodology used in this study, may show differences in
+as preoperative preparation, whereas the three image-free pro-                   stiffness due to variations in the physical properties of the mate-
+cesses proposed in this study are procedures performed during                    rial [43]. Additionally, in this study, since the primary objective
+the surgical procedure. The execution time for point cloud ac-                   is segmentation rather than depth estimation, the tumor tissue
+quisition is approximately 3 minutes, point2mesh deep learning                   was positioned close to the surface in the models. However,
+takes about 2 minutes, and robotic palpation requires a minimum                  actual malignant tumor tissues may be located deeper from the
+of 7 minutes, so the entire process takes about 12 minutes.                      surface, and their depths can vary. Although not addressed in
+Therefore, introducing these processes may potentially increase                  this study, it is anticipated that creating a regression model for
+the surgical time. However, since the proposed processes heavily                 depth or employing depth estimation algorithms could allow for
+depend on the performance of the robot and controller, as well                   the estimation and evaluation of tumor depth.
+
+
+        Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+3630                                                                 IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 72, NO. 12, DECEMBER 2025
+
+
+
+                             V. CONCLUSION                                         [14] P. Zhu et al., “Intraoperative ultrasonography of robot-assisted laparo-
+                                                                                        scopic hepatectomy: Initial experiences from 110 consecutive cases,” Surg.
+   This paper proposes the robotic palpation system and intro-                          Endoscopy Other Interventional Techn., vol. 32, no. 10, pp. 4071–4077,
+duces a method for image-free tumor segmentation utilizing                              Aug. 2018, doi: 10.1007/s00464-017-5854-9.
+                                                                                   [15] B. Gherman et al., “Development of inverse dynamic model for
+this system. Using the proposed robotic palpation system in the                         a surgical hybrid parallel robot with equivalent lumped masses,”
+RMIS environment, the acquisition of tissue surface information                         Robot. Comput.-Integr. Manuf., vol. 28, no. 3, pp. 402–415, Jun. 2012,
+via surface reconstruction, and robotic palpation guided by                             doi: 10.1016/j.rcim.2011.11.003.
+                                                                                   [16] D. Pisla et al., “Kinematics and workspace modeling of a new hybrid
+surface information, were conducted and tumor segmentation                              robot used in minimally invasive surgery,” Robot. Comput.-Integr. Manuf.,
+based on interpolated stiffness maps was performed. We fo-                              vol. 29, no. 2, pp. 463–474, Apr. 2013, doi: 10.1016/j.rcim.2012.09.016.
+cused on visualizing tissue stiffness and accurately segmenting                    [17] M. N. Huda, H. Yu, and S. Cang, “Robots for minimally invasive diagnosis
+                                                                                        and intervention,” Robot. Comput.-Integr. Manuf., vol. 41, pp. 127–144,
+tumors based on quantified stiffness measurements. Validation                           Oct. 2016, doi: 10.1016/j.rcim.2016.03.003.
+conducted through phantom model tests confirmed the high                           [18] T. Rueckert, D. Rueckert, and C. Palm, “Methods and datasets for segmen-
+accuracy of the proposed method in tumor tissue segmentation.                           tation of minimally invasive surgical instruments in endoscopic images and
+                                                                                        videos: A review of the state of the art,” Comput. Biol. Med., vol. 169, 2024,
+Furthermore, the feasibility of image-free tumor segmentation                           Art. no. 107929, doi: 10.1016/j.compbiomed.2024.107929.
+on real tissues was demonstrated via an ex-vivo test employing                     [19] F. R. Kolbinger et al., “Anatomy segmentation in laparoscopic surgery:
+porcine liver models. Future endeavors will focus on enhancing                          Comparison of machine learning and human expertise – An experimen-
+                                                                                        tal study,” Int. J. Surg., vol. 109, no. 10, pp. 2962–2974, Jul. 2023,
+the speed and precision of the image-free tumor segmentation                            doi: 10.1097/js9.0000000000000595.
+method utilizing the proposed robotic palpation system, thereby                    [20] P. Puangmali et al., “State-of-the-art in force and tactile sensing for
+enabling precise segmentation of more intricate and diverse                             minimally invasive surgery,” IEEE Sensors J., vol. 8, no. 4, pp. 371–381,
+                                                                                        Apr. 2008, doi: 10.1109/JSEN.2008.917481.
+tumor tissues. Additionally, it is anticipated that the proposed                   [21] X. Wu et al., “Unsupervised brain tumor segmentation using a symmetric-
+method will find application in various clinical scenarios beyond                       driven adversarial network,” Neurocomputing, vol. 455, pp. 242–254,
+tumor.                                                                                  Sep. 2021, doi: 10.1016/j.neucom.2021.05.073.
+                                                                                   [22] Y.-E. Lee et al., “Learning to estimate palpation forces in robotic surgery
+                                                                                        from visual-inertial data,” IEEE Trans. Med. Robot. Bionics, vol. 5, no. 3,
+                              REFERENCES                                                pp. 496–506, Aug. 2023, doi: 10.1109/tmrb.2023.3295008.
+                                                                                   [23] J. Konstantinova et al., “Palpation force modulation strategies to identify
+ [1] L. Chen et al., “Liver tumor segmentation in CT volumes using an                   hard regions in soft tissue organs,” Plos one, vol. 12, no. 2, Feb. 2017,
+     adversarial densely connected network,” BMC Bioinf., vol. 20, no. S16,             Art. no. e0171706, doi: 10.1371/journal.pone.0171706.
+     pp. 1–13, Dec. 2019, doi: 10.1186/s12859-019-3069-x.                          [24] J. Guo, B. Xiao, and H. Ren, “Compensating uncertainties in force sensing
+ [2] K. A. Nichols and A. M. Okamura, “Methods to segment hard inclu-                   for robotic-assisted palpation,” Appl. Sci., vol. 9, no. 12, Jun. 2019,
+     sions in soft tissue during autonomous robotic palpation,” IEEE Trans.             Art. no. 2573, doi: 10.3390/app9122573.
+     Robot., vol. 31, no. 2, pp. 344–354, Apr. 2015, doi: 10.1109/tro.2015.        [25] Y. Yun et al., “Palpation-based multi-tumor detection method considering
+     2402531.                                                                           moving distance for robot-assisted minimally invasive surgery,” in Proc.
+ [3] M. Zhang et al., “Augmented transformer network for MRI brain tumor                42nd Annu. Int. Conf. IEEE Eng. Med. Biol. Soc., 2020, pp. 4899–4902,
+     segmentation,” J. King Saud Univ. - Comput. Inf. Sci., vol. 36, no. 1,             doi: 10.1109/EMBC44109.2020.9176127.
+     Jan. 2024, Art. no. 101917, doi: 10.1016/j.jksuci.2024.101917.                [26] M. Mir et al., “A minimally invasive robotic tissue palpation device,”
+ [4] Y. Shui et al., “A three-path network with multi-scale selective fea-              IEEE Trans. Bio-Med. Eng., vol. 71, no. 6, pp. 1958–1968, Jun. 2024,
+     ture fusion, edge-inspiring and edge-guiding for liver tumor segmen-               doi: 10.1109/TBME.2024.3357293.
+     tation,” Comput. Biol. Med., vol. 168, Jan. 2024, Art. no. 107841,            [27] Y. Yan and J. Pan, “Fast localization and segmentation of tissue abnor-
+     doi: 10.1016/j.compbiomed.2023.107841.                                             malities by autonomous robotic palpation,” IEEE Robot. Automat. Lett.,
+ [5] L. Li et al., “Automatic abdominal segmentation using novel 3D                     vol. 6, no. 2, pp. 1707–1714, Apr. 2021, doi: 10.1109/lra.2021.3058870.
+     self-adjustable organ aware deep network in CT images,” Biomed.               [28] B. Xiao et al., “Depth estimation of hard inclusions in soft tissue by
+     Signal Process. Control, vol. 84, Jul. 2023, Art. no. 104691,                      autonomous robotic palpation using deep recurrent neural network,” IEEE
+     doi: 10.1016/j.bspc.2023.104691.                                                   Trans. Automat. Sci. Eng., vol. 17, no. 4, pp. 1791–1799, Oct. 2020,
+ [6] S. W. Bang et al., “Registration-free minimally invasive surgery with-             doi: 10.1109/tase.2020.2978881.
+     out preoperative phase,” Int. J. Control, Automat. Syst., vol. 21, no. 10,    [29] N. Zevallos et al., “A surgical system for automatic registration, stiffness
+     pp. 3313–3323, Sep. 2023, doi: 10.1007/s12555-022-0916-8.                          mapping and dynamic image overlay,” in Proc. Int. Symp. Med. Robot.,
+ [7] W. M. Allen et al., “Optical palpation for the visualization of tu-                2018, pp. 1–6.
+     mor in human breast tissue,” J. Biophotonics, vol. 12, no. 1, 2019,           [30] R. Hanocka et al., “Point2Mesh,” ACM Trans. Graph., vol. 39, no. 4,
+     Art. no. e201800180, doi: 10.1002/jbio.201800180.                                  Aug. 2020, doi: 10.1145/3386569.3392415.
+ [8] A. Garg et al., “Tumor localization using automated palpation with Gaus-      [31] E. H. Lee and J. R. M. Radok, “The contact problem for viscoelas-
+     sian process adaptive sampling,” in Proc. IEEE Int. Conf. Automat. Sci.            tic bodies,” J. Appl. Mechan., vol. 27, no. 3, pp. 438–444, Sep. 1960,
+     Eng., 2016, pp. 194–200, doi: 10.1109/COASE.2016.7743380.                          doi: 10.1115/1.3644020.
+ [9] H. Liu et al., “Rolling indentation probe for tissue abnormality identifi-    [32] Y. Yang et al., “Mechanical characterization of porcine liver proper-
+     cation during minimally invasive surgery,” IEEE Trans. Robot., vol. 27,            ties for computational simulation of indentation on cancerous tissue,”
+     no. 3, pp. 450–460, Jun. 2011, doi: 10.1109/tro.2011.2127210.                      Math. Med. Biol.: A J. IMA, vol. 37, no. 4, pp. 469–490, May 2020,
+[10] J. Konstantinova et al., “Implementation of tactile sensing for pal-               doi: 10.1093/imammb/dqaa006.
+     pation in robot-assisted minimally invasive surgery: A review,”               [33] F. J. Carter et al., “Measurements and modelling of the compliance of
+     IEEE Sensors J., vol. 14, no. 8, pp. 2490–2501, Aug. 2014,                         human and porcine organs,” Med. Image Anal., vol. 5, no. 4, pp. 231–236,
+     doi: 10.1109/JSEN.2014.2325794.                                                    Dec. 2001, doi: 10.1016/s1361-8415(01)00048-2.
+[11] R. Tozzi et al., “Laparoscopic treatment of early ovarian cancer: Surgical    [34] Z. Fu et al., “The future of endoscopic navigation: A review of advanced
+     and survival outcomes,” Gynecologic Oncol., vol. 93, no. 1, pp. 199–203,           endoscopic vision technology,” IEEE Access, vol. 9, pp. 41144–41167,
+     Apr. 2004, doi: 10.1016/j.ygyno.2004.01.004.                                       2021, doi: 10.1109/ACCESS.2021.3065104.
+[12] S. An and Y. Kim, “Laparoscopic surgery for colorectal cancer                 [35] C. Wengert et al., “Endoscopic navigation for minimally invasive su-
+     in emergencies,” Laparoscopic Surg., vol. 3, pp. 48–48, Dec. 2019,                 turing,” Comput. Aided Surg., vol. 13, no. 5, pp. 299–310, 2008,
+     doi: 10.21037/ls.2019.10.01.                                                       doi: 10.3109/10929080802337914.
+[13] G. B. et al., “Laparoscopic radical prostatectomy: Oncological evalua-        [36] D. K. Chhetri, Z. Zhang, and J. Neubauer, “Measurement of Young’s
+     tion after 1,000 cases at montsouris institute,” J. Urol., vol. 169, no. 4,        modulus of vocal folds by indentation,” J. Voice, vol. 25, no. 1, pp. 1–7,
+     pp. 1261–1266, Apr. 2003, doi: 10.1097/01.ju.0000055141.36916.be.                  2011, doi: 10.1016/j.jvoice.2009.09.005.
+
+
+
+        Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+LEE et al.: IMAGE-FREE TUMOR SEGMENTATION OF SOFT TISSUE USING A MINIMALLY INVASIVE ROBOTIC PALPATION SYSTEM                                                    3631
+
+
+
+[37] R. Sun et al., “A potential field segmentation based method for tumor seg-    [41] T. Fujikawa et al., “Critical contact pressure and transferred energy for soft
+     mentation on multi-parametric MRI of glioma cancer patients,” BMC Med.             tissue injury by blunt impact in human-robot interaction,” in Proc. 17th
+     Imag., vol. 19, no. 1, pp. 1–9, Jun. 2019, doi: 10.1186/s12880-019-0348-y.         Int. Conf. Control, Automat. Syst., 2017, pp. 867–872, doi: 10.23919/ic-
+[38] S. Beller et al., “Upgrade of an optical navigation system with a permanent        cas.2017.8204347.
+     electromagnetic position control,” J. Hepato-Biliary-Pancreatic Surg.,        [42] E. Samur et al., “A robotic indenter for minimally invasive character-
+     vol. 16, no. 2, pp. 165–170, Jan. 2009, doi: 10.1007/s00534-008-0040-z.            ization of soft tissues,” in Proc. Int. Congr. Ser., 2005, pp. 713–718,
+[39] S. Langlois et al., “MRI geometric distortion: A simple approach                   doi: 10.1016/j.ics.2005.03.117.
+     to correcting the effects of non-linear gradient fields,” J. Magn. Re-        [43] B. Johnson, S. Campbell, and N. Campbell-Kyureghyan, “Characterizing
+     son. Imag., vol. 9, no. 6, pp. 821–831, Jun. 1999, doi: 10.1002/                   the material properties of the kidney and liver in unconfined compres-
+     (sici)1522-2586(199906)9:6%3C821::aid-jmri9%3E3.0.co;2-2.                          sion and probing protocols with special reference to varying strain rate,”
+[40] R. D. Venook et al., “Prepolarized magnetic resonance imaging around               Biomechanics, vol. 1, no. 2, pp. 264–280, Sep. 2021, doi: 10.3390/biome-
+     metal orthopedic implants,” Magn. Reson. Med., vol. 56, no. 1,                     chanics1020022.
+     pp. 177–186, 2006, doi: 10.1002/mrm.20927.
+
+
+
+
+         Authorized licensed use limited to: Institute of Science Tokyo. Downloaded on July 17,2026 at 15:14:14 UTC from IEEE Xplore. Restrictions apply.
+

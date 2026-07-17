@@ -1,0 +1,767 @@
+SOURCE_FILE: s41077-016-0033-y.pdf
+SOURCE_TYPE: pdf
+-----
+Cook and Hatala Advances in Simulation (2016) 1:31
+DOI 10.1186/s41077-016-0033-y
+
+
+
+
+ METHODOLOGY ARTICLE                                                                                                                             Open Access
+
+Validation of educational assessments:
+a primer for simulation and beyond
+David A. Cook1,2,3* and Rose Hatala4
+
+
+  Abstract
+  Background: Simulation plays a vital role in health professions assessment. This review provides a primer on
+  assessment validation for educators and education researchers. We focus on simulation-based assessment of health
+  professionals, but the principles apply broadly to other assessment approaches and topics.
+  Key principles: Validation refers to the process of collecting validity evidence to evaluate the appropriateness of
+  the interpretations, uses, and decisions based on assessment results. Contemporary frameworks view validity as a
+  hypothesis, and validity evidence is collected to support or refute the validity hypothesis (i.e., that the proposed
+  interpretations and decisions are defensible). In validation, the educator or researcher defines the proposed
+  interpretations and decisions, identifies and prioritizes the most questionable assumptions in making these
+  interpretations and decisions (the “interpretation-use argument”), empirically tests those assumptions using
+  existing or newly-collected evidence, and then summarizes the evidence as a coherent “validity argument.”
+  A framework proposed by Messick identifies potential evidence sources: content, response process, internal
+  structure, relationships with other variables, and consequences. Another framework proposed by Kane identifies
+  key inferences in generating useful interpretations: scoring, generalization, extrapolation, and implications/
+  decision. We propose an eight-step approach to validation that applies to either framework: Define the construct
+  and proposed interpretation, make explicit the intended decision(s), define the interpretation-use argument and
+  prioritize needed validity evidence, identify candidate instruments and/or create/adapt a new instrument,
+  appraise existing evidence and collect new evidence as needed, keep track of practical issues, formulate the
+  validity argument, and make a judgment: does the evidence support the intended use?
+  Conclusions: Rigorous validation first prioritizes and then empirically evaluates key assumptions in the
+  interpretation and use of assessment scores. Validation science would be improved by more explicit articulation
+  and prioritization of the interpretation-use argument, greater use of formal validation frameworks, and more
+  evidence informing the consequences and implications of assessment.
+
+
+Good assessment is important; simulation can help                                     debates regarding the requirements for initial and ongoing
+Educators, administrators, researchers, policymakers,                                 professional licensure and certification. Front-line educa-
+and even the lay public recognize the importance of                                   tors and education researchers require defensible assess-
+assessing health professionals. Trending topics such as                               ments of health professionals in clinical and nonclinical
+competency-based education, milestones, and mastery                                   settings. Indeed, the need for good assessments has never
+learning hinge on accurate, timely, and meaningful assess-                            been greater and will most likely continue to grow.
+ment to provide essential information about performance.                                Although workplace-based assessment is essential [1–3],
+Assessment of professional competence increasingly ex-                                simulation does and will continue to play a vital role in
+tends beyond training into clinical practice, with ongoing                            health professions assessment, inasmuch as it permits the
+                                                                                      targeting of specific topics and skills in a safe environment
+* Correspondence: cook.david33@mayo.edu
+1
+                                                                                      [4–6]. The conditions of assessment can be standardized
+ Mayo Clinic Online Learning, Mayo Clinic College of Medicine, Rochester,
+MN, USA
+                                                                                      across learners, and the spectrum of disease, clinical con-
+2
+ Office of Applied Scholarship and Education Science, Mayo Clinic College of          texts, and comorbidities can be manipulated to focus on,
+Medicine, Rochester, MN, USA                                                          for example, common yet critical tasks, infrequently seen
+Full list of author information is available at the end of the article
+
+                                        © The Author(s). 2016 Open Access This article is distributed under the terms of the Creative Commons Attribution 4.0
+                                        International License (http://creativecommons.org/licenses/by/4.0/), which permits unrestricted use, distribution, and
+                                        reproduction in any medium, provided you give appropriate credit to the original author(s) and the source, provide a link to
+                                        the Creative Commons license, and indicate if changes were made. The Creative Commons Public Domain Dedication waiver
+                                        (http://creativecommons.org/publicdomain/zero/1.0/) applies to the data made available in this article, unless otherwise stated.
+Cook and Hatala Advances in Simulation (2016) 1:31                                                                   Page 2 of 12
+
+
+
+
+conditions, activities that might put patients at risk, or        needed). In other words, the negative/harmful conse-
+situations that provoke specific emotional responses [7, 8].      quences outweigh the beneficial consequences of testing
+Thus, it comes as no surprise that simulation-based as-           (screening) in many patients [13–15]. However, PSA
+sessment is increasingly common. A review published               testing is still useful as a marker of disease once prostate
+in 2013 identified over 400 studies evaluating simulation-        cancer has been diagnosed and treated. Reflecting this
+based assessments [9], and that number has surely grown.          example back to educational tests (assessments) and the
+However, that same review identified serious and frequent         importance of decisions: (1) if it will not change manage-
+shortcomings in the evidence supporting these assess-             ment the test should not be done, (2) a test that is useful
+ments, and in the research studies designed to collect such       for one objective or setting may be less useful in another
+evidence (i.e., validation studies). The gap between the          context, and (3) the long-term and downstream conse-
+need for good simulation-based assessment and the defi-           quences of testing must be considered in determining the
+ciencies in the process and product of current validation         overall usefulness of the test.
+efforts suggests the need for increased awareness of the
+current state of the science of validation.                       Why is assessment validation important?
+   The purpose of this article is to provide a primer on          Rigorous validation of educational assessments is critically
+assessment validation for educators and education re-             important for at least two reasons. First, those using an as-
+searchers. We focus on the context of simulation-based            sessment must be able to trust the results. Validation does
+assessment of health professionals but believe the princi-        not give a simple yes/no answer regarding trustworthiness
+ples apply broadly to other assessment approaches and             (validity); rather, a judgment of trustworthiness or validity
+topics.                                                           depends on the intended application and context and is
+                                                                  typically a matter of degree. Validation provides the evi-
+Validation is a process                                           dence to make such judgments and a critical appraisal of
+Validation refers to the process of collecting validity           remaining gaps.
+evidence to evaluate the appropriateness of the inter-              Second, the number of assessment instruments, tools,
+pretations, uses, and decisions based on assessment re-           and activities is essentially infinite, since each new
+sults [10]. This definition highlights several important          multiple-choice question, scale item, or exam station
+points. First, validation is a process not an endpoint.           creates a de facto new instrument. Yet, for a given educa-
+Labeling an assessment as “validated” means only that             tor, the relevant tasks and constructs in need of assess-
+the validation process has been applied—i.e., that evidence       ment are finite. Each educator thus needs information to
+has been collected. It does not tell us what process was          sort and sift among the myriad possibilities to identify the
+used, the direction or magnitude of the evidence (i.e., was       assessment solution that best meets his or her immediate
+it favorable or unfavorable and to what degree?), what            needs. Potential solutions include selecting an existing
+gaps remain, or for what context (learner group, learning         instrument, adapting an existing instrument, combining
+objectives, educational setting) the evidence is relevant.        elements of several instruments, or creating a novel in-
+   Second, validation involves the collection of validity         strument from scratch [16]. Educators need information
+evidence, as we discuss in a following section.                   regarding not only the trustworthiness of scores, but also
+   Third, validation and validity ultimately refer to a spe-      the logistics and practical issues such as cost, acceptability,
+cific interpretation or use of assessment data, be these          and feasibility that arise during test implementation and
+numeric scores or narrative comments [11], and to the de-         administration.
+cisions grounded in this interpretation. We find it helpful         In addition, simulation-based assessments are almost
+to illustrate this point through analogy with diagnostic          by definition used as surrogates for a more “meaning-
+tests in clinical medicine [12]. A clinical test is only useful   ful” clinical or educational outcome [17]. Rarely do we
+to the degree that (a) the test influences decisions, and (b)     actually want to know how well learners perform in a
+these decisions lead to meaningful changes in action or           simulated environment; usually, we want to know how
+patient outcomes. Hence, physicians are often taught,             they would perform in real life. A comprehensive ap-
+“Don’t order the test if it won’t change patient manage-          proach to validation will include evaluating the degree to
+ment.” For example, the prostate-specific antigen (PSA)           which assessment results extrapolate to different settings
+test has high reliability and is strongly associated with         and outcomes [18, 19].
+prostate cancer. However, this test is no longer widely
+recommended in screening for prostate cancer because it           What do we mean by validity evidence?
+is frequently elevated when no cancer is present, because         Classical validation frameworks identified at least three dif-
+testing leads to unnecessary prostate biopsies and patient        ferent “types” of validity: content, construct, and criterion;
+anxiety, and because treating cancers that are found often        see Table 1. However, this perspective has been replaced by
+does not improve clinical outcomes (i.e., treatment is not        more nuanced yet unified and practical views of validity
+Cook and Hatala Advances in Simulation (2016) 1:31                                                                                                       Page 3 of 12
+
+
+
+
+Table 1 The classical validity framework
+Type of validitya                        Definition                                                              Examples of evidence
+Content                                  Test items and format constitute a relevant                             Procedures for item development and sampling
+                                         and representative sample of the domain of tasks
+Criterion (includes correlational,   Correlation between actual test scores and the “true”                       Correlation with a definitive standard
+concurrent, and predictive validity) (criterion) score
+Construct                                Scores vary as expected based on an underlying psychological Correlation with another measure of the same
+                                         construct (used when no definitive criterion exists)         construct
+                                                                                                      Factor analysis
+                                                                                                      Expert-novice comparisons
+                                                                                                      Change or stability over time
+a
+ Some authors also include “face validity” as a fourth type of validity in the classical framework. However, face validity refers either to superficial appearances that
+have little merit in evaluating the defensibility of assessment [26, 59] (like judging the speed of the car by its color) or to influential features that are better
+labeled content validity (like judging the speed of the car by its model or engine size). We discourage use of the term "face validity"
+
+
+
+[10, 12, 20]. Contemporary frameworks view validity as a                              reflect the construct they are intended to measure.
+hypothesis, and just as a researcher would collect evidence                           Internal structure evidence evaluates the relationships of
+to support or refute a research hypothesis, validity evidence                         individual assessment items with each other and with the
+is collected to support or refute the validity hypothesis                             overarching construct(s), e.g., reliability, domain or factor
+(more commonly referred to as the validity argument). Just                            structure, and item difficulty. Relationships with other var-
+as one can never prove a hypothesis, validity can never be                            iables evidence evaluates the associations, positive or
+proven; but evidence can, as it accumulates, support or                               negative and strong or weak, between assessment results
+refute the validity argument.                                                         and other measures or learner characteristics. This corre-
+  The first contemporary validity framework was pro-                                  sponds closely with classical notions of criterion validity
+posed by Messick in 1989 [21] and adopted as a stand-                                 and construct validity. Response process evidence evaluates
+ard for the field in 1999 [22] and again in 2014 [23].                                how well the documented record (answer, rating, or free-
+This framework proposes five sources of validity evi-                                 text narrative) reflects the observed performance. Issues
+dence [24–26] that overlap in part with the classical                                 that might interfere with the quality of responses include
+framework (see Table 2). Content evidence, which is es-                               poorly trained raters, low-quality video recordings, and
+sentially the same as the old concept of content validity,                            cheating. Consequences evidence looks at the impact,
+refers to the steps taken to ensure that assessment items                             beneficial or harmful, of the assessment itself and the
+(including scenarios, questions, and response options)                                decisions and actions that result [27–29]. Educators and
+
+Table 2 The five sources of evidence validity framework
+Source of evidence               Definition                                                          Examples of evidence
+Content                          “The relationship between the content of a test                     Procedures for item sampling, development, and scoring
+                                 and the construct it is intended to measure” [24]                   (e.g., expert panel, previously described instrument, test
+                                                                                                     blueprint, and pilot testing and revision)
+Internal structure               Relationship among data items within the assessment                 Internal consistency reliability
+                                 and how these relate to the overarching construct                   Interrater reliability
+                                                                                                     Factor analysis
+                                                                                                     Test item statistics
+Relationships with other         “Degree to which these relationships are consistent with            Correlation with tests measuring similar constructs
+variables                        the construct underlying the proposed test score                    Correlation (or lack thereof) with tests measuring different
+                                 interpretations” [24]                                               constructs
+                                                                                                     Expert-novice comparisons
+Response process                 “The fit between the construct and the detailed nature              Analysis of examinees’ or raters’ thoughts or actions during
+                                 of performance . . . actually engaged in” [24]                      assessment (e.g., think-aloud protocol)
+                                                                                                     Assessment security (e.g., prevention of cheating)
+                                                                                                     Quality control (e.g., video capture)
+                                                                                                     Rater training
+Consequences                     “The impact, beneficial or harmful and intended or                  Impact on examinee performance (e.g., downstream effects
+                                 unintended, of assessment” [27]                                     on board scores, graduation rates, clinical performance,
+                                                                                                     patient safety)
+                                                                                                     Other examinee effects (e.g., test preparation, length of
+                                                                                                     training, stress, anxiety)
+                                                                                                     Definition of pass/fail standard
+See the following for further details and examples [20, 25, 26]
+Cook and Hatala Advances in Simulation (2016) 1:31                                                                                           Page 4 of 12
+
+
+
+
+researchers must identify the evidence most relevant to                            inference); and this performance (in a test setting or real
+their assessment and corresponding decision, then collect                          life) might not form a proper foundation for the desired
+and appraise this evidence to formulate a validity argu-                           decision (implications or decision inference). Kane’s valid-
+ment. Unfortunately, the “five sources of evidence” frame-                         ity framework explicitly evaluates the justifications for
+work provides incomplete guidance in such prioritization                           each of these four inferences. We refer those wishing to
+or selection of evidence.                                                          learn more about Kane’s framework to his description [10,
+   The most recent validity framework, from Kane                                   30] and to our recent synopsis of his work [12].
+[10, 12, 30], addresses the issue of prioritization by iden-                          Educators and researchers often ask how much valid-
+tifying four key inferences in an assessment activity                              ity evidence is needed and how the evidence from a
+(Table 3). For those accustomed to the classical or five-                          previous validation applies when an instrument is used
+evidence-sources framework, Kane’s framework is often                              in a new context. Unfortunately, the answers to these
+challenging at first because the terminology and concepts                          questions depend on several factors including the risk
+are entirely new. In fact, when learning this framework,                           of making a wrong decision (i.e., the “stakes” of the as-
+we have found that it helps to not attempt to match                                sessment), the intended use, and the magnitude and sa-
+concepts with those of earlier frameworks. Rather, we                              lience of contextual differences. While all assessments
+begin de novo by considering conceptually the stages                               should be important, some assessment decisions have
+involved in any assessment activity. An assessment                                 more impact on a learner’s life than others. Assess-
+starts with a performance of some kind, such as an-                                ments with higher impact or higher risk, including
+swering a multiple-choice test item, interviewing a real                           those used for research purposes, merit higher stan-
+or standardized patient, or performing a procedural                                dards for the quantity, quality, and breadth of evidence.
+task. Based on this observation, a score or written nar-                           Strictly speaking, validity evidence applies only to the
+rative is documented that we assume reflects the level                             purpose, context, and learner group in which it was
+of performance; several scores or narratives are com-                              collected; existing evidence might guide our choice of
+bined to generate an overall score or interpretation that                          assessment approach but does not support our future
+we assume reflects the desired performance in a test                               interpretations and use. Of course, in practice, we rou-
+setting; the performance in a test setting is assumed to                           tinely consider existing evidence in constructing a val-
+reflect the desired performance in a real-life setting;                            idity argument. Whether old evidence applies to a new
+and that performance is further assumed to constitute a                            situation requires a critical appraisal of how situational
+rational basis for making a meaningful decision (see                               differences might influence the relevance of the evi-
+Fig. 1). Each of these assumptions represents an infer-                            dence. For example, some items on a checklist might be
+ence that might not actually be justifiable. The docu-                             relevant across different tasks while others might be
+mentation of performance (scoring inference) could be                              task-specific; reliability can vary substantially from one
+inaccurate; the synthesis of individual scores might not                           group to another, with typically lower values among
+accurately reflect performance across the desired test do-                         more homogeneous learners; and differences in context
+mains (generalization inference); the synthesized score                            (inpatient vs outpatient), learner level (junior medical
+also might not reflect real-life performance (extrapolation                        student vs senior resident), and purpose might affect
+
+Table 3 The validation inferences validity framework
+Validity inference          Definition (assumptions)a                                           Examples of evidence
+Scoring                     The score or written narrative from a given observation             Procedures for creating and empirically evaluating item
+                            adequately captures key aspects of performance                      wording, response options, scoring options
+                                                                                                Rater selection and training
+Generalization              The total score or synthesis of narratives reflects performance     Sampling strategy (e.g., test blueprint) and sample size
+                            across the test domain                                              Internal consistency reliability
+                                                                                                Interrater reliability
+Extrapolation               The total score or synthesis in a test setting reflects meaningful Authenticity of context
+                            performance in a real life setting                                 Correlation with tests measuring similar constructs,
+                                                                                               especially in real-life context
+                                                                                               Correlation (or lack thereof) with tests measuring different
+                                                                                               constructs
+                                                                                               Expert-novice comparisons
+                                                                                               Factor analysis
+Implications/decisions      Measured performance constitutes a rational basis for               See Table 2, “Consequences”
+                            meaningful decisions and actions
+See Kane [10] and Cook et al [12] for further details and examples
+a
+ Each of the inferences reflects assumptions about the creation and use of assessment results
+Cook and Hatala Advances in Simulation (2016) 1:31                                                               Page 5 of 12
+
+
+
+
+                                                               analogous both conceptually and in importance to stating
+                                                               a research hypothesis and articulating the evidence re-
+                                                               quired to empirically test that hypothesis.
+                                                                  Once the evaluation plan has been implemented and
+                                                               evidence has been collected, we synthesize the evi-
+                                                               dence, contrast these findings with what we anticipated
+                                                               in the original interpretation-use argument, identify
+                                                               strengths and weaknesses, and distill this into a final
+                                                               validity argument. Although the validity argument at-
+                                                               tempts to persuade others that the interpretations and
+                                                               uses are indeed defensible—or that important gaps
+                                                               remain—potential users should be able to arrive at their
+                                                               own conclusions regarding the sufficiency of the evi-
+                                                               dence and the accuracy of the bottom-line appraisal.
+                                                               Our work is similar to that of an attorney arguing a
+                                                               case before a jury: we strategically seek, organize, and
+ Fig. 1 Key inferences in validation                           interpret the evidence and present an honest, complete,
+                                                               and compelling argument, yet it is the “jury” of poten-
+                                                               tial users that ultimately passes judgment on validity
+our interpretation of evidence of content, relations with      for their intended use and context. [31]
+other variables, or consequences. Evidence collected in           It is unlikely that any single study will gather all the
+contexts similar to ours and consistent findings across        validity evidence required to support a specific decision.
+a variety of contexts will support our choice to include       Rather, different studies will usually address different as-
+existing evidence in constructing our validity argument.       pects of the argument, and educators need to consider
+                                                               the totality of the evidence when choosing an assessment
+                                                               instrument for their context and needs.
+What do we mean by validity argument?                             Of course, it is not enough for researchers to simply col-
+In addition to clarifying the four key inferences, Kane        lect any evidence. It is not just the quantity of evidence
+has advanced our understanding of “argument” in the            that matters, but also the relevance, quality, and breadth.
+validation process by emphasizing two distinct stages of       Collecting abundant evidence of score reliability does not
+argument: an up-front “interpretation-use argument” or         obviate the need for evidence about content, relationships,
+“IUA,” and a final “validity argument.”                        or consequences. Conversely, if existing evidence is robust
+   As noted above, all interpretations and uses—i.e., deci-    and logically applicable to our context, such as a rigorous
+sions—incur a number of assumptions. For example, in           item development process, then replicating such efforts
+interpreting the scores from a virtual reality assessment,     may not be top priority. Unfortunately, researchers often
+we might assume that the simulation task—including the         inadvertently fail to deliberately prioritize the importance
+visual representation, the simulator controls, and the task    of the assumptions or skip the interpretation-use argu-
+itself—has relevance to tasks of clinical significance; that   ment altogether, which can result in reporting evidence
+the scoring algorithm accounts for important elements of       for assumptions that are easy to test rather than those that
+that task; that there are enough tasks, and enough variety     are most critical.
+among tasks, to reliably gauge trainee performance; and
+that it is beneficial to require trainees to continue prac-    A practical approach to validation
+ticing until they achieve a target score. These and other      Although the above concepts are essential to understand-
+assumptions can and must be tested! Many assumptions           ing the process of validation, it is also important to be able
+are implicit, and recognizing and explicitly stating them      to apply this process in practical ways. Table 4 outlines
+before collecting or examining the evidence is an essen-       one possible approach to validation that would work with
+tial step. Once we have specified the intended use, we         any of the validity frameworks described above (classical,
+need to (a) identify as many assumptions as possible,          Messick, or Kane). In this section, we will illustrate this
+(b) prioritize the most worrisome or questionable as-          approach using a hypothetical simulation-based example.
+sumptions, and (c) come up with a plan to collect evi-
+dence that will confirm or refute the correctness of each        Imagine that we are teaching first year internal
+assumption. The resulting prioritized list of assumptions        medicine residents lumbar puncture (LP) using a
+and desired evidence constitute the interpretation-use           part-task trainer. At the end of the training session,
+argument. Specifying the interpretation-use argument is          we wish to assess whether the learners are ready to
+Cook and Hatala Advances in Simulation (2016) 1:31                                                                       Page 6 of 12
+
+
+
+
+Table 4 A practical approach to validation                                   assumptions and anticipating the evidence we
+1. Define the construct and proposed interpretation                          hope to find allows us to outline an
+2. Make explicit the intended decision(s)                                    interpretation-use argument [30].
+3. Define the interpretation-use argument, and prioritize needed
+   validity evidence
+4. Identify candidate instruments and/or create/adapt a new instrument    In our scenario, we are looking for an assessment
+5. Appraise existing evidence and collect new evidence as needed          instrument in which a “pass” indicates competence to
+6. Keep track of practical issues including cost
+7. Formulate/synthesize the validity argument in relation to the          attempt a supervised LP on a real patient. We
+   interpretation-use argument                                            anticipate that this will involve a physician rating
+8. Make a judgment: does the evidence support the intended use?           student performance on a skills station. Assumptions
+                                                                          in this context include that the station is set up to test
+   safely attempt an LP with a real patient under                         techniques essential for LP performance (vs generic
+   supervision.                                                           skills in sterile technique or instrument handling),
+                                                                          that the rater is properly trained, that a different rater
+ 1. Define the construct and proposed interpretation                      would give similar scores, and that learners who score
+     Validation begins by considering the construct of                    higher on the test will perform more safely on their
+     interest. For example, are we interested in the                      first patient attempt. Considering the evidence we
+     learners’ knowledge of LP indications and risks,                     might need to support or refute these assumptions,
+     their ability to perform LP, or their non-technical                  and using Kane’s framework as a guide, we propose an
+     skills when attempting an LP? Each of these is a                     interpretation-use argument as follows. We do not
+     different construct requiring selection of a different               know at this stage whether evidence has already been
+     assessment tool: we might choose multiple-choice                     collected or if we will need to collect it ourselves, but
+     questions (MCQs) to assess knowledge, a series                       we have at least identified what to look for.
+     of skill stations using a part-task trainer to asses
+     procedural skill with an Objective Structured
+     Assessment of Technical Skills (OSATS) [32], or a                   (a) Scoring: the observation of performance is correctly
+     resuscitation scenario using a high-fidelity manikin                        transformed into a consistent numeric score.
+     and a team of providers to assess non-technical                             Evidence will ideally show that the items within
+     skills with the Non-Technical Skills (NOTECHS)                              the instrument are relevant to LP performance,
+     scale [33].                                                                 that raters understood how to use the
+                                                                                 instrument, and that video-recording perform-
+   In our example, the construct is “LP skill” and the                           ance yields similar scores as direct observation.
+   interpretation is that “learners have fundamental LP                  (b)Generalization: scores on a single performance
+   skills sufficient to attempt a supervised LP on a real                        align with overall scores in the test setting.
+   patient.”                                                                     Evidence will ideally show that we have
+                                                                                 adequately sampled performance (sufficient
+2. Make explicit the intended decision(s)                                        number of simulated LPs, and sufficient variety
+    Without a clear idea of the decisions we anticipate                          of conditions such as varying the simulated
+    making based on those interpretations, we will be                            patient habitus) and that scores are reproducible
+    unable to craft a coherent validity argument.                                between performances and between raters
+                                                                                 (inter-station and inter-rater reliability).
+   In our example, our foremost decision is whether the                  (c)Extrapolation: assessment scores relate to real-world
+   learner has sufficient procedural competence to                               performance. Evidence will ideally show that
+   attempt a supervised LP on a real patient. Other                              scores from the instrument correlate with other
+   decisions we might alternatively consider include                             LP performance measures in real practice, such
+   identifying performance points on which to offer                              as procedural logs, patient adverse events, or
+   feedback to the learner, deciding if the learner can be                       supervisor ratings.
+   promoted to the next stage of training, or certifying                  (d)Implications: the assessment has important and
+   the learner for licensure.                                                    favorable effects on learners, training programs, or
+                                                                                 patients, and negative effects are minimal.
+3. Define the interpretation-use argument, and prioritize                        Evidence will ideally show that students feel more
+    needed validity evidence                                                     prepared following the assessment, that those
+     In making our interpretations and decisions, we                             requiring remediation feel this time was well
+     will invoke a number of assumptions, and these                              spent, and that LP complications in real patients
+     must be tested. Identifying and prioritizing key                            decline in the year following implementation.
+Cook and Hatala Advances in Simulation (2016) 1:31                                                              Page 7 of 12
+
+
+
+
+We cannot over-emphasize the importance of these first          this instrument. However, we will collect our own evi-
+three steps in validation. Clearly articulating the proposed    dence during implementation, especially if we identify
+interpretations, intended decision(s), and assumptions          important gaps, i.e., at later stages in the validation
+and corresponding evidence collectively set the stage for       process; see below.
+everything that follows.
+                                                               6. Keep track of practical issues including cost
+ 4. Identify candidate instruments and/or create/adapt a           An important yet often poorly appreciated and
+     new instrument                                                under-studied aspect of validation concerns the
+      We should identify a measurement format that                 practical issues surrounding development,
+      aligns conceptually with our target construct and            implementation, and interpretation of scores. An
+      then search for existing instruments that meet or            assessment procedure might yield outstanding data,
+      could be adapted to our needs. A rigorous search             but if it is prohibitively expensive or if logistical or
+      provides content evidence to support our final               expertise requirements exceed local resources, it may
+      assessment. Only if we cannot find an appropriate            be impossible to implement.
+      existing instrument would we develop an
+      instrument de novo.                                       For the LP instrument, one study [37] tracked the
+                                                                costs of running a simulation-based LP training and
+  We find a description of a checklist for assessing            assessment session; the authors suggested that costs
+  PGY-1’s procedural competence in LP [34]. The                 could be reduced by using trained non-physician
+  checklist appears well suited for our purpose, as             raters. As we implement the instrument, and
+  we will be using it in a similar educational context;         especially if we collect fresh validity evidence,
+  we thus proceed to appraising the evidence without            we should likewise monitor costs such as money,
+  changing the instrument.                                      human and non-human resources, and other
+                                                                practical issues.
+ 5. Appraise existing evidence and collect new evidence
+     as needed                                                 7. Formulate/synthesize the validity argument in relation
+      Although existing evidence does not, strictly                to the interpretation-use argument
+      speaking apply to our situation, for practical                We now compare the evidence available (the validity
+      purposes we will rely heavily on existing evidence            argument) against the evidence we identified up-front
+      as we decide whether to use this instrument. Of               as necessary to support the desired interpretations
+      course, we will want to collect our own evidence as           and decisions (the interpretation-use argument).
+      well, but we must base our initial adoption on what
+      is now available.                                         We find reasonable scoring and generalization
+                                                                evidence, a gap in the extrapolation evidence (direct
+  We begin our appraisal of the validity argument by            comparisons between simulation and real-world
+  searching for existing evidence. The original                 performance have not been done), and limited
+  description [34] offers scoring evidence by describing        implications evidence. As is nearly always the case,
+  the development of checklist items through formal LP          the match between the interpretation-use argument
+  task analysis and expert consensus. It provides               and the available evidence is not perfect; some gaps
+  generalization evidence by showing good inter-rater           remain, and some of the evidence is not as favorable
+  reliability, and adds limited extrapolation evidence by       as we might wish.
+  confirming that residents with more experience had
+  higher checklist scores. Other studies using the same        8. Make a judgment: does the evidence support the
+  or a slightly modified checklist provide further                intended use?
+  evidence for generalization with good inter-rater                The final step in validation is to judge the
+  reliabilities [35, 36], and contribute extrapolation             sufficiency and suitability of evidence, i.e.,
+  evidence by showing that scores are higher after                 whether the validity argument and the associated
+  training [35, 37] and that the instrument identified             evidence meet the demands of the proposed
+  important learner errors when used to rate real patient          interpretation-use argument.
+  LPs [38]. One study also provided limited implications
+  evidence by counting the number of practice attempts          Based on the evidence summarized above, we judge
+  required to attain competence in the simulation setting       that the validity argument supports those
+  [37]. In light of these existing studies, we will not plan    interpretations and uses reasonably well, and the
+  to collect more evidence before our initial adoption of       checklist appears suitable for our purposes. Moreover,
+Cook and Hatala Advances in Simulation (2016) 1:31                                                                    Page 8 of 12
+
+
+
+
+  the costs seem reasonable for the effort expended, and           to understand and apply the results. We present these as
+  we have access to an assistant in the simulation                 ten mistakes guaranteed to alarm peer reviewers, frustrate
+  laboratory who is keen to be trained as a rater.                 readers, and limit the uptake of an instrument.
+
+  We also plan to help resolve the evidence gaps                   Mistake 1. Reinvent the wheel (create a new assessment
+  noted above by conducting a research study as we                 every time)
+  implement the instrument at our institution. To                  Our review [9] found that the vast majority of validity
+  buttress the extrapolation inference we plan to                  studies focused on a newly created instrument rather
+  correlate scores from the simulation assessment                  than using or adapting an existing instrument. Yet, there
+  with ongoing workplace-based LP assessments.                     is rarely a need to start completely from scratch when
+  We will also address the implications inference                  initiating learner assessment, as instruments to assess
+  by tracking the effects of additional training for               most constructs already exist in some form. Using or
+  poor performing residents, i.e., the downstream                  building from an existing instrument saves the trouble
+  consequences of assessment. Finally, we will                     of developing an instrument de novo, allows us to com-
+  measure the inter-rater, inter-case, and internal                pare our results with prior work, and permits others to
+  consistency reliability in our learner population,               compare their work with ours and include our evidence in
+  and will monitor costs and practical issues as                   the overall evidence base for that instrument, task, or
+  noted above.                                                     assessment modality. Reviews of evidence for the OSATS
+                                                                   [42], Fundamentals of Laparoscopic Surgery (FLS) [43],
+Application of the same instrument to a different setting          and other simulation-based assessments [9] all show
+As a thought exercise, let us consider how the above               important gaps in the evidence base. Filling these gaps will
+would unfold if we wanted to use the same instrument for           require the collaborative effort of multiple investigators all
+a different purpose and decision, for example as part of a         focused on collecting evidence for the scores, inferences,
+high-stakes exam to certify postgraduate neurologist               and decisions derived from the same assessment.
+trainees as they finish residency. As our decision changes,
+so does our interpretation-use argument; we would now              Mistake 2. Fail to use a validation framework
+be searching for evidence that a “pass” score on the check-        As noted above, validation frameworks add rigor to the
+list indicates competence to independently perform LPs             selection and collection of evidence and help identify
+on a variety of real patients. We would require different or       gaps that might otherwise be missed. More important
+additional validity evidence, with increased emphasis on           than the framework chosen is the timing (ideally early)
+generalization (sampling across simulated patients that            and manner (rigorously and completely) in which the
+vary in age, body habitus, and other factors that influence        framework is applied in the validation effort.
+difficulty), extrapolation (looking for stronger correlation
+between simulation and real-life performance), and impli-          Mistake 3. Make expert-novice comparisons the crux of
+cations evidence (e.g., evidence that we were accurately           the validity argument
+classifying learners as competent or incompetent for inde-         Comparing the scores from a less experienced group
+pendent practice). We would have to conclude that the              against those from a more experienced group (e.g.,
+current body of evidence does not support this argument            medical students vs senior residents) is a common ap-
+and would need to either (a) find a new instrument with            proach to collecting evidence of relationships with other
+evidence that meets our demands, (b) create a new instru-          variables—reported in 73% of studies of simulation-
+ment and start collecting evidence from scratch, or (c)            based assessment [9]. Yet this approach provides only
+collect additional validity evidence to fill in the gaps.          weak evidence because the difference in scores may arise
+   This thought exercise highlights two important points.          from a myriad of factors unrelated to the intended
+First, the interpretation-use argument might change when           construct [44]. To take an extreme example for illustra-
+the decision changes. Second, an instrument is not “valid”         tion, suppose an assessment intended to measure suturing
+in and of itself; rather, it is the interpretations or decisions   ability actually measured sterile technique and completely
+that are validated. A final judgment of validity based on          ignored suturing. If an investigator trialed this in practice
+the same evidence may differ for different proposed                among third-year medical students and attending physi-
+decisions.                                                         cians, he would most likely find a significant difference
+                                                                   favoring the attendings and might erroneously conclude
+Common mistakes to avoid in validation                             that this evidence supports the validity of the proposed
+In our own validation efforts [39–41] and in reviewing             interpretation (i.e., suturing skill). Of course, in this hypo-
+the work of others [9, 25, 42], we have identified several         thetical example, we know that attendings are better than
+common mistakes that undermine the end-user’s ability              medical students in both suturing and sterile technique.
+Cook and Hatala Advances in Simulation (2016) 1:31                                                                 Page 9 of 12
+
+
+
+
+Yet, in real life, we lack the omniscient knowledge of           example, score reliability can change substantially across
+what is actually being assessed; we only know the test           different populations [44], an assessment designed for
+scores—and the same scores can be interpreted as                 one learning context such as ambulatory practice may or
+reflecting any number of underlying constructs. This             may not be relevant in another context such as hospital
+problem of “confounding” (multiple possible interpre-            or acute care medicine, and some instruments such as
+tations) makes it impossible to say that any differ-             the OSATS global rating scale lend themselves readily to
+ences between groups are actually linked to the                  application to a new task while others such as the OSATS
+intended construct. On the other hand, failure to con-           checklist do not [42]. Of course, evidence collected in one
+firm expected differences would constitute powerful              context, such as medical school, often has at least partial
+evidence of score invalidity.                                    relevance to another context, such as residency training;
+   Cook provided an extended discussion and illustration         but determinations of when and to what degree evidence
+of this problem, concluding that “It is not wrong to per-        transfers to a new setting are a matter of judgment, and
+form such analyses, … provided researchers understand            these judgments are potentially fallible.
+the limitations. … These analyses will be most interesting         The interpretation-use argument cannot, strictly speak-
+if they fail to discriminate groups that should be different,    ing, be appropriately made without articulating the con-
+or find differences where none should exist. Confirmation        text of intended application. Since the researcher’s context
+of hypothesized differences or similarities adds little to the   and the end-user’s context almost always differ, the
+validity argument.” [44]                                         interpretation-use argument necessarily differs as well.
+                                                                 Researchers can facilitate subsequent uptake of their work
+Mistake 4. Focus on the easily accessible validity evidence      by clearly specifying the context of data collection—for
+rather than the most important                                   example, the learner group, task, and intended use/deci-
+Validation researchers often focus on data they have read-       sion—and also by proposing the scope to which they
+ily available or can easily collect. While this approach is      believe their findings might plausibly apply.
+understandable, it often results in abundant validity              It is acceptable to talk about the validity of scores, but
+evidence being reported for one source while large evi-          for reasons articulated above, it is better to specify the
+dence gaps remain for other sources that might be equally        intended interpretation and use of those scores, i.e., the
+or more important. Examples include emphasizing con-             intended decision. We strongly encourage both researchers
+tent evidence while neglecting internal structure, report-       and end-users (educators) to articulate the interpretations
+ing inter-item reliability when inter-rater reliability is       and uses at every stage of validation.
+more important, or reporting expert-novice comparisons
+rather than correlations with an independent measure to          Mistake 6. Fail to synthesize or critique the validity
+support relationships with other variables. In our review,       evidence
+we found that 306/417 (73%) of studies reported expert-          We have often observed researchers merely report the
+novice comparisons, and 138 of these (45%) reported no           evidence without any attempt at synthesis and appraisal.
+additional evidence. By contrast, only 128 (31%) reported        Both educators and future investigators greatly benefit
+relationships with a separate measure, 142 (34%) reported        when researchers interpret their findings in light of the
+content evidence, and 163 (39%) reported score reliability.      proposed interpretation-use argument, integrate it with
+While we do not know all the reasons for these reporting         prior work to create a current and comprehensive valid-
+patterns, we suspect they are due at least in part to the        ity argument, and identify shortcomings and persistent
+ease with which some elements (e.g., expert-novice               gaps or inconsistencies. Educators and other end-users
+comparison data) can be obtained.                                must become familiar with the evidence as well, to
+   This underscores the importance of clearly and com-           confirm the claims of researchers and to formulate their
+pletely stating the interpretation-use argument, identifying     own judgments of validity for their specific context.
+existing evidence and gaps, and tailoring the collection of
+evidence to address the most important gaps.                     Mistake 7. Ignore best practices for assessment
+                                                                 development
+Mistake 5. Focus on the instrument rather than score             Volumes have been written on the development, re-
+interpretations and uses                                         finement, and implementation of assessment tasks, in-
+As noted above, validity is a property of scores, interpre-      struments, and procedures [23, 45–48]. Developing or
+tations, and uses, not of instruments. The same instru-          modifying an assessment without considering these
+ment can be applied to different uses (the PSA may not           best practices would be imprudent. We could not
+be useful as a clinical screening tool, but continues to         begin to summarize these, but we highlight two rec-
+have value for monitoring prostate cancer recurrence),           ommendations of particular salience to health profes-
+and much validity evidence is context-dependent. For             sions educators, both of which relate to content
+Cook and Hatala Advances in Simulation (2016) 1:31                                                             Page 10 of 12
+
+
+
+
+evidence (per the classic or five sources frameworks)          Mistake 9. Let the availability of the simulator/assessment
+and the generalization inference (per Kane).                   instrument drive the assessment
+   First, the sample of tasks or topics should represent       Too often as educators, we allow the availability of an
+the desired performance domain. A recurrent finding in         assessment tool to drive the assessment process, such as
+health professions assessment is that there are few, if        taking an off-the-shelf MCQ exam for an end-of-clerkship
+any, generalizable skills; performance on one task does        assessment when a performance-based assessment might
+not predict performance on another task [49, 50]. Thus,        better align with clerkship objectives. This issue is further
+the assessment must provide a sufficiently numerous            complicated with simulation-based assessments, where
+and broad sample of scenarios, cases, tasks, stations, etc.    the availability of a simulator may drive the educational
+   Second, the assessment response format should bal-          program as opposed to designing the educational program
+ance objectification and judgment or subjectivity [51].        and then choosing the best simulation to fit the educa-
+The advantages and disadvantages of checklists and glo-        tional needs [56]. We should align the construct we are
+bal ratings have long been debated, and it turns out that      teaching with the simulator and assessment tool that best
+both have strengths and weaknesses [52]. Checklists out-       assess that construct.
+line specific criteria for desired behaviors and guidance
+for formative feedback, and as such can often be used by       Mistake 10. Label an instrument as validated
+raters less familiar with the assessment task. However,        There are three problems with labeling an instrument as
+the “objectivity” of checklists is largely an illusion; [53]   validated. First, validity is a property of scores, interpre-
+correct interpretation of an observed behavior may yet         tations, and decisions, not instruments. Second, validity
+require task-relevant expertise, and forcing raters to         is a matter of degree—not a yes or no decision. Third,
+dichotomize ratings may result in a loss of information.       validation is a process, not an endpoint. The word vali-
+Moreover, a new checklist must be created for each spe-        dated means only that a process has been applied; it
+cific task, and the items often reward thoroughness at         does not provide any details about that process nor indi-
+the expense of actions that might more accurately reflect      cate the magnitude or direction (supportive or opposing)
+clinical competence. By contrast, global ratings require       of the empiric findings.
+greater expertise to use but can measure more subtle
+nuances of performance and reflect multiple comple-            The future of simulation-based assessment
+mentary perspectives. Global ratings can also be de-           Although we do not pretend to know the future of
+signed for use across multiple tasks, as is the case for       simulation-based assessment, we conclude with six
+the OSATS. In a recent systematic review, we found             aspirational developments we hope come to pass.
+slightly higher inter-rater reliability for checklists than
+for global ratings when averaged across studies, while           1. We hope to see greater use of simulation-based
+global ratings had higher average inter-item and inter-             assessment as part of a suite of learner assessments.
+station reliability [52]. Qualitative assessment offers             Simulation-based assessment should not be a goal
+another option for assessing some learner attributes                in and of itself, but we anticipate more frequent
+[11, 54, 55].                                                       assessment in general and believe that simulation
+                                                                    will play a vital role. The choice of modality
+                                                                    should first consider what is the best assessment
+Mistake 8. Omit details about the instrument                        approach in a given situation, i.e., learning objective,
+It is frustrating to identify an assessment with rele-              learner level, or educational context. Simulation in
+vance to local needs and validity evidence supporting               its various forms will often be the answer, especially
+intended uses, only to find that the assessment is not              in skill assessments requiring standardization of
+specified with sufficient detail to permit application.             conditions and content.
+Important omissions include the precise wording of               2. We hope that simulation-based assessment will focus
+instrument items, the scoring rubric, instructions pro-             more clearly on educational needs and less
+vided to either learners or raters, and a description of            on technology. Expensive manikins and virtual
+station arrangements (e.g., materials required in a                 reality task trainers may play a role, but pigs
+procedural task, participant training in a standardized             feet, Penrose drains, wooden pegs, and cardboard
+patient encounter) and the sequence of events. Most                 manikins may actually offer more practical utility
+researchers want others to use their creations and cite             because they can be used with greater frequency
+their publications; this is far more likely to occur if             and with fewer constraints. For example, such
+needed details are reported. Online appendices pro-                 low-cost models can be used at home or on the
+vide an alternative to print publication if article                 wards rather than in a dedicated simulation
+length is a problem.                                                center. As we consider the need for high-value,
+Cook and Hatala Advances in Simulation (2016) 1:31                                                                                             Page 11 of 12
+
+
+
+
+     cost-conscious education [57], we encourage                             Rochester, MN 55905, USA. 4Department of Medicine, University of British
+     innovative educators to actively seek low-tech                          Columbia, Vancouver, British Columbia, Canada.
+
+     solutions.                                                              Received: 20 July 2016 Accepted: 16 November 2016
+  3. Building off the first two points, we hope to see less
+     expensive, less sophisticated, less intrusive, lower-
+     stakes assessments take place more often in a greater                   References
+     variety of contexts, both simulated and in the                          1. Norcini J, Burch V. Workplace-based assessment as an educational tool:
+                                                                                 AMEE Guide No. 31. Med Teach. 2007;29:855–71.
+     workplace. As Schuwirth and van der Vleuten                             2. Kogan JR, Holmboe ES, Hauer KE. Tools for direct observation and
+     have proposed [58], this model would—over                                   assessment of clinical skills of medical trainees: a systematic review. JAMA.
+     time—paint a more complete picture of the                                   2009;302:1316–26.
+                                                                             3. Holmboe ES, Sherbino J, Long DM, Swing SR, Frank JR. The role of
+     learner than any single assessment, no matter                               assessment in competency-based medical education. Med Teach.
+     how well-designed, could likely achieve.                                    2010;32:676–82.
+  4. We hope to see fewer new assessment instruments                         4. Ziv A, Wolpe PR, Small SD, Glick S. Simulation-based medical education: an
+                                                                                 ethical imperative. Acad Med. 2003;78:783–8.
+     created and more evidence collected to support and                      5. Schuwirth LWT, van der Vleuten CPM. The use of clinical simulations in
+     adapt existing instruments. While we appreciate the                         assessment. Med Educ. 2003;37(s1):65–71.
+     forces that might incentivize the creation of novel                     6. Boulet JR, Jeffries PR, Hatala RA, Korndorffer Jr JR, Feinstein DM, Roche JP.
+                                                                                 Research regarding methods of assessing learning outcomes. Simul Healthc.
+     instruments, we believe that the field will advance                         2011;6(Suppl):S48–51.
+     farther and faster if researchers pool their efforts to                 7. Issenberg SB, McGaghie WC, Hart IR, Mayer JW, Felner JM, Petrusa ER, et al.
+     extend the validity evidence for a smaller subset of                        Simulation technology for health care professional skills training and
+                                                                                 assessment. JAMA. 1999;282:861–6.
+     promising instruments, evaluating such instruments                      8. Amin Z, Boulet JR, Cook DA, Ellaway R, Fahal A, Kneebone R, et al.
+     in different contexts, and successively filling in                          Technology-enabled assessment of health professions education: consensus
+     evidence gaps.                                                              statement and recommendations from the Ottawa 2010 conference. Med
+                                                                                 Teach. 2011;33:364–9.
+  5. We hope to see more evidence informing the                              9. Cook DA, Brydges R, Zendejas B, Hamstra SJ, Hatala R. Technology-
+     consequences and implications of assessment.                                enhanced simulation to assess health professionals: a systematic review
+     This is probably the most important evidence                                of validity evidence, research methods, and reporting quality. Acad Med.
+                                                                                 2013;88:872–83.
+     source, yet it is among the least often studied.                        10. Kane MT. Validation. In: Brennan RL, editor. Educational measurement. 4th
+     Suggestions for the study of the consequences                               ed. Westport: Praeger; 2006. p. 17–64.
+     of assessment have recently been published [27].                        11. Cook DA, Kuper A, Hatala R, Ginsburg S. When assessment data are words:
+                                                                                 validity evidence for qualitative educational assessments. Acad Med. 2016.
+  6. Finally, we hope to see more frequent and more                              Epub ahead of print: 2016 Apr 5.
+     explicit use of the interpretation-use argument.                        12. Cook DA, Brydges R, Ginsburg S, Hatala R. A contemporary approach to
+     As noted above, this initial step is difficult but                          validity arguments: a practical guide to Kane’s framework. Med Educ.
+                                                                                 2015;49:560–75.
+     vitally important to meaningful validation.                             13. Barry MJ. Screening for prostate cancer—the controversy that refuses to die.
+                                                                                 N Engl J Med. 2009;360:1351–4.
+Acknowledgements                                                             14. Moyer VA. Screening for prostate cancer: U.S. Preventive Services Task Force
+Not applicable.                                                                  recommendation statement. Ann Intern Med. 2012;157:120–34.
+                                                                             15. Hayes JH, Barry MJ. Screening for prostate cancer with the prostate-specific
+Funding                                                                          antigen test: a review of current evidence. JAMA. 2014;311:1143–9.
+None.                                                                        16. Artino AR, Jr., La Rochelle JS, Dezee KJ, Gehlbach H. Developing
+                                                                                 questionnaires for educational research: AMEE Guide No. 87. Med Teach.
+Availability of data and materials                                               2014;36:463–74.
+Not applicable.                                                              17. Brydges R, Hatala R, Zendejas B, Erwin PJ, Cook DA. Linking simulation-
+                                                                                 based educational assessments and patient-related outcomes: a systematic
+Authors’ contributions                                                           review and meta-analysis. Acad Med. 2015;90:246–56.
+Authors DAC and RH jointly conceived this work. DAC drafted the initial      18. Fleming TR, DeMets DL. Surrogate end points in clinical trials: are we being
+manuscript, and both authors revised the manuscript for important                misled? Ann Intern Med. 1996;125:605–13.
+intellectual content and approved the final version.                         19. Prentice RL. Surrogate endpoints in clinical trials: definition and operational
+                                                                                 criteria. Stat Med. 1989;8:431–40.
+Competing interests                                                          20. Downing SM. Validity: on the meaningful interpretation of assessment data.
+The authors declare that they have no competing interests.                       Med Educ. 2003;37:830–7.
+                                                                             21. Messick S. Validity. In: Linn RL, editor. Educational measurement. 3rd ed.
+Consent for publication                                                          New York: American Council on Education and Macmillan; 1989. p. 13–103.
+Not applicable.                                                              22. Association AER. American Psychological Association, National Council on
+                                                                                 Measurement in Education. Standards for educational and psychological
+Ethics approval and consent to participate                                       testing. Washington, DC: American Educational Research Association; 1999.
+Not applicable.                                                              23. Association AER. American Psychological Association, National Council on
+                                                                                 Measurement in Education. Standards for educational and psychological
+Author details                                                                   testing. Washington, DC: American Educational Research Association; 2014.
+1
+ Mayo Clinic Online Learning, Mayo Clinic College of Medicine, Rochester,    24. American Educational Research Association, American Psychological
+MN, USA. 2Office of Applied Scholarship and Education Science, Mayo Clinic       Association, National Council on Measurement in Education. Validity.
+College of Medicine, Rochester, MN, USA. 3Division of General Internal           Standards for educational and psychological testing. Washington, DC:
+Medicine, Mayo Clinic College of Medicine, Mayo 17-W, 200 First Street SW,       American Educational Research Association; 2014. p. 11–31.
+Cook and Hatala Advances in Simulation (2016) 1:31                                                                                                  Page 12 of 12
+
+
+
+
+25. Cook DA, Zendejas B, Hamstra SJ, Hatala R, Brydges R. What counts as            52. Ilgen JS, Ma IW, Hatala R, Cook DA. A systematic review of validity evidence
+    validity evidence? Examples and prevalence in a systematic review of                for checklists versus global rating scales in simulation-based assessment.
+    simulation-based assessment. Adv Health Sci Educ. 2014;19:233–50.                   Med Educ. 2015;49:161–73.
+26. Cook DA, Beckman TJ. Current concepts in validity and reliability for           53. Norman GR, Van der Vleuten CP, De Graaff E. Pitfalls in the pursuit of
+    psychometric instruments: theory and application. Am J Med.                         objectivity: issues of validity, efficiency and acceptability. Med Educ.
+    2006;119:166.e7-16.                                                                 1991;25:119–26.
+27. Cook DA, Lineberry M. Consequences validity evidence: evaluating the            54. Kuper A, Reeves S, Albert M, Hodges BD. Assessment: do we need to
+    impact of educational assessments. Acad Med. 2016;91:785–95.                        broaden our methodological horizons? Med Educ. 2007;41:1121–3.
+28. Moss PA. The role of consequences in validity theory. Educ Meas Issues          55. Govaerts M, van der Vleuten CP. Validity in work-based assessment:
+    Pract. 1998;17(2):6–12.                                                             expanding our horizons. Med Educ. 2013;47:1164–74.
+29. Haertel E. How is testing supposed to improve schooling? Measurement.           56. Hamstra SJ, Brydges R, Hatala R, Zendejas B, Cook DA. Reconsidering
+    2013;11:1–18.                                                                       fidelity in simulation-based training. Acad Med. 2014;89:387–92.
+30. Kane MT. Validating the interpretations and uses of test scores. J Educ Meas.   57. Cook DA, Beckman TJ. High-value, cost-conscious medical education.
+    2013;50:1–73.                                                                       JAMA Pediatr. 2015. Epub ahead of print 12/23/2014.
+31. Cook DA. When I say… validity. Med Educ. 2014;48:948–9.                         58. Schuwirth LW, van der Vleuten CP. A plea for new psychometric models
+32. Martin JA, Regehr G, Reznick R, MacRae H, Murnaghan J, Hutchison C, et al.          in educational assessment. Med Educ. 2006;40:296–300.
+    Objective structured assessment of technical skill (OSATS) for surgical         59. Downing SM. Face validity of assessments: faith-based interpretations or
+    residents. Br J Surg. 1997;84:273–8.                                                evidence-based science? Med Educ. 2006;40:7–8.
+33. Moorthy K, Munz Y, Forrest D, Pandey V, Undre S, Vincent C, et al. Surgical
+    crisis management skills training and assessment: a simulation-based
+    approach to enhancing operating room performance. Ann Surg.
+    2006;244:139–47.
+34. Lammers RL, Temple KJ, Wagner MJ, Ray D. Competence of new
+    emergency medicine residents in the performance of lumbar punctures.
+    Acad Emerg Med. 2005;12:622–8.
+35. Shanks D, Brydges R, den Brok W, Nair P, Hatala R. Are two heads better
+    than one? Comparing dyad and self-regulated learning in simulation
+    training. Med Educ. 2013;47:1215–22.
+36. Brydges R, Nair P, Ma I, Shanks D, Hatala R. Directed self-regulated learning
+    versus instructor-regulated learning in simulation training. Med Educ.
+    2012;46:648–56.
+37. Conroy SM, Bond WF, Pheasant KS, Ceccacci N. Competence and retention
+    in performance of the lumbar puncture procedure in a task trainer model.
+    Simul Healthc. 2010;5:133–8.
+38. White ML, Jones R, Zinkan L, Tofil NM. Transfer of simulated lumbar
+    puncture training to the clinical setting. Pediatr Emerg Care.
+    2012;28:1009–12.
+39. Hatala R, Issenberg SB, Kassen B, Cole G, Bacchus CM, Scalese RJ. Assessing
+    cardiac physical examination skills using simulation technology and real
+    patients: a comparison study. Med Educ. 2008;42:628–36.
+40. Hatala R, Scalese RJ, Cole G, Bacchus M, Kassen B, Issenberg SB.
+    Development and validation of a cardiac findings checklist for use with
+    simulator-based assessments of cardiac physical examination competence.
+    Simul Healthc. 2009;4:17–21.
+41. Dong Y, Suri HS, Cook DA, Kashani KB, Mullon JJ, Enders FT, et al.
+    Simulation-based objective assessment discerns clinical proficiency in
+    central line placement: a construct validation. Chest. 2010;137:1050–6.
+42. Hatala R, Cook DA, Brydges R, Hawkins RE. Constructing a validity argument
+    for the Objective Structured Assessment of Technical Skills (OSATS): a
+    systematic review of validity evidence. Adv Health Sci Educ Theory Pract.
+    2015;20:1149–75.
+43. Zendejas B, Ruparel RK, Cook DA. Validity evidence for the Fundamentals of
+    Laparoscopic Surgery (FLS) program as an assessment tool: a systematic
+    review. Surg Endosc. 2016;30:512–20.
+44. Cook DA. Much ado about differences: why expert-novice comparisons add
+    little to the validity argument. Adv Health Sci Educ Theory Pract. 2014. Epub
+    ahead of print 2014 Sep 27.
+45. Brennan RL. Educational measurement. 4th ed. Westport: Praeger; 2006.               Submit your next manuscript to BioMed Central
+46. DeVellis RF. Scale Development: Theory and applications. 2nd ed. Thousand           and we will help you at every step:
+    Oaks, CA: Sage Publications; 2003.
+47. Streiner DL, Norman GR. Health measurement scales: a practical guide to               • We accept pre-submission inquiries
+    their development and use. 3rd ed. New York: Oxford University Press; 2003.           • Our selector tool helps you to find the most relevant journal
+48. Downing SM, Yudkowsky R. Assessment in health professions education.
+                                                                                          • We provide round the clock customer support
+    New York, NY: Routledge; 2009.
+49. Neufeld VR, Norman GR, Feightner JW, Barrows HS. Clinical problem-solving             • Convenient online submission
+    by medical students: a cross-sectional and longitudinal analysis. Med Educ.           • Thorough peer review
+    1981;15:315–22.
+                                                                                          • Inclusion in PubMed and all major indexing services
+50. Norman GR. The glass is a little full—of something: revisiting the issue of
+    content specificity of problem solving. Med Educ. 2008;42:549–51.                     • Maximum visibility for your research
+51. Eva KW, Hodges BD. Scylla or Charybdis? Can we navigate between
+    objectification and judgement in assessment? Med Educ. 2012;46:914–9.                 Submit your manuscript at
+                                                                                          www.biomedcentral.com/submit
+

@@ -1,433 +1,99 @@
 # IEEE Access 修改重投 TODO
 
-> 论文：*A Real-Time Haptic Simulation Prototype for Liver Lesion Localization Training: System Design, Technical Feasibility Validation, and Formative Expert Evaluation*  
 > 稿件号：Access-2026-15540  
-> 编辑决定：Reject - updates required before resubmission（允许修改后重投）  
-> 注意：IEEE Access 只允许这一次重投机会，不要在核心问题未回应时提交。
-
-## 使用方法
-
-- [ ] 按照本文档的顺序修改，完成一项后将 `[ ]` 改为 `[x]`。
-- [ ] 每一项修改同时记录页码、章节、行号或图表号，以便最后写 point-by-point response。
-- [ ] 凡是需要新数据的项目，先完成实验和数据固化，再改论文叙述，避免数字反复变动。
-- [ ] 不用一条笼统的回复合并多个审稿问题；给每位审稿人分别、逐条回复，即使内容重复。
-
----
-
-## 第 1 阶段：先确定修改后论文的边界
-
-### 1.1 锁定论文定位
-
-- [ ] 将全文的核心定位统一为 **system-integration and technical-feasibility study**，不将本研究定位为训练效果研究。（R1-1，R1-Q1/Q2，R2，R3-M1/M2/M8）
-- [ ] 明确声明：本文不提出新的 GB-cFEM 算法，也不提出全新的指尖触觉设备。（R1-Q1，R3 总评/M0）
-- [ ] 将新颖性明确定义为：GB-cFEM、双手追踪、1-DOF 指尖力反馈、肝脏病灶定位任务、法向力映射、闭环同步、消费级硬件部署和形成性工程评估的任务导向集成。（R1-Q1，R3-M0）
-- [ ] 在 Introduction 末尾用一段话分清“已发表组件”和“本文新增的系统级贡献”。（R1-Q1，R3-M0）
-- [ ] 增加一张与作者既有 GB-cFEM 论文、既有触觉设备论文的对比表，列出算法、设备、手部追踪、肝脏任务、闭环映射、部署验证和专家评估等差异。（R3-M0）
-
-### 1.2 删除或降低证据不支持的声称
-
-- [ ] 全文搜索 `training effectiveness`、`clinical usefulness`、`clinical-grade`、`learning efficiency`、`learning outcomes`、`skill improvement`、`skill transfer`、`educational impact` 和近义表达。（R1-1，R1-Q1/Q2/Q3，R3-M1/M2/M8）
-- [ ] 删除或改写任何“本系统已提高学习效率”的结论。（R3-M2/M8）
-- [ ] 删除或改写任何“本系统已验证医学教育效果”的结论。（R1-1，R3-M2/M8）
-- [ ] 删除或改写任何“本系统已可用于临床级训练”的结论。（R1-1，R3-M1/M8）
-- [ ] 将教育心理学文献只用作研究动机，不用作本原型已有教育效果的证据。（R1-Q5a，R3-M2）
-- [ ] 将 Abstract 中的结论限定为“实时闭环运行和工程可行性”。（R1-1，R3-M8）
-- [ ] 将 Discussion 中的推论限定为“工程边界和后续设计启示”。（R1-1，R3-M8）
-- [ ] 重写 Conclusion 最后一段，删除“matches the actual demands”、“meets educational standards”、“improving learning efficiency”等过强句子。（R1-1，R3-M2/M8）
-- [ ] 在 Abstract、Discussion 和 Conclusion 都明确写出：单一专家形成性评估不能证明训练有效性或临床有效性。（R1-1，R1-Q1/Q2，R3-M1/M2/M8）
-
----
-
-## 第 2 阶段：补齐触觉系统的定量验证（最高优先级）
-
-### 2.1 触觉设备规格与标定方法
-
-- [ ] 在 Methods 中报告触觉设备的设计输出力范围和实际可用输出力范围。（R1-2，R1-Q2/Q3，R3-M3）
-- [ ] 报告执行器、细线/传动机构、驱动电路和力传感器的型号或关键规格。（R1-2，R3-M3）
-- [ ] 描述力标定装置，包括传感器位置、采样率、接触几何、重复次数和环境条件。（R1-2，R3-M3）
-- [ ] 描述从数字指令到执行器输出力的标定流程。（R1-2，R3-M3）
-- [ ] 说明标定方程、分段函数或查找表，并报告拟合误差。（R1-2，R3-M3）
-- [ ] 报告最小力增量/输出分辨率，或说明硬件和测量方法无法支持该指标。（R3-M3）
-- [ ] 报告力输出上限、饱和阈值以及指令超限时的处理方式。（R1-2，R3-M3）
-- [ ] 说明安全限幅、异常指令和通信中断时的输出处理。（R1-2，R3-M3）
-
-### 2.2 实测力输出
-
-- [ ] 在多个指令档位下测量实际输出力，覆盖低、中、高和饱和区域。（R1-2，R3-M3）
-- [ ] 每个指令档位进行多次重复测量。（R3-M3）
-- [ ] 绘制 commanded force - measured force 曲线，显示均值和离散程度。（R1-2，R3-M3）
-- [ ] 报告力输出的 MAE/RMSE、线性、重复性或滞后中能够可靠测得的指标。（R1-2，R3-M3）
-- [ ] 在持续恒定指令下测量输出波动，报告稳定性。（R3-M3）
-- [ ] 如果四个手指通道的机械结构不完全相同，分别报告通道差异；如果相同，说明代表通道选择依据。（R3-M3）
-
-### 2.3 延迟、同步和滤波
-
-- [ ] 画出或文字说明完整时序：手部追踪→代理体位置→物理计算→接触力→串口指令→执行器→指尖力。（R1-2，R1-Q2/Q3，R3-M3）
-- [ ] 测量并报告端到端延迟，明确起点和终点定义。（R1-2，R3-M3）
-- [ ] 报告延迟的重复测量结果和波动范围，不只报一个理论值。（R1-2，R3-M3）
-- [ ] 明确物理循环实际频率，不将 FPS 和触觉控制频率混为同一指标。（R1-2，R3-M3）
-- [ ] 说明约 83 Hz 物理更新与 1000 Hz 触觉循环如何同步。（R1-2，R1-Q2/Q3，R3-M3）
-- [ ] 说明物理帧之间是保持上一帧力、插值、外推，还是使用其他更新策略。（R1-2，R3-M3）
-- [ ] 说明从接触力到输出指令使用的滤波、平滑、限速或阻尼策略及其参数。（R1-2，R3-M3）
-- [ ] 如果没有使用滤波或插值，如实说明，并将其列为力反馈连续性限制。（R1-2，R3-M3）
-- [ ] 绘制一组阶跃响应或实际交互时序图，显示指令与实测力的时间关系。（R1-2，R3-M3）
-- [ ] 在 Results 中对力准确性、延迟、饱和、分辨率和稳定性的实测结果进行客观解释。（R3-M3）
-- [ ] 在 Discussion 中说明实测性能对病灶硬度辨别的可能影响，不将设备规格等同于人体感知效果。（R3-M3/M8）
-
----
-
-## 第 3 阶段：补全肝脏、病灶和生物力学建模依据
-
-### 3.1 病灶几何和任务难度
-
-- [ ] 对三个可切换硬区域分别报告位置、尺寸/直径、体积、深度和所包含的节点/四面体数。（R1-3，R1-Q3，R3-M4/M5）
-- [ ] 说明病灶是球形、不规则区域还是通过其他方法选取。（R1-Q3，R3-M5）
-- [ ] 增加图示，在不泄露正式实验视觉信息的前提下展示三个病灶配置。（R1-Q3，R3-M4/M5）
-- [ ] 说明 haptics-off 和 haptics-on 使用了哪两个位置。（R1-3，R1-Q3，R3-M4）
-- [ ] 解释两个位置在尺寸、深度、可达性和定位难度上是否可比。（R1-3，R1-Q3，R3-M4）
-- [ ] 如果两个位置没有做过难度匹配，如实承认，不将两条件的行为差异归因于触觉开关。（R1-3，R3-M4）
-- [ ] 解释为什么使用不同位置，以及这只能减少空间记忆、不能排除病灶难度差异。（R1-3）
-
-### 3.2 材料参数与临床/文献依据
-
-- [ ] 为正常肝组织 `Young's modulus = 7000 Pa` 提供直接文献、仿体测量或标定依据。（R3-M5）
-- [ ] 为硬区域 `Young's modulus = 30000 Pa` 提供直接文献、仿体测量或标定依据。（R3-M5）
-- [ ] 解释 30000/7000 的刚度比为什么适合当前的“可感知硬区域原型”。（R3-M5）
-- [ ] 为泊松比和近不可压缩设置提供依据。（R3-M5/M6）
-- [ ] 解释当前参数是生理真实性标定，还是为保证稳定和可感知的工程配置。（R3-M5）
-- [ ] 如果没有文献或实验足以支持“肿瘤”的病理含义，将物理模型中的 `tumor` 改为 `simulated stiff inclusion` 或同等严谨术语。（R3-m2/M5）
-- [ ] 对 `lesion`、`tumor`、`hard region/stiff inclusion` 分别给出定义，并在全文使用统一。（R3-m2）
-
-### 3.3 解剖约束与材料真实性
-
-- [ ] 清楚区分真实解剖结构和当前等效约束。（R2，R3-M5/M7）
-- [ ] 明确静态外壳是从静息肝脏表面扩张得到的 support envelope，不是真实腹壁、膨肌和周围器官的解剖模型。（R2，R3-M5）
-- [ ] 说明 Porta Hepatis、IVC groove 和 Bare Area 的等效固定方式及其局限。（R2，R3-M5）
-- [ ] 说明缺失前方韧带牵引会导致的全局漂移/横向推动不真实问题。（R2，R3-M5）
-- [ ] 明确当前线性或简化材料没有表示肝包膜、非线性和深压缩时渐进阻力。（R2，R3-M5）
-- [ ] 将专家所述“像均质软胶”作为形成性工程发现，而不是可推广的临床验证结果。（R3-M5）
-- [ ] 在 Future Work 中列出非线性材料、包膜效应、韧带约束、真实腹部接触关系和器械交互。（R2，R3-M5/M7）
-
----
-
-## 第 4 阶段：使数值对比可复现、可公平解读
-
-### 4.1 建立完整的 benchmark protocol 表
-
-- [ ] 报告每个实验模型的节点数、表面三角形数、四面体数和分组数。（R1-4，R3-M6）
-- [ ] 报告并区分 Proposed method、XPBD Fast、XPBD Ref 和 VegaFEM 的时间步长。（R1-4，R3-M6）
-- [ ] 给出 XPBD Fast 的准确 substeps 和 solver iterations，不再只写 `low substeps`。（R1-4，R3-M6）
-- [ ] 给出 XPBD Ref 的准确 substeps 和 solver iterations，不再只写 `increased substantially`。（R1-4，R3-M6）
-- [ ] 给出 Proposed method 的迭代数、容差、分组耦合和额外体积修正参数。（R1-4，R3-M6）
-- [ ] 给出 VegaFEM 的求解器、时间积分、迭代/收敛条件和关键参数。（R1-4，R3-M6）
-- [ ] 报告各方法使用的 Young's modulus、Poisson ratio、密度、阻尼和其他材料参数。（R1-4，R3-M6）
-- [ ] 说明各方法的固定节点和边界约束是否一致。（R1-4，R3-M6）
-- [ ] 给出载荷大小、方向、施加位置、施加方式和持续时间。（R1-4，R3-M6）
-- [ ] 对“三个 loading strengths”给出准确数值。（R1-4，R3-M6）
-- [ ] 定义位移误差的计算式、参考节点/区域和时刻。（R1-4，R3-M6）
-- [ ] 定义体积偏差的计算式、取样时间窗和 maximum/mean 的统计方式。（R1-4，R3-M6）
-- [ ] 给出每项实验的终止时间、收敛标准或 stopping criterion。（R1-4，R3-M6）
-- [ ] 说明 FPS/runtime 是单次、平均、中位数还是多次测量，并报告测量次数和离散程度。（R1-4，R3-M6）
-- [ ] 说明测试是单线程、多线程还是使用特定并行配置。（R1-4，R3-M6）
-
-### 4.2 解决公平性和结论强度
-
-- [ ] 优先在相同网格、相同载荷、相同边界条件和尽可能统一的材料设置下重做对比。（R1-4，R3-M6）
-- [ ] 如果无法匹配网格规模，明确解释原因，并将数据表述为 application-level observations，不作标准化跨方法 benchmark 结论。（R1-4，R3-M6）
-- [ ] 删除或改写“结果仍足以证明本方法优于其他方法”类过强推论。（R1-4，R3-M6/M8）
-- [ ] 对 XPBD Fast 和 XPBD Ref 的选取理由作中性说明，不把低子步设置当成 XPBD 本身精度的全面代表。（R1-4，R3-M6）
-- [ ] 对 VegaFEM 作为参考解的条件和局限作出说明。（R1-4，R3-M6）
-- [ ] 核对表格、正文和图中所有 FPS、runtime、网格规模和误差数字完全一致。（R1-4，R3-m3/M6）
-
----
-
-## 第 5 阶段：重构单专家形成性评估
-
-### 5.1 说明研究目的和合理性
-
-- [ ] 将评估明确称为 `single-expert formative evaluation` 或 `formative expert walkthrough`。（R1-1，R2，R3-M1）
-- [ ] 解释为什么原型阶段采用一位外科专家：目的是识别工程边界，而不是进行统计推断。（R2，R3-M1）
-- [ ] 保留并明确说明专家经验、任务流程、口述反馈和记录方式。（R2，R3-M1）
-- [ ] 明确本评估不测量 novice performance、skill improvement、retention 或 transfer to clinical tasks。（R1-1，R3-M1/M2）
-- [ ] 不将单一专家的 Likert 分数称为可推广的 usability evidence。（R3-m4）
-- [ ] 将 Likert 分数重新表述为该专家个人的 descriptive formative ratings，不计算或暗示统计显著性。（R3-m4）
-
-### 5.2 处理 haptics-off / haptics-on 设计混杂
-
-- [ ] 明确报告试次顺序是否固定。（R1-3，R1-Q2/Q3，R3-M4）
-- [ ] 明确报告是否进行了随机化、顺序平衡或 counterbalancing。（R1-3，R3-M4）
-- [ ] 如果没有平衡顺序，明确承认学习、熟悉和疲劳效应无法排除。（R1-3，R1-Q2，R3-M4）
-- [ ] 如果病灶位置不同且难度未匹配，不将观察到的策略改变直接归因于触觉反馈。（R1-3，R3-M4）
-- [ ] 将“触觉支持了硬区域辨别”改成与个案证据相符的谨慎表达，例如“该专家在此试次中报告察觉到局部阻力差异”。（R1-3，R3-M4/M8）
-
-### 5.3 尽可能提供客观任务指标
-
-- [ ] 检查原始录屏、日志或记录是否能提取 localization success/accuracy。（R1-3，R3-M4）
-- [ ] 检查是否能提取 time to localization。（R1-3，R3-M4）
-- [ ] 检查是否能提取 localization error distance。（R1-3，R3-M4）
-- [ ] 检查是否能提取 number of pressing attempts。（R1-3，R3-M4）
-- [ ] 检查是否能提取手指轨迹、搜索覆盖范围或压入深度。（R1-3，R3-M4）
-- [ ] 检查是否记录了 confidence 或可转换为客观编码的口述信息。（R1-3，R3-M4）
-- [ ] 如果能可靠恢复上述指标，用描述性个案结果呈现，不对 n=1 做统计推断。（R3-M1/M4）
-- [ ] 如果无法可靠恢复，在回复信和论文中如实说明，并将结构化客观指标列为下一阶段研究内容。（R1-3，R3-M4）
-- [ ] 决定是否新增小规模、顺序平衡、病灶难度匹配的 haptics-on/off 实验。（R1-3，R3-M1/M4）
-- [ ] 如果新增人体参与实验，先确认新方案是否在现有伦理批准范围内，并在文章中准确报告。
-
----
-
-## 第 6 阶段：加强临床相关性和相关工作对比
-
-- [ ] 补充肝脏触诊、腹部触诊、病灶定位和医学触觉训练系统的近期相关工作。（R1-Q3/Q4，R2，R3-m6）
-- [ ] 补充医学模拟器验证方法、触觉输出验证和手术模拟用户研究设计的相关文献。（R1-Q4）
-- [ ] 添加“与已有肝脏/腹部触诊系统对比”表，至少比较任务、物理模型、交互媒介、触觉自由度、实时性、硬件和验证规模。（R2，R1-Q4）
-- [ ] 说明本系统与肝切除/切割模拟器的任务边界不同。（R2）
-- [ ] 解释裸手触诊对病灶定位研究的意义，同时承认手术场景通常使用器械，因此当前任务的手术真实性有限。（R2，R3-M7）
-- [ ] 在 Discussion 中区分“工程可行性”、“感知可辨认性”、“临床真实性”和“教育有效性”四个不同层级。（R2，R3-M1/M2/M8）
-- [ ] 对未能满足的临床需求作具体讨论，而不仅列为通用 Future Work。（R2，R3-M5/M7）
-
----
-
-## 第 7 阶段：充分说明 1-DOF 限制
-
-- [ ] 明确说明设备只能输出一个方向的法向阻力。（R2，R3-M7）
-- [ ] 明确说明设备无法输出切向力和滑动阻力梯度。（R2，R3-M7）
-- [ ] 明确说明设备无法重现手指深压组织时的包裹/挤压感。（R2，R3-M7）
-- [ ] 明确说明设备无法表达复杂接触力分布。（R2，R3-M7）
-- [ ] 将 1-DOF 解释为面向局部法向刚度差异的 task-oriented choice，但不将这一选择描述为与高自由度触觉等价。（R1-Q1，R3-M7）
-- [ ] 说明 1-DOF 限制如何可能促使参与者采用密集垂直按压，而不是滑动探索病灶边界。（R3-M7）
-- [ ] 将切向补偿、更高自由度、力控连续性和硬件频响改进写入 Future Work。（R2，R3-M7）
-
----
-
-## 第 8 阶段：按章节修订论文
-
-### 8.1 Title / Abstract / Keywords
-
-- [ ] 检查标题中 `Training` 是否会让读者误以为已验证训练效果；必要时改为更精确的 `palpation prototype` 或其他表达。（R1-1，R3-M2/M8）
-- [ ] Abstract 明确本文的集成型新颖性。（R3-M0）
-- [ ] Abstract 明确评估只包含一位外科专家。（R1-1，R3-M1）
-- [ ] Abstract 不暗示训练成效或临床可用性。（R1-1，R3-M2/M8）
-- [ ] Abstract 补充最关键的实测触觉性能结果，而不仅报告 1000 Hz。（R1-2，R3-M3）
-- [ ] Keywords 与实际研究定位一致，避免过度临床化。（R3-M8）
-
-### 8.2 Introduction / Contributions
-
-- [ ] 压缩医学教育动机的重复内容。（R3-m7）
-- [ ] 将医学教育的学习理论限定为背景动机。（R1-Q5a，R3-M2）
-- [ ] 说明既有 GB-cFEM 和既有触觉设备已分别解决什么。（R3-M0）
-- [ ] 说明本文解决的闭环集成问题是什么。（R3-M0）
-- [ ] 将 contribution 1 限定为系统架构和消费级部署可行性，不声称已实现课堂普及。（R1-1，R3-M2/M8）
-- [ ] 将 contribution 2 限定为法向力映射机制和其实测性能，不声称已帮助学习者建立心理表征。（R1-2，R3-M2/M3）
-- [ ] 将 contribution 3 限定为形成性工程评估和限制识别。（R1-1，R3-M1）
-
-### 8.3 Related Work
-
-- [ ] 补充肝脏触诊和腹部触诊模拟器。（R2，R1-Q4）
-- [ ] 补充医学触觉系统定量验证方法。（R1-Q4，R3-M3）
-- [ ] 补充手术/触诊模拟器用户研究设计文献。（R1-Q4，R3-M1/M4）
-- [ ] 用对比表说明本文的中等但明确的集成贡献。（R3 附加问题 1，R3-M0）
-
-### 8.4 System Design and Implementation
-
-- [ ] 补全触觉设备范围、标定、饱和、分辨率、滤波和安全限幅。（R1-2，R3-M3）
-- [ ] 补全端到端数据流和时序/同步机制。（R1-2，R3-M3）
-- [ ] 补全肝脏网格规模和病灶几何。（R1-Q3，R3-M5/M6）
-- [ ] 补全材料参数和病灶刚度比的依据。（R3-M5）
-- [ ] 明确区分解剖结构、简化约束和数值稳定修正。（R2，R3-M5）
-
-### 8.5 Experimental Design
-
-- [ ] 补全全部 benchmark 参数和重复测量方法。（R1-4，R3-M6）
-- [ ] 补全触觉定量验证 protocol。（R1-2，R3-M3）
-- [ ] 补全单专家形成性评估 protocol。（R1-3，R2，R3-M1/M4）
-- [ ] 说明两次病灶配置、试次顺序和混杂因素。（R1-3，R3-M4）
-- [ ] 说明所有已记录的客观和主观指标。（R1-3，R3-M4）
-
-### 8.6 Results
-
-- [ ] 增加触觉输出标定、延迟和稳定性结果小节。（R1-2，R3-M3）
-- [ ] 为所有力输出结果给出原始量级、误差和重复性，不只给映射方程。（R1-2，R3-M3）
-- [ ] 使算法对比的图表数据与方法章参数一一对应。（R1-4，R3-M6）
-- [ ] 如果报告定位时间、按压次数等，明确它们是 n=1 的描述性结果。（R1-3，R3-M1/M4）
-- [ ] 将专家口述反馈与作者的机制解释分开。（R3-M1/M4）
-
-### 8.7 Discussion / Limitations / Future Work
-
-- [ ] 讨论力标定、延迟、力维度和更新连续性的局限。（R1-2，R2，R3-M3/M7）
-- [ ] 讨论线性材料、包膜缺失和解剖约束简化对触诊行为的具体影响。（R2，R3-M5）
-- [ ] 讨论不同病灶位置和固定顺序导致的混杂。（R1-3，R3-M4）
-- [ ] 讨论裸手交互与器械交互之间的任务效度差异。（R2，R3-M7）
-- [ ] 讨论单专家不能支持统计推广。（R1-1，R2，R3-M1）
-- [ ] 讨论当前没有学习成效、保持性或临床迁移证据。（R1-1，R3-M2）
-- [ ] 给出后续结构化多样本研究的方案：新手+专家、平衡顺序、匹配病灶、定位误差、时间、学习曲线和迁移。（R1-3，R3-M1/M2/M4）
-- [ ] 压缩重复讨论，特别是与 Introduction 重复的教育意义。（R3-m7）
-
-### 8.8 Conclusion
-
-- [ ] 只总结系统连通性、实时性、触觉实测性能和形成性发现。（R1-1，R3-M8）
-- [ ] 不将与 XPBD/VegaFEM 的非统一网格对比称为标准 benchmark。（R1-4，R3-M6/M8）
-- [ ] 不声称已验证医学教育价值。（R1-1，R3-M2/M8）
-- [ ] 不声称已达到临床级真实性。（R1-1，R3-M8）
-- [ ] 明确当前结论是原型的 technical feasibility，不是 efficacy。（R1-1，R3-M8）
-
----
-
-## 第 9 阶段：图、表、视频、参考文献和语言
-
-### 9.1 图表可读性
-
-- [ ] 逐张检查性能曲线的坐标轴、单位、图例和标签大小。（R3-m3）
-- [ ] 放大过小的图内文字，确保双栏 PDF 按实际显示尺寸仍可读。（R3-m3）
-- [ ] 为每张性能图的 caption 补充网格、参数、载荷和误差定义等必要条件。（R3-m3，R1-4）
-- [ ] 为系统截图标清手部分工、外壳、肝脏、指尖代理体和视觉化病灶的含义。（R3-m3/m5）
-- [ ] 检查表格在双栏布局中没有溢出、过密或字号过小。（R3-m3）
-
-### 9.2 补充视频
-
-- [ ] 在正文或 Supplementary Material 说明视频分别展示什么。（R3-m5）
-- [ ] 明确视频中病灶是否可见。（R3-m5）
-- [ ] 明确病灶可视化是只用于系统演示，还是也在正式专家评估中开启。（R3-m5）
-- [ ] 如果演示和评估的显示条件不同，在正文和视频说明中分开描述。（R3-m5）
-- [ ] 检查重投时上传的视频与修订后论文一致。（R1 文件审阅确认，R3-m5）
-
-### 9.3 参考文献
-
-- [ ] 逐条核对作者、标题、期刊/会议、年份、卷、期、页码/文章号和 DOI。（R3-m6）
-- [ ] 重点检查所有 2025 年文献是否完整。（R3-m6）
-- [ ] 确认没有将预印本信息与最终出版信息混用。（R3-m6）
-- [ ] 检查所有引用都真正支持对应句子。（R1-Q4/Q5，R3-m6）
-- [ ] 补充文献时以相关性为标准，不为满足审稿人而加入无关文献。（编辑信特别说明）
-- [ ] 检查是否存在已撤稿或已更正而未注明的引用。
-
-### 9.4 语言和排版
-
-- [ ] 删除或替换 `Date of publication xxxx 00, 0000` 等占位信息。（R3-m1）
-- [ ] 确认 DOI 字段不包含非真实的占位 DOI。（R3-m1）
-- [ ] 检查 IEEE Access 模板、标题页、作者、通讯作者、单位和传记格式。（R3-m1，R1-5）
-- [ ] 逐页检查并修正审稿人指出的 `ABSTRACTHaptic`、`INDEX TERMSLiver`、`V egaFEM`、`Y oung's`、`RESUL TS`、`Chernikovaet al.` 和 `Agbohet al.`。（R1-5）
-- [ ] 搜索同类转换或排版断字问题，不仅修正审稿人列举的几处。（R1-5）
-- [ ] 压缩 Introduction 中冗长和重复的段落。（R3-m7）
-- [ ] 压缩 Discussion 中重复的限制和教育意义表述。（R3-m7）
-- [ ] 完成一轮标准学术英语校对，但不在校对中改变技术含义。（R3-m7，R1-5）
-- [ ] 检查所有缩写在首次出现时定义。
-- [ ] 检查所有数值都带单位，且有效数字精度合理。
-
----
-
-## 第 10 阶段：编译、视觉检查和内容一致性
-
-- [ ] 从干净的中间文件状态完整编译 LaTeX。
-- [ ] 确认没有 undefined references、missing citations、overfull boxes 或缺失图片。
-- [ ] 确认所有图表在正文中按顺序引用。
-- [ ] 确认图表中的方法名、参数名和数值与正文一致。
-- [ ] 确认 Main Manuscript 的 LaTeX 源文件和 PDF 内容完全一致。（编辑要求）
-- [ ] 将最终 PDF 逐页渲染为图片并检查。
-- [ ] 检查双栏排版中是否有文字裁切、重叠、黑块、数学符号丢失或字体异常。
-- [ ] 检查标题、Abstract、Index Terms、各级标题和参考文献的空格/断字问题。（R1-5）
-- [ ] 检查所有人像、系统截图和视频的授权与匿名化状态。
-- [ ] 核对伦理批准号、知情同意表述和实际实验范围一致。
-- [ ] 保留并检查 AI editorial support 的致谢/披露符合当前投稿要求。
-
----
-
-## 第 11 阶段：撰写逐条 Response to Reviewers
-
-### 11.1 统一回复格式
-
-- [ ] 为每条意见保留审稿人原文 `Reviewer's concern`。（编辑要求）
-- [ ] 在原文后给出直接的 `Authors' response`。（编辑要求）
-- [ ] 给出具体的 `Action/changes implemented`。（编辑要求）
-- [ ] 在每条回复中写明修改后的章节、页码、行号和图表号。
-- [ ] 对所有新实验给出方法、重复次数、主要结果和结论变化摘要。
-- [ ] 对未采纳的技术建议给出有数据、文献或研究边界支持的反驳，不只写“不同意”。（编辑信要求）
-- [ ] 对无法补做的项目明确说明原因，并同时降低声称、补充局限，不只把问题推给 Future Work。
-- [ ] 对 Reviewer 1、2、3 分别回复，不因意见重复而跳过任何一条。
-
-### 11.2 Reviewer 1 回复覆盖检查
-
-- [ ] R1-1：贡献定位为系统集成/技术可行性，降低训练、临床和学习效果声称。
-- [ ] R1-2：输出力范围、标定、饱和、延迟、滤波、同步和实测力数据。
-- [ ] R1-3：不同病灶、固定顺序、难度可比性、学习效应和客观定位指标。
-- [ ] R1-4：XPBD/VegaFEM 的 substeps、iterations、timestep、材料、载荷、网格、终止条件和公平性。
-- [ ] R1-5：修正所有列举的排版/空格问题并完成校对。
-- [ ] R1-Q1：明确本文相对已发表算法和设备工作的新贡献。
-- [ ] R1-Q2：补齐技术可靠性信息，并承认形成性评估不证明 efficacy。
-- [ ] R1-Q3：补齐病灶几何、深度、放置策略、条件可比性和力映射详情。
-- [ ] R1-Q4：补充模拟器验证、触觉评估、用户研究和肝脏/腹部触诊系统文献。
-- [ ] R1-Q5/Q5a：确认没有无关引用；通用教育文献只用于动机，不用于证明本系统效果。
-
-### 11.3 Reviewer 2 回复覆盖检查
-
-- [ ] R2-1：扩展临床相关性与潜在教育影响的讨论，同时不将潜力写成已证实效果。
-- [ ] R2-2：充分说明单专家形成性评估的用途和合理性。
-- [ ] R2-3：进一步说明触觉真实性和解剖真实性的局限。
-- [ ] R2-4：增加与已有肝脏触诊模拟器和训练系统的详细对比。
-
-### 11.4 Reviewer 3 回复覆盖检查
-
-- [ ] R3-M0：说清与作者既有 GB-cFEM 和触觉设备工作相比的新颖性。
-- [ ] R3-M1：单一专家评估只作为早期形成性反馈。
-- [ ] R3-M2：没有 novice performance、skill improvement、retention 或 transfer 数据，因此删除或降低教育成效声称。
-- [ ] R3-M3：补齐力准确性、延迟、标定、执行器限制、分辨率、饱和和稳定性数据。
-- [ ] R3-M4：提供定位准确率、时间、误差、按压次数和 haptics-on/off 对比，或对无法提供的指标明确降低声称。
-- [ ] R3-M5：为肝脏模量、病灶刚度比、病灶几何和边界约束提供更强依据。
-- [ ] R3-M6：补齐 benchmark 参数，使结果可复现并谨慎处理非匹配网格。
-- [ ] R3-M7：充分说明 1-DOF 缺少切向力、包裹感和复杂接触反馈。
-- [ ] R3-M8：将结论限定为技术可行性和早期专家反馈。
-- [ ] R3-m1：修正出版占位信息和模板不一致。
-- [ ] R3-m2：统一 lesion、tumor 和 hard region 的定义与用法。
-- [ ] R3-m3：改善性能图、系统截图、标签、caption 和实验条件说明。
-- [ ] R3-m4：将单人 Likert 结果解释为定性形成性反馈。
-- [ ] R3-m5：说清补充视频展示内容和病灶在演示/评估中的可见性。
-- [ ] R3-m6：检查并补全近期参考文献，特别是 2025 年文献。
-- [ ] R3-m7：压缩 Introduction 和 Discussion 的冗长、重复内容，完成语言编辑。
-
----
-
-## 第 12 阶段：准备 IEEE Access 重投文件
-
-- [ ] 下载并逐项完成编辑信附带的 Resubmission Checklist。（编辑要求）
-- [ ] 准备 `Response to Reviewers / List of Updates`，覆盖 concern、response 和 actual change 三部分。（编辑要求）
-- [ ] 将 Response to Reviewers 上传为 `Author's Response Files`。（编辑要求）
-- [ ] 生成一份所有单项修改（包括语法修改）都明显标黄的 PDF。（编辑要求）
-- [ ] 将标黄 PDF 上传为 `Highlighted PDF`。（编辑要求）
-- [ ] 生成不带高亮和批注的 clean PDF。（编辑要求）
-- [ ] 准备与 clean PDF 完全一致的 LaTeX 源文件。（编辑要求）
-- [ ] 将 clean PDF 和 LaTeX 源文件都上传为 `Main Manuscript`。（编辑要求）
-- [ ] 准备并上传修订后的 supplementary video 及说明。
-- [ ] 确保补充文件、视频和论文中的系统版本、病灶配置和实验条件一致。
-- [ ] 如果作者名单或顺序有任何改变，填写 `Request for Byline Change`，详细说明每位作者的贡献和变更理由，并取得所有作者同意。（编辑要求）
-- [ ] 如果作者名单和顺序不变，确认投稿系统、LaTeX 和 PDF 三处完全一致。
-- [ ] 在 IEEE Author Portal 中从原被拒稿件选择 `Start Resubmission`，不将其当作无关的全新投稿。（编辑要求）
-- [ ] 提交前确认论文没有同时在其他期刊审理。
-- [ ] 提交前由所有作者审阅 clean manuscript、highlighted PDF、response letter 和 supplementary files。
-- [ ] 提交前再次确认每一条审稿意见都已在 response letter 中有单独条目。
-
----
-
-## 最终 Go / No-Go 检查
-
-### 以下项目未完成时，建议不要重投
-
-- [ ] 已提供实测力输出、标定、延迟、饱和和稳定性数据。
-- [ ] 已补齐 XPBD/VegaFEM/Proposed method 的可复现参数。
-- [ ] 已说清病灶尺寸、深度、位置、刚度比和参数依据。
-- [ ] 已妥善处理不同病灶和固定顺序的混杂，不再进行过度归因。
-- [ ] 已将全文限定为系统集成和技术可行性，不声称训练或临床有效性。
-- [ ] 已明确本文相对作者既有算法和设备工作的新增贡献。
-- [ ] 已增加与现有肝脏/腹部触诊系统的具体对比。
-- [ ] 已处理所有图表、术语、参考文献、占位信息和排版问题。
-- [ ] 已生成并逐页检查 clean PDF 和 highlighted PDF。
-- [ ] 已完成三位审稿人的逐条回复，且每条都包含 concern、response、actual change 和修改位置。
-- [ ] 所有作者已审阅并同意重投版本。
-
----
-
-## 意见编号说明
-
-- `R1-1` 至 `R1-5`：Reviewer 1 的五条主要意见。
-- `R1-Q1` 至 `R1-Q5a`：Reviewer 1 在 Additional Questions 中补充的实质性意见。
-- `R2`：Reviewer 2 的四项 Required Changes Before Acceptance 及其附加评价。
-- `R3-M0`：Reviewer 3 对新颖性与既有工作差异的总体意见。
-- `R3-M1` 至 `R3-M8`：Reviewer 3 PDF 中的八条 Major Issues。
-- `R3-m1` 至 `R3-m7`：Reviewer 3 PDF 中的七条 Minor Issues。
+> 结论：Reject - updates required before resubmission（编辑明确鼓励修改后重投）  
+> 注意：IEEE Access 只允许一次重投机会。
+
+## 编辑部要求
+
+- [ ] 逐条回应所有审稿意见；如果不同意某个技术意见，需在回复信中提供论据，并在论文中作相应说明。
+- [ ] 对审稿人建议的文献只在确实相关且能增强论文时引用，不必为了迎合审稿人强制添加。
+- [ ] 准备 Response to Reviewers，每条都包含：(a) Reviewer's concern，(b) Authors' response，(c) Action/actual change。
+- [ ] 准备所有修改均已高亮的 `Highlighted PDF`，包括语法修改。
+- [ ] 准备无高亮的 clean manuscript，同时提交 LaTeX 源文件和内容完全一致的 PDF。
+- [ ] 使用编辑部附带的 Resubmission Checklist 完成提交前检查。
+- [ ] 如果作者名单或顺序发生变化，提交 `Request for Byline Change`，详细说明变更理由及每位作者的贡献。
+- [ ] 在 IEEE Author Portal 中从原稿件选择 `Start Resubmission` 进行重投。
+
+
+## Reviewer 1
+
+- [x] **R1-1：重新限定论文贡献。** 将本文明确定位为“系统集成与技术可行性研究”，而不是训练有效性证据；单一外科专家只能提供形成性反馈，不能支持临床级训练、教育影响或学习效率的强结论；修改 Abstract、Discussion 和 Conclusion。
+  - **审稿人回复：** 我们重新限定了本文的贡献表述。Abstract 明确将本研究定位为“系统集成与技术可行性研究”（原文：“This study is framed as a system-integration and technical-feasibility study rather than as evidence of training effectiveness”），并加入一句说明：单一外科专家的走查式评估只能提供诊断性、探索性反馈，不能单独支撑临床级训练效果、教育影响或学习效率方面的结论（原文：“this single-participant walkthrough provides diagnostic, exploratory feedback and does not by itself support claims of clinical-grade training efficacy, educational impact, or learning outcomes”）。Discussion 的 “From Algorithm Validation to System-Prototype Evaluation” 小节开头新增一句显式声明（原文：“It should be emphasized that this single-expert, walkthrough-based evaluation is formative and diagnostic in nature: it is designed to expose engineering boundaries rather than to establish clinical-grade training efficacy, educational impact, or learning outcomes, and none of the observations discussed below should be read as demonstrating such effects.”），强调该评估是形成性、诊断性的，目的是暴露工程边界而非证明训练成效。Conclusion 总结段删除了原先“matches the actual demands of modern medical education”“meets the educational standards of improving learning efficiency”等过强表述，改为（原文：“Establishing actual training effectiveness, learning-efficiency gains, or clinical-grade fidelity will require the structured, multi-participant, novice-and-expert study outlined in the Future Research Directions subsection, and no such claim is made on the basis of the present single-expert formative evaluation.”）：本研究只证明了技术可行性与系统级连通性，训练有效性、学习效率提升或临床级可信度需要后续多参与者（新手+专家）研究才能证实，当前单一专家形成性评估不支持此类结论。
+- [x] **R1-2：补充触觉渲染管线的技术细节和定量验证。** 报告设备力范围、力标定方法、饱和、端到端延迟、滤波/平滑方法，以及物理更新与 1000 Hz 触觉循环的同步方式；尽可能提供实测力输出数据，而不只是计算力映射公式。
+  - **审稿人回复：** 此条与 R3-M3 要求高度一致，共享同一处修改（详见 R3-M3 的回复）。我们在 “1-DOF Haptic Rendering Strategy” 小节补充了执行器台架实测的可感知力范围与饱和行为（原文：“The actuator was bench-characterized with a force sensor, giving a calibrated, perceptible output-force range of 0.04 N to 1.36 N (values above this range saturate at 1.36 N) and a linear vibration-frequency response over a 100--180 Hz resonance band (correlation coefficient 0.9998).”）；逐用户力阈值标定方法（原文：“A per-user calibration before each session sets the perceptible-force threshold, and any $F_n$ below this threshold is rendered at the threshold value instead of zero.”）；软件管线的实测同帧延迟（原文：“The haptic control loop runs at 1000 Hz, with force commands sent over a 2,000,000 bps serial link (under 1 ms per packet). On the default liver mesh (13,800 nodes, 62,897 tetrahedra), profiling the software pipeline over 90 frames gives a mean same-frame latency of 25.2 ms (39.6 FPS, peak 30.1 ms) from hand-input update to force-command issuance, of which 22.2 ms is GB-cFEM/PBD, 1.4 ms is contact and force mapping, and 0.3 ms is rendering.”）；以及滤波/平滑处理（原文：“Device forces are additionally low-pass filtered (10 ms time constant) and hand positions are smoothed (30 ms time constant) to suppress transients, and the actuator command path applies a PWM slew limiter to avoid cable-snap artifacts on contact onset.”）。
+- [x] **R1-3：澄清形成性评估设计。** 说明 haptics-off 和 haptics-on 使用的病灶位置如何选择，两者在尺寸、深度和难度上是否可比；说明固定试次顺序所带来的学习/熟悉效应；如果可能，补充定位准确率、定位时间、按压次数、轨迹、置信度或误差距离等客观指标。
+  - **审稿人回复：** 系统预置了 3 个可切换的病灶位置，三者共享相同的局部半径和杨氏模量增强量，因此在尺寸和刚度对比度上按构造严格匹配（原文：“all three share the same local radius and the same Young's-modulus enhancement, so the two trial positions were matched in lesion size and stiffness contrast by construction.”）；但三者位于肝脏模型的不同解剖区域，我们并未独立验证过它们在距表面深度和局部几何复杂度上的可比性，故不能排除残余的难度差异（原文：“because the three presets sit in different anatomical regions of the model, they were not independently verified to be matched in depth beneath the surface or in local geometric complexity, so a residual difference in task difficulty between trials cannot be ruled out.”）。三个预置位置按固定、确定的顺序循环切换，并未在两次试次间随机化或做顺序平衡，因此学习/熟悉效应也无法排除（原文：“The presets are also cycled in a fixed, deterministic order rather than randomized or counterbalanced across trials, so a learning or familiarization effect between the haptics-off and haptics-on trials cannot be excluded either”）；由此观察到的策略变化已改写为“提示性的定性趋势”而非“受控比较”的结论（原文：“the strategy change reported below should therefore be read as a plausible, suggestive observation rather than an isolated causal effect of haptic feedback.”）。关于客观指标：本轮单次、诊断性的形成性走查未做自动化埋点（原文：“the task was not instrumented to automatically record quantitative indicators such as localization accuracy, time-to-localization, number of exploratory presses, hand trajectory, or error distance.”），定位准确率、时间、按压次数、轨迹、误差距离等指标当时未被记录，行为数据只通过观察和访谈定性记录，文中已如实说明这一局限（详见 R3-M4 回复中的具体原因和下一步方案）。
+- [x] **R1-4：补齐 XPBD/VegaFEM 对比的可复现信息。** 明确 substeps、iterations、timestep、材料参数、网格规模、载荷条件、边界约束和终止/收敛条件；对不同方法网格规模未完全匹配的情况谨慎表述结论。
+  - **审稿人回复：** 此条与 R3-M6 要求完全一致，共享同一处修改（详见 R3-M6 的回复）。我们核对了三种方法在大变形精度对比（Experiment 1）和体积保持对比（Experiment 2）中实际使用的设置，并在 “Application-Level Technical Validation Based on a Specific Liver Model” 小节新增了一段说明和一张标题为 “Solver Settings Used in the Displacement-Accuracy and Volume-Preservation Comparisons” 的表，其中明确列出三种方法共用同一份网格和固定点定义（原文：“All three methods were run on the same TetGen-generated liver mesh (a quality-constrained tetrahedralization of the liver surface model comprising 13,800 nodes and 62,897 tetrahedra) and the same deterministic fixed-vertex definition exported from the interactive system, so that differences in the results reflect solver behavior rather than mesh or boundary mismatches.”），以及时间步长（0.01 s）、材料参数（$E=7000$ Pa）、GB-cFEM 耦合迭代次数（30/150）、XPBD substeps（5/50，maxIterations=1）、VegaFEM Newton 迭代次数（1/2）。同时补充了加载条件（原文：“a ramped pull force was applied to a deterministic frontal target region (influence radius equal to 0.6 of the local bounding-box scale) at three loading strengths (relative magnitudes 16, 30, and 40), following a settle (120 steps) $\rightarrow$ load-ramp (240 steps) $\rightarrow$ hold (240 steps) protocol for the proposed method and for XPBD.”）、边界条件（原文：“an anchor slice covering the posterior 5\% of the model was fixed while an anterior pull slice (covering the anterior 12\% of the model, at least 24 vertices) was dragged by an imposed displacement”），以及终止/收敛条件的说明（原文：“the termination criterion for each run is a fixed step count rather than a residual- or tolerance-based convergence check: metrics are read only after the hold phase ... This mixed protocol is disclosed here so that the reported comparisons are interpreted as steady-state, post-transient values obtained under a fixed-step schedule, not as results certified by a common numerical convergence tolerance across methods.”）。Results 部分的 “Real-Time Performance and Scalability” 小节也补充了网格规模扫描方法、线程数设置（1 线程与 10 线程，最多 12 核）、以及各方法的预热/测量帧数。
+- [x] **R1-5：完成全文排版和校对。** 检查并修正 `ABSTRACTHaptic`、`INDEX TERMSLiver`、`V egaFEM`、`Y oung's`、`RESUL TS`、`Chernikovaet al.`、`Agbohet al.` 等空格、断字和转换问题。
+  - **审稿人回复：** 已全面校对，LaTeX 源码中未发现这类问题。
+- [x] **R1-补充：说清本文相对作者既有工作的新贡献。** 明确 GB-cFEM 和指尖触觉设备已分别发表，本文的新贡献是将它们与手部追踪、肝脏病灶定位任务和力映射集成为可运行的实时闭环系统。
+  - **审稿人回复：** 此条与 R3-0 要求完全一致，共享同一处改动（详见 R3-0 的回复）。我们在 “Related Work” 的 “Position of This Work” 小节新增一句（原文：“The GB-cFEM solver used here has previously been validated as a standalone real-time large-deformation algorithm \cite{wang2025group}, and the fingertip haptic device used here has previously been validated as a standalone lightweight actuator \cite{xu2025lightweight}; neither prior study integrated the two with hand tracking into a running, task-oriented closed loop, which is what the present work adds.”），直接点名 GB-cFEM 算法和指尖触觉设备各自已作为独立成果发表，本文的增量贡献是把二者与手部追踪一起集成进一个可运行的病灶定位任务闭环。Discussion 的 “From Algorithm Validation to System-Prototype Evaluation” 小节开头原有的类似表述保持不变，两处相互印证。
+- [x] **R1-补充：补充相关文献与对比。** 加强医学模拟器验证方法、触觉渲染评估、手术模拟用户研究设计，以及近期肝脏/腹部触诊系统的文献与对比；通用教育文献只用于动机，不用于证明本系统已具有教育效果。
+  - **审稿人回复：** 此条与 R2-4 关于肝脏/腹部触诊系统对比的要求重叠，一并回应（详见 R2-4 的回复）。除此之外，我们还在 “Haptic Device Degrees of Freedom and Low-Dimensional Haptic Rendering” 小节补充了触觉渲染定量评测基准和刚度辨别心理物理学研究（原文：“Independently of any specific device, benchmarking frameworks have also been proposed to quantify grounded force-feedback performance (e.g., workspace, free-space residual force, and renderable stiffness) rather than relying on user self-report alone \cite{fazlollahi2023haptify}, and psychophysical studies of stiffness discrimination under different haptic postures further inform how reliably users can distinguish the kind of stiffness contrast targeted here \cite{hafiz2022effect}.”）；在 “Formative Expert Evaluation and Observation of Lesion-Search Behavior” 小节补充了手术模拟效度论证方法、模拟研究试点/精化策略，以及一篇关于腹部触诊模拟评估局限性的负结果研究（原文：“This staged strategy follows guidance that a simulation should first be piloted and iteratively refined before a larger validity study is undertaken \cite{cheng2016reporting,dasilva2019piloting}, and the view that validity is not a fixed property of a simulator but must be argued for a specific intended use rather than asserted from a single expert opinion \cite{cook2016validation,borgersen2018gathering}; prior negative results with abdominal-palpation simulators also caution that even a well-designed simulated task does not automatically yield a reliable competency measure \cite{xu2023difficulties}.”），用于支撑“先做单专家形成性评估、暂不做大规模效度声称”这一设计选择；在 Likert 结果段落补充了有序量表数据解读的方法学引用（原文：“consistent with guidance on interpreting ordinal rating data \cite{sullivan2013analyzing}, they are not statistically generalizable usability evidence and should not be interpreted as validating training effectiveness.”）。通用教育文献（如 Wisniewski 等）在 Introduction 中的作用保持不变，仍只用于说明研究动机，不作为本系统已具有教育效果的证据。
+
+## Reviewer 2
+
+- [x] **R2-1：** 扩展对系统临床相关性和潜在教育影响的讨论，但不将“潜在价值”写成“已证实效果”。
+  - **审稿人回复：** 我们重写了 Conclusion 最后一段，将原先直接断言系统“满足现代医学教育实际需求”“达到提升学习效率的教育标准”的表述改为更克制的措辞（原文：“In summary, this study demonstrates that a physics-driven, GB-cFEM-based haptic simulation loop can be engineered to run in real time on compact, consumer-grade hardware, and that a surgical expert could extract physically meaningful stiffness cues from it during a brief walkthrough. These results support the technical feasibility and system-level connectivity of the proposed architecture, and they suggest, without by themselves demonstrating, that such systems could eventually help address the hardware-accessibility and high-information-feedback needs of high-frequency medical training. Establishing actual training effectiveness, learning-efficiency gains, or clinical-grade fidelity will require the structured, multi-participant, novice-and-expert study outlined in the Future Research Directions subsection, and no such claim is made on the basis of the present single-expert formative evaluation.”）。Abstract 中也同步加入了类似的克制表述。
+- [x] **R2-2：** 更充分地说明为什么采用单一专家形成性评估，并明确其目的是识别工程问题，而不是验证训练效果。
+  - **审稿人回复：** 我们在 “Formative Expert Evaluation and Observation of Lesion-Search Behavior” 小节开头新增了一段设计说明（原文：“Before investing in a structured multi-participant protocol, it was necessary to first determine whether the simplified anatomical constraints, the current material model, and the 1-DOF force channel could even produce mechanically and clinically sensible feedback; running a large novice-and-expert study prior to this engineering diagnosis would have been premature and resource-inefficient.”）：在投入大规模、统计有效的多参与者研究之前，我们需要先确认简化的解剖约束、当前材料模型以及 1-DOF 力反馈通道是否能够产生在力学和临床上合理的反馈。紧接着的一句也明确指出该评估的目标（原文：“This evaluation was a formative expert evaluation. Its goal was to identify system feasibility and engineering boundaries, not to measure training effectiveness, skill acquisition, or learning outcomes; a single expert's walkthrough is not intended, and is not sufficient, to support such claims.”）：识别系统可行性和工程边界，而不是测量训练效果、技能习得或学习结果，单一专家的走查本身也不足以支撑此类结论。
+- [x] **R2-3：** 进一步澄清当前系统在触觉真实性和解剖真实性方面的限制。
+  - **审稿人回复：** 此前散落在 “Interaction Fidelity During Free Exploration” 小节、“From Algorithm Validation to System-Prototype Evaluation” 小节以及腹腔碰撞外壳描述中的相关观察已涉及材料真实性、解剖约束简化和 1-DOF 力方向限制等问题，但未被显式归纳为两个维度。为此我们在 Discussion 的 “From Algorithm Validation to System-Prototype Evaluation” 小节新增一段整合性说明，将这些限制拆分为两个不应混淆的真实性维度（原文：“Anatomical realism concerns how faithfully the model's geometry and boundary conditions represent the real organ and its surroundings: the liver is treated as a homogeneous, near-incompressible linear-elastic body without a distinct capsule layer, the ligamentous attachment network is reduced to three fixed anatomical anchor regions rather than a continuous, direction-dependent constraint, and the surrounding abdominal environment is approximated by a rest-pose envelope shell rather than a segmented reconstruction of the abdominal wall, diaphragm, and adjacent organs. Haptic realism concerns how faithfully the rendered force reproduces what a hand would feel during contact: the 1-DOF actuator conveys only the scalar magnitude of contact-normal resistance at each fingertip, and it cannot render tangential shear during sliding, the enveloping squeeze sensation of real fingertip contact, or more complex, spatially distributed tissue-contact feedback such as friction, local texture, or the differential response of multiple simultaneous contact points across the hand. The same absence of material nonlinearity and capsule behavior that limits anatomical realism also flattens the progressive-stiffening cue that a real liver would provide under deep pressing.”）：解剖真实性（均匀线弹性体、无独立包膜层，韧带附着网络简化为三个固定锚点区域，周围腹腔环境用静息位包络外壳近似）和触觉真实性（1-DOF 执行器只能输出接触法向阻力的标量大小，无法呈现切向剪切、包裹挤压感、摩擦/局部纹理等）。文中同时说明（原文：“Both dimensions were simplified deliberately in order to preserve real-time performance and consumer-grade deployability, and both remain open engineering targets rather than settled properties of the present system.”），这两个维度都是为了保证实时性能和消费级硬件可部署性而被主动简化的，目前仍是待解决的工程目标，而不是已经证实无问题的系统属性。
+- [x] **R2-4：** 增加与现有肝脏触诊模拟器和训练系统的更详细对比。
+  - **审稿人回复：** 此条与 R1-补充中“近期肝脏/腹部触诊系统对比”的要求完全一致，共享同一处改动。我们在 “Liver-Related Simulation Systems and Training Tasks” 小节新增一段对比（原文：“More directly comparable to this subtask, recent robotic palpation systems localize hidden lesions through stiffness-adaptive probing or force/deformation-based sensing rather than imaging \cite{fan2026stiffness,lee2025imagefree}, and physical abdominal trainers have embedded tunable-stiffness nodules with force sensing to support bare-hand palpation practice \cite{he2021abdominal}, while surrogate finite-element models have been used to visualize abdominal tissue stress near real time for examination training \cite{leong2022surrogate}. These systems target the same lesion-search problem but differ from the present work either in modality (robot-driven tactile sensing rather than a haptic-rendering VR trainer) or in physical form (a fixed phantom rather than a reconfigurable virtual model with an actively rendered, physics-driven force loop).”）：近期的机器人触诊系统通过变刚度或力/形变探测在无影像引导下定位隐藏病灶；实体腹部教具通过可调刚度结节配合力传感支持徒手触诊练习；代理有限元模型用于近实时可视化腹部组织应力以支持体格检查训练。这些系统针对的是同一类病灶搜索问题，但在形式或载体上与本文不同。
+
+## Reviewer 3
+
+### 总体意见
+
+- [x] **R3-0：澄清新颖性。** 更明确地说明本文与作者既有 GB-cFEM 和触觉设备工作相比新在哪里。
+  - **审稿人回复：** 此条与 R1-补充中的“新贡献”要求完全一致，共享同一处改动（详见 R1-补充的回复）。我们在 “Position of This Work” 小节新增一句显式说明（原文：“The GB-cFEM solver used here has previously been validated as a standalone real-time large-deformation algorithm \cite{wang2025group}, and the fingertip haptic device used here has previously been validated as a standalone lightweight actuator \cite{xu2025lightweight}; neither prior study integrated the two with hand tracking into a running, task-oriented closed loop, which is what the present work adds.”）：GB-cFEM 已作为独立的实时大变形算法验证过，指尖触觉设备也已作为独立的轻量执行器验证过，本文的增量贡献是把二者与手部追踪一起集成为一个针对病灶定位任务、可运行的闭环系统，这也是 Discussion 部分已有类似表述的直接对应。
+
+### Major Issues
+
+- [x] **R3-M1：** 单一外科专家的评估不足以支持广泛的训练或临床使用声称；将结果限定为早期形成性反馈。
+  - **审稿人回复：** 我们已在全文多处对结论范围做了限定（原文分别见 Abstract 的 “this single-participant walkthrough provides diagnostic, exploratory feedback and does not by itself support claims of clinical-grade training efficacy, educational impact, or learning outcomes”；“Formative Expert Evaluation and Observation of Lesion-Search Behavior” 小节的 “This evaluation was a formative expert evaluation. Its goal was to identify system feasibility and engineering boundaries, not to measure training effectiveness, skill acquisition, or learning outcomes”；Discussion 的 “From Algorithm Validation to System-Prototype Evaluation” 小节开头的 “this single-expert, walkthrough-based evaluation is formative and diagnostic in nature: it is designed to expose engineering boundaries rather than to establish clinical-grade training efficacy, educational impact, or learning outcomes”；以及 Conclusion 的 “no such claim is made on the basis of the present single-expert formative evaluation”），明确单一外科专家的走查评估只能提供早期、诊断性的形成性反馈，用于识别系统的工程边界，不能作为支持广泛训练效果或临床使用的证据。
+- [x] **R3-M2：** 论文没有测量新手表现、技能提升、保持性或向真实临床任务的迁移；因此降低教育和学习效果声称，或补充相应实验。
+  - **审稿人回复：** 我们选择“降低声称”而非“补充实验”，因为当前阶段的核心目标仍是先确认系统的工程可行性，再决定是否值得投入一次结构化的多参与者学习效果研究（详见对 R2-2 的回复）。在此基础上，Discussion 的 “From Algorithm Validation to System-Prototype Evaluation” 小节新增了一句直接对应审稿人四项具体指标的显式说明（原文：“Concretely, the present study does not evaluate novice performance, measure skill improvement or retention over repeated practice, or examine transfer to real clinical palpation tasks; the surgeon who took part served only to diagnose whether the system's physics-driven cues are mechanically and clinically plausible, not to represent trainee learning. The discussion of medical-education needs in the Introduction is accordingly used only to motivate why such a system could be worth building, and should not be read as evidence that the present prototype already achieves an educational effect; establishing that would require the dedicated novice-and-expert learning study outlined in the Future Research Directions subsection.”）：本研究没有评估新手表现，没有测量重复练习后的技能提升或保持性，也没有检验向真实临床触诊任务的迁移；参与的外科专家只是用来诊断系统的物理驱动反馈是否在力学和临床上合理，并不代表学员的学习过程。Introduction 中关于医学教育需求的讨论只用于说明研究动机，不应被读作已取得教育效果的证据。
+- [x] **R3-M3：** 加强触觉反馈的定量验证；补充实际力准确性、延迟、标定、执行器限制、力分辨率、饱和和交互稳定性。
+  - **审稿人回复：** 此条与 R1-2 要求高度一致，共享同一处改动，具体的英文原文引用详见 R1-2 的回复：可感知力范围 0.04 N–1.36 N 及饱和行为、逐用户力阈值标定、振动频率响应线性度（100–180 Hz，相关系数 0.9998）、实测同帧延迟 25.2 ms（39.6 FPS，物理求解 22.2 ms + 接触/力映射 1.4 ms + 渲染 0.3 ms，串口 <1 ms），以及设备力/手部位姿滤波与 PWM 斜率限制。
+- [x] **R3-M4：** 围绕核心的病灶定位任务提供客观结果，例如定位准确率、时间、定位误差、按压次数，以及 haptics-on/off 对比。
+  - **审稿人回复：** 此条与 R1-3 后半部分要求一致，一并回应。我们没有为了满足这条意见而事后编造或估算数字，而是在 “Formative Expert Evaluation and Observation of Lesion-Search Behavior” 小节说明三点：（1）本轮未做自动化埋点，定位准确率、时间、按压次数、轨迹、误差距离当时未被记录（原文：“the task was not instrumented to automatically record quantitative indicators such as localization accuracy, time-to-localization, number of exploratory presses, hand trajectory, or error distance.”）；（2）部分指标本身在这种连续、双手、探索式触诊中缺乏统一的操作性定义（原文：“a 'press' has no unambiguous boundary when the expert freely alternates between sliding, sustained compression, and brief taps, and an 'error distance' presumes a well-defined target point, whereas the simulated lesion is a diffuse region of elevated modulus rather than a point target.”）；（3）即使记录了，两次试次的病灶位置和顺序不同、并非随机对照设计，任何单次数值都只是 $n=1$ 且存在混杂因素的比较（原文：“any single-trial values for these indicators would amount to an $n=1$, confounded comparison; reporting them with numerical precision could imply a level of statistical or causal rigor that this formative walkthrough is not designed to support”）。我们同时给出了具体的下一步方案（原文：“the interaction pipeline already logs per-frame fingertip proxy positions and contact state internally for haptic-force computation, and a concrete next step is to first define operationalized versions of these indicators (for example, a contact-force threshold and minimum dwell time to demarcate a discrete press, and a signed distance to the nearest lesion boundary rather than to a single point) and then enable this logging within a structured, randomized, multi-participant study capable of supporting a controlled haptics-on/off comparison.”）。
+- [x] **R3-M5：** 加强肝脏模型的生物力学依据；为正常组织 Young's modulus、病灶刚度比、病灶尺寸以及边界约束提供文献、仿体数据或临床标定依据。
+  - **审稿人回复：** 我们在 “Liver Model and Lesion Configuration” 小节新增了两段说明，为参数表中的四项设置分别补充了文献依据：（1）正常组织 Young's modulus 与（2）病灶刚度比（原文：“Ex vivo and phantom studies of liver and liver-mimicking tissue report background stiffness on the order of a few to a few tens of kPa \cite{he2021abdominal,lee2025imagefree}, and the same body of work reports metastatic or tumor-mimicking inclusions with several-fold higher stiffness than the surrounding tissue \cite{he2021abdominal,lee2025imagefree}; the roughly 4:1 lesion-to-background modulus ratio used here falls within this reported contrast range rather than being set purely for perceptual convenience.”）——现有腹部仿体与机器人触诊文献报告正常肝脏/仿体背景刚度为几到几十 kPa 量级，病灶/肿瘤仿体刚度相对背景组织有数倍增强，本文约 4:1 的病灶-背景模量比落在该对比范围内；（3）病灶尺寸（原文：“The preset lesion size is likewise chosen to be consistent with the clinical size range of focal liver lesions that remain identifiable by manual palpation: a retrospective series of intraoperative liver-metastasis detection found that most nodules subsequently identified by bimanual palpation were on the order of 1 cm or smaller and located at or near the liver surface \cite{hata2011value}.”）——引用一项结直肠癌肝转移术中探查的回顾性研究，其结果显示经双手触诊确认的新发结节大多在 1 cm 量级或更小、位于或接近肝脏表面；（4）边界约束（原文：“These regions were chosen because they correspond to where the liver is anatomically tethered by the coronary and triangular ligaments and by the inferior vena cava, which prior work on liver boundary-condition modeling identifies as the dominant anatomical constraints on liver motion \cite{nikolaev2020estimation}.”）——引用一项肝脏患者特异性仿真边界条件建模研究，指出肝脏的主要解剖固定结构是冠状韧带、三角韧带及下腔静脉附着，本文设定的三处固定区域（肝门、下腔静脉沟、裸区）正对应这些解剖附着位置。我们也照该文献承认当前的固定边界是简化近似（原文：“consistent with that same prior work, it is a simplified fixed-boundary approximation rather than a compliant, ligament-level model, which is a source of boundary-condition error relative to a fully patient-specific simulation.”），并未对韧带柔性做定量建模，这是相对患者特异性仿真的已知误差来源，相应局限性说明已同步补充在腹腔碰撞外壳段落中（原文：“it does not yet model the anterior falciform ligament or authentic abdominal contact relations individually, nor does it represent ligament compliance the way a patient-specific boundary-condition model would \cite{nikolaev2020estimation}.”）。
+- [x] **R3-M6：** 对 XPBD 和 VegaFEM benchmark 提供更完整的实现信息，包括 solver settings、mesh scale、loading conditions、boundary constraints、timesteps、substeps 和 convergence criteria，使结果可复现。
+  - **审稿人回复：** 此条与 R1-4 要求完全一致，共享同一处修改，具体的英文原文引用详见 R1-4 的回复。“Application-Level Technical Validation Based on a Specific Liver Model” 小节新增的标题为 “Solver Settings Used in the Displacement-Accuracy and Volume-Preservation Comparisons” 的表列出了 timestep（0.01 s）、材料参数（$E=7000$ Pa, $\nu=0.49$）及各方法的 solver-level 迭代/子步设置（GB-cFEM 耦合迭代 30/150、XPBD substeps 5/50、VegaFEM Newton 迭代 1/2）。正文补充了 mesh scale（三方法共用同一份 TetGen 生成的肝脏四面体网格，13,800 个节点、62,897 个四面体）、loading conditions（Experiment 1 的三档拉力强度、settle/ramp/hold 步数）和 boundary constraints（Experiment 2 的锚定/拖拽切片比例、拖拽位移量、两组泊松比设置）。我们还新增一段说明 convergence/终止判据：Experiment 1、2 均按固定步数的 settle/ramp(drag)/hold 协议读取 hold 阶段稳态值，而非基于残差容差的收敛检查；VegaFEM 的 Newton 迭代逐步内收敛，本方法与 XPBD 用固定外层迭代/子步数，这是混合协议，而非三种方法共享同一数值收敛容差。Results 部分 “Real-Time Performance and Scalability” 小节也补充了网格规模生成方式、线程数和预热/测量帧数设置，使对比具备可复现所需的细节。
+- [x] **R3-M7：** 充分说明 1-DOF 设备的限制：只能表达法向阻力，不能表达切向力、包裹/挤压感和复杂组织接触反馈。
+  - **审稿人回复：** 此条与 R2-3 涉及的“触觉真实性”维度高度相关，共享同一处改动（详见 R2-3 的回复）。我们扩写了 Discussion 的 “From Algorithm Validation to System-Prototype Evaluation” 小节中关于触觉真实性的这段文字（原文：“the 1-DOF actuator conveys only the scalar magnitude of contact-normal resistance at each fingertip, and it cannot render tangential shear during sliding, the enveloping squeeze sensation of real fingertip contact, or more complex, spatially distributed tissue-contact feedback such as friction, local texture, or the differential response of multiple simultaneous contact points across the hand.”），使其显式覆盖审稿人提到的三类限制：(1) 法向阻力：1-DOF 执行器只能在每个指尖输出接触法向阻力的标量大小；(2) 切向力与包裹/挤压感：无法呈现滑动时的切向剪切力，也无法呈现真实指尖接触组织时的包裹挤压感；(3) 复杂组织接触反馈：无法呈现摩擦、局部纹理，以及手部多个接触点之间空间上分布、彼此有差异的接触反馈模式。此外，Results 部分 “Diagnosis of Engineering Constraints and Evaluation of Force-Rendering Quality” 小节中专家在 Task C 里对该硬件瓶颈的原始观察描述保持不变（原文：“the hardware limitation in feedback directionality. The current 1-DOF output can convey only one-directional normal resistance, while lacking tangential force and more complex reaction-force distribution. As a result, it cannot reproduce the enveloping squeeze sensation that a real finger experiences when pressed into tissue and surrounded by the material.”），作为这一限制的实证支持。
+- [x] **R3-M8：** 降低过强结论；当前研究只能证明技术可行性和早期专家反馈，不能证明系统已是临床级训练器或能够改善医学学习成效。
+  - **审稿人回复：** 我们重写了 Conclusion 的总结段（原文：“In summary, this study demonstrates that a physics-driven, GB-cFEM-based haptic simulation loop can be engineered to run in real time on compact, consumer-grade hardware, and that a surgical expert could extract physically meaningful stiffness cues from it during a brief walkthrough. These results support the technical feasibility and system-level connectivity of the proposed architecture, and they suggest, without by themselves demonstrating, that such systems could eventually help address the hardware-accessibility and high-information-feedback needs of high-frequency medical training. Establishing actual training effectiveness, learning-efficiency gains, or clinical-grade fidelity will require the structured, multi-participant, novice-and-expert study outlined in the Future Research Directions subsection, and no such claim is made on the basis of the present single-expert formative evaluation.”）：删除了原先“系统满足现代医学教育实际需求”“达到提升学习效率的教育标准”等过强断言，改为仅陈述已证明的部分——GB-cFEM 触觉闭环可在消费级硬件上实时运行，专家能从中提取有物理意义的刚度线索——并说明训练有效性、学习成效改善或临床级训练器地位尚未被证明，需要后续结构化多参与者（新手+专家）研究才能验证。Abstract 与 Discussion 中的相应表述也做了一致的弱化处理。
+
+### Minor Issues
+
+- [x] **R3-m1：** 修正出版日期等占位信息及其他模板/格式不一致问题。
+  - **审稿人回复：** 稿件中的 “Date of publication xxxx 00, 0000” 及 DOI 占位符是 IEEE Access 官方模板（`ieeeaccess.cls`）自带的标准字段，按模板设计应在正式录用、进入排版流程后由编辑部/出版方填入真实信息，作者投稿阶段按惯例保持原样，故未对这两处做改动，仅在回复信中说明。其他模板/格式问题与 R1-5 共享同一处核对工作（详见 R1-5 回复），未发现残留的空格、断字或字符转换问题。
+- [x] **R3-m2：** 定义并统一使用 `lesion`、`tumor` 和 `hard region` 等术语。
+  - **审稿人回复：** 全文以 `lesion` 为主导术语（约 50 处），但表格和两处正文段落中残留了 `tumor`（2 处）和 `hard region`（5 处），指的其实是同一个构造：局部杨氏模量增强区域。我们已将这些残留统一改为 `lesion`，并在 “Liver Model and Lesion Configuration” 小节新增一句显式定义（原文：“Throughout this paper, ``lesion'' refers to this locally stiffness-enhanced tissue region: the term is used in a general sense to denote a mechanically distinguishable abnormal region rather than a specific pathological diagnosis such as a tumor.”）：`lesion` 在本文中泛指力学上可区分的局部异常组织区域，不预设具体病理诊断。我们没有改用 `tumor` 作为统一术语，因为该词特指肿瘤性病变，会给当前仅做了局部模量增强、尚未验证病理类型的模型引入缺乏证据支撑的临床断言，与本轮大修“避免过强声称”的方向不一致。
+- [x] **R3-m3：** 改善图和表的可读性，特别是性能图和系统截图的标签大小、caption 及实验条件说明。
+  - **审稿人回复：** 我们逐一核对了性能图和系统截图并做了修改：(1) 性能对比图（caption 现为：“Frame rate versus mesh scale (log-scale FPS axis) for the proposed method (10 threads), XPBD under the Fast and Reference substep configurations defined in Section IV-A, and VegaFEM. The proposed method maintains better real-time performance than VegaFEM over a broad tetrahedral range and still retains basic interactivity on larger-scale models.”）此前包含 log-scale 和 linear-scale 两个子图，但 linear-scale 子图会把除 XPBD Fast 外的三条曲线压缩到难以区分的窄带内，未提供额外信息，我们移除该子图只保留 log-scale 图，并将图例中的实验条件从缩写展开为完整参数，caption 中补充说明各方法对应的具体配置。(2) 系统截图中此前包含开发调试用的界面文字和内部变量名 `Tumor` 标注，已替换为 `Lesion`；专家评估现场照片中屏幕上残留的调试指令列表做了模糊处理。其余图表的坐标轴、图例字号在双栏排版下清晰可读，未做进一步放大；如排版阶段仍偏小，可在定稿前根据校样调整。
+- [x] **R3-m4：** 谨慎解释来自单一参与者的 Likert 评分，只将其作为定性形成性反馈，不将其解释为可推广的可用性证据。
+  - **审稿人回复：** 我们在标题为 “Likert-Scale Ratings of System Usability and Force-Rendering Quality” 的表所对应的段落末尾新增一句说明（原文：“Because these scores come from a single surgical expert, they are reported only as qualitative, formative feedback that corroborates the verbal walkthrough findings; consistent with guidance on interpreting ordinal rating data \cite{sullivan2013analyzing}, they are not statistically generalizable usability evidence and should not be interpreted as validating training effectiveness.”）：由于这些评分来自单一外科专家，它们只作为定性、形成性的反馈来印证访谈中的口头走查发现，不构成统计意义上可推广的可用性证据，也不应被解读为对训练效果的验证。
+- [x] **R3-m5：** 说明补充视频展示的内容，并说清病灶是只在演示中可见，还是在正式评估中也可见。
+  - **审稿人回复：** 我们在回复信中说明如下，未对论文正文做改动（正文未直接引用该补充视频）。补充视频约 54 秒、无音轨，依次展示：(1) 系统总览，肝脏四面体网格与多根彩色线框指尖代理体的整体布局；(2) 单点深压下的实时大变形演示，表面叠加变形/接触热力图，展示 GB-cFEM 核心在大变形下的实时求解能力；(3) 双手操作演示，一侧手牵拉暴露组织，另一侧手触诊，展示左手暴露、右手触诊的分工。第三段演示中为便于观众看清"牵拉后病灶被暴露"这一交互逻辑，病灶被渲染为肉眼可见的高亮区域，这一可视化处理仅用于演示目的，不代表正式评估中的实际条件——在正式的形成性评估任务中，病灶始终没有任何视觉提示，专家只能依靠局部形变和触觉差异推断位置，与正文对病灶隐蔽性的描述一致；视频高亮与评估中的盲触条件服务于不同目的，二者并不矛盾。
+- [x] **R3-m6：** 核对所有参考文献信息，特别是 2025 年文献的作者、标题、卷期、页码/文章号和 DOI。
+  - **审稿人回复：** 我们已核对并补全 References 中三篇 2025 年文献的书目信息：`wang2025group`（IEEE Access, vol. 13, pp. 179041–179056, DOI: 10.1109/ACCESS.2025.3616629）、`xu2025lightweight`（IEEE Transactions on Haptics, vol. 18, no. 3, pp. 626–639, DOI: 10.1109/TOH.2025.3581014），以及 `bjelland2025haptic`（IEEE Transactions on Haptics, vol. 18, no. 3, pp. 569–581）。
+- [x] **R3-m7：** 压缩 Introduction 和 Discussion 中冗长、重复的内容，完成一轮仔细的英语语言编辑。
+  - **审稿人回复：** 我们对 Introduction 和 Discussion 做了一轮压缩和语言编辑。Introduction 中，"高频练习""高信息反馈"等表述原本在多个段落及三条 contribution 列表中反复出现三到四次，现合并为一段更紧凑的论述（原文：“Motivated by these two needs, this study builds a real-time physical computation loop on consumer-grade hardware, aiming to remove the physical-space and equipment constraints of traditional simulators and to close the loop between FEM-based large-deformation computation and force response, so that fingertip feedback tracks the modulus changes of internal liver lesions rather than remaining a static cue.”），只在首次出现时完整表述，后文改为简短回指。Discussion 中，开头一段原样重复了 “Position of This Work” 小节已说明过的贡献表述，现改为一句回指性过渡句（原文：“As established in the Position of This Work discussion, the present contribution is the task-oriented integration of the previously separate GB-cFEM solver and fingertip haptic device into a medical palpation scenario, evaluated here through application-level technical validation and formative expert diagnosis.”）；总结专家发现的三点问题时，原文重复了 Results 部分已写过的观察细节，现精简为只保留这些观察对触诊判断逻辑的因果影响（原文：“The absence of material nonlinearity weakens the operator's ability to probe deep lesions based on progressive resistance; the simplified anatomical constraints let organ-level displacement mask local hardness abnormalities near the margins; and the lack of tangential cues in the 1-DOF channel forces the operator to rely on dense vertical pressing rather than sliding to outline lesion boundaries.”）。“Application Focus and Future Evolution of the System” 与 “Future Research Directions” 两小节原各自列出几乎相同的工程改进清单，现合并为一份，只保留在 “Future Research Directions” 中（原文：“On the engineering side, the next iteration will prioritize a nonlinear, capsule-aware material model, more complete ligament and abdominal boundary constraints for stronger organ anchoring, integration of surgical-instrument proxies to correct the interaction paradigm, and improved tangential-force compensation and synchronization between the physics engine and the haptic loop.”）。
+
+## 最后提交前
+
+- [ ] 把审稿人回复caption 改成实际的表格number
+- [x] 不用每条都感谢，太乱了
+- [x] 看看有没有问号
+- [ ] 按 Reviewer 1、2、3 分组写完 point-by-point response，确保上述每个 checkbox 都有对应回复和修改位置。
+- [ ] 逐页检查 clean PDF 和 highlighted PDF，确认没有断字、重叠、缺图、引用错误或未高亮的修改。
+- [ ] 确认 LaTeX、clean PDF、highlighted PDF、Response to Reviewers 和补充视频内容一致。
+- [ ] 由所有作者审阅并同意最终重投版本。
+

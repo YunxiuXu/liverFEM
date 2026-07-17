@@ -1,0 +1,482 @@
+SOURCE_FILE: s12909-023-04861-6.pdf
+SOURCE_TYPE: pdf
+-----
+Xu et al. BMC Medical Education   (2023) 23:897                                                                                            BMC Medical Education
+https://doi.org/10.1186/s12909-023-04861-6
+
+
+
+
+    RESEARCH                                                                                                                                                 Open Access
+
+Difficulties in using simulation to assess
+abdominal palpation skills
+Xiaowei Xu1,2†, Haoyu Wang2,3†, Jingfang Luo1,2, Changhua Zhang1,2, Lars Konge2,4 and Lina Tang1,2*
+
+
+
+    Abstract
+    Objectives Abdominal palpation is an essential examination to diagnose various digestive system diseases. This
+    study aimed to develop an objective and standardized test based on abdominal palpation simulators, and establish
+    a credible pass/fail standard of basic competency.
+    Methods Two tests were designed using the newly developed Jucheng abdominal palpation simulator (test 1)
+    and the AbSim simulator (test 2), respectively. Validity evidence for both tests was gathered according to Messick’s
+    contemporary framework by using experts to define test content and then administering the tests in a highly
+    standardized way to participants of different experience. Different simulator setups modified by the built-in software
+    were selected from hepatomegaly, splenomegaly, positive McBurney’s sign plus rebound tenderness, gallbladder
+    tenderness (Murphy’s sign), pancreas tenderness, and a normal setup without pathologies, with six sets used in test 1
+    and five sets used in test 2. Different novices and experienced were included in the tests, and test 1 was also adminis-
+    tered to an intermediate group. Scores and test time were collected and analyzed statistically.
+    Results The internal consistency reliability of test 1 and test 2 showed low Cronbach’s alphas of 0.35 and -0.41,
+    respectively. Cronbach’s alpha for palpation time across cases were 0.65 for test 1 and 0.76 for test 2. There was no sta-
+    tistical difference in total time spent and total scores among the three groups in test 1 (P-values (ANOVA) were 0.53
+    and 0.35 respectively), nor between novices and experienced groups in test 2 (P-values (t-test) were 0.13 and 1.0
+    respectively). It was not relevant to try to establish pass/fail standards due to the low reliability and lack of discrimina-
+    tory ability of the tests.
+    Conclusions It was not possible to measure abdominal palpation skills in a valid way using either of the two
+    standardized, simulation-based tests in our study. Assessment of the patient’s abdomen using palpation is a chal-
+    lenging clinical skill that is difficult to simulate as it highly relies on tactile sensations and adequate responsiveness
+    from the patients.
+    Keywords Abdominal palpation, Simulation, Assessment, Validity
+
+
+
+
+†
+Xiaowei Xu and Haoyu Wang are considered as co-first authors.
+*Correspondence:
+Lina Tang
+tanglina@mail.sysu.edu.cn
+Full list of author information is available at the end of the article
+
+
+                                             © The Author(s) 2023. Open Access This article is licensed under a Creative Commons Attribution 4.0 International License, which
+                                             permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the
+                                             original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or
+                                             other third party material in this article are included in the article’s Creative Commons licence, unless indicated otherwise in a credit line
+                                             to the material. If material is not included in the article’s Creative Commons licence and your intended use is not permitted by statutory
+                                             regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this
+                                             licence, visit http://creativecommons.org/licenses/by/4.0/. The Creative Commons Public Domain Dedication waiver (http://creativecom-
+                                             mons.org/publicdomain/zero/1.0/) applies to the data made available in this article, unless otherwise stated in a credit line to the data.
+Xu et al. BMC Medical Education   (2023) 23:897                                                                 Page 2 of 8
+
+
+
+
+Introduction                                                  However, this study did not provide sufficient validity
+Abdominal palpation is an essential body examination to       evidence for the simulation-based test that was used [6].
+diagnose various digestive system diseases, e.g. liver cir-      Abdominal palpation is complex and involves different
+rhosis, ascites, etc. [1]. However, most pre-interns and      depths of palpation and different organ-based maneu-
+interns find it challenging to perform abdominal palpa-       ver skills. Appropriate pressure and speed are essential
+tion accurately and effectively because it requires sophis-   for effective abdominal palpation [15]. Force feedback
+ticated manual skills and the ability to interpret a large    has been increasingly used in simulation studies, which
+volume of clinical information [1–3]. Therefore, it is        includes different modalities: visual feedback, auditory
+essential to determine the optimal way to train abdomi-       feedback, tactile feedback, and their combinations [16].
+nal palpation to ensure that students meet the require-       Hsieh et al. designed digital abdominal palpation devices
+ments of clinical practice.                                   to assess the pressure of palpation on healthy participants
+  There are two essential processes in learning: prac-        [15]. S. Riek et al. developed a haptic device to assess the
+tice and testing. Traditionally, body examination has         haptic feedback forces in a simulator aiming to train the
+been taught using the apprenticeship model where nov-         skills of gastroenterology assistants in abdominal pal-
+ices practice directly on patients supervised by a sen-       pation during colonoscopy [17]. Both these studies are
+ior colleague [4]. Experienced faculty is necessary for       enlightening and have paid attention to force feedback
+supervising and providing feedback. However, ethical          in the use of the simulator as a training model, but none
+considerations, lack of supervisors, and increased con-       of them have developed a valid abdominal palpation test
+cerns for patient safety make the practice opportunities      using the simulators.
+shrink. Students can practice manual skills on each other        This study aimed to develop two objective and stand-
+or use standardized patients, but the lack of patholo-        ardized tests based on two different abdominal palpation
+gies and resemblance to the real clinical scenario reduce     simulators, gather valid evidence for the tests, and estab-
+the learning effect [5, 6]. Simulation-based training on      lish credible pass/fail standards that can ensure basic
+physical phantoms and virtual-reality simulators would        competency before continuing to clinical practice.
+allow trainees to practice repeatedly in a standardized
+and completely safe environment until basic compe-            Methods
+tency is acquired [6, 7]. Various abdominal simulators        The first test was based on a newly developed simulator
+have been manufactured and used in the training of            from our own center and the second test used a commer-
+medical students, ranging from manikins with physical         cially available simulator. Validity evidence for both two
+organs inserted into the cavity [8, 9] to models (ACDET’s     tests was gathered according to Messick’s contemporary
+ABSIM system) with computerized automatic control             framework by employing experts to define tests (validity
+[6]. Practicing on the simulators have improved students’     evidence for content) and then administering the tests in
+abdominal examination skills on the simulators but it is      a highly standardized way (validity evidence for response
+unknown if skills are transferable to real patients.          process) to participants of different experience (validity
+  The other crucial element in the learning process –         evidence for internal structure, relationship to other vari-
+testing of skills—also deserves our attention. Mastery        ables, and consequences). To avoid a learning-by-testing
+Learning is a very efficient and recommended training         effect, we used different participants for data collection
+method where trainees continue to practice until they         for each test. The process was slightly different for the
+have reached a pre-defined mastery level [10]. A good test    two tests due to differences in simulator content and
+with solid evidence of validity is a prerequisite for mas-    practical experience gathered during data collection for
+tery learning [11]. The current standard of exploring a       the first test.
+test requires validity evidence from five sources: content,
+response process, internal structure, relations with other    The tests
+variables, and consequences [12]. Assessments based on        The newly developed simulator (From Jucheng, Inc.,
+objective metrics provided by virtual-reality simulators      Yingkou, China) used for the first test consists of a phan-
+have been used for other procedures to provide auto-          tom with software that can change the size of the liver,
+matic, unbiased test results [13, 14], but to our knowl-      gallbladder, and spleen, and the degree of tenderness and
+edge, this has not been done for abdominal palpation.         rebound pain of 14 tenderness points across the abdo-
+Hamm et al. used the AbSim simulator to do abdominal          men (Figs. 1 and 2).
+palpation competence assessment before and after train-         The Jucheng simulator is a combination of a physi-
+ing for 3rd year medical students, and they found that        cal phantom and computer technology to allow training
+guided abdominal simulator practice increased medical         and assessment of abdominal examination skills. The
+students’ capacity to perform an abdominal examination.       phantom is an adult female half model, 76 cm*37 cm
+Xu et al. BMC Medical Education     (2023) 23:897                                                                                             Page 3 of 8
+
+
+
+
+ Fig. 1 a External view of Jucheng simulator and its operation station. b Internal view during inhaling. c Internal view during exhalation. d Internal
+ view when simulating hepatomegaly
+
+
+
+
+ Fig. 2 A student using the Jucheng simulator
+
+
+
+*22 cm, with TPE (thermoplastic elastomer) material on
+the skin, which can simulate different abdominal patho-
+logical signs accompanied with deep or shallow abdomi-
+nal breathing. Hepatomegaly or splenomegaly can be
+simulated as the liver module or spleen module moves
+up and down, and the built-in pressure sensors can also
+be used to simulate tenderness and rebound pain in 16
+different points. The phantom emits responsive vocali-                          Fig. 3 A student using the AbSim simulator
+zations of pain, which can be relayed through either a
+built-in speaker or headphone. Figure 1a, b, c, and d show
+the external and internal views of the Jucheng simulator
+                                                                              half of the physical examination abdomen model. It is
+in various modes such as inhaling, exhalation and simu-
+                                                                              56 cm long, 35 cm wide, and 27 cm tall with silicon skin.
+lating hepatomegaly. Figure 2 shows a student using the
+                                                                              The system can register the users’ palpation force on the
+Jucheng simulator.
+                                                                              abdominal model with blue, gray, and red shown on the
+  The second test was based on the AbSim abdominal
+                                                                              monitor.
+simulator (ACDET, Inc., Fort Worth, Texas) that allows
+                                                                                In contrast to the AbSim simulator, the newly devel-
+setting of the size of liver and spleen as well as the ten-
+                                                                              oped Jucheng simulator simulates breathing during
+derness degree for different points across the abdomen
+                                                                              the abdominal palpation, which could be beneficial for
+(Appendix, Colon, Gallbladder, left Ovary, right Ovary,
+                                                                              practicing hepatomegaly or splenomegaly detection.
+Pancreas, Urinary Bladder) (Fig. 3).
+                                                                              Besides, the Jucheng simulator exhibits superior volu-
+  The AbSim simulator is a human physical examina-
+                                                                              metric dimensions and provides a heightened degree of
+tion training system composed of computer system and
+Xu et al. BMC Medical Education   (2023) 23:897                                                                   Page 4 of 8
+
+
+
+
+versatility in representing a spectrum of hepatomegaly         tenderness, and normal abdomen without pathologies.
+and splenomegaly severities, ranging from mild to severe.      The cases in the second test had 12 different answer
+However, the skin of the Jucheng simulator has a harder        options: hepatomegaly, splenomegaly, gastric tenderness,
+feel than the AbSim simulator and it lacks real time force     appendix tenderness (McBurney’s sign) without rebound
+feedback on the monitor.                                       tenderness, appendix tenderness with rebound tender-
+  Experts in abdominal palpation, student education,           ness, gallbladder tenderness (Murphy’s sign), urinary
+and simulation-based assessment defined the content of         bladder tenderness, colon left lower tenderness, ovary
+the tests. The first test consisted of six different simula-   left tenderness, ovary right tenderness, pancreas tender-
+tor setups (i.e. cases) modified by the built-in software:     ness, and normal setup without pathologies.
+hepatomegaly, positive McBurney’s sign plus rebound              The simulator assistant did not offer any feedback or
+tenderness, severe splenomegaly, positive Murphy’s             guidance to the participants during the tests.
+sign, pancreas tenderness, and a normal setup without
+pathologies. The second test consisted of five different       Scoring
+simulator setups including hepatomegaly, splenomegaly,         Each correct answer was awarded a score of one point
+gallbladder tenderness (Murphy’s sign), Appendix ten-          resulting in possible maximum scores of six points in
+derness (McBurney’s sign) with rebound tenderness, and         the first test and five points in the second test. The scor-
+normal setup without pathologies.                              ing was totally objective, i.e. based solely on simulator
+                                                               settings and the participants’ single-best-answer with-
+The participants                                               out room for interpretation. The time spent on palpat-
+Volunteering participants with different experiences in        ing each of the six and five cases in the two tests was
+abdominal palpation were recruited. The novices were           registered by the simulator assistant without pre-warn-
+12 fifth-year medical students from Sun Yat-sen Univer-        ing before and during the tests lest the participant feel
+sity with no previous practical experience and the expe-       rushed and stressed.
+rienced group consisted of 12 physicians with more than
+three years of experience with abdominal palpation. The        Statistical analysis
+first test was also administered to an intermediate group      An item analysis with item difficulty index and item dis-
+consisting of 12 residents from the Departments of Inter-      crimination index was done for the six cases in test 1 and
+nal Medicine, Surgery, Oncology, and Neurology at the          for the five cases in test 2. The overall Cronbach’s alpha
+Seventh Affiliated Hospital of Sun Yat-sen University.         across items (i.e. internal consistency reliability) was cal-
+They had performed ≥ 10 abdominal palpations and had a         culated for both tests.
+maximum of one year of experience in abdominal palpa-            The total test scores and the total test time of the three
+tion. Therefore, 36 participants (12 in each of the three      groups in test 1 were compared using one-way analysis
+groups) were included in data collection for test 1 and 24     of variance (ANOVA) and the two groups in test 2 were
+participants (12 in each of the two groups) were included      compared using an independent samples T-test. One-
+for test 2.                                                    way ANOVA and T-test were also used to compare the
+                                                               groups’ scores for each of the 11 cases in the tests.
+The testing process                                              All analyses were performed using the software pack-
+Each participant came to the simulation center and             age IBM Statistical Package for the Social Sciences (SPSS)
+signed informed consent. The order of the different            version 25. P-values below 0.05 were considered statisti-
+cases in the tests (six and five cases, respectively) was      cally significant.
+randomized on a test sheet to avoid participants memo-
+rizing the cases and passing these on to the subsequent        Results
+participants. A simulator assistant set up the simulator       There was no statistical difference between male and
+according to the test sheet and asked the participant to       female in each test an both of the two tests had age dif-
+palpate the simulated abdomen and tick one box with the        ferent among or between their groups (see Table 1). All
+correct finding. Each case in the first test had ten differ-   participants completed the test without missing data
+ent answer opportunities: hepatomegaly, discrete spleno-       (ensured by the simulator assistant).
+megaly, severe splenomegaly, gastric tenderness, diffuse         Validity evidence for content was established by the
+intense tenderness and rebound pain, appendix tender-          developers of the two simulators and the experts in our
+ness (McBurney’s sign) without rebound tenderness,             group that picked relevant simulator settings to include
+appendix tenderness with diffuse rebound pain, appendix        as cases in each of the two tests. Validity evidence for
+tenderness with distinct rebound tenderness, gallblad-         the response process was ensured by the standard-
+der tenderness (Murphy’s sign), gallbladder and gastric        ized administration of the test where the cases were
+Xu et al. BMC Medical Education   (2023) 23:897                                                                           Page 5 of 8
+
+
+
+
+Table 1 The demographic features of each group in test 1 and test2
+Tests          Groups                Gender M/F          Chi-Square Tests        Age (Mean ± SD)         Age (Median)       P-Values
+
+Test 1         Novice                8/4                 0.06                    22.7 ± 0.9              23.0               P < 0.001
+               Intermediate          4/8                                         30.8 ± 2.8              30.5
+               Experienced           9/3                                         38.1 ± 7.2              39.0
+Test 2         Novice                6/6                 0.34                    22.0 ± 0.4              22.0               P < 0.001
+               Experienced           4/8                                         36.9 ± 4.5              36.0
+
+
+
+
+administered in a randomized order by a simulator assis-                1.31), 3.17 points (SD 1.03), and 2.75 points (SD 1.36).
+tant that did not offer any feedback or guidance but only               P-values were 0.53 for total time spent and 0.35 for total
+objectively noted down the time spent and the single-                   score. For test two, the novices spent 391 s (SD 122) and
+best answer from the list of answer opportunities.                      the experienced spent 307 s (SD 138), p = 0.13. The nov-
+  The internal structure of total scores in test 1 showed a             ices scored 3.6 points (SD 1.1) and the experienced also
+low Cronbach’s alpha of 0.35. Cronbach’s alpha for test 2               scored 3.6 points (SD 0.67), p = 1.0. Table 1 shows the
+was negative (-0.41) due to a negative average covariance               percentage of correct answers for each of the groups in
+among items which violates the reliability model assump-                each of the 11 cases. Only the splenomegaly cases on the
+tions. Cronbach’s alphas for palpation time across cases                AbSim simulator had a significant p-value (p = 0.04), but
+were better, 0.65 for test 1 and 0.76 for test 2. The comple-           unfortunately this was because more novices (83%) than
+tion times for each test and group was listed in Table 2.               experienced (42%) identified this pathology.
+No statistical difference of completion time was found                    Due to lack of discriminatory ability (and the low reli-
+in test 1, neither was test 2 except items of Gallbladder               ability), it was pointless to explore the validity evidence
+tenderness or Appendix tenderness in which experienced                  regarding consequences for the tests.
+doctors were much faster than novice students.
+  The item difficulty indices and item discrimina-                      Discussion
+tion indices of the 11 cases in the two tests are listed in             In this study, we failed to develop a valid abdominal pal-
+Table 3.                                                                pation test to establish a credible pass/fail standard based
+  The relationship to other variables showed that nei-                  on the newly developed Jucheng abdominal simulator
+ther test 1 nor test 2 were able to discriminate between                and the AbSim abdominal simulator. Consistent negative
+groups. The novices, intermediates, and experienced                     results despite the use of two different phantom-based
+spent 323 s (SD 159), 377 s (SD 155), and 323 s (SD 72),                models and good consistency between the included
+respectively, to perform test 1, and scored 2.42 points (SD             content of the two independent tests, demonstrate the
+
+
+Table 2 The completion times of the 11 cases in the two tests
+                                    Novices                       Intermediates                Experienced                 P-Values
+                                    Completion time(s)            Completion time(s)           Completion time(s)
+
+Test 1 (Jucheng simulator used)
+  Hepatomegaly                      50.4 ± 30.1                   49.3 ± 19.7                  36.2 ± 12.7                 0.23
+   Positive McBurney’s              44.3 ± 30.8                   32.1 ± 16.4                  33.8 ± 11.0                 0.32
+sign + rebound tenderness
+  Splenomegaly                      60.8 ± 52.2                   75.0 ± 38.1                  51.8 ± 30.5                 0.39
+  Positive Murphy’s sign            62.5 ± 53.4                   80.1 ± 55.7                  83.6 ± 48.8                 0.58
+  Pancreas tenderness               48.7 ± 24.7                   46.3 ± 39.9                  45.3 ± 25.6                 0.96
+  Normal abdomen                    56.4 ± 34.8                   94.5 ± 44.5                  72.2 ± 43.6                 0.09
+Test 2 (AbSim simulator used)
+  Hepatomegaly                      85.1 ± 34.4                     -                          72.6 ± 52.8                 0.49
+  Splenomegaly                      58.1 ± 27.9                     -                          71.1 ± 34.7                 0.32
+  Gallbladder tenderness            73.3 ± 28.8                     -                          45.7 ± 33.5                 0.04
+  Appendix tenderness               86.1 ± 40.2                     -                          48.1 ± 20.7                 0.008
+  Normal abdomen                    88.8 ± 48.1                     -                          69.8 ± 32.8                 0.27
+Xu et al. BMC Medical Education   (2023) 23:897                                                                         Page 6 of 8
+
+
+
+
+Table 3 The item difficulty indices and item discrimination indices of the 11 cases in the two tests
+                                  Novices %       Intermediates %       Experienced %       Overall %    Disc. Index      P-value
+                                  correct         correct               correct             correct
+
+Test 1 (Jucheng simulator used)
+  • Hepatomegaly                  58              92                    67                  72            0.21            0.18
+   • Positive McBurney’s          50              92                    67                  69            0.11            0.09
+sign + rebound tenderness
+  • Splenomegaly                  58              58                    50                  56            0.14            0.90
+  • Positive Murphy’s sign        8               8                     17                  11            0.03            0.77
+  • Pancreas tenderness           17              0                     8                   08            0.08            0.36
+  • Normal abdomen                50              67                    67                  61            0.38            0.65
+Test 2 (AbSim simulator used)
+  • Hepatomegaly                  58                                    67                  63            0.23            0.69
+  • Splenomegaly                  83                                    42                  63           -0.04            0.04*
+  • Gallbladder tenderness        83                                    67                  75           -0.32            0.37
+  • Appendix tenderness           67                                    92                  79           -0.01            0.15
+  • Normal abdomen                67                                    92                  79           -0.43            0.15
+
+
+
+difficulty of developing a valid abdominal palpation test             the abdominal palpation simulators. Judging from the big
+based on a phantom simulator. Phantom simulators                      gap between popular valid tests on the simulation-based
+might be suitable as training tools with educational value,           laparoscopy and the relatively few studies of abdominal
+but currently it is not possible to plan mastery learn-               palpation simulation, we have reason to consider heavy
+ing training programs where everybody continue prac-                  reliance on tactile sensations as one of the reasons to
+ticing until a pre-defined pass/fail level is met – simply            explain our negative results.
+because the simulator cannot be trusted to ensure clini-                Besides, we ought to pay attention to the “artificial
+cal proficiency.                                                      effect” in the simulator “skin texture” which may also play
+  Studies like this with negative results are rare due to             a part in the failure of abdominal palpation as a test tool.
+publication bias. However, it is not the first study about            Even though both the Jucheng and the AbSim simulators
+simulators failing to assess competency in a valid way.               are equipped with silicon skin, their softness and elastic-
+In 2017, Mills et al. reported that there was no correla-             ity are still not able to be compared with patient’s abdom-
+tion between attending surgeons’ simulator performance                inal skin. But abdominal palpation highly relies on the
+and expert ratings of intraoperative videos based on the              delicate feeling of hands on touch of the “skin” of patients
+Global Evaluative Assessment of Robotic Skills scale [18].            or simulators. Too hard or too soft both decreases the
+Although novice surgeons may put considerable effort                  accuracy of palpation. Similar to abdominal palpation,
+into training on robotic simulators, performance on a                 the existing literature reveals a deficiency in the devel-
+simulator may not correlate with attending robotic surgi-             opment of training methods for medical students in the
+cal performance [18].                                                 examination of skin [6, 21]. The latest advances of skin
+  When it comes to a phantom-based abdominal palpa-                   simulation models have incorporated smart phone-based
+tion simulator, the reason for its failure as a test tool is not      skin simulation models as a training tool, but the absence
+clear yet, but simulating this examination heavily relies             of substantial validity evidence underscores the chal-
+on tactile sensations and adequate reactions from the                 lenges associated with simulations involving skin [22].
+“simulated patient” regarding tenderness, pain etc. [15].               Medical simulators could be classified into compiler-
+This could have a part to play in the negative result of              driven types and event-driven types (standardized
+this study. Compared to abdominal palpation simulators                patients/care actors, hybrid simulation, and computer-
+equipped with tactile feedback [15–17], simulators used               based simulators) [23]. Per fidelity, medical simulators
+in surgery or endoscopy assessment have been widely                   could be low-fidelity, medium-fidelity, and high-fidelity
+used [19]. Valid tests based on simulation offer novice               simulators [24, 25]. Both of the simulators used in this
+doctors an opportunity to practice the skill set necessary            study are computer-based and virtual-simulated, with
+to perform laparoscopy exam or surgery efficiently, and               medium fidelity. Even with the objective limitation that
+could be used as an educational tool [20]. In these sce-              simulators are unsuitable for ensuring abdominal pal-
+narios, tactile feedback is not so highly demanding as in             pation skills, they could still have value for training
+Xu et al. BMC Medical Education         (2023) 23:897                                                                                               Page 7 of 8
+
+
+
+
+purposes. However, simulation training should be based                            Competing interests
+                                                                                  The authors declare no competing interests.
+on solid evidence of efficacy and proof of transfer of skills
+to real patients should be demanded [26].                                         Author details
+   However, this doesn’t mean the attempt to develop an                           1
+                                                                                  2
+                                                                                    The Seventh Affiliated Hospital, Sun Yat-Sen University, Shenzhen, China.
+                                                                                    Guangdong Academy for Medical Simulation (GAMS), Guangzhou, China.
+abdominal palpation simulator suitable for testing should                         3
+                                                                                    School of Medicine, Sun Yat-Sen University, Shenzhen, China. 4 Copenhagen
+be stopped for good. Compared with simulated patients,                            Academy for Medical Education and Simulation, Copenhagen, Denmark.
+virtual reality simulation of abdominal palpation offers
+                                                                                  Received: 10 July 2023 Accepted: 9 November 2023
+more convenience for medical students and novice resi-
+dents to practice, free of ethics issues. In the long run,
+virtual reality simulation benefits the trainees, the mul-
+tidisciplinary team, and the hospital as a whole [23].
+Immersive haptic force feedback technique could be con-
+                                                                                  References
+sidered and developed more, as well as the artificial intel-                      1. Rastogi V, Singh D, Tekiner H, Ye F, Kirchenko N, Mazza JJ, Yale SH.
+ligence assistance in mimicking real patients’ reactions to                           Abdominal physical signs and medical eponyms: physical examination of
+palpation [27].                                                                       palpation Part 1, 1876–1907. Clin Med Res. 2018;16(3–4):83–91.
+                                                                                  2. Rastogi V, Singh D, Tekiner H, Ye F, Mazza JJ, Yale SH. Abdominal Physical
+                                                                                      Signs and Medical Eponyms: Part II. Physical Examination of Palpation,
+                                                                                      1907–1926. Clin Med Res. 2019;17(1–2):47–54.
+Conclusion                                                                        3. Ericsson KA. An expert-performance perspective of research on
+In conclusion, it was not possible to measure abdomi-                                 medical expertise: the study of clinical performance. Med Educ.
+                                                                                      2007;41(12):1124–30.
+nal palpation skills in a valid way using either of the two                       4. Rassie K. The apprenticeship model of clinical medical education: time for
+standardized, simulation-based tests in our study. Assess-                            structural change. N Z Med J. 2017;130(1461):66–72.
+ment of the patient’s abdomen using palpation is a chal-                          5. Sachdeva AK, Wolfson PJ, Blair PG, Gillum DR, Gracely EJ, Friedman
+                                                                                      M. Impact of a standardized patient intervention to teach breast and
+lenging clinical skill that is difficult to simulate as it relies                     abdominal examination skills to third-year medical students at two
+highly on tactile sensations and adequate responsiveness                              institutions. Am J Surg. 1997;173(4):320–5.
+from the patients. Additionally, this study underscores                           6. Hamm RM, Kelley DM, Medina JA, Syed NS, Harris GA, Papa FJ. Effects of
+                                                                                      using an abdominal simulator to develop palpatory competencies in 3rd
+the urgent need and provides insights into the future                                 year medical students. BMC Med Educ. 2022;22(1):63.
+direction for developing abdominal palpation simulators.                          7. McGaghie WC, Issenberg SB, Cohen ER, Barsuk JH, Wayne DB. Does
+                                                                                      simulation-based medical education with deliberate practice yield better
+Acknowledgements                                                                      results than traditional clinical education? A meta-analytic comparative
+We appreciated the help of our colleagues Shuo Fang, Xiaohua Wang, Mingxia            review of the evidence. Acad Med. 2011;86(6):706–11.
+Zhang, Liang Deng, Pengyou Long and Jing Wu in recruiting and organizing          8. Hyde L, Erolin C, Ker J. Creation of abdominal palpation model prototype
+the participants in two tests.                                                        for training of medical students in detection and diagnosis of liver dis-
+                                                                                      ease. J Vis Commun Med. 2012;35(3):104–14.
+Authors’ contributions                                                            9. Mahaboob S, Lim LK, Ng CL, Ho QY, Leow MEL, Lim ECH. Develop-
+Xiaowei Xu: Designed the study, conducted data processing and analysis, and           ing the “NUS Tummy Dummy”, a low-cost simulator to teach medical
+drafted the manuscript. Haoyu Wang: Coordinated tests and maintained simu-            students to perform the abdominal examination. Ann Acad Med Singap.
+lators. Jingfang Luo: Managed intern recruitment and data collection from             2010;39(2):150–1.
+participants. Changhua Zhang: Provided overall project guidance. Lars Konge:      10 Winget M, Persky AM. A practical review of mastery learning. Am J Pharm
+Offered expertise in study design, data statistics, and manuscript refinement.        Educ. 2022;86(10):ajpe8906. https://​doi.​org/​10.​5688/​ajpe8​906.
+Lina Tang: Led the study design process. All authors reviewed the manuscript.     11. Dyre L, Nørgaard LN, Tabor A, Madsen ME, Sørensen JL, Ringsted C,
+                                                                                      Tolsgaard M. Collecting validity evidence for the assessment of mastery
+Funding                                                                               learning in simulation-based ultrasound training. Ultraschall Med.
+2022 annual project of the "14th Five-Year Plan" of Shenzhen Educational              2016;37(4):386–92.
+Science (Project Number: szjy22010); Ministry of Education Industry-              12. Cook DA, Zendejas B, Hamstra SJ, Hatala R, Brydges R. What counts as
+University Cooperation Collaborative Education Project (project number:               validity evidence? Examples and prevalence in a systematic review
+220702943222125); Sun Yat-sen University 2022 Undergraduate Teaching                  of simulation-based assessment. Adv Health Sci Educ Theory Pract.
+Quality Engineering Category Project [Academic Affairs [2022] No. 91].                2014;19(2):233–50.
+                                                                                  13. Norcini J, et al. Criteria for good assessment: consensus statement and
+Availability of data and materials                                                    recommendations from the Ottawa 2010 Conference. Med Teach.
+The datasets used and/or analyzed during the current study available from the         2011;33(3):206–14.
+corresponding author on reasonable request.                                       14. Bayona, S., et al. Implementing Virtual Reality in the Healthcare Sector.
+                                                                                      Virtual Technologies for Business and Industrial Applications: Innovative
+                                                                                      and Synergistic Approaches. IGI Global. 2011.p:138–163. https://​doi.​org/​
+Declarations                                                                          10.​4018/​978-1-​61520-​631-5.​ch009.
+                                                                                  15. Hsu JL, Lee CH, Hsieh CH. Digitizing abdominal palpation with a pressure
+Ethics approval and participant consents
+                                                                                      measurement and positioning device. PeerJ. 2020;8:e10511.
+This study has obtained ethical approval from the Local Ethics Committee at
+                                                                                  16. Oppici L, et al. How does the modality of delivering force feedback influ-
+the Seventh Affiliated Hospital, Sun Yat-sen University. Participant’s informed
+                                                                                      ence the performance and learning of surgical suturing skills? We don’t
+consent has been signed by each participant of this study.
+                                                                                      know, but we better find out! A review Surg Endosc. 2023;37(4):2439–52.
+                                                                                  17. Cheng M, et al. Abdominal Palpation Haptic Device for Colonoscopy
+Consent for publication
+                                                                                      Simulation Using Pneumatic Control. IEEE Trans Haptics. 2012;5(2):97–108.
+Informed consent for publication have been obtained from the two students
+whose photos shown in Figs. 2 and 3.
+Xu et al. BMC Medical Education        (2023) 23:897                                                                                                  Page 8 of 8
+
+
+
+
+18. Mills JT, Hougen HY, Bitner D, Krupski TL, Schenkman NS. Does robotic
+    surgical simulator performance correlate with surgical skill? J Surg Educ.
+    2017;74(6):1052–6.
+19. Aebersold M. The history of simulation and its impact on the future.
+    AACN Adv Crit Care. 2016;27(1):56–61.
+20. Frazzini Padilla PM, Farag S, Smith KA, Zimberg SE, Davila GW, Sprague
+    ML. Development and validation of a simulation model for laparoscopic
+    colpotomy. Obstet Gynecol. 2018;132(Suppl 1):19S-26S.
+21. Dąbrowska AK, Rotaru GM, Derler S, Spano F, Camenzind M, Annaheim
+    S, Stämpfli R, Schmid M, Rossi RM. Materials used to simulate physical
+    properties of human skin. Skin Res Technol. 2016;22(1):3–14.
+22. Dsouza R, Spillman DR Jr, Barrows S, Golemon T, Boppart SA. Develop-
+    ment of a smartphone-based skin simulation model for medical educa-
+    tion. Simul Healthc. 2021;16(6):414–9.
+23. Datta R, Upadhyay K, Jaideep C. Simulation and its role in medical educa-
+    tion. Med J Armed Forces India. 2012;68(2):167–72.
+24. Uth HJ, Wiese N. Central collecting and evaluating of major accidents and
+    near-miss-events in the Federal Republic of Germany–results, experi-
+    ences, perspectives. J Hazard Mater. 2004;111(1–3):139–45.
+25. Bradley P. The history of simulation in medical education and possible
+    future directions. Med Educ. 2006;40(3):254–62.
+26. Cook DA, Hatala R, Brydges R, Zendejas B, Szostek JH, Wang AT, Erwin PJ,
+    Hamstra SJ. Technology-enhanced simulation for health professions edu-
+    cation: a systematic review and meta-analysis. JAMA. 2011;306(9):978–88.
+27. Zaed I, Chibbaro S, Ganau M, Tinterri B, Bossi B, Peschillo S, Capo G, Costa
+    F, Cardia A, Cannizzaro D. Simulation and virtual reality in intracranial
+    aneurysms neurosurgical training: a systematic review. J Neurosurg Sci.
+    2022;66(6):494–500.
+
+
+Publisher’s Note
+Springer Nature remains neutral with regard to jurisdictional claims in pub-
+lished maps and institutional affiliations.
+
+
+
+
+                                                                                   Ready to submit your research ? Choose BMC and benefit from:
+
+                                                                                    • fast, convenient online submission
+                                                                                    • thorough peer review by experienced researchers in your field
+                                                                                    • rapid publication on acceptance
+                                                                                    • support for research data, including large and complex data types
+                                                                                    • gold Open Access which fosters wider collaboration and increased citations
+                                                                                    • maximum visibility for your research: over 100M website views per year
+
+                                                                                   At BMC, research is always in progress.
+
+                                                                                   Learn more biomedcentral.com/submissions
+

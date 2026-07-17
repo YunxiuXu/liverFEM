@@ -1,0 +1,108 @@
+SOURCE_FILE: haptic supplementary.docx
+SOURCE_TYPE: docx
+-----
+1. Fan et al., 2026
+
+A Stiffness-Adaptive Visuo-Tactile Robotic Palpation System for Surface
+Texture Profiling and Deep Lesion Localization
+
+提出一种微型的自适应变刚度视触觉探头。探头较软时可以贴合组织表面，重建微小纹理；压得较深后刚度会明显增加，从而探测组织内部的硬结或隐藏病灶。作者进行了表面三维重建、人工肿瘤模型和离体猪肝实验，证明系统能够同时识别表面病变和深部结节。它与你们的“隐藏硬区定位”任务非常接近，但本质上是机器人感知系统，不是给医生输出力反馈的虚拟训练器。
+
+2. Lee et al., 2025
+
+Image-Free Tumor Segmentation of Soft Tissue Using a Minimally Invasive
+Robotic Palpation System
+
+研究目标是在不依赖 CT、MRI
+或术中超声的情况下，仅通过机器人对软组织进行触诊，估计肿瘤的位置和边界。系统先重建组织表面，再以控制深度进行压入，根据力和位移生成刚度分布图，并据此分割较硬的肿瘤区域；实验包括平面、曲面软组织模型以及离体猪肝。
+
+3. Leong et al., 2022
+
+A Surrogate Model Based on a Finite Element Model of Abdomen for
+Real-Time Visualisation of Tissue Stress during Physical Examination
+Training
+
+作者先根据 CT
+图像建立高保真的腹部有限元模型，模拟手指按压腹部时皮肤、脂肪、肌肉和内部器官的变形与应力。但完整有限元计算速度太慢，因此又使用有限元结果训练机器学习代理模型，使系统能够近实时预测内部组织应力。它主要解决的是“如何把精确但缓慢的腹部
+FEM 转化为可用于训练反馈的实时模型”，不是研究隐藏病灶辨别本身。
+
+4. He et al., 2021
+
+An Abdominal Phantom With Tunable Stiffness Nodules and Force Sensing
+Capability for Palpation Training
+
+开发了一个实体腹部模型，内部设置可调节刚度的模拟肝结节。结节采用气动颗粒阻塞机制：通过改变内部压力，既可以让结节变软或变硬，也可以利用压力变化估计医生按压的位置和力量。该系统的特点是学员可以直接徒手触诊，不需要佩戴数据手套，同时模型能够记录触诊行为并提供量化反馈。
+
+5. Cook and Hatala, 2016
+
+Validation of Educational Assessments: A Primer for Simulation and
+Beyond
+
+这是一篇关于医学模拟和教育测评中“效度”概念的方法学文章。作者强调，效度不是模拟器自身的固定属性，也不是做一次专家问卷就能获得的标签；真正需要验证的是“根据某项测量结果作出的解释和决策是否合理”。文章介绍了
+Messick
+框架，包括内容、反应过程、内部结构、与其他变量的关系和后果五类效度证据。
+
+6. Borgersen et al., 2018
+
+Gathering Validity Evidence for Surgical Simulation: A Systematic Review
+
+这篇系统综述调查手术模拟研究如何建立和报告效度证据。作者发现，不少研究仍然简单使用
+“face validity”“content validity”
+等标签，却没有明确说明测量结果要用于什么决策，也没有按照现代效度框架系统收集证据。文章主张从“证明某一种
+validity”转向“针对具体用途建立连贯的 validity argument”。
+
+7. Fazlollahi and Kuchenbecker, 2023
+
+Haptify: A Measurement-Based Benchmarking System for Grounded
+Force-Feedback Devices
+
+提出一套用于客观测试接地式力反馈设备的基准系统。它通过仪器化末端执行器测量工作空间、自由空间残余力、振动、动态力和力矩、表面渲染以及可实现刚度等性能，从而让不同触觉设备能够在较统一的条件下进行比较。
+
+对你们最有用的是其“设备性能不能只靠用户感觉评价”的思路。可以据此说明为什么应报告力输出、噪声、稳定性、重复性和最大可渲染刚度等定量指标。但它不是医学模拟器效度评价方法，也没有直接验证你们的病灶定位任务。
+
+8. Hafiz and Karadoğan, 2022
+
+Effect of Arm Pivot Joints on Stiffness Discrimination in Haptic
+Environments
+
+研究人在使用不同手臂关节作为主要运动支点时，刚度辨别能力是否不同。38
+名参与者使用 Geomagic Touch
+比较两个虚拟圆柱表面的刚度，采用二选一强迫选择法，并利用 Weber fraction
+表示刚度差异阈值。结果显示，不同关节条件下的阈值、触诊速度和按压力虽然存在趋势，但差异没有达到统计显著。
+
+9. Xu et al., 2023
+
+Difficulties in Using Simulation to Assess Abdominal Palpation Skills
+
+作者尝试用两种腹部触诊模拟器建立标准化能力测试，病例包括肝大、脾大、胆囊压痛、阑尾压痛和正常腹部等，并比较新手、中等经验者和有经验医生的得分及操作时间。结果显示，两套测试的内部一致性较低，而且不能稳定地区分不同经验组，因此作者没有建立合格线。
+
+这是一篇很有价值的“负结果”论文。它说明腹部触诊高度依赖细微触觉、皮肤质感和患者对疼痛的反应，即使模拟器能够生成多种病例，也不代表它自动具备可靠的能力评估功能。
+
+10. Cheng et al., 2016
+
+Reporting Guidelines for Health Care Simulation Research: Extensions to
+the CONSORT and STROBE Statements
+
+这篇文章为医疗模拟研究制定了 CONSORT 和 STROBE
+的模拟研究扩展报告指南。它要求作者详细说明模拟场景、设备、参与者经验、任务环境、干预方法、结局指标、数据采集方式以及可能影响研究内部效度的模拟特有因素。
+
+它主要解决的是“论文应当报告什么”，而不是告诉你多少样本才足够，也不能直接替
+N=1 专家评价提供合理性证明。你们可以用它检查 Methods 和 Limitations
+是否报告完整。
+
+11. Sullivan and Artino, 2013
+
+Analyzing and Interpreting Data From Likert-Type Scales
+
+这是一篇面向医学教育研究者的简短统计方法文章，解释 Likert
+单项和由多个题目组成的 Likert scale
+的区别，以及如何选择描述统计和推断统计方法。核心提醒是：Likert
+单项通常属于有序分类数据，分析时不能忽略其测量层级，也不应对缺乏依据的多个题目随意求和或求平均。
+
+12. Da Silva and Dubrowski, 2019
+
+Piloting Simulations: A Systematic Refinement Strategy
+
+研究提出一种在正式教学使用前，通过多轮试点系统完善模拟场景的方法。参与者逐轮体验模拟任务、填写评价并提供开放式反馈；研究者根据反馈修改不清楚、缺失或设计不足的环节，再进入下一轮测试，直到主要设计问题得到解决。
+
+这篇文章可以支持你们把当前专家实验定位为“设计完善和问题发现阶段”。但它研究的是护理教学模拟的迭代优化，并没有证明单一专家足以建立系统效度。

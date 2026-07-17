@@ -1,0 +1,1694 @@
+SOURCE_FILE: mti-06-00098.pdf
+SOURCE_TYPE: pdf
+-----
+             Multimodal Technologies
+             and Interaction
+
+
+
+Article
+Effect of Arm Pivot Joints on Stiffness Discrimination in
+Haptic Environments
+Khandaker Nusaiba Hafiz 1 and Ernur Karadoğan 2, *
+
+                                          1   Bionic Laboratory, Mechanical Engineering, Bourns College of Engineering, University of California,
+                                              Riverside, CA 92507, USA
+                                          2   Robotics and Haptics Laboratory, School of Engineering and Technology, Central Michigan University,
+                                              Mount Pleasant, MI 48858, USA
+                                          *   Correspondence: ernur.karadogan@cmich.edu
+
+
+                                          Abstract: We investigated the effect of arm pivot joints that are typically used during haptic explo-
+                                          ration by evaluating four joints of the human arm (metacarpophalangeal joint of the index finger,
+                                          wrist, elbow, and shoulder joints). Using a virtual stiffness discrimination task, a four-session psy-
+                                          chophysical experiment was conducted with 38 participants (25 male and 13 female); each session was
+                                          conducted with one of the four joints as the pivot joint during haptic exploration. The participants
+                                          were asked to judge the stiffness of the top surface of two computer-generated cylinders by determin-
+                                          ing the stiffer one while using their dominant hand’s index finger. A two-alternative forced-choice
+                                          procedure was employed by assigning one cylinder a constant stiffness value of 1.0 N/mm (standard
+                                          side) and the remaining cylinder a variable stiffness value (comparison side). Using a custom-made
+                                          stylus for the Geomagic TouchTM (3D Systems, Inc., Rock Hill, SC, USA) haptic interface, the par-
+                                          ticipants were able to feel the stiffness of these virtual surfaces only with their index fingers. It was
+                                          observed that the average Weber fraction monotonically decreased as the pivot joint shifted toward
+                                          the torso (i.e., a shift from the metacarpophalangeal joint to the shoulder joint); this decrease was
+                                          not statistically significant, which suggests that the selection of the pivot joint was not a determining
+Citation: Hafiz, K.N.; Karadoğan, E.
+                                          factor for the sensitivity to discriminate stiffness. In general, the palpation speed and force exerted by
+Effect of Arm Pivot Joints on Stiffness
+                                          the participants on the standard side during the haptic exploration showed a tendency to increase
+Discrimination in Haptic
+                                          when the pivot joint shifted toward the torso; the difference in average palpation speed and force
+Environments. Multimodal Technol.
+Interact. 2022, 6, 98. https://doi.org/
+                                          across the pivot joints was not statistically significant.
+10.3390/mti6110098
+                                          Keywords: haptics; virtual environment; simulations; stiffness discrimination; metacarpophalangeal
+Academic Editors: Arun
+                                          joint; wrist joint; elbow joint; shoulder joint
+K. Kulshreshth and Kevin Pfeil
+
+Received: 13 October 2022
+Accepted: 4 November 2022
+Published: 10 November 2022               1. Introduction
+Publisher’s Note: MDPI stays neutral            During the design and development stage of a haptic simulation system, designers of
+with regard to jurisdictional claims in   such systems must make various decisions and selections that contribute toward creating
+published maps and institutional affil-   an engaging and, more importantly, useful simulation. These decisions may include the
+iations.                                  choice of the software language and development environment, pedagogical aspects in
+                                          line with the learning outcomes, components of the user interface (such as easy access to
+                                          relevant parameters of the simulation), and the haptic interface (one with sufficient force
+                                          resolution and capacity, for instance). The choice of the haptic device also determines how
+Copyright: © 2022 by the authors.         users should interact with the simulation such as by using a stylus or a thimble, and how
+Licensee MDPI, Basel, Switzerland.        this stylus/thimble can be operated by the user to control the user’s interaction comfortably
+This article is an open access article    and accurately with that virtual environment as part of the simulation. While users interact
+distributed under the terms and
+                                          with a virtual environment using a haptic device, they employ a joint of the arm (e.g., elbow
+conditions of the Creative Commons
+                                          or wrist joint) as the pivot joint; that is, they use a joint of the arm as the support point
+Attribution (CC BY) license (https://
+                                          to control the haptic device during haptic exploration. Naturally, this choice is generally
+creativecommons.org/licenses/by/
+                                          affected by both the selected haptic device and the purpose of that simulation. For instance,
+4.0/).
+
+
+
+
+Multimodal Technol. Interact. 2022, 6, 98. https://doi.org/10.3390/mti6110098                                    https://www.mdpi.com/journal/mti
+Multimodal Technol. Interact. 2022, 6, 98                                                                                        2 of 14
+
+
+
+
+                                       a simulation that trains osteopathic medical students in palpation may require trainees
+                                       to use their entire arm during haptic exploration, and therefore, users may tend to utilize
+                                       their shoulder joint as the pivot joint [1]. On the other hand, a simulation that promotes the
+                                       usage of a stylus as the proxy for a physical tool (e.g., a simulation for dentistry students)
+                                       may require trainees to use their wrist or elbow as the pivot joint [2,3]. In addition to
+                                       these simulation-specific requirements, some simulations may provide the users with the
+                                       freedom to choose their own pivot joint during haptic exploration; in that kind of scenario,
+                                       different users utilize different pivot joints based on individual preferences.
+                                             During virtual exploration, if the users are in control of their actions while initiating
+                                       the touch, it is defined as active touch; on the other hand, in passive touch, a haptic
+                                       interface or external stimulus is used to simulate the touch [4]. This potential variability in
+                                       identifying the pivot joint stems from the fact that most tasks involving (active/passive)
+                                       touch without restrictions can be performed using any joint of the arm as the pivot joint.
+                                       This brings up the question: Could we, as prospective users or the designer of a haptic
+                                       simulation, intentionally select that pivot joint beforehand for a better outcome (increased
+                                       level of accuracy and speed, higher efficiency, etc.) on a specific task? Better yet, by training
+                                       ourselves using a specific joint of our arm as the pivot, could we learn to adopt that same
+                                       palpation approach in real life for a better outcome (e.g., for a more accurate palpatory
+                                       diagnosis/treatment by a doctor of osteopathy or a veterinarian)? To the best of the authors’
+                                       knowledge, there has not been a study to date that directly investigates the effect of the
+                                       pivot joint on the task performance of haptic simulation users. Therefore, this study aims
+                                       to take the first step toward investigating the effect of the human arm’s pivot joints on the
+                                       performance of a haptic-related task. Although there are many aspects of touch that define
+                                       the quality of information we receive through the action of touch, we have specifically
+                                       chosen the stiffness discrimination task during haptic exploration, as it lends itself to
+                                       relatively straightforward implementation in a psychophysical experiment and has a wide
+                                       application area including medicine and education. Other alternative tasks such as force
+                                       angle and height discrimination are also possible and planned for the future.
+                                             Stiffness discrimination has been an active area of research to study the properties of
+                                       objects in virtual environments [5,6]. A few examples are given here, as they use similar
+                                       concepts that were used in the current study. Genecov et al. [7] analyzed the non-linear
+                                       stiffness and geometry of a jamming device using just noticeable difference (JND) as a
+                                       parameter for examining human perception. The just noticeable difference is defined as
+                                       the minimum stiffness difference between the objects detectable by a user [8]. Fu et al. [9]
+                                       discussed the basic principles of just noticeable difference (JND) associated with human
+                                       haptics in observing mechanical force feedback properties. The ratio of JND to the standard
+                                       stiffness expresses the Weber fraction of any sensory modality, which indicates the sensi-
+                                       tivity toward stiffness discrimination ability, i.e., a lower Weber fraction designates better
+                                       stiffness discrimination ability [10]. The Weber fraction is a well-established parameter to
+                                       analyze psychophysical responses to human perception of stiffness [11]. Maereg et al. [12]
+                                       developed a wearable vibrotactile haptic device to use for stiffness discrimination in virtual
+                                       interactions and used Weber fractions for quantitative analysis. They used the wearable
+                                       haptic device at the wrist joint for this experiment and found that the average Weber frac-
+                                       tion values for ten participants were 0.39 for visual feedback only 0.24 for tactile feedback
+                                       only and 0.25 for both feedbacks combined. De Gersem [13] utilized a PHANToM 1.5 haptic
+                                       device and estimated the elbow joint’s Weber fractions were between 0.08 and 0.12 for
+                                       their experiment. Son and Park [14] developed a wearable haptic system for hand palms
+                                       and fingers to improve the tactile perception of bulky objects. They calculated the Weber
+                                       fraction for their wearable haptic interface for the palm and finger separately and together
+                                       at a range of 0.3 to 0.6 approximately. Karadogan et al. [15] analyzed the Weber fraction for
+                                       four different standard stiffness values (0.25, 0.50, 1.00, and 1.25 N/mm). They used the
+                                       metacarpophalangeal joint as a pivot point to explore two virtual cylinders with stiffness
+                                       differences. The Weber fraction for four standard stiffness was 0.2, 0.27, 0.26, and 0.3,
+                                       respectively.
+Multimodal Technol. Interact. 2022, 6, x FOR PEER REVIEW                                                                                                3 of 14
+
+
+
+ Multimodal Technol. Interact. 2022, 6, 98                                                                                                                 3 of 14
+                                       cylinders with stiffness differences. The Weber fraction for four standard stiffness was 0.2,
+                                       0.27, 0.26, and 0.3, respectively.
+                                             In the current study, we examined the effect of different pivot joints of a human up-
+                                              In the
+                                       per limb       current
+                                                  through     study, we examined
+                                                            comparative            the
+                                                                         analysis at    effect of different
+                                                                                      a stiffness           pivot joints
+                                                                                                  discrimination   task. of  a human
+                                                                                                                          Four         upper
+                                                                                                                                pivot joints
+                                       of the arm (metacarpophalangeal joint of the index finger, wrist joint, elbow joint, joints
+                                        limb   through    comparative  analysis at  a  stiffness discrimination    task.  Four   pivot   and
+                                        of the arm
+                                       shoulder       (metacarpophalangeal
+                                                   joint)                     joint of
+                                                          were evaluated by means     ofthe  index finger, wrist
+                                                                                          a psychophysical          joint, elbow
+                                                                                                              experiment           joint, the
+                                                                                                                             to analyze   and
+                                        shoulder joint) were evaluated by means of a psychophysical experiment to analyze the
+                                       Weber fractions, average palpation speed, and average palpation force during a stiffness
+                                        Weber fractions, average palpation speed, and average palpation force during a stiffness
+                                       discrimination task. The following sections of the paper detail the methodology and re-
+                                        discrimination task. The following sections of the paper detail the methodology and results
+                                       sults of the experiment, and the discussion of these results.
+                                        of the experiment, and the discussion of these results.
+                                       2.2.Methodology
+                                            Methodology
+                                       2.1.
+                                        2.1.Experimental
+                                             ExperimentalSetupSetup
+                                             As
+                                              Asshown
+                                                  shown in in Figure 1,  1, the
+                                                                             theexperimental
+                                                                                  experimentalsetup   setupwas was   composed
+                                                                                                                  composed          of three
+                                                                                                                                of three   main main    compo-
+                                                                                                                                                   components:
+                                       nents:  a  computer      software      module      (i.e.,  the  virtual   environment),
+                                        a computer software module (i.e., the virtual environment), a haptic device (Geomagic         a  haptic    device   (Ge-
+                                       omagic  TMTouch   TM by 3D Systems) to establish the interface between the participant and the
+                                        Touch by 3D Systems) to establish the interface between the participant and the computer
+                                       computer
+                                        software,software,
+                                                    and an arm    andrestraint
+                                                                        an arm table
+                                                                                   restraint     tablethe
+                                                                                           to place      to place   the participant’s
+                                                                                                             participant’s                 arm. In
+                                                                                                                              arm. In Figure        1, Figure
+                                                                                                                                                       the arm’s 1,
+                                       the  arm’s in
+                                        position   position    in four different
+                                                       four different      sessions sessions
+                                                                                        is shown.   is While
+                                                                                                        shown.using
+                                                                                                                  While  theusing   the metacarpophalan-
+                                                                                                                              metacarpophalangeal            joint
+                                       geal  joint1a)
+                                        (Figure    (Figure
+                                                        of the1a)  of the
+                                                                 index        index
+                                                                          finger    asfinger
+                                                                                        the pivotas he     pivot
+                                                                                                       joint,  thejoint,   the participants
+                                                                                                                     participants                 placed
+                                                                                                                                       placed their        their
+                                                                                                                                                         forearm
+                                       forearm
+                                        on an arm on an   arm
+                                                        pad    padtheir
+                                                             and      and hand
+                                                                             their hand
+                                                                                     againstagainst
+                                                                                                 a handa hand
+                                                                                                            rest rest
+                                                                                                                  whilewhile   moving
+                                                                                                                           moving      thethe   finger-holder
+                                                                                                                                            finger-holder        on
+                                       on
+                                        thethe  haptic
+                                             haptic      interfacewith
+                                                       interface      withtheirtheirindex
+                                                                                      indexfinger
+                                                                                               fingerofofthe the dominant
+                                                                                                                 dominant hand. hand. For For the
+                                                                                                                                                thewrist
+                                                                                                                                                     wristjoint
+                                                                                                                                                             joint
+                                        (Figure1b),
+                                       (Figure    1b),the
+                                                        theparticipants
+                                                            participantscould   couldmove
+                                                                                        movetheir theirhands
+                                                                                                          handsfrom
+                                                                                                                  fromthe thewrist
+                                                                                                                              wristjoint
+                                                                                                                                       jointasasthe
+                                                                                                                                                  thehand
+                                                                                                                                                       handrestrest
+                                        wasfolded
+                                       was    foldeddown,
+                                                        down,and andany anymovement
+                                                                               movementofofthe     theelbow
+                                                                                                        elbowwas wasrestricted
+                                                                                                                       restrictedby   bymeans
+                                                                                                                                           meansofofpadding
+                                                                                                                                                        padding
+                                        underthe
+                                       under     theforearm.
+                                                      forearm.InInthe  thesession
+                                                                             sessionwithwiththe theelbow
+                                                                                                     elbowjointjointasasthe
+                                                                                                                          thepivot
+                                                                                                                               pivotjoint
+                                                                                                                                        joint(Figure
+                                                                                                                                              (Figure1c), 1c),the
+                                                                                                                                                                the
+                                        participantsused
+                                       participants      usedtheir
+                                                               theirelbow
+                                                                       elbowtotoreceive
+                                                                                     receivesupport
+                                                                                                supportfrom fromthethearm
+                                                                                                                        armpad—the
+                                                                                                                              pad—theelbow, elbow,wrist,
+                                                                                                                                                      wrist,and
+                                                                                                                                                              and
+                                        metacarpophalangealjoint
+                                       metacarpophalangeal           joint moved
+                                                                             moved freely. When   When the the participants
+                                                                                                                participantsused usedthe  theshoulder
+                                                                                                                                               shoulderjointjointas
+                                        the  pivot  joint  (Figure    1d),    they   did  not
+                                       as the pivot joint (Figure 1d), they did not receive      receive   any   support     at all  from   the   arm
+                                                                                                                                all from the arm pad andpad   and
+                                        could   use  the  haptic   interface     by   using   their   shoulder
+                                       could use the haptic interface by using their shoulder as the pivot joint.  as the   pivot  joint.
+
+
+
+
+                                                                    (a)                                                          (b)
+
+
+
+
+                                                                    (c)                                                          (d)
+                                       Figure
+                                        Figure1.1.User
+                                                    Userinterface
+                                                         interfacefor
+                                                                    forthe
+                                                                         thestiffness
+                                                                             stiffnessdiscrimination
+                                                                                       discriminationtask:
+                                                                                                         task:(a)(a)metacarpophalangeal
+                                                                                                                     metacarpophalangealjoint  jointasasthe
+                                                                                                                                                          the
+                                       pivot
+                                        pivotjoint;
+                                              joint;(b)
+                                                     (b)wrist
+                                                         wristjoint
+                                                               jointasasthe
+                                                                         thepivot
+                                                                             pivotjoint;
+                                                                                   joint;(c)
+                                                                                          (c)elbow
+                                                                                              elbowjoint
+                                                                                                     jointasasthe
+                                                                                                               thepivot
+                                                                                                                    pivotjoint;
+                                                                                                                           joint;(d)
+                                                                                                                                  (d)shoulder
+                                                                                                                                      shoulderjoint
+                                                                                                                                                jointasasthe
+                                                                                                                                                          the
+                                       pivot
+                                        pivotjoint.
+                                              joint.
+
+                                       2.2.
+                                        2.2.Software
+                                             Softwareand
+                                                      andVirtual
+                                                          VirtualEnvironment
+                                                                  Environment
+                                            For
+                                             Forthis
+                                                 thisexperiment,
+                                                       experiment,wewe created a virtual
+                                                                          created        simulation
+                                                                                  a virtual         of two
+                                                                                            simulation   of computer-generated   cyl-
+                                                                                                            two computer-generated
+                                        cylinders with  different stiffness values. The  participants used  this simulation to explore
+                                       inders with different stiffness values. The participants used this simulation to explore the
+                                        the upper surfaces of those cylinders. Microsoft Visual C++ and the OpenGL graphics
+                                        library were used to generate the graphical interface that is compatible with any desktop
+Multimodal Technol. Interact. 2022, 6, x FOR PEER REVIEW                                                                                              4 of 14
+
+
+
+      Multimodal Technol. Interact. 2022, 6, 98                                                                                                  4 of 14
+                                         upper surfaces of those cylinders. Microsoft Visual C++ and the OpenGL graphics library
+                                         were used to generate the graphical interface that is compatible with any desktop or lap-
+                                         top computer [15]. OpenHapticsTM Toolkit                  was used as an interface between the software
+                                            or laptop computer [15]. OpenHapticsTM Toolkit was used as an interface between the
+                                         and  the user.
+                                            software     andWe  theused
+                                                                    user. an
+                                                                           WeIntel(R)
+                                                                               used anCore      (TM)
+                                                                                          Intel(R)   Corei7-6700
+                                                                                                            (TM) computer       with awith
+                                                                                                                   i7-6700 computer       64-bit   Operation
+                                                                                                                                                a 64-bit
+                                         system,   Windows          10  Education    edition,   16.0    GB   RAM,     and  an
+                                            Operation system, Windows 10 Education edition, 16.0 GB RAM, and an NVIDIA Quadro  NVIDIA       Quadro      M2000
+                                         video  adapter.
+                                            M2000              The userThe
+                                                    video adapter.         interface   is shown
+                                                                              user interface        in Figure
+                                                                                              is shown           2, which
+                                                                                                           in Figure        contains
+                                                                                                                       2, which containstwotwo virtual
+                                                                                                                                                  virtualthree-
+                                         dimensional       cylinders
+                                            three-dimensional            (numbered
+                                                                     cylinders (numbered1 and  3), response
+                                                                                             1 and   3), responsefeedback
+                                                                                                                    feedbackofofthe
+                                                                                                                                 the last  trial,device
+                                                                                                                                      last trial,  device sta-
+                                         tus, and a timer to display the remaining trial time. This simulation also allowsuser
+                                            status, and    a  timer  to display  the remaining    trial time.  This  simulation  also  allows   the   the user
+                                            to pause
+                                         to pause   it itatatany
+                                                               anytime
+                                                                   timeusing
+                                                                          using the
+                                                                                the “P”
+                                                                                     “P”keykeyfrom
+                                                                                                from thethekeyboard.
+                                                                                                             keyboard.
+
+
+
+
+                                         Figure 2. User interface for the stiffness discrimination task.
+                                            Figure 2. User interface for the stiffness discrimination task.
+
+                                         2.3.2.3. Haptic
+                                              Haptic     Interfaceand
+                                                      Interface    andHardware
+                                                                      Hardware
+                                                   GeomagicTouch      TM
+                                                                TouchTM (3D (3D Systems,
+                                                                                 Systems, Inc.)
+                                               Geomagic                                        Inc.)was
+                                                                                                      wasused
+                                                                                                            usedas as
+                                                                                                                   thethe
+                                                                                                                        haptic interface.
+                                                                                                                           haptic          This This
+                                                                                                                                    interface.   device
+                                                                                                                                                      device
+                                            was modified to use with the index finger through a custom-made stylus. The device
+                                         was modified to use with the index finger through a custom-made stylus. The device has
+                                            has three degrees of freedom, and at the three axes, the stiffness limits are 1.26 N/mm,
+                                         three degrees of freedom, and at the three axes, the stiffness limits are 1.26 N/mm, 2.31
+                                            2.31 N/mm, and 1.02 N/mm, respectively. According to the device specifications, the
+                                         N/mm,
+                                            maximum and exertable
+                                                          1.02 N/mm,  forcerespectively.
+                                                                             is 3.3 N at anyAccording         to the device specifications, the maxi-
+                                                                                                nominal position.
+                                         mum exertable        force  is  3.3  N  at any   nominal      position.
+                                                   The custom-made stylus was designed aiming to quadruple the haptic device’s maxi-
+                                            mumTheexertable
+                                                      custom-made        stylus
+                                                                force. The        wasdevice
+                                                                              haptic    designedwith aiming    to quadruple
+                                                                                                        modified   finger stylusthe
+                                                                                                                                  andhaptic   device’s
+                                                                                                                                        a shifted pivot max-
+                                                                                                                            TM haptic interface shifts
+                                         imum
+                                            pointexertable
+                                                    is shown inforce.  The
+                                                                  Figure   3. haptic
+                                                                              The pivotdevice
+                                                                                          pointwith
+                                                                                                  of theaGeomagic
+                                                                                                           modifiedTouch
+                                                                                                                       finger  stylus and a shifted pivot
+                                            from
+                                         point   is point
+                                                    shown  “O”
+                                                             in to  point3.“A”
+                                                                 Figure       Thetopivot
+                                                                                    increasepointtheofexertable  force onTouch
+                                                                                                       the Geomagic        “O” (FTM    ) by four
+                                                                                                                                    haptic
+                                                                                                                                  omni            timesshifts
+                                                                                                                                             interface
+                                            when
+                                         from        the “O”
+                                                 point   user is
+                                                               toapplying
+                                                                   point “A”  force
+                                                                                  to (F user ) on the
+                                                                                      increase     thefinger  stylusforce
+                                                                                                        exertable     [16]. on
+                                                                                                                            The“O”
+                                                                                                                                 modified
+                                                                                                                                      (Fomni)stylus cantimes
+                                                                                                                                              by four
+                                            rotate about point A and move in a horizontal direction (in and out of the page) through
+                                         when the user is applying force (Fuser) on the finger stylus [16]. The modified stylus can
+                                            the linear guide rail. To ensure that the participants can control the stylus comfortably
+                                         rotate about point A and move in a horizontal direction (in and out of the page) through
+                                            during the experimentation, their index finger is comfortably wrapped using an adjustable
+                                         thestrap
+                                              linearoundguide
+                                                            therail.   Toholder.
+                                                                  finger   ensure that the participants can control the stylus comfortably
+                                         during Athe     experimentation,
+                                                      custom-made      portabletheir    index finger
+                                                                                  ambidextrous            is comfortably
+                                                                                                    arm restraint            wrapped
+                                                                                                                    setup (Figure  4) wasusing   an adjusta-
+                                                                                                                                           constructed
+                                         bletostrap   around
+                                                install         the finger
+                                                        the modified    stylusholder.
+                                                                                of the Geomagic TouchTM haptic device. The setup included a
+                                             padded surface and a folding palm rest that allowed the isolation of the arm’s pivot joints.
+                                             It had the ability to support the arm’s movement at the index finger, wrist, and elbow joints.
+Multimodal
+ MultimodalTechnol.
+            Technol. Interact. 2022,
+                               2022,6,6,98
+                                         x FOR PEER REVIEW                                                                                              5 of 14
+                                                                                                                                                   5 of 14
+
+
+
+
+                                Figure 3. Geomagic TouchTM haptic device with modified stylus. The modified stylus can rotate
+                                about the link at point A and slide on the linear guide rail sideways (in and out of the page as
+                                shown). The finger holder with a strap allows palpation with only one finger. Point O is the origi-
+                                nal pivot (the distal end of the second arm) of the haptic device and D = 28 mm)
+
+                                     A custom-made portable ambidextrous arm restraint setup (Figure 4) was con-
+                                structed    to Geomagic
+                                                 install theTouch
+                                                                modified        stylus    ofwith
+                                                                                              the modified
+                                                                                                   Geomagic       Touch   TM haptic device. The setup
+                                   Figure3.3. Geomagic
+                                   Figure                     TouchTM TM haptic     devicewith
+                                                                          haptic device                        stylus.The
+                                                                                                  modified stylus.     Themodified
+                                                                                                                            modifiedstylus
+                                                                                                                                        styluscancanrotate
+                                                                                                                                                       rotate
+                                included
+                                   aboutthe
+                                   about     a link
+                                           the  padded       surface
+                                                          point
+                                                 linkatatpoint AAandand and   ona the
+                                                                           slide
+                                                                       slide       folding
+                                                                                  on  the     palm
+                                                                                           linear
+                                                                                      linear  guide  rest
+                                                                                                  guide
+                                                                                                    rail    that
+                                                                                                          rail    allowed
+                                                                                                               sideways
+                                                                                                         sideways              the
+                                                                                                                               and
+                                                                                                                          (inout
+                                                                                                                    (in and      of isolation
+                                                                                                                                    out  of the
+                                                                                                                                    the page      of
+                                                                                                                                               aspage the
+                                                                                                                                                   shown).asarm’s
+                                pivot
+                                   The joints.
+                                       fingerThe
+                                   shown).         Itfinger
+                                                      had
+                                                 holder      the
+                                                          with    ability
+                                                               older
+                                                               a strapwith
+                                                                        allowsto  support
+                                                                              a strap   allows
+                                                                                 palpation     the
+                                                                                                palpation
+                                                                                              with           movement
+                                                                                                    arm’sewith
+                                                                                                   only            only
+                                                                                                              finger.    oneOat
+                                                                                                                      Point    isthe
+                                                                                                                              finger. index     finger,
+                                                                                                                                       Point Opivot
+                                                                                                                                  the original    is the    wrist,
+                                                                                                                                                           origi-
+                                                                                                                                                        (the
+                                anddistal
+                                     elbow
+                                   nal pivot    joints.
+                                                (the  distal  end  of  the  second    arm)   of the haptic
+                                          end of the second arm) of the haptic device and D = 28 mm).        device   and D   = 28  mm)
+
+                                         A custom-made portable ambidextrous arm restraint setup (Figure 4) was con-
+                                    structed to install the modified stylus of the Geomagic TouchTM haptic device. The setup
+                                    included a padded surface and a folding palm rest that allowed the isolation of the arm’s
+                                    pivot joints. It had the ability to support the arm’s movement at the index finger, wrist,
+                                    and elbow joints.
+
+
+
+
+                                Figure 4. Custom-made portable arm restraint table setup.
+                                    Figure 4. Custom-made portable arm restraint table setup.
+
+                                2.4.2.4. Participants
+                                     Participants
+                                      In In  total,
+                                         total,  40 40   participants
+                                                     participants    (15(15  female
+                                                                          female     and
+                                                                                   and   2525  male)
+                                                                                             male)     between1818and
+                                                                                                     between          and3030years
+                                                                                                                               yearsofofage
+                                                                                                                                          age(mean
+                                   (mean ± standard deviation = 21.7 ± 3.4) were recruited for this study. As prior technical
+                                ± standard deviation = 21.7 ± 3.4) were cruited for this study. As prior technical
+                                   knowledge      was not necessary,
+                                    Figure 4. Custom-made       portable any
+                                                                          arm interested    candidate
+                                                                               restraint table  setup. without known neuromuscular
+                                knowledge was not necessary, any interested candidate without known neuromuscular
+                                   abnormalities, injuries (fractures, etc.), and/or orthopedic procedures of the dominant
+                                abnormalities,
+                                   hand             injuries (fractures,
+                                           could participate.    This studyetc.),    and/or orthopedic
+                                                                               was conducted                   procedures
+                                                                                                   with approval    from the of    the dominant
+                                                                                                                                Institutional
+                                    2.4. Participants
+                                hand   could
+                                   Review       participate.
+                                              Board             This
+                                                      (IRB) at our     study was
+                                                                    institution.      conducted with
+                                                                                   Each                    approval     fromformsthe Institutional
+                                          In total,  40  participants  (15 female    andparticipant    signed
+                                                                                          25 male) between     two consent
+                                                                                                                 18 and 30 years    of before
+                                                                                                                                       age (mean
+                                Review     Board (IRB)
+                                   participation:           at our institution.
+                                                     one informed    consent formEachabout participant    signed
+                                                                                             this experiment    andtwo   consent
+                                                                                                                     another         forms
+                                                                                                                               consent  formbefore
+                                    ± standard deviation = 21.7 ± 3.4) were recruited for this study. As prior technical
+                                participation:
+                                   for COVID-19   one    informed consent
+                                                     precautionary             form
+                                                                      awareness.    Outabout
+                                                                                         of thethis experimentrecruited,
+                                                                                                 40 participants    and another     consent form
+                                                                                                                              2 participants’
+                                    knowledge was not necessary, any interested candidate without known neuromuscular
+                                fordata  were removed
+                                     COVID-19               after we detected
+                                                    precautionary                them Out
+                                                                        awareness.      as outliers
+                                                                                              of theusing  the three-sigma
+                                                                                                      40 participants          test based2 on
+                                                                                                                           recruited,      partici-
+                                    abnormalities,
+                                   the  Weber           injuries
+                                                fractions         (fractures,
+                                                            calculated   across etc.),
+                                                                                all    and/orTherefore,
+                                                                                    sessions.    orthopedic theprocedures
+                                                                                                                data  from  38 ofparticipants
+                                                                                                                                   the dominant
+                                pants’
+                                    hand
+                                         data   were
+                                            could
+                                                        removed
+                                                    participate.
+                                                                    after   we  detected
+                                                                   Thisconsidered
+                                                                                             them
+                                                                          study wasforconducted
+                                                                                                    as  outliers   using  the    three-sigma
+                                                                                                      with approval from the Institutional
+                                                                                                                                               test
+                                   (25 male    and  13  female)  were                    the  analyses.
+                                based on the Weber fractions calculated across all sessions. Therefore, the data from 38
+                                   Review Board (IRB) at our institution. Each participant signed two consent forms before
+                                participants (25 male
+                                   participation:      and 13 female)
+                                                  one informed consentwere
+                                                                       form considered  for the analyses.
+                                                                            about this experiment and another consent form
+                                   for COVID-19 precautionary awareness. Out of the 40 participants recruited, 2 partici-
+                                   pants’ data were removed after we detected them as outliers using the three-sigma test
+                                   based on the Weber fractions calculated across all sessions. Therefore, the data from 38
+                                   participants (25 male and 13 female) were considered for the analyses.
+Multimodal Technol. Interact. 2022, 6, 98                                                                                                                   6 of 14
+
+
+
+
+                                                              2.5. Experimental Procedure
+                                              We tested the effect of four separate pivot joints (the metacarpophalangeal joint of the
+                                        dominant index finger, wrist, elbow, and shoulder joints) on the stiffness discrimination
+                                        thresholds. For instance, the elbow joint as the pivot meant that the participant placed
+                                        his/her elbow on a padded surface for supporting the movement of the joints that are
+                                        distal to the elbow. In a similar manner, for the shoulder pivot joint, the arm was allowed
+                                        to move freely without placing it on any surface at any portion of the arm while keeping
+                                        the torso stationary. We focused on only the proprioceptive feedback from the joints that
+                                        are actively utilized during haptic exploration while judging the relative stiffness of the
+                                        two virtual surfaces. Therefore, by controlling the pivot joint during the haptic exploration,
+                                        we aimed to find out any patterns in individuals’ sensitivity to discriminate stiffness when
+                                        the actively utilized joints were varied.
+                                              The experimentation was completed in four sessions with each session taking about
+                                        30 min. The participants were allowed to perform only one session per day. The joint order
+                                        in the four sessions for each participant was randomized. The participants explored the
+                                        computer simulation of two virtual cylinders. The upper surfaces of these two cylinders
+                                        were designated with different stiffness values. The participants were requested to identify
+                                        the stiffer surface in between the two surfaces based on a two-alternative, forced-choice
+                                        procedure. They were given a 15 s time limit per trial to feel the stiffness of the simulated
+                                        cylinders. The participants were asked to record their response to the stiffer side by selecting
+                                        either “1” or “3” from the keyboard. A staircase procedure [16] was used to decide when
+                                        to update the stiffness difference between the two surfaces; four incorrect answers in a
+                                        row or not obtaining three correct answers in a row in ten consecutive trials resulted in an
+                                        increase (the difference was too small to be detected by the participant), and three correct
+                                        answers in a row resulted in a decrease in the stiffness difference (the stiffness difference
+                                        was detectable by the participant beyond random chance). Figure 5 presents a sample of
+Multimodal Technol. Interact. 2022, 6, xthe
+                                         FORdata
+                                              PEERtoREVIEW
+                                                     demonstrate this approach. If the participant did not record any response within
+                                                                                                                                  7 of 14
+                                        15 s, the response for that trial was considered as a wrong response.
+
+
+                                                                       Stiffness of comparison side in one session
+
+                                                   0.95
+                Comparison side stiffness (N/mm)
+
+
+
+
+                                                                                                                          3                        5
+                                                    0.9
+                                                   0.85
+                                                                                            1                                                          6
+                                                    0.8                                                                                 4
+                                                   0.75
+                                                    0.7                                          2
+                                                   0.65
+                                                    0.6
+                                                   0.55
+                                                    0.5
+                                                          1   5    9    13   17   21   25   29       33   37   41   45   49   53   57   61   65   69   73
+
+                                                                                                      Trial number
+
+                                                              Figure 5. Actual sample participant data (reversals are numbered).
+                                                              Figure 5. Actual sample participant data (reversals are numbered).
+
+                                                              2.6. Data
+                                                                   OneCollection  and cylinders
+                                                                        of these two  Analysis had a stiffness value of 1.00 N/mm (standard side), and
+                                                                    The data
+                                                              the other       collected
+                                                                         side had         for each
+                                                                                   a stiffness valuesession were
+                                                                                                      ranging fromcomposed
+                                                                                                                   0.5 to 0.99of three (comparison
+                                                                                                                               N/mm    parts: the comparison
+                                                                                                                                                     side) [17].
+                                                              side’s stiffness value for all trials, palpation speed, and palpation force. We used the We-
+                                                              ber fraction, which is widely used to evaluate human perception using psychophysical
+                                                              responses, in order to determine the sensitivity of the participants to stiffness difference.
+                                                              The Weber fraction for each joint of a specific participant was computed from the ratio of
+                                                              just a noticeable stiffness difference to the standard stiffness value [18] using the following
+Multimodal Technol. Interact. 2022, 6, 98                                                                                       7 of 14
+
+
+
+
+                                       The standard stiffness side was randomly assigned to the left or right cylinder for each trial.
+                                       The comparison side had eleven levels of stiffness changing between 0.50 and 0.95 N/mm
+                                       with 0.05 N/mm increments and 0.99 N/mm, which also prescribed the step size when the
+                                       stiffness difference needed to be adjusted.
+                                             Each session was composed of several trials, and the total trial numbers in a session
+                                       depended on each participant’s capability to identify the stiffer side correctly throughout
+                                       the experiment. The sessions ended after six reversals. A reversal is defined as the change
+                                       in the opposite direction, such as the stiffness level decreasing after an increase or vice
+                                       versa. Figure 5 displays the change in the stiffness of the comparison side (the standard
+                                       side is always at 1.00 N/mm) and the use of reversals on actual participant data.
+
+                                       2.6. Data Collection and Analysis
+                                            The data collected for each session were composed of three parts: the comparison
+                                       side’s stiffness value for all trials, palpation speed, and palpation force. We used the We-
+                                       ber fraction, which is widely used to evaluate human perception using psychophysical
+                                       responses, in order to determine the sensitivity of the participants to stiffness difference.
+                                       The Weber fraction for each joint of a specific participant was computed from the ra-
+                                       tio of just a noticeable stiffness difference to the standard stiffness value [18] using the
+                                       following equation:
+
+                                                                                           JND
+                                                               Weber fraction =
+                                                                                   Standard stiffness value
+                                       where the just noticeable difference (JND) is defined as the smallest detectable stiffness
+                                       difference between the two cylinders. A lower Weber fraction implies better stiffness
+                                       discrimination ability. Since the stiffness value of the comparison side changed throughout
+                                       a session, we used the average of the last three reversals as the stiffness value of the
+                                       comparison side.
+                                             The palpation force and velocity vectors at each session were recorded directly from the
+                                       OpenHaptics Toolkit and Geomagic TouchTM haptic device through predefined functions.
+                                       We collected the data for each trial, while the cursor touched the virtual cylinders’ upper
+                                       surface. From the dataset, we extracted the magnitudes of palpation velocity (palpation
+                                       speed) and palpation force vectors at four pivot joints. The palpation speed and palpation
+                                       forces of the standard side only were taken into consideration because this side maintained
+                                       the fixed stiffness value of 1.0 N/mm across all sessions. Palpation forces were calculated
+                                       utilizing Hooke’s law. The average value of palpation speed and force values for all trials
+                                       in each session were computed and considered in the data analyses.
+                                             Out of the 40 participants recruited, 2 participants’ data were removed after we
+                                       detected them as outliers using the three-sigma test based on the Weber fractions calculated
+                                       across all sessions. Therefore, the data from 38 participants (25 male and 13 female) were
+                                       considered for the analyses. The age range of the remaining participants was 18 to 30 years
+                                       with a mean age of 21.7 years and a standard deviation of 3.4 years. Upon normality
+                                       check, a repeated-measure ANOVA was used to examine the statistical significance of the
+                                       Weber fraction values, average palpation forces, and speed across the four pivot joints.
+                                       Bonferroni’s confidence interval adjustment was used for post hoc analysis. The correlation
+                                       between the average palpation speed with respect to the Weber fraction was analyzed using
+                                       the Pearson product–moment correlation coefficient.
+
+                                       3. Results
+                                            We analyzed the average Weber fraction, palpation speed, and palpation force by
+                                       evaluating the effect of four pivot joints on stiffness discrimination. The results are cate-
+                                       gorized in the following subsections based on the Weber fraction, palpation speed, and
+                                       palpation force.
+                                  using the Pearson product–moment correlation coefficient.
+
+                                  3. Results
+                                               We analyzed the average Weber fraction, palpation speed, and palpation force by
+                                          evaluating the effect of four pivot joints on stiffness discrimination. The results are cate-
+Multimodal Technol. Interact. 2022, 6, 98                                                                                       8 of 14
+                                          gorized in the following subsections based on the Weber fraction, palpation speed, and
+                                          palpation force.
+
+                                 3.1.
+                                   3.1.Weber
+                                        WeberFraction
+                                               Fraction
+                                        The
+                                         Theaverage
+                                              averageWeber
+                                                        Weberfraction
+                                                                  fractionvalues
+                                                                             valueswhen
+                                                                                     whenthethemetacarpophalangeal
+                                                                                                 metacarpophalangealjoint     jointofofthe
+                                                                                                                                        theindex
+                                                                                                                                            index
+                                 finger,
+                                   finger,wrist
+                                            wristjoint,
+                                                   joint,elbow
+                                                           elbowjoint,
+                                                                    joint,and
+                                                                           andshoulder
+                                                                                 shoulderjoint
+                                                                                            jointwas
+                                                                                                   wasused
+                                                                                                         usedas asthe
+                                                                                                                    thepivot
+                                                                                                                         pivotjoint
+                                                                                                                                 jointand
+                                                                                                                                        andtheir
+                                                                                                                                             their
+                                 corresponding
+                                   correspondingstandard
+                                                      standarderrors
+                                                                   errorswere      0.1423±±0.017,
+                                                                            were0.1423                 0.1279±±0.014,
+                                                                                              0.017,0.1279                0.1276±±0.013,
+                                                                                                                  0.014,0.1276         0.013,and
+                                                                                                                                              and
+                                 0.1150   ±  0.012,  respectively.   As  shown    in Figure  6, the  Weber   fractions   decreased
+                                   0.1150 ± 0.012, respectively. As shown in Figure 6, the Weber fractions decreased mono-             monoton-
+                                 ically  as the
+                                   tonically  aspivot   joint joint
+                                                  the pivot    moved     from from
+                                                                      moved     the metacarpophalangeal
+                                                                                       the metacarpophalangeal   joint to  the to
+                                                                                                                        joint   shoulder    joint.
+                                                                                                                                   the shoulder
+                                 The   average   Weber    fractions   for the  wrist  and  elbow    joints were    very  close
+                                   joint. The average Weber fractions for the wrist and elbow joints were very close to one     to one   another.
+                                 The   change
+                                   another.     in change
+                                              The   Weber fractions
+                                                              in Weberacross     the four
+                                                                           fractions       pivot
+                                                                                      across   the joints  was not
+                                                                                                    four pivot       statistically
+                                                                                                                  joints  was not significant
+                                                                                                                                     statistically
+                                 (psignificant
+                                     > 0.05 for (p
+                                                 all>joints).
+                                                      0.05 forThe     weber The
+                                                                 all joints). fraction
+                                                                                    webervalues   across
+                                                                                            fraction       different
+                                                                                                        values  acrossjoints   werejoints
+                                                                                                                         different     analyzed
+                                                                                                                                             were
+                                 for  male   and   female    participants    separately.   This   analysis   did   not  reveal
+                                   analyzed for male and female participants separately. This analysis did not reveal any        any   apparent
+                                 pattern
+                                   apparentfor pattern
+                                               the jointsforand
+                                                              thewas    notand
+                                                                   joints   statistically
+                                                                                was not significant
+                                                                                          statisticallyacross   the joints
+                                                                                                          significant        (p >the
+                                                                                                                         across    0.05), which
+                                                                                                                                       joints (p >
+                                 suggests    that   the gender     of  the  participants   had   no   effect on   their  performance
+                                   0.05), which suggests that the gender of the participants had no effect on their perfor-                in the
+                                 haptic
+                                   manceexploration.
+                                           in the haptic exploration.
+
+
+                                                              0.15
+                                                                                      0.1423
+                                        Avg. Weber fraction
+
+
+
+
+                                                              0.14
+
+                                                                                                    0.1279         0.1276
+                                                              0.13
+
+                                                              0.12                                                               0.115
+
+                                                              0.11
+
+                                                               0.1
+                                                                     0            1             2              3             4
+                                                                         1. Metacarpophalangeal joint of index finger, 2. Wrist joint,
+                                                                                     3. Elbow joint, 4. Shoulder joint.
+
+                                  Figure6.6.Average
+                                 Figure      AverageWeber
+                                                     Weberfractions
+                                                            fractions(mean
+                                                                      (mean±±standard
+                                                                              standarderror)
+                                                                                       error)of
+                                                                                              offour
+                                                                                                 fourpivot
+                                                                                                      pivotjoints.
+                                                                                                            joints.
+
+                                 3.2.
+                                   3.2.Palpation
+                                        PalpationSpeed
+                                                    Speed
+                                        The
+                                         The averagepalpation
+                                             average    palpationspeed speedvalues
+                                                                              valuesofofthe theparticipants
+                                                                                                 participantsfor forthe
+                                                                                                                     thestandard
+                                                                                                                          standardstiffness
+                                                                                                                                     stiffnessside
+                                                                                                                                                 side
+                                 are  shown     in Figure
+                                   are shown in Figure 7.   7.   The   average     palpation    speed   for the   metacarpophalangeal
+                                                                      average palpation speed for the metacarpophalangeal joint               jointof
+                                 ofthe
+                                     the  index
+                                       index      finger,
+                                               finger,     wrist
+                                                       wrist       joint,
+                                                               joint,      elbow
+                                                                       elbow        joint,
+                                                                               joint, and and     shoulder
+                                                                                             shoulder   joint joint  and corresponding
+                                                                                                              and their    their corresponding
+                                                                                                                                             stand-
+                                 standard
+                                   ard errorserrors
+                                                 werewere   18.1375
+                                                       18.1375         ± 1.276
+                                                                  ± 1.276    mm/s,mm/s,    19.5747
+                                                                                      19.5747        ± 1.604
+                                                                                                 ± 1.604  mm/s,mm/s,    17.0552
+                                                                                                                    17.0552        ± 1.359
+                                                                                                                               ± 1.359 mm/s,mm/s,and
+                                 and   20.0833
+                                   20.0833       ± 1.466
+                                            ± 1.466   mm/s,mm/s,      respectively.
+                                                                respectively.     The The     average
+                                                                                        average         palpation
+                                                                                                   palpation    speedspeed    for elbow
+                                                                                                                        for the   the elbow
+                                                                                                                                          jointjoint
+                                                                                                                                                 was
+                                 was   the lowest,
+                                   the lowest,   whilewhile    the shoulder
+                                                        the shoulder              jointthe
+                                                                          joint had      had   the highest
+                                                                                            highest   value. value.    The repeated-measure
+                                                                                                              The repeated-measure         analysis
+                                 analysis   of  variance   across   the  four  joints  indicated    that there
+                                   of variance across the four joints indicated that there was no significant    was  no   significant  difference
+                                                                                                                                 difference   in the
+                                 inpalpation
+                                     the palpation
+                                                speedspeed   between
+                                                       between            the joints
+                                                                    the joints        (p > 0.05).
+                                                                                 (p > 0.05).        We also
+                                                                                               We also       did observe
+                                                                                                         did not   not observeany any  significant
+                                                                                                                                   significant   cor-
+                                 correlation    between
+                                   relation between        theaverage
+                                                         the     averageWeber
+                                                                            Weberfractions
+                                                                                     fractionsand and the
+                                                                                                       the average
+                                                                                                           average palpation
+                                                                                                                       palpation speeds
+                                                                                                                                    speeds of ofthe
+                                                                                                                                                  the
+                                 standard
+                                   standardstiffness
+                                              stiffnessside
+                                                         sideforforany
+                                                                     anyofofthe
+                                                                             thefour
+                                                                                   fourjoints.
+                                                                                         joints.There
+                                                                                                 Therewaswasalso
+                                                                                                               alsononoapparent
+                                                                                                                         apparentpattern
+                                                                                                                                     patternininthe
+                                                                                                                                                  the
+                                 average
+                                   averagepalpation
+                                             palpationspeeds
+                                                          speedsbetween
+                                                                     betweenthe themale
+                                                                                     maleand andfemale
+                                                                                                  femaleparticipants.
+                                                                                                           participants.
+                                        The experimental procedure suggests that the stiffness difference between the two
+                                 surfaces tended to decrease with an increasing number of trials in any given session.
+                                 Figure 8 clearly illustrates the decrease in the average stiffness difference values across the
+                                 four joints, as represented by quartiles based on the trial numbers. The repeated-measure
+                                 analysis of variance revealed that there was a significant difference between the first and
+                                 second quartiles and other quartiles’ values (p < 0.05), but the third and fourth quartile
+                                 values were close to each other and showed no statistical significance in any of the analyzed
+                                 joints. Therefore, we further dissected the palpation speed data into quartiles to potentially
+                                 observe any patterns that may diminish in the aggregated data for any given session.
+dal Technol.Multimodal  Technol.
+             Interact. 2022,      Interact.
+                             6, x FOR  PEER 2022, 6, 98
+                                               REVIEW                                                                                                                                                                                                                             9 of 14     9 of 14
+
+
+
+
+                                                   Avg. palpaion speed (mm/sec)
+
+
+                                                                                    22.00                                                                                                                                                                          20.08
+                                                                                                                                                                                       19.57
+                                                                                                                                        18.14                                                                                                 17.06
+                                                                                    18.00
+
+
+                                                                                    14.00
+
+
+                                                                                    10.00
+                                                                                                                 0                          1                                                2                                                   3                      4
+
+                                                                                                                        1. Metacarpophalangeal joint of index finger, 2. Wrist joint,
+                                                                                                                                    3. Elbow joint, 4. Shoulder joint
+           Multimodal Technol. Interact. 2022, 6, x FOR PEER REVIEW                                                                                                                                                                                                                         10 of 15
+                                                   Figure 7. Average palpation speed of four pivot joints (mean ± standard error).
+                                                                   Figure 7. Average palpation speed of four pivot joints (mean ± standard error).
+
+                                                        The experimental procedure suggests that the stiffness difference between the two
+                                                   surfacesMetacarpophalangeal    jointan
+                                                             tended to decrease with    of increasing number of trialsWrist
+                                                                                                                       in anyjoint
+                                                                                                                              given session. Fig-
+                                                                     index finger
+                                                   ure 8 clearly illustrates the decrease in the average stiffness difference  values across the
+                                                            0.40                                           0.40     a
+                                                                     a
+                                                   four joints, as represented  by quartiles based on the trial numbers. The repeated-measure
+                                                   analysis of variance revealed that there was a significant difference between the first and
+                                                                                                                                                                                                        Avg. stiffness diff. (N/mm)
+                                                                           Avg. stiffness diff. (N/mm)
+
+
+
+
+                                                            0.30
+                                                   second quartiles                                        0.30but the third and fourth quartile
+                                                                       and other quartiles’ values (p < 0.05),
+                                                   values were close to each other and showed no statistical significance in any of the ana-
+                                                   lyzed joints. Therefore,bwe further dissected the palpation             b
+                                                            0.20                                           0.20 speed data into quartiles to po-
+                                                   tentially observe any patterns c that may diminish in the aggregated data cfor anyc given
+                                                   session.                              c
+                                                                                                                                                                                                                                       0.10
+                                                                                                                 0.10
+
+                                            Metacarpophalangeal joint of                                                                                                                                     Wrist0.00
+                                                                                                                                                                                                                    joint
+                                                   index finger
+                                                          0.00
+                                            0.40                 1st 2nd                                                                        3rd       4th 0.40                                a                                              1st     2nd      3rd       4th
+                                                   a
+
+                                                                                                                                                                                                                                                  Shoulder joint
+                                                                                                                                                      Avg. stiffness diff. (N/mm)
+
+
+
+
+                                                                                                                                  Elbow joint
+              Avg. stiffness diff. (N/mm)
+
+
+
+
+                                            0.30                                                                                                                                     0.30
+                                                                                                                0.40         a                                                                                                         0.40          a
+                                                                                                                b                                                                                                                      b
+                                            0.20                                                                                                                                     0.20
+                                                                                  Avg. stiffness diff. (N/mm)
+
+
+
+
+                                                                                                                                                                                                      Avg. stiffness diff. (N/mm)
+
+
+
+
+                                                                                                                 0.30   c                                                                                                              0.30      c        c
+                                                                                                                                    c
+                                                                                                                                                                                     0.10
+                                            0.10
+                                                                                                                 0.20                   b                                                                                              0.20                   b
+                                                                                                                                                  c                                 c 0.00                                                                         c
+                                            0.00                                                                                                                                                                                                                              c
+                                                       1st                                                       0.10 3rd
+                                                                                                                2nd               4th                                                            1st                                  2nd
+                                                                                                                                                                                                                                       0.10 3rd          4th
+
+
+                                                                                                                 0.00                                                                                                                  0.00
+                                                                                                                            1st     2nd         3rd                  4th                                                                         1st     2nd      3rd       4th
+
+                                                                                                                        Figure 8. Relative stiffness difference between two virtual cylinders in quarterly subsets of the total
+                                                                                                                        Figure 8. Relative stiffness difference between two virtual cylinders in quarterly subsets of the total
+                                                                                                                        number of trials. Means labeled without a common letter are significantly different (p < 0.05).
+                                                                                                                        number of trials. Means labeled without a common letter are significantly different (p < 0.05).
+
+                                                                                                                              The
+                                                                                                                              The palpation
+                                                                                                                                  palpation speed
+                                                                                                                                            speed onon the
+                                                                                                                                                       the standard
+                                                                                                                                                           standard stiffness
+                                                                                                                                                                     stiffness side
+                                                                                                                                                                               side recorded   in the
+                                                                                                                                                                                     recorded in  the simulation
+                                                                                                                                                                                                       simulation for for each
+                                                                                                                                                                                                                          each
+                                                                                                                        participant’s  response  was  separated   into four  divisions   based  on   the  quartiles
+                                                                                                                        participant’s response was separated into four divisions based on the quartiles of total       of total
+                                                                                                                                                                                                                           trial
+                                                                                                                        trial numbers.
+                                                                                                                        numbers.         The average
+                                                                                                                                   The average  of the of the palpation
+                                                                                                                                                        palpation         speed of
+                                                                                                                                                                   speed values   values
+                                                                                                                                                                                     each of
+                                                                                                                                                                                          25%each   25%
+                                                                                                                                                                                                of the     of the
+                                                                                                                                                                                                        total  trialtotal  trial
+                                                                                                                                                                                                                     numbers
+                                                                                                                        numbers
+                                                                                                                        was        was calculated
+                                                                                                                              calculated            and is illustrated
+                                                                                                                                         and is illustrated  in Figure in Figure
+                                                                                                                                                                       9 for       9 forpivot
+                                                                                                                                                                             the four    the four   pivot
+                                                                                                                                                                                              joints.       joints.
+                                                                                                                                                                                                       It can        It can be
+                                                                                                                                                                                                                be observed
+                                                                                                                        observed from Figure 9 that the participants monotonically increased their average pal-
+                                                                                                                        pation speed on the standard stiffness side (1.00 N/mm) through the quartiles for all four
+                                                                                                                        joints. This showed that the participants in general had a tendency to increase their aver-
+                                                                                                                        age speed across the quartiles with declining relative stiffness difference.
+                                                                         Figure 8. Relative stiffness difference between two virtual cylinders in quarterly subsets of the total
+                                                                         number of trials. Means labeled without a common letter are significantly different (p < 0.05).
+
+                                                                              The palpation speed on the standard stiffness side recorded in the simulation for each
+Multimodal Technol. Interact. 2022, 6, 98                                                                                                                           10 of 14
+                                                                        participant’s response was separated into four divisions based on the quartiles of total
+                                                                        trial numbers. The average of the palpation speed values of each 25% of the total trial
+                                                                        numbers was calculated and is illustrated in Figure 9 for the four pivot joints. It can be
+                                                                      from  Figurefrom
+                                                                        observed    9 thatFigure
+                                                                                           the participants
+                                                                                                  9 that the monotonically    increased their
+                                                                                                              participants monotonically       average their
+                                                                                                                                             increased   palpation  speed
+                                                                                                                                                               average    pal-
+                                                                      onpation
+                                                                          the standard   stiffness side (1.00 N/mm)     through   the quartiles  for all four
+                                                                                speed on the standard stiffness side (1.00 N/mm) through the quartiles for alljoints. This
+                                                                                                                                                                         four
+                                                                      showed    that the
+                                                                        joints. This      participants
+                                                                                     showed    that the in general had
+                                                                                                        participants      a tendency
+                                                                                                                      in general  had to  increase their
+                                                                                                                                       a tendency          average
+                                                                                                                                                    to increase     speed
+                                                                                                                                                                 their  aver-
+                                                                      across  the quartiles  with declining  relative stiffness difference.
+                                                                        age speed across the quartiles with declining relative stiffness difference.
+
+                                                         Metacarpophalangeal joint                                                                             Wrist joint
+                                                              of index finger
+                                                    24                                                                                            24
+                 Avg. palpation speed (mm/sec)
+
+
+
+
+                                                                                                                 Avg. palpation speed (mm/sec)
+
+
+
+
+                                                                                                                                                                                        a
+                                                                                                                                                                              a
+                                                                                                                                                                    ab
+                                                                                                                                                  20
+
+
+                                                                                              a
+                                                    20                             a
+                                                                        a
+
+
+
+
+                                                                                                                                                           b
+                                                             b
+
+
+
+
+                                                    16                                                                                            16
+
+                                                    12                                                                                            12
+                                                     8                                                                                             8
+                                                     4                                                                                             4
+                                                     0                                                                                             0
+                                                            1st         2nd        3rd         4th                                                       1st       2nd        3rd        4th
+                                                           Quartile    Quartile   Quartile   Quartile                                                  Quartile   Quartile   Quartile   Quartile
+
+
+                                                                 Elbow joint                                                                                Shoulder joint
+                                                    24                                                                                            24
+
+
+
+
+                                                                                                                                                                                        a
+                                                                                                                 Avg. palpaption speed (mm/sec)
+
+
+
+
+                                                                                                                                                                              a
+                    Avg. palpation speed (mm/sec)
+
+
+
+
+                                                                                                                                                                    ab
+                                                    20                                                                                            20
+                                                                                              a
+                                                                                   a
+
+
+
+
+                                                                                                                                                          b
+                                                                        a
+
+
+
+
+                                                    16                                                                                            16
+                                                             b
+
+
+
+
+                                                    12                                                                                            12
+
+                                                     8                                                                                             8
+
+                                                     4                                                                                             4
+
+                                                     0                                                                                             0
+                                                             1st       2nd         3rd        4th                                                        1st       2nd        3rd        4th
+                                                          Quartile    Quartile    Quartile    Quartile                                                 Quartile   Quartile   Quartile   Quartile
+
+
+
+                                                                      Figure 9. Average palpation speeds on standard stiffness side in quarterly subsets of total number of
+                                                                      trials (mean ± standard error). Means labeled without a common letter are significantly different
+                                                                      (p < 0.05).
+
+                                                                           We analyzed the differences in average palpation speed using the repeated-measure
+                                                                      analysis of variance within the quartiles. For the metacarpophalangeal and elbow joints,
+                                                                      the values of average palpation speed of the first quartile were significantly different from
+                                                                      the values of other quartiles. For the wrist joint, only the values of the first and third
+                                                                      quartiles were significantly different. For the shoulder joint, the values of the first quartile
+                                                                      had statistically significant differences from those of the third and fourth quartiles. There
+                                                                      was no significant difference among the palpation speed values of other quartiles.
+
+                                                                      3.3. Palpation Force
+                                                                           The average palpation force for the metacarpophalangeal joint of the index finger, the
+                                                                      wrist joint, the elbow joint, and the shoulder joint were 8.8439 ± 0.513 N, 9.7273 ± 0.799 N,
+                                                                      9.4554 ± 0.813 N, and 10.0812 ± 0.675 N, respectively (Figure 10). The average force values
+                                                                      increased as the pivot joint moved from the metacarpophalangeal joint to the shoulder joint,
+                                                                      while at the wrist and elbow joints, they were similar. There was no significant difference
+                                                                      between these four average palpation forces. The male and female participants performed
+                                                                      without any significant difference.
+                                              The average palpation force for the metacarpophalangeal joint of the index finger,
+                                         the wrist joint, the elbow joint, and the shoulder joint were 8.8439 ± 0.513 N, 9.7273 ± 0.799
+                                         N, 9.4554 ± 0.813 N, and 10.0812 ± 0.675 N, respectively (Figure 10). The average force
+                                         values increased as the pivot joint moved from the metacarpophalangeal joint to the
+Multimodal Technol. Interact. 2022, 6, 98
+                                         shoulder joint, while at the wrist and elbow joints, they were similar. There was no11 signif-
+                                                                                                                                  of 14
+                                         icant difference between these four average palpation forces. The male and female partic-
+                                         ipants performed without any significant difference.
+
+
+                                                                         12
+
+
+
+
+                                     Avg. palpation force (N)
+                                                                                                                                                                                                        10.0812
+                                                                                                                                 9.7273                                       9.4554
+                                                                         10
+                                                                                                         8.8439
+
+
+                                                                             8
+
+
+
+
+                                                                             6
+                                                                                 0                         1                       2                                            3                          4
+                                                                                            1. Metacarpophalangeal joint of index finger, 2. Wrist joint,
+                                                                                                        3. Elbow joint, 4. Shoulder joint
+                                                                                                                                                  …
+                                  Figure10.
+                                 Figure  10.Average
+                                             Averagepalpation
+                                                     palpationforce
+                                                               forceofofour
+                                                                        fourpivot
+                                                                             pivotjoints
+                                                                                    joints(mean
+                                                                                           (mean±±standard
+                                                                                                   standarderror).
+                                                                                                            error).
+
+                                           The four
+                                         The      four quartiles’ data dataofofaverage
+                                                                                 averagepalpation
+                                                                                           palpationforces  forfor
+                                                                                                       forces   thethe
+                                                                                                                    fourfour
+                                                                                                                          joints   werewere
+                                                                                                                                joints   also com-
+                                                                                                                                               also
+                                   puted (Figure
+                                  computed         (Figure 11).11).
+                                                                  This computation
+                                                                    This  computationdrewdrewaaconclusion
+                                                                                                 conclusion resembling            observationwe
+                                                                                                              resembling the observation         we
+                                   foundfor
+                                  found       forthe
+                                                   theaverage
+                                                         averagespeed.
+                                                                     speed.The
+                                                                            Theaverage
+                                                                                  averageforce
+                                                                                            forcevalues
+                                                                                                  valuesincreased
+                                                                                                         increasedas asthe
+                                                                                                                        thestiffness
+                                                                                                                              stiffnessdifference
+                                                                                                                                         difference
+                                   decreased.Except
+                                  decreased.          Exceptfor  forthe
+                                                                     thewrist
+                                                                         wristjoint,
+                                                                                joint,the
+                                                                                       theforce
+                                                                                           forcevalue
+                                                                                                 valueofofthe
+                                                                                                           thefirst
+                                                                                                               firstquartile
+                                                                                                                     quartilewaswassignificantly
+                                                                                                                                      significantly
+                                   differentfrom
+                                  different       from those
+                                                           those ofof the other three
+                                                                                  three quartiles.
+                                                                                         quartiles.For
+                                                                                                     Forthe
+                                                                                                          thewrist
+                                                                                                              wristjoint, thethe
+                                                                                                                     joint,    average
+                                                                                                                                   averagevalue  for
+                                                                                                                                             value
+                        Multimodalfor   first
+                                   thethe
+                                   Technol.     quartile
+                                              first
+                                            Interact. 2022, 6,showed
+                                                      quartile    showed
+                                                              x FOR PEERsignificant differences
+                                                                           significant
+                                                                         REVIEW                  withwith
+                                                                                         differences   onlyonly
+                                                                                                             the third quartile’s
+                                                                                                                  the third          average
+                                                                                                                             quartile’s       force12 of 14
+                                                                                                                                          average
+                                  force
+                                   value. value.
+
+
+                                                                         Metacarpophalangeal joint                                                                                   Wrist joint
+                                                                              of index finger
+                                                                        12                                                                                               12
+                                                                                                                                                                                             ab
+
+
+
+                                                                                                                                                                                                         a
+                                       Avg. palpation force (N)
+
+
+
+
+                                                                                                                                                                                                                      a
+                                                                        10
+                                                                                                                     a
+
+
+
+
+                                                                                                                                                                         10
+                                                                                                          a
+
+
+
+
+                                                                                                                                          Avg. palpation force (N)
+                                                                                               a
+
+
+
+
+                                                                                                                                                                                 b
+                                                                                     b
+
+
+
+
+                                                                         8                                                                                                8
+                                                                         6                                                                                                6
+                                                                         4                                                                                                4
+                                                                         2                                                                                                2
+                                                                         0                                                                                                0
+                                                                                  First       Second       Third       Forth                                                    First       Second        Third       Forth
+                                                                                 Quartile     Quartile    Quartile    Quartile                                                  Quartile    Quartile     Quartile    Quartile
+
+
+
+                                                                                      Elbow joint                                                                                   Shoulder joint
+                                                                        12                                                                                               12
+                                                                                                                                                                                                                       a
+                                                                                                                                                                                                          a
+                                                                                                                     a
+                                                                                                          a
+
+
+
+
+                                                                                                                                                                                              a
+                                                                                               a
+
+
+
+
+                                                                        10                                                                                               10
+                                                                                                                                              Avg. palpation force (N)
+
+
+
+
+                                                                                                                                                                                    b
+                                             Avg. palpation force (N)
+
+
+
+
+                                                                                     b
+
+
+
+
+                                                                         8                                                                                                8
+                                                                         6                                                                                                6
+                                                                         4                                                                                                4
+                                                                         2                                                                                                2
+                                                                         0                                                                                                0
+                                                                                   First      Second      Third       Forth                                                      First       Second        Third        Forth
+                                                                                  Quartile    Quartile   Quartile    Quartile                                                    Quartile    Quartile     Quartile     Quartile
+
+
+
+                                                       Figure 11. forces
+                                 Figure 11. Average palpation      Average  palpation
+                                                                         applied      forces applied
+                                                                                  on standard        on standard
+                                                                                                stiffness side in stiffness
+                                                                                                                  quarterly side in quarterly
+                                                                                                                              subsets  of the subsets
+                                                                                                                                              total of the
+                                                       total number of trials (mean ± standard error). Means labeled without a common letter are signifi-
+                                 number of trials (mean    ± different
+                                                       cantly standard(perror).
+                                                                          < 0.05).Means labeled without a common letter are significantly
+                                 different (p < 0.05).
+                                                       4. Discussion
+                                                                                                   The selection of the pivot joint that users utilize for any haptic exploration task in a
+                                                                                              virtual environment can vary depending on the task itself, the design implementation of
+                                                                                              the simulation that incorporates that task, and individual preference. Therefore, it is im-
+                                                                                              portant that we gain insight into how this selection affects the performance of a given task
+Multimodal Technol. Interact. 2022, 6, 98                                                                                      12 of 14
+
+
+
+
+                                       4. Discussion
+                                             The selection of the pivot joint that users utilize for any haptic exploration task in
+                                       a virtual environment can vary depending on the task itself, the design implementation
+                                       of the simulation that incorporates that task, and individual preference. Therefore, it is
+                                       important that we gain insight into how this selection affects the performance of a given
+                                       task so that both users and designers of such simulations may make informed decisions.
+                                       We know that our perception of stiffness is influenced by various factors including the
+                                       existence of tactile and/or proprioceptive feedback, the visual feedback received while
+                                       an object of interest deforms under applied load, the speed of haptic exploration, and the
+                                       stiffness difference between the objects. We do not know, however, if the pivot joint used
+                                       during a task is also one of these influential factors. In that direction, the current study
+                                       aimed to address the effect of selecting the pivot joint using a stiffness discrimination task.
+                                       We analyzed the effect of the pivot (or support) joint specifically on stiffness discrimination
+                                       using three different measures: the Weber fraction, palpation speed, and palpation force
+                                       by means of a psychophysical experiment. The presented methodology, however, can be
+                                       applied to tasks other than stiffness discrimination and, therefore, has the potential to be
+                                       expanded to other aspects of touch.
+                                             The Weber fraction has widely been used to quantify an individual’s ability to dis-
+                                       criminate differences in various modalities such as perception of weight, temperature, and
+                                       auditory feedback. We used the Weber fraction in a similar manner; that is, as a quantifiable
+                                       measure for performance changed as the participants used a different pivot joint in a con-
+                                       trolled experiment. The results of the average Weber fraction demonstrated a monotonic
+                                       decrease as the pivot joint shifted toward the torso, resulting in the smallest average Weber
+                                       fraction at the shoulder joint. Although these differences in the average Weber fraction
+                                       between the joints were not significant, they suggested that the users might become more
+                                       sensitive to stiffness discrimination in a virtual world when more joints of the human arm
+                                       are involved in the procedure. This, in a sense, can be initially interpreted as the amount
+                                       of information received in the form of proprioceptive feedback from the joints increases
+                                       as more joints are involved. The fact that the differences were not significant, however,
+                                       suggests that the pivot joint, at least during a stiffness discrimination task, eventually does
+                                       not play a role in an individual’s performance in the stiffness discrimination task.
+                                             As for the average palpation speed and force, they were both observed to increase as
+                                       the pivot joint moved closer to the torso (i.e., a shift from the metacarpophalangeal joint to
+                                       the shoulder joint) with the exception of the elbow joint. While using the shoulder joint, the
+                                       participants palpated with the highest speed and force. Combined with the results from
+                                       the Weber fraction, it can be concluded that using the metacarpophalangeal joint as the
+                                       pivot seems to be the most advantageous, as incorporating a haptic interface with relatively
+                                       less force capacity would not affect the individual’s performance.
+                                             We also observed that, with the decrease in the stiffness difference between the two
+                                       palpated surfaces, the average palpation speed and the average palpation force both
+                                       increased monotonically. These results suggest that the participants used higher force and
+                                       speed in order to resolve the situations in which the discrimination task became somewhat
+                                       complicated. This prompts more attention to be paid when predicting the amount of force
+                                       from the users in a specific haptic exploration task, especially when users are expected
+                                       to navigate through environments that possess quantifiably similar properties such as
+                                       stiffness. Additionally, the average palpation speed was found to have no correlation with
+                                       the average Weber fraction of individual participants for any of the joints, suggesting that
+                                       the speed at which the surfaces were palpated did not indicate any change in sensitivity for
+                                       discriminating stiffness differences.
+                                             In this study, mainly due to the tedious nature of the employed psychophysical
+                                       experimentation technique, we examined the effect of arm pivot joints on the stiffness
+                                       discrimination task by using one single standard stiffness of 1.0 N/mm, which is close to
+                                       the stiffness of human soft tissue [19]. Further investigation can be carried out with various
+                                       standard stiffness values to investigate the repeatability of the observed results of this
+Multimodal Technol. Interact. 2022, 6, 98                                                                                            13 of 14
+
+
+
+
+                                       study. Additionally, we do not utilize only our ability to discriminate stiffness differences
+                                       while exploring and manipulating haptic environments; therefore, the same procedure
+                                       described herein can be applied to other touch-relevant tasks such as force direction angle
+                                       and height discrimination tasks that would help generalize the effect of arm pivot joints as
+                                       far as the overall experience of haptic manipulation is considered. Finally, the participant
+                                       population used for testing could be a factor; for instance, simulated haptic experiences
+                                       for users of a specific profession (dentists, doctors of allopathic or osteopathic medicine,
+                                       etc.) can be studied for a more complete understanding of the effect of arm pivot joints on
+                                       different populations.
+
+                                       5. Conclusions
+                                             We analyzed the effect of four pivot joints of the arm on stiffness discrimination ability
+                                       through a comparative analysis of the Weber fraction, palpation speed, and palpation force.
+                                       From thirty-eight participants, the Weber fraction for four pivot joints (the metacarpopha-
+                                       langeal joint of the index finger, wrist, elbow, and shoulder joints) were 0.14, 0.13, 0.13, and
+                                       0.12, respectively. When palpation speed and force were considered, there were certain
+                                       tendencies across the pivot joints, especially in the form of monotonic increase as the pivot
+                                       joint approached the torso, but these differences were not significant. In a similar manner,
+                                       the Weber fractions showed no significant difference across the pivot joints, suggesting
+                                       that the selection of the pivot joint did not have an effect on the sensitivity to discriminate
+                                       stiffness differences.
+
+                                       Author Contributions: Conceptualization, E.K.; data curation, K.N.H.; formal analysis, E.K. and
+                                       K.N.H.; investigation, E.K. and K.N.H.; methodology, E.K.; project administration, E.K.; resources,
+                                       E.K.; software, E.K.; supervision, E.K.; validation, K.N.H.; writing—original draft preparation, E.K.
+                                       and K.N.H.; writing—review and editing, E.K. All authors have read and agreed to the published
+                                       version of the manuscript.
+                                       Funding: This research received no external funding.
+                                       Institutional Review Board Statement: The approval of the IRB at Central Michigan University,
+                                       Mount Pleasant, MI, was received under protocol number 2020-351.
+                                       Informed Consent Statement: Informed consent was obtained from all participants involved in
+                                       the study.
+                                       Conflicts of Interest: The authors declare no conflict of interest.
+
+References
+1.    Williams, R.L., II; Srivastava, M.; Howell, J.N.; Conatser, R.R.; Eland, D.C.; Janet Burns, D.M.; Anthony Chila, D.G. The Virtual
+      Haptic Back for Palpatory Training General Terms: Experimentation, Human Factors. In Proceedings of the 6th international
+      conference on Multimodal interfaces, State College, PA, USA, 14–15 October 2004.
+2.    Kim, L.; Park, S.H. Haptic Interaction and Volume Modeling Techniques for Realistic Dental Simulation. Vis. Comput. 2006, 22,
+      90–98. [CrossRef]
+3.    Kosuki, Y.; Okada, Y. 3D Visual Component Based Development System for Medical Training Systems Supporting Haptic Devices
+      and Their Collaborative Environments. In Proceedings of the 2012 Sixth International Conference on Complex, Intelligent, and
+      Software Intensive Systems, Palermo, Italy, 4–6 July 2012; pp. 687–692.
+4.    Rodríguez, J.L.; Velázquez, R.; Del-Valle-soto, C.; Gutiérrez, S.; Varona, J.; Enríquez-Zarate, J. Active and Passive Haptic Perception
+      of Shape: Passive Haptics Can Support Navigation. Electronics 2019, 8, 355. [CrossRef]
+5.    Tan, H.Z.; Durlach, N.I.; Beauregard, G.L.; Srinivasan, M.A. Manual Discrimination of Compliance Using Active Pinch Grasp:
+      The Roles of Force and Work Cues. Percept. Psychophys. 1995, 57, 495–510. [CrossRef] [PubMed]
+6.    Lécuyer, A.; Coquillart, S.; Kheddar, A.; Richard, P.; Coiffet, P. Pseudo-Haptic Feedback: Can Isometric Input Devices Simulate
+      Force Feedback? In Proceedings of the IEEE Virtual Reality 2000 (Cat. No. 00CB37048), New Brunswick, NJ, USA, 18–22 March
+      2000; pp. 83–90.
+7.    Genecov, A.M.; Stanley, A.A.; Okamura, A.M. Perception of a Haptic Jamming Display: Just Noticeable Differences in Stiffness
+      and Geometry. In Proceedings of the 2014 IEEE Haptics Symposium (HAPTICS), Houston, TX, USA, 20 March 2014; pp. 333–338.
+8.    Allin, S.; Matsuoka, Y.; Klatzky, R. Measuring Just Noticeable Differences for Haptic Force Feedback: Implications for Rehabilita-
+      tion. In Proceedings of the 10th Symposium on Haptic Interfaces for Virtual Environment and Teleoperator Systems, HAPTICS
+      2002, Orlando, FL, USA, 24–25 March 2002; pp. 299–302.
+Multimodal Technol. Interact. 2022, 6, 98                                                                                      14 of 14
+
+
+
+
+9.    Fu, W.; Landman, A.; van Paassen, M.M.; Mulder, M. Modeling Human Difference Threshold in Perceiving Mechanical Properties
+      from Force. IEEE Trans. Hum. Mach. Syst. 2018, 48, 359–368. [CrossRef]
+10.   Laming, D. Sensory Analysis; Academic Press: Cambridge, MA, USA, 1986.
+11.   Norwich, K.H. On the Theory of Weber Fractions. Percept. Psychophys. 1987, 42, 286–298. [CrossRef] [PubMed]
+12.   Maereg, A.T.; Nagar, A.; Reid, D.; Secco, E.L. Wearable Vibrotactile Haptic Device for Stiffness Discrimination during Virtual
+      Interactions. Front. Robot. AI 2017, 4, 42. [CrossRef]
+13.   De Gersem, G. Kinaesthetic Feedback and Enhanced Sensitivity in Robotic Endoscopic Telesurgery. Cathol. Univ. Leuven 2005, 7.
+      Available online: https://www.semanticscholar.org/paper/Kinaesthetic-Feedback-and-Enhanced-Sensitivity-in-Gersem/21
+      5b0d3f18d0b530ff66a4634bab7c44c7061d08 (accessed on 30 September 2022).
+14.   Son, B.; Park, J. Haptic Feedback to the Palm and Fingers for Improved Tactile Perception of Large Objects. In Proceedings of the
+      31st Annual ACM Symposium on User Interface Software and Technology, Berlin, Germany, 14–17 October 2018; pp. 757–763.
+15.   Karadogan, E.; Williams, R.L., II; Howell, J.N.; Conatser, R.R. A Stiffness Discrimination Experiment Including Analysis of
+      Palpation Forces and Velocities. Simul. Healthc. 2010, 5, 279–288. [CrossRef] [PubMed]
+16.   Leek, M.R. Adaptive Procedures in Psychophysical Research. Percept. Psychophys. 2001, 63, 1279–1292. [CrossRef]
+17.   Walker, L.; Tan, H.Z. A Perceptual Study on Haptic Rendering of Surface Topography When Both Surface Height and Stiffness
+      Vary. In Proceedings of the 12th International Symposium on Haptic Interfaces for Virtual Environment and Teleoperator Systems,
+      HAPTICS’04, Chicago, IL, USA, 27–28 March 2004; pp. 138–145.
+18.   Gescheider, G.A. Psychophysics: The Fundamentals; Psychology Press: London, UK, 2013; ISBN 113480122X.
+19.   Oh, D.; Lee, S.; Choi, Y. Simultaneous Stiffness Measurement Device for a Human Forearm. IEEE Access 2020, 8, 15313–15321.
+      [CrossRef]
+

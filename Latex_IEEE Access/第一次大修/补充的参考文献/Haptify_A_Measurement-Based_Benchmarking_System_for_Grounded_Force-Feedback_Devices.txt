@@ -1,0 +1,825 @@
+SOURCE_FILE: Haptify_A_Measurement-Based_Benchmarking_System_for_Grounded_Force-Feedback_Devices.pdf
+SOURCE_TYPE: pdf
+-----
+1622                                                                                           IEEE TRANSACTIONS ON ROBOTICS, VOL. 39, NO. 2, APRIL 2023
+
+
+
+
+         Haptify: A Measurement-Based Benchmarking
+         System for Grounded Force-Feedback Devices
+        Farimah Fazlollahi , Graduate Student Member, IEEE, and Katherine J. Kuchenbecker , Fellow, IEEE
+
+
+   Abstract—Grounded force-feedback (GFF) devices are an estab-
+lished and diverse class of haptic technology based on robotic arms.
+However, the number of designs and how they are specified make
+comparing devices difficult. We thus present Haptify, a benchmark-
+ing system that can thoroughly, fairly, and noninvasively evalu-
+ate GFF haptic devices. The user holds the instrumented device
+end-effector and moves it through a series of passive and active
+experiments. Haptify records the interaction between the hand,
+device, and ground with a seven-camera optical motion-capture
+system, a 60-cm-square custom force plate, and a customized sens-
+ing end-effector. We demonstrate six key ways to assess GFF device
+performance: workspace shape, global free-space forces, global
+free-space vibrations, local dynamic forces and torques, frictionless
+surface rendering, and stiffness rendering. We then use Haptify
+to benchmark two commercial haptic devices. With a smaller
+workspace than the 3D Systems Touch, the more expensive Touch
+X outputs smaller free-space forces and vibrations, smaller and
+more predictable dynamic forces and torques, and higher-quality
+renderings of a frictionless surface and high stiffness.
+   Index Terms—Benchmarking, grounded force-feedback devices,                    Fig. 1. User holds the end-effector of a GFF device to touch four virtual
+haptics, performance metrics.                                                    spheres. The forces she feels are greatly affected by not only the rendering
+                           I. INTRODUCTION                                       capability of the device but also the device’s own dynamics, such as its workspace
+                                                                                 edges, weight, and friction.
+       VER the last 30 years, researchers have invented hundreds
+O      of haptic interfaces that enable a human user to touch a
+virtual or remote environment. Common applications include
+                                                                                 three necessary criteria for an effective haptic interface are: 1)
+                                                                                 free space must feel free, 2) solid virtual objects must feel stiff,
+education, computer-aided design, gaming, surgery, and haz-                      and 3) virtual constraints must not be easily saturated. Designers
+ardous material handling. These devices vary widely in their                     thus seek to create mechanisms that are easily backdrivable, stiff,
+mechanical design, what they sense and actuate, how they                         and strong. Haptipedia is an open-source taxonomy and database
+are controlled, and other factors that consider both technical                   that has recently visualized the specifications of more than
+requirements and human insights. As the first main type of haptic                100 GFF devices from the literature and commercial product
+interface to be developed, a grounded force-feedback (GFF)                       datasheets [4].
+device is a mechatronic system that is mounted to a stationary                      Although many GFF haptic devices exist, there is no standard
+surface such as a table and that measures the user’s motion                      framework for reporting their performance, and many reported
+and/or force, and outputs forces and/or motions in response [1],                 metrics are not well-grounded in user opinion. In a recent
+[2]. GFF devices vary from simple haptic paddles and knobs to                    study Seifi et al. [5] showed that common definitions of device
+high-degree-of-freedom robotic arms (see Fig. 1).                                attributes do not correspond well with device affordances; expert
+   According to Massie and Salisbury’s [3] pioneering 1994                       opinions about device capabilities go far beyond the low-level
+paper on the first successful GFF device (the PHANToM), the                      specifications currently reported in papers, data sheets, and
+                                                                                 Haptipedia. Instead, experts typically rely on their experience
+   Manuscript received 26 March 2022; revised 29 September 2022; accepted 9      physically testing devices.
+November 2022. Date of publication 16 December 2022; date of current version 5      Most other researchers concerned with haptic interface quality
+April 2023. This research was supported by the Max Planck Society. This paper
+was recommended for publication by Associate Editor J. Ueda and Editor P.        have focused on individual devices. For example, the kinematics,
+Robuffo Giordano upon evaluation of the reviewers’ comments. (Corresponding      manipulability, and gravity compensation of three devices from
+author: Farimah Fazlollahi.)                                                     the same company (SensAble, now 3D systems) were separately
+   The authors are with the Haptic Intelligence Department, Max Planck In-
+stitute for Intelligent Systems, 70569 Stuttgart, Germany (e-mail: fazlollahi@   characterized by different research teams: the Phantom Omni
+is.mpg.de; kjk@is.mpg.de).                                                       (now Touch) [6], [7], the Phantom Desktop (now Touch X) [8],
+   This article has supplementary material provided by the au-                   and the Phantom Premium [9]. Samur [10] and Hatzfeld and
+thors and color versions of one or more figures available at
+https://doi.org/10.1109/TRO.2022.3226110.                                        Kern [11] have both made progress on defining and calculating
+   Digital Object Identifier 10.1109/TRO.2022.3226110                            performance metrics for a few haptic interfaces. However, these
+             This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 License. For more information, see
+                                                     https://creativecommons.org/licenses/by-nc-nd/4.0/
+FAZLOLLAHI AND KUCHENBECKER: HAPTIFY: A MEASUREMENT-BASED BENCHMARKING SYSTEM FOR GROUNDED FORCE-FEEDBACK                              1623
+
+
+
+metrics almost all depend on the device’s own sensor read-               Here, we present and validate Haptify (see Fig. 2), a new com-
+ings, which may not be accurate and certainly do not capture          prehensive benchmarking system for GFF devices. Haptify uses
+everything a user can feel. Indeed, as Samur [10] presciently         external sensors to measure the performance of a GFF device
+stated, the most difficult challenge in characterizing devices is     while a user holds the device end-effector and performs motions.
+not in defining good metrics; instead, it is in practice, since the   We define new metrics for evaluating GFF device performance
+applicability of measurements and calculation of meaningful           based on external sensor measurements from interaction exper-
+results are highly limited by the lack of proper experimental         iments, and we compare how two devices feel to the user during
+equipment, nonlinear device behavior, and position dependency.        similar tasks. Our approach is inspired by real use cases of GFF
+   As more robotic technologies are developed, scientific             devices, in which the device is mounted on a table, here a force
+methodologies for standardization and benchmarking are es-            plate, and the human user holds the device end-effector and can
+sential to speed up and strengthen their wide acceptance [12].        move throughout the device workspace, in all the ways allowed
+New benchmarks have been developed for several subfields of           by the device. Section II explains the essential design criteria that
+robotics as they mature and expand. In the field of human–robot       drove the creation of Haptify. Section III characterizes the three
+interaction, Aly et al. [13] presented a subjective analysis of       main parts of the setup: the motion-capture system, the force
+metrics, benchmarks, frameworks, and recent technologies in           plate, and the sensing end-effector. Section IV introduces the six
+cognitive robotics, and Feil-Seifer et al. [14] presented the         benchmarking methods that we use to analyze a device’s passive
+existing benchmarks for evaluating socially assistive robotics.       and active performance. Section V explains how we collected
+RoboBench [15] is a platform for sharing simulations of full          data from two commercial GFF devices, a Touch and a Touch X.
+robotic systems, aiming to make a sustainable benchmark for           Section VI presents our experimental results; a narrated video
+reproducible research. Standard benchmarks are also crucial           about Haptify is also available in the supplementary materials.
+to the improvement of work in other interdisciplinary fields,         Section VII discusses the results, and Section VIII explains the
+as they create reproducible measurements that can quantify            implications of our findings, the limitations of our approach, and
+progress [15].                                                        our plans for future research.
+   There is currently no standard benchmarking system that can
+evaluate many GFF devices and compare them from the user’s
+perspective. Understanding how each device feels when one                                    II. SYSTEM DESIGN
+performs different tasks, e.g., slow motions in free space, fast         To design Haptify, we went through the commercial devices
+oscillations, or exploring a particular rendered virtual environ-     listed on Haptipedia [4] to determine the type and working range
+ment, requires a standard method for recording and modeling           of the sensors that would be required. Like robotic arms, GFF
+the haptic interaction in the same way for all devices. Only          devices can be approximately modeled as multibody dynamic
+a few previous studies have used haptic sensors to compare            systems; see [20] for a good review. Each link has mass, ro-
+how real objects and rendered objects feel to the user. For           tational inertia, and weight due to gravity. Joints transmit both
+example, Culbertson and Kuchenbecker [16] investigated the            passive and active forces and torques between links and also
+realism of data-driven virtual surfaces rendered with a Phantom       incur friction and vibration. The user applies forces and torques
+Omni. Their force and acceleration measurements showed that           at the end-effector, and the ground applies forces and torques to
+the device’s passive mechanical properties negatively affected        keep the base stationary. Therefore, separate sensors are required
+the rendered friction forces, tapping transients, and texture vi-     to know the interaction at the end-effector (between the user and
+brations; the user feels a distorted version of the commanded         the device) and the ground (between the device and the base),
+haptic signals both in free space and when touching virtual           as well as to know the dynamic states of each link throughout
+objects [16]. The mechanical properties of the hardware also          the experiments.
+affect what the user feels in teleoperation, where the goal is           Haptify aims to be minimally invasive to avoid damaging the
+haptic transparency. Kuchenbecker and Niemeyer [17], [18]             device or altering how it feels. Thus, an accurate optical motion-
+considered how mechanism friction and compliant connecting            capture system with small passive markers is a good choice for
+elements affect a GFF device’s dynamic behavior, presenting           recording the positions and velocities of device links. Except
+a painstaking and invasive method for developing an accurate,         for the Haption Inca, which is a room-sized cable-driven haptic
+high-order, nonlinear model of these dynamics. Most relevant to       device, the workspace size of all commercial haptic devices in
+our work, Frisson et al. [19] proposed to create an open-source       Haptipedia are in the range of 1.5 m×1.5 m×1.5 m. Therefore,
+platform for benchmarking haptic devices leveraging the robot         this is the minimum required working volume for our motion-
+operating system (ROS). Their current prototype of RepHap             capture system. A Vicon system with seven Vantage V5 infrared
+measures interaction forces while using a two-DOF gantry to           cameras and one Vue HD video camera was chosen as it can
+move the device’s end-effector in the left-right and up–down          cover the required volume with 1 mm accuracy and a sampling
+directions and using a third rail to move the haptic device base      rate of 100 Hz. Its 3 mm hemispherical markers can adhere to
+inward and outward. This approach is limited by the gantry’s          the links and have negligible mass (0.02 g).
+workspace size, lacks any rotational DOF, and will measure the           For measuring the forces and torques at the base, the required
+gantry’s own vibrations. Moving the device base also causes the       range comes from the Haption Virtuoso 6-D device with a weight
+force readings to include the inertial forces caused by the base’s    of 120 N. It can output a maximum force of 70 N and maximum
+mass.                                                                 torque of 5 N · m, which are the largest among the commercial
+1624                                                                                              IEEE TRANSACTIONS ON ROBOTICS, VOL. 39, NO. 2, APRIL 2023
+
+
+
+
+Fig. 2. The Design of Haptify. The GFF device being examined is brought to Haptify and placed on the force plate. The sensing end-effector is attached to the
+device’s handle, and retro-reflective markers are attached to each of its links. The examiner holds the end-effector and moves it in different ways; Haptify records
+the interaction forces, torques, and vibrations at the handle and the base, as well as the movement of each link. The measurements recorded when the device is
+unpowered are processed to output the shape of the device’s workspace, global free-space forces, global free-space vibrations, and a local dynamic force and torque
+model. Haptify also measures frictionless surface rendering and stiffness rendering quality when the device is active.
+
+
+devices. Since the directions of the peak force and torque are not                                               TABLE I
+                                                                                       REQUIRED SENSOR TYPES, THEIR RESPECTIVE WORKING RANGES, AND
+mentioned in the data sheet, we choose a required force range                                           IMPORTANT DESIGN CRITERIA
+of 70 N in the horizontal plane and 190 N along the vertical
+axis. The required torque range is 5 N · m around all axes. The
+required size for the sensor at the ground comes from the Force
+Dimension Sigma.7 device, which has the largest base size of
+about 50 cm square among the commercial devices. To fulfill
+these requirements, we built a rectangular 60 cm ×60 cm force
+plate with four ATI Mini40 (SI-40-2) force/torque sensors at the
+corners. The working range of the force plate is ±160 N in the
+horizontal plane and ±480 N in the vertical direction; the bias                    ATmega32U4 processor. We synchronize all data lines using a
+weight of the plate (160 N) yields a total vertical measuring range                multicontact switch to send a trigger signal to the motion-capture
+from –320 N to +640 N. Given its wide base, it can measure more                    system, DAQ, and microcontroller. The motion-capture data are
+than ±100 N· m torque around its center point in all directions.                   recorded through the Vicon Nexus software, and the DAQ and
+   The required force and torque range for the sensor at the                       microcontroller data are recorded via MATLAB; the recordings
+end-effector is the same as the ground sensor without the full                     are all processed offline in MATLAB.
+device weight. However, since this sensor needs to be attached to                     Table I summarizes all the sensor requirements suitable for
+the device end-effector, the sensor shape, form factor, and weight                 fully benchmarking 27 of the 30 (90%) commercial devices on
+are also important criteria. An ATI Mini27 Titanium (SI-80-4)                      Haptipedia. Beyond the room-sized Haption Inca, the remaining
+force/torque sensor was chosen for the end-effector sensor. Its                    two devices have higher force or torque output, like the Moog
+working range is ±80 N in the lateral directions, and ±160 N in                    FCS HapticMaster [21], which can output a translational peak
+the axial direction; it can sense a maximum torque of ±4 N · m                     force of 250 N. Such devices can be still examined by Haptify
+about the lateral directions and ±2 N · m in the axial direction.                  while moving passively and actively outputting lower forces and
+The resonant frequency of this sensor is 4900 Hz, which is far                     torques. Haptify can also be used to benchmark the vast majority
+higher than human movement bandwidth and also higher than                          of custom GFF devices listed in Haptipedia. Though capable, the
+human haptic sensing capabilities. Because parasitic vibrations                    selected sensors are admittedly costly (approximately 175 000
+felt by the user strongly influence the haptic interaction qual-                   USD total); we envision this first version of Haptify as a unique
+ity [16], and because handle acceleration cannot be estimated                      precision instrument that can gather detailed benchmarking data
+accurately from motion-capture measurements, a digital TDK                         from a wide range of devices while also allowing us to determine
+InvenSense MPU-9250 accelerometer with a working range of                          whether a simpler set of sensors could yield similar insights.
+40 m/s2 is also included on the end-effector.
+   A National Instruments USB-6255 DAQ reads all the ana-
+log voltages from the ATI multisensor interface box (9105-                                            III. SYSTEM CHARACTERIZATION
+IFPSMC-6) that collects inputs from the five force/torque                             This section characterizes the three main sensing components
+sensors. The accelerometer data are read through a custom-                         of Haptify, which are the motion-capture system, the force plate,
+built M2 microcontroller built around the high-performance                         and the sensing end-effector.
+FAZLOLLAHI AND KUCHENBECKER: HAPTIFY: A MEASUREMENT-BASED BENCHMARKING SYSTEM FOR GROUNDED FORCE-FEEDBACK                                                    1625
+
+
+
+
+Fig. 3. Calibration process demonstrated for the Touch. To remove the influence of gravity from our readings, we slowly rotate the unattached sensing end-effector
+in the air. We record force and torque data at 1 kHz with the Mini27, acceleration at 2 kHz with the MPU-9250, and orientation of the end-effector at 100 Hz with
+the Vicon. The force, torque, and acceleration data are then low-pass filtered, resampled to 100 Hz, and compared with the Vicon data. By calculating the sensor
+bias (sphere center) and the weight (sphere radius) and center of mass of the connector (3) from these measurements, and by knowing the sensor’s world-frame
+orientation, we can remove the undesired effects of gravity from subsequent interactions recorded by Haptify, leaving only the forces, torques, and vibrations
+generated by the haptic device being examined.
+
+
+
+A. Motion-Capture System Characterization                                         printed. The handle is where the examiner holds; it is rigidly
+                                                                                  attached to the other side of the force/torque sensor and the
+   The Vicon motion-capture system needs a common calibra-
+tion and origin frame definition before every use. At least three                 accelerometer, and it is the same for both devices tested here, the
+markers are attached to each device link with double-sided tape.                  Touch and the Touch X. For devices with different end-effectors,
+                                                                                  like the spherical handle of the Force Dimension Omega.3,
+Vicon Nexus software is used to record data at 100 Hz. The
+markers are labeled to define local coordinate frames on each                     an appropriately shaped handle and a matching connector are
+                                                                                  designed and 3-D printed.
+link, and the software provides the transformation matrix from
+                                                                                     We want to measure the forces, torques, and vibrations that
+each link’s local frame to the origin frame. Merriaux et al. [22]
+previously evaluated the positioning performance of a Vicon                       the device applies to the user; however, the connector itself has
+motion-capture system similar to ours, finding a mean absolute                    a mass whose weight exerts an additional force and torque.
+positioning error of 0.15 mm for static experiments and less than                 A stationary system such as the force plate requires only one
+2 mm for high-speed experiments.                                                  calibration measurement to zero its readings. However, the
+                                                                                  Mini27 rotates with the end-effector; therefore, to calibrate out
+                                                                                  the influence of gravity from our readings, we must determine
+B. Force Plate Characterization                                                   the mass and the location of the center of mass of the connector,
+   The force applied to the force plate is equal to the sum of the                and we must know the world-frame orientation of the sensor.
+force readings of the four sensors at the corners. The total torque               Similarly, the accelerometer rotates, so the direction in which it
+applied around the center of the force plate is the sum of the four               senses gravity constantly changes. Adapting a method explained
+torque readings plus the moments of the four force readings. The                  in [23], we recorded position, orientation, force, acceleration,
+force plate is characterized through two experiments to calculate                 and torque while slowly rotating the unattached sensing end-
+its natural frequency and center of pressure (COP), as described                  effector in all directions in free space, as shown in Fig. 3. Under
+in the Appendix. It provides better force-sensing resolution and                  these conditions, the expected force vector measurement in the
+more accurate COP estimates than commercial force plates with                     handle body frame (β) can be described as follows:
+similar size.
+                                                                                                           F β (t) = bβF + mgW
+                                                                                                                                β
+                                                                                                                                  (t)                         (1)
+
+C. Sensing End-Effector Characterization                                          where bβF is the sensor’s internal force bias (constant offset), m is
+                                                                                                                      β
+   The sensing end-effector consists of two parts, the connector                  the mass of the connector, and gW    (t) is the constant-magnitude
+and the handle, as shown for the Touch in Fig. 3. The connector                   gravitational acceleration vector transformed from the world
+rigidly attaches the force/torque sensor to the handle of the                     frame to the handle body frame, whose direction varies over
+haptic device. It is designed specifically for each device and 3-D                time. Similarly, under these conditions, the total acceleration
+1626                                                                             IEEE TRANSACTIONS ON ROBOTICS, VOL. 39, NO. 2, APRIL 2023
+
+
+
+vector measurement in the body frame is                                                         TABLE II
+                                                                              DENAVIT–HARTENBERG PARAMETERS FOR EACH DEVICE
+                                         β
+                      aβ (t) = bβa + gW (t)                (2)
+where bβa is the sensor’s internal acceleration bias (constant
+offset). The total torque vector measurement in the handle body
+frame is
+                                             β
+                  τ β (t) = bβτ + rβ × mgW (t)            (3)
+                                                      β
+where bβτ is the internal torque bias and rβ × mgW   (t) is the
+torque contributed by gravity acting on the mass of the con-
+nector. Here, rβ is the constant vector from the sensor to the
+end-effector’s center of mass in the handle body frame. (1) and      and the joint limits are known [24]. The Denavit–Hartenberg pa-
+(2) both have the form of a sphere, as shown in Fig. 3. Fitting a    rameters [25] for the Touch [7] and the Touch X [8] are reported
+sphere to the force data gives the solution for bF as the center    in Table II. The two devices have similar hybrid mechanisms,
+and weight mg as the radius. Fitting a sphere to the acceleration    and their workspaces can be modeled by an equivalent serial
+data gives the solution for ba as the center and g as the radius.   kinematic chain. For the αi , a1 , and di values shown in Table II,
+Finally, we apply robust least squares estimation to solve (3)       the end-effector position is
+for bτ and r. The RMS errors of the fit for the Touch handle                  ⎡                                               ⎤ ⎡ ⎤
+                                                                                   a2 c 1 c 2 + a3 c 1 c 2 c 3 − a3 c 1 s 2 s 3    xee
+are 0.008 N, 0.16 m/s2 , 0.0002 Nm and for the Touch X handle              0    ⎢                                               ⎥ ⎢ ⎥
+                                                                          P3 = ⎣a2 s1 c2 + a3 s1 c2 c3 − a3 s1 s2 s3 ⎦ = ⎣ yee ⎦       (4)
+are 0.010 N, 0.17 m/s2 , and 0.0003 Nm. All of these errors are
+negligible. These fits can thus be used to remove the influence                        a2 s 2 + a3 c 2 s 3 + a3 s 2 c 3            zee
+of sensor bias, connector weight, and gravity from the sensing       where ci is cos(θi ) and si is sin(θi ). This approach assumes
+end-effector’s readings to highlight the haptic sensations caused    a perfect model of the kinematics with infinitely rigid links,
+by the device itself.                                                flawless joint angle zeroing, and no external collisions. It also
+                                                                     requires one to know the exact values for link lengths and joint
+                IV. BENCHMARKING METHODS                             limits. Workspace modeling is more complex for parallel mech-
+   A Touch and a Touch X were tested both passively and actively     anisms, where conventional methods like Denavit–Hartenberg
+to validate Haptify. These two devices were chosen since they        do not apply. So far, it has been uncommon for device inventors
+are widely known and used in haptics. They are similar and have      to provide these geometrical attributes in papers and datasheets.
+comparable kinematics, but the Touch X is significantly more            Our proposed solution for finding the reachable workspace
+expensive. Here, we show how to use Haptify to characterize          of a device is to experimentally record all the points that its
+a GFF device’s workspace shape, global free space forces and         end-effector can reach. The workspace shape and volume can be
+vibrations, local dynamic forces and toques, frictionless surface    obtained most efficiently by covering all the corners, edges, and
+rendering, and stiffness rendering.                                  surfaces of the workspace boundary. Like a cube, the workspace
+                                                                     of a device with three fixed-range joints has 8 corners, 12 edges,
+A. Workspace Shape                                                   and 6 surfaces. The workspace corners are where all joints are at
+                                                                     maximum or minimum value. The workspace edges are where
+   The points that can be reached by the end-effector are defined
+                                                                     two of the joints are at a limit, and the other joint is varying
+as the reachable workspace [10]. Workspace is a fundamental
+                                                                     freely. The workspace surfaces are where we have one joint at
+property of a GFF device because different user applications
+                                                                     its maximum or minimum limit, and the other two joints are
+require different workspaces. As also reported in Haptipedia [4],
+                                                                     moving freely.
+workspaces are usually provided as three values in the x, y, and
+z-directions, as if the workspace shape is a rectangular solid
+                                                                     B. Global Free-Space Forces
+with the aforementioned width, height, and depth. However, the
+real workspace of a GFF device is almost never rectangular. The         GFF haptic devices are built to impose forces on the user’s
+workspaces given in the technical specifications are 16 cm × 12      body at their end point. Most GFF devices are impedance type
+cm × 7 cm = 1344 cm3 for the Touch and 16 cm × 12 cm ×               and are designed to have low moving mass and low friction [1].
+12 cm = 2304 cm3 for the Touch X. These volumes seem to              When a passive device exerts high forces on the user’s hand, high
+be a subset of the actual device workspace, where performance        control effort is required to try to compensate for these intrinsic
+is deemed subjectively good, but other manufacturers follow          dynamics in the active mode. These unwanted forces are mostly
+different conventions, and different users have different require-   due to physical causes such as gravity, joint friction, and the
+ments.                                                               inertia of rotational components. Canceling weight reduces the
+   The real workspace shape and volume depend on the device’s        maximum output force, and stably canceling friction or inertia
+degrees of freedom (DOF), its kinematic structure, the link          is technically difficult. Ideally, the haptic device should impose
+lengths, and the joint limits, some of which stem from internal      zero forces on the user, but these interaction forces exist and are
+collisions. The workspace can be modeled easily for serial and       impossible to calculate from the currently provided specifica-
+some hybrid structures if the physical dimensions of the links       tions for each device; device manufacturers also do not provide
+FAZLOLLAHI AND KUCHENBECKER: HAPTIFY: A MEASUREMENT-BASED BENCHMARKING SYSTEM FOR GROUNDED FORCE-FEEDBACK                                 1627
+
+
+
+this information. We thus propose to capture these forces by
+having an examiner move slowly within the workspace volume
+while recording the end-effector position, orientation, velocity,      Fig. 4.   Block diagram of a Hammerstein–Wiener nonlinear model.
+acceleration, and interaction forces, as well as interaction forces
+at the force plate. The average magnitude and direction of the
+end-effector forces are calculated to show the global free-space
+force field across each device workspace. We also compare the          [35]. As demonstrated in Fig. 4, the H–W model is made of
+force magnitude measured at the end-effector and the force plate       three series blocks. The first block is a nonlinear function f that
+for a similar range of translational speeds and angular speeds in      transforms the input data u(t) to w(t), with a similar size
+both devices.                                                                                      w(t) = f (u(t))                        (5)
+
+C. Global Free-Space Vibrations                                        The second block is a linear transfer function that transforms
+    Haptic devices should render free space cleanly. Any nonin-        w(t) to x(t), with the same dimension
+tentional vibrations output by a device degrade the rendering                                              Bji
+quality and can distract the user from the haptic interactions                                    x(t) =       w(t).                      (6)
+                                                                                                           Fji
+taking place. To quantify this aspect of device behavior, we
+analyze the vibrations measured in the experiment designed             Here, B and F are similar to polynomials in the linear output-
+to capture global free-space forces (see Section IV-B). The            error model, and
+3-D acceleration is recorded at a sampling rate of 2 kHz. To
+eliminate the effect of the user’s hand motion, we high-pass                          i = 1, 2, . . ., nu and j = 1, 2, . . ., ny         (7)
+filter the signals from 10 Hz. The vibrations in the three direc-      where nu is the number of inputs and ny is the number of outputs.
+tions are combined into one vibration signal using the DFT321          The last block is a nonlinear function that maps the linear block’s
+function [26]; this transformation is commonly used to estimate        output to the system output
+human perception of 3-D vibrations. The reduced 1-D vibration
+signal has the same spectral energy as the original three-axis                                     y(t) = h(x(t)).                        (8)
+acceleration. These measured parasitic vibrations are then quan-
+tified by the root-mean-square signal magnitude along with the         The 13 inputs for our model are 3-D handle orientation repre-
+spectral centroid frequency [27], [28].                                sented as a quaternion plus the 3-D Cartesian position, velocity,
+                                                                       and acceleration, all expressed in the world frame. The handle
+D. Local Dynamic Forces and Torques                                    orientation and gimbal-center position and velocity come from
+                                                                       the Vicon motion-capture system, and the acceleration comes
+   Haptic devices typically have their best dynamic performance        from the handle-mounted accelerometer after its bias and gravity
+at the center of their workspace, far from singularities and           have been removed. The six model outputs come from the
+workspace edges. To capture the dynamics of a device, we pro-          handle force/torque sensor after removal of bias and connector
+pose to have the examiner move the end-effector back and forth         weight. This black-box modeling approach can be used for all
+in all directions at the desired location from low to high speed.      GFF devices regardless of their structure or type. It can handle
+These fast oscillatory movements involve high accelerations and        all types of dynamics and global free-space forces, including
+thus highlight the device’s inertial characteristics. We start from    gravity, joint friction, and nonlinearities. The resulting model
+the workspace center and record the interaction forces as well         can be used by other researchers and future users of the device
+as the end-effector motion.                                            to predict the forces and torques that will be imposed on the user
+   Real haptic systems present nonlinear behavior, several vi-         along recorded or defined trajectories without dealing with the
+bration modes, and distributed masses [29]; therefore, we fit          complexities and deficiencies of analytical models.
+a nonlinear Hammerstein–Wiener (H–W) local dynamic force
+and torque model to the recorded data using the MATLAB
+System Identification Toolbox. A data-driven model was chosen          E. Frictionless Surface Rendering
+since most of the existing analytical models do not consider              In an ideal haptic rendering, the user should feel only the
+friction [9], [30], except [31], [32]. In addition, these analytical   interaction forces that originate from the virtual objects being
+joint-space models are complex and have strong assumptions             explored [3]. To measure how well each device performs against
+about device structure and behavior, so they are impractical to        this ideal, we create a virtual stiff frictionless surface. For
+fit to the wide variety of GFF devices we want to benchmark            simplicity, it is horizontal and located near the center of the
+with Haptify. Deriving analytical models for hybrid and parallel       device workspace. Ideally, the planar forces felt when moving
+mechanisms with friction would be particularly time consuming          along this surface should be zero (as they are commanded); any
+and system dependent. On the other hand, a data-driven block-          nonzero planar forces stem from the device and not the content
+oriented model has a simple modeling architecture, a straightfor-      being rendered. We expect these forces to be similar to the
+ward training method, and a low cost of identification [33]. H–W       global free-space forces in the chosen region, though actively
+models are also appropriate for control design and nonlinear           exerting normal forces may change how the device feels in the
+systems because they provide flexible parameterization [34],           perpendicular directions.
+1628                                                                               IEEE TRANSACTIONS ON ROBOTICS, VOL. 39, NO. 2, APRIL 2023
+
+
+
+F. Stiffness Rendering                                                 D. Frictionless Surface Rendering
+   Rendering stiffness is one of the most important capabilities          After setting up each device as explained in Section V-B, we
+of GFF devices [3]. To examine each device’s stiffness rendering       connected it via USB 2.0 to a separate computer running the
+quality, we use the same frictionless virtual surface already          open-source haptic library CHAI3D [36] in Windows 10. A stiff
+described for the previous benchmark. We assign it a high              horizontal surface adapted from a CHAI3D example was pro-
+constant stiffness value in the vertical (z) direction. Ideally, the   grammed to have zero friction and a stiffness of 0.75 N/mm. For
+normal force should be zero before touching the surface, and it        the experiment, the user pressed the device end-effector lightly
+should start increasing precisely when the end-effector reaches        into this virtual surface and performed circular motions from
+the surface. The normal force should then increase linearly with       low to high speed in the xy plane, centered in the workspace.
+penetration distance until reaching the peak force possible for        The commanded data from CHAI3D were recorded at 1 kHz
+the device in that configuration.                                      and synchronized with other data streams using the multicontact
+                                                                       switch.
+                     V. DATA COLLECTION
+                                                                       E. Stiffness Rendering
+   For each GFF haptic device, we conducted five experiments
+three times each. In all the experiments, the force data were             This experiment uses the same set up and virtual environment
+recorded at 1 kHz, the accelerations were recorded at 2 kHz,           as the frictionless surface rendering benchmark (see Section V-
+and the motion data were recorded at 100 Hz.                           D). The user holds the end-effector near the center of the
+                                                                       workspace and repeatedly presses down (in the z direction) into
+                                                                       the 0.75 N/mm surface until they reach the edge of the device
+A. Workspace Experiment                                                workspace or the device abruptly stops outputting forces.
+   To find the real shape and volume of the workspace, we placed
+two markers on the end-effector, spanning the center of the                                      VI. RESULTS
+gimbal. The haptic device was then placed on a table while the
+                                                                         Here, we present the results of applying our six benchmarking
+device end-effector position was tracked with the Vicon motion-
+                                                                       methods to the data collected in Section V.
+capture system. The experimenter moved the end-effector to
+the joint limits and tried to cover all the corners, edges, and
+surfaces, as explained in Section IV-A. For comparison, each           A. Workspace Shape
+device’s theoretical workspace was calculated from its forward            The modeled and measured workspaces for the two devices
+kinematics and joint limits.                                           are presented in Fig. 5. The volume of the measured workspace
+                                                                       for the Touch is 11 799 cm3 , while the volume of its model is
+B. Global Free-Space Experiment                                        13 223 cm3 . The Touch’s real reachable workspace of Touch
+                                                                       is thus 10.76% smaller than the modeled workspace. This dif-
+   In this experiment, we first took the force plate’s bias and        ference mostly comes from the fact that the shape of its base
+calibrated the end-effector’s force sensor and accelerometer. We       intersects with the modeled workspace and therefore prevents
+then connected the sensing end-effector to the chosen haptic           the end-effector from reaching. In addition, the link lengths used
+device and placed it at the center of the force plate. Double-         in the model cannot be accurately measured without disassem-
+sided tape was used to prevent any unwanted movements of the           bling the device. The volume of the measured workspace for
+device’s base. The user held the end-effector and moved slowly         the Touch X is 10 418 cm3 , while the volume of its model is
+with a speed less than 0.16 m/s and an angular speed of less           10 279 cm3 . The reachable workspace of the Touch X is 1.35%
+than 16 deg/s throughout the workspace, while the device was           bigger than its modeled workspace. Unlike the Touch, the Touch
+completely turned off, being careful not to touch the workspace        X’s base does not interfere with the reachable workspace. More
+boundaries, so that only free-space forces were captured. The          generally, the workspace volumes we measured for the Touch
+user employed a natural hand pose and orientation through the          and the Touch X are, respectively, 877% and 452% larger than
+experiment.                                                            the rectangular workspaces reported by the manufacturer.
+
+C. Local Dynamic Experiment                                            B. Global Free-Space Forces
+   In this experiment, after setting up each device as explained          Fig. 6 shows the measured speeds along with the forces
+in Section V-B, the user performed oscillatory motions in all the      felt while the experimenter moved the end-effectors of the two
+directions (x, y, z, and diagonals) with low to high speed for         devices. Both tests had an average translational speed of about
+about 140 s. She started near the center of the workspace and          0.05 m/s and an average angular speed of about 4.0 deg/s, which
+was careful not to touch the boundaries of the workspace. No           are both slow for the human hand. The total device weights of
+limits were imposed on speed or angular speed; instead, the user       the Touch and the Touch X are 18.5 N and 30.8 N, respectively.
+started with slow oscillations (around 0.5 Hz) and progressed          The mean values of −17.4 N, and −30.2 N were subtracted from
+to motions that were as fast as possible (around 4 Hz), always         the force-plate forces in the z direction to facilitate comparisons
+using a natural hand orientation.                                      between the two readings; these values are equal to the weights
+FAZLOLLAHI AND KUCHENBECKER: HAPTIFY: A MEASUREMENT-BASED BENCHMARKING SYSTEM FOR GROUNDED FORCE-FEEDBACK                                          1629
+
+
+
+
+Fig. 5. Modeled and measured workspaces for the Touch and the Touch X. As indicated by the red boxes, the measured workspace of the Touch is missing the
+lower lobe due to collisions between the end-effector tip and the base.
+
+of the parts of the haptic device that are on the force plate and            devices cause measurable vibrations. The vibrations recorded
+not held up by the user. The force magnitudes imposed on the                 from the two devices are also presented as sound files in the
+user while interacting with the devices vary from 0.13 N to 2.39             supplementary materials. One can listen to or feel these signals
+N for the Touch and from 0.38 N to 1.18 N for the Touch X. The               to compare the vibration levels between the devices. To create
+mean ± standard deviation of the forces felt by the user are 0.98            the sound files, we first resampled the vibration signals to a
+N ± 0.42 N and 0.87 N ± 0.12 N, respectively.                                frequency of 44 100 Hz, which is the standard sampling rate for
+                                                                             many audio file formats [37]. Second, we divided both signals
+                                                                             by the maximum absolute value of the Touch vibration signal
+C. Global Free-Space Vibrations                                              (0.8443 m/s2 ) to scale both sound files to the maximum of the
+   The high-pass filtered and combined vibrations felt by the                Touch signal.
+user in the global free-space experiments are shown in Fig. 7.
+The RMS value and the spectral centroid of the combined signal
+                                                                             D. Local Dynamic Force and Torque Model
+for the Touch are 0.0685 m/s2 and 122.96 Hz, respectively.
+The same values for the Touch X are 0.0408 m/s2 and 162.81                       The local dynamic experiment data and the outputs of the
+Hz. For comparison, the vibrations measured by Haptify in a                  fitted H–W model for each device are shown in Fig. 8. Each
+similar experiment without any device have an RMS of 0.0332                  nonlinear H–W model predicts the measured forces and torques
+m/s2 and a spectral centroid of 108.25 Hz, indicating that both              in each direction from the measured 3-D position, velocity,
+1630                                                                                               IEEE TRANSACTIONS ON ROBOTICS, VOL. 39, NO. 2, APRIL 2023
+
+
+
+
+Fig. 6. Global free-space experiments. The experimenter slowly moved the end-effector to a wide range of poses in the workspace while avoiding the workspace
+edges. The center panel visualizes the force vector measured at each tested position. As shown in the left panel, translational speed averaged about 0.05 m/s, and
+angular speed averaged about 4.0 deg/s. As seen in the right panel, although the motions are similar, the forces exerted by the Touch on the user at the end-effector
+are higher and more varied than those exerted by the Touch X. The forces measured by the force plate differ in the same way.
+
+
+                                                                                       were fit (the training set) and four other experiments that we
+                                                                                       recorded from the passive devices (test sets). We hypothesized
+                                                                                       that a good distance metric would be able to predict the error
+                                                                                       between the modeled and measured forces and therefore show
+                                                                                       whether a particular model should be trusted to predict what
+                                                                                       a user would feel when moving a device in a particular way.
+                                                                                       We began this process by low-pass filtering the velocity data
+                                                                                       calculated from the Vicon measurements and the accelerometer
+                                                                                       to eliminate noise and device vibrations. We then subdivided
+                                                                                       each test set into nonoverlapping time windows that are 5 s long
+                                                                                       so that the human motion each segment contains is reasonably
+                                                                                       uniform. Test sets 1 and 2 are from the second and third repe-
+                                                                                       titions of the local dynamic experiment, so they are reasonably
+Fig. 7. High-pass filtered and combined vibration signals felt by the user in          similar to the training set. Test set 3 is from an experiment, where
+the global free-space experiments. The signal RMS and spectral centroid are            the user moved the end-effector in an infinity-shape trajectory
+presented in each subfigure; the parasitic vibrations of the Touch (left) are larger
+and lower frequency than those of the Touch X (right).                                 with various speeds near the center of the device workspace.
+                                                                                       Test set 4 is from the global free-space experiment described in
+                                                                                       Section V-B; it is slow movements over a large area are rather
+acceleration, and orientation (quaternions). Before modeling,                          different from the training set.
+the torque readings from the sensor were transferred to the                                Each 5-s-long test segment and the whole training set are
+gimbal by subtracting the moment of the measured force vector                          then further divided into window lengths of 0.2 s to represent
+around the sensor.                                                                     the captured motion over a short time period. For each window
+   With a similar fitting approach and the same number of param-                       of data in the test set, we find the most kinematically similar
+eters, the trained model fits the Touch local dynamic experiment                       window in the training set by finding the window that minimizes
+with an RMS error of 0.33 N, 0.37 N, and 0.37 N, 0.02 N·m, 0.02                        the following distance function:
+N ·m, and 0.01 N·m for Fx , Fy , Fz , τx , τy , and τz , respectively.                                          δp   δv   δa   δθ
+The corresponding RMS error values for the Touch X’s model                                               Δ=        +    +    +    .                              (9)
+                                                                                                                Rp   Rv   Ra   Rθ
+are smaller at 0.20 N, 0.13 N, and 0.22 N, 0.005 N · m, 0.004 N·m,
+and 0.005 N·m. We could reduce the fitting errors by increasing                        Here, δp , δv , δa , and δθ are the position, velocity, acceleration,
+the model complexity; however, such models risk overfitting and                        and orientation distances between the two selected windows. We
+tend to incorrectly predict very large forces and torques when                         define δp as the Euclidean distance between the mean positions in
+tested with unseen trajectories.                                                       the two windows. δv is defined as the magnitude of the difference
+   To examine and validate the fitted models, we defined a                             between the average velocity vectors in the two segments, and
+distance metric between the trajectory data on which the models                        δa is defined the same way for acceleration, as measured by the
+FAZLOLLAHI AND KUCHENBECKER: HAPTIFY: A MEASUREMENT-BASED BENCHMARKING SYSTEM FOR GROUNDED FORCE-FEEDBACK                                               1631
+
+
+
+
+Fig. 8. Trained local dynamic force H–W model for (a) the Touch and (b) the Touch X. The end-effector’s position, velocity, acceleration, and orientation are
+given as inputs (left), and the end-effector forces and torques are the outputs (right). The models capture the recorded forces and torques well.
+
+handle accelerometer. δθ is the angle needed to rotate from the                 and orientation of each test trajectory into the model and cal-
+average frame orientation in one segment to the average frame                   culated the output forces; a similar analysis could be done for
+orientation in the other segment. These distance values are thus                output torques. As shown Fig. 9, segments with lower distances
+all positive; since they have diverse units, they should not simply             tend to have lower force errors. Many segments with a distance
+be added together. Instead, we normalize them by dividing each                  less than one have an RMS force error that is comparable to
+measure by a representative distance that we empirically defined                that of the segments from the training set, which have a distance
+to be the maximum difference seen between windows when                          of zero. As anticipated, test sets 1 and 2 have lower distance
+comparing test sets 1 and 2 with the training set: Rp = 0.12 m,                 metrics and lower force errors than test set 4, which is the global
+Rv = 1.6 m/s2 , Ra = 38 m/s2 , and Rθ = 86 deg. We define the                   free-space experiment. Though the overall motion was different,
+overall distance between a particular 5 s long test segment and                 the segments from test set 3 have relatively low distance metrics
+the training set to be the average of the minimum Δ distances for               and low force errors, indicating successful generalization. As
+its 25 windows. In this way, we can calculate a unitless distance               the kinematic distance between a segment and the training set
+that aims to show how different the demonstrated motion is from                 increases, higher force errors are more likely to occur. The black
+the motions contained in the training set of a particular local                 lines show linear models fitted to all presented data points. The
+dynamic model.                                                                  model for the Touch has higher force errors than the model for
+   To quantify the error between the forces predicted by the                    the Touch X, particularly for the slow movements of test set
+model and the end-effector forces actually measured during data                 4. All fitted H–W models are provided as MATLAB files in
+collection, we passed the 3-D position, velocity, acceleration,                 the supplementary materials. Researchers can use these models
+1632                                                                                              IEEE TRANSACTIONS ON ROBOTICS, VOL. 39, NO. 2, APRIL 2023
+
+
+
+                                                                                      F. Stiffness Rendering
+                                                                                         Fig. 11 shows the results of the stiffness rendering experiment.
+                                                                                      The measured stiffness for the Touch is 0.36 N/mm, which
+                                                                                      is about 47% of the commanded stiffness (0.75 N/mm). The
+                                                                                      measured stiffness for the Touch X is 0.60 N/mm, or about 80%
+                                                                                      of the commanded stiffness. As the user continues penetrating
+                                                                                      into the stiff plane, the normal force imposed by the Touch
+                                                                                      increases until about 2.7 N. The force remains constant after
+                                                                                      that point until the user reaches the edge of the workspace. The
+                                                                                      Touch X shows a different behavior. The force keeps increasing
+Fig. 9. RMS force prediction error plotted against the kinematic distance             with penetration until about 5.7 N. After that, the force does not
+metric defined in (9) for (a) the Touch and (b) the Touch X. Each point represents    remain constant but instead suddenly decreases, causing the user
+5 s of data. The training set, test set 1, and test set 2 are three repetitions of    to move very quickly through the stiff surface to the workspace
+the local dynamic experiment. Test set 3 is an infinity-shaped trajectory with
+varying speed, and test set 4 is the global free-space experiment. As the distance    edge. For both devices, the force commanded by CHAI3D keeps
+increases, the models tend to have higher force errors, particularly for the Touch.   linearly increasing with penetration distance.
+
+                                                                                                   VII. DISCUSSION AND FUTURE WORK
+                                                                                      A. Workspace Shape
+                                                                                         Our results show that the Touch has a larger reachable
+                                                                                      workspace than the Touch X. The two devices have a similar
+                                                                                      hybrid structure with slightly different link lengths and joint
+                                                                                      limits. The Touch’s base acts as a rigid constraint and does not let
+                                                                                      the user reach some locations that are considered to be part of the
+                                                                                      reachable workspace in the model. Unlike the Touch, the Touch
+                                                                                      X does not have any collisions inside its workspace, and all
+                                                                                      the points are reachable. The fact that the manufacturer reports
+                                                                                      much smaller but differently sized rectangular workspaces for
+                                                                                      these two devices implicitly shows that device behavior varies
+                                                                                      across the workspace, foreshadowing the need to investigate
+                                                                                      both passive and active device performance as a function of
+                                                                                      position. In future extensions of this work, we also plan to
+                                                                                      use measurements to obtain the device’s kinematic chain, joint
+Fig. 10. Planar forces imposed by the devices in the frictionless surface             limits, link lengths, rotational workspace, and manipulability.
+rendering experiment. The Touch imposes higher forces that the Touch X even
+though the commanded forces were zero for both devices.
+                                                                                      B. Global Free-Space Forces
+                                                                                         The forces imposed on the user’s hand in the global free-
+to estimate the forces imposed by these two haptic devices for                        space experiment with the passive Touch are higher than those
+arbitrary recorded or generated trajectories that are inspired by                     from the passive Touch X; this result matches what the user
+their target application. When a tested trajectory is similar to our                  perceived during the experiments. As shown in Haptipedia [4],
+training set, the estimated forces should be reasonable. When the                     the manufacturer reported higher translational friction for the
+distance is high, the model should not be expected to output good                     Touch (0.26 N) than for the Touch X (0.06 N), though both of
+predictions.                                                                          these values are much less than what we measured; our higher
+                                                                                      force measurements most likely come from the lack of gravity
+E. Frictionless Surface Rendering                                                     compensation. In future work, we plan to try to distinguish the
+                                                                                      effects of gravitational forces from friction, rotational inertia,
+   The planar forces felt during the frictionless surface rendering                   and other sources in the global free-space forces. We also intend
+experiment are shown in Fig. 10. The forces commanded by                              to evaluate the software-based gravity compensation provided
+CHAI3D are zero throughout this experiment, and the exper-                            by some device manufacturers and investigate automatic data-
+imenter made similar motions. However, the average planar                             driven compensation methods.
+forces imposed by the Touch are 0.53 N, which is higher than
+the 0.34 N imposed by the Touch X. The Touch’s forces are
+especially large when the end-effector moves in the positive                          C. Global Free-Space Vibrations
+or negative y direction at points farther away from the device                          The combined vibration signal in the interaction with the
+midline. The planar forces for the Touch X have lower values                          Touch is stronger than the Touch X. The spectral centroid is
+overall with only one area of increased magnitude.                                    higher for the Touch X, meaning its vibrations have higher
+FAZLOLLAHI AND KUCHENBECKER: HAPTIFY: A MEASUREMENT-BASED BENCHMARKING SYSTEM FOR GROUNDED FORCE-FEEDBACK                                                    1633
+
+
+
+
+Fig. 11. Stiffness rendering experiment. Fz is the force applied to the user’s hand in the z direction, pz is the z position of the end-effector, and ΔPz is the
+penetration of the end-effector into the virtual surface. The commanded stiffness is 0.75 N/mm, but neither device accurately renders this stiffness. The measured
+stiffness for the Touch is 0.36 N/mm and for the Touch X is 0.60 N/mm.
+
+
+
+
+pitch, on average. The different levels of vibrations in these two                position in the global free-space experiment. Therefore, it is not
+devices with similar kinematic structures could be due to the                     surprising that force prediction is less accurate for trajectories
+different tolerance of bearings, different stiffness of segments,                 farther from the center area, where the models were trained.
+backlash in the drive train, the passive behavior of the motors,                  One way of improving the prediction performance would be to
+and loose or tight tolerances on joint axles. Although users may                  train a model for a large range of trajectories at various locations
+complain about parasitic vibrations in a particular GFF device,                   in the workspace, though such recordings require more time to
+such measurements have not previously been proposed as an                         gather and to process. In future work, we plan to investigate the
+indicator of quality.                                                             utility of using deduced joint angle values as direct inputs to
+                                                                                  the model. We will also test how well these approaches apply
+                                                                                  to other devices with more distinct mechanisms. Modeling the
+D. Local Dynamic Force and Torque Model                                           feel of devices with low DOF will be particularly interesting, as
+   The H–W models fitted for both devices show good predic-                       workspace limits cannot be avoided.
+tions for input trajectories that are similar to the trajectories
+on which the models were trained, as quantified by our dis-
+tance metric. With relatively similar input motion and the same                   E. Frictionless Surface Rendering
+modeling approach, the Touch X model estimates forces for                            Although the commanded planar forces were zero, both de-
+unseen trajectories with lower errors than the Touch model.                       vices imposed nonzero planar forces on the user’s hand, and
+The fitting errors achieved during training are also lower for                    the Touch exerted higher forces than the Touch X. We believe
+the Touch X, meaning its model more accurately captures the                       these forces mainly stem from the friction and inertia of the
+measured behavior. We believe that the higher mass of the                         device itself, which matches with the results of the passive global
+links, higher joint friction, cable flexibility, backlash, and other              free-space experiment. It appears that these two devices do not
+nonlinear effects make the Touch’s model less accurate. We also                   compensate for gravity and friction when actively rendering
+observe that the Touch forces are larger and vary more with                       virtual content with CHAI3D; therefore, the lower quality of
+1634                                                                              IEEE TRANSACTIONS ON ROBOTICS, VOL. 39, NO. 2, APRIL 2023
+
+
+
+                            TABLE III                                 more detailed analysis of the recordings along with more sophis-
+       HAPTIFY BENCHMARKS FOR THE TWO EVALUATED GFF DEVICES
+                                                                      ticated investigations of active haptic rendering. We also plan to
+                                                                      run a user study to find out the techniques that haptic experts
+                                                                      use to compare device characteristics in both passive and active
+                                                                      modes. We plan to make our findings from Haptify accessible
+                                                                      to all researchers by adding extra features to the Haptipedia
+                                                                      website. These detailed, reliable, and relevant measures should
+                                                                      help designers efficiently choose devices that match their task re-
+                                                                      quirements. By showing specific device attributes, Haptify could
+                                                                      inspire device designers and engineers to create new devices
+                                                                      with better performance. Haptify’s evaluation of GFF devices
+free space in the Touch leads to lower quality of rendering           may also lead to hardware changes and software approaches to
+a frictionless surface. In future work, we plan to investigate        compensate for the documented nonidealities, which may enable
+the connection between these two benchmarks and link our              existing devices to achieve higher performance.
+measures to human perception.
+                                                                                             VIII. CONCLUSION
+F. Stiffness Rendering                                                   This article presented Haptify, a comprehensive benchmark-
+   In line with our other results, the Touch X renders high stiff-    ing system for GFF haptic devices. Haptify has three main
+ness more accurately than the Touch, though neither device pro-       sensing components: a motion-capture system, a custom-built
+duces an end-effector interaction that matches the commanded          force plate, and a sensing end-effector. The sensors used in
+stiffness. We believe the main cause for this softening is the        Haptify were carefully chosen to be usable for many devices and
+series elasticity of the device drive train; indeed, the Touch’s      cover the limits of most GFF devices’ output forces, torques,
+internal cable drive system includes springs that stretch when        and position ranges. We validated Haptify by evaluating two
+active forces are exerted. The peak normal force measured for         common commercial haptic devices and showed that Haptify’s
+the Touch and the Touch X in this experiment are 2.7 and 5.7          external sensors allow us to characterize the two devices in a
+N, while the manufacturer reports peak forces of 3.3 and 7.9 N,       standard, noninvasive way.
+respectively. The discrepancy likely comes from the uncompen-            We compared each device’s measured workspace with its
+sated effects of gravity and/or the direction in which the force is   modeled workspace and showed how imprecise joint limits,
+applied. The distance between the end-effector and the device         incorrect link lengths, and unmodeled collisions affect the
+base also affects the stiffness rendering quality and the maximum     workspace’s shape and volume. To characterize the global free-
+force available. We have anecdotally observed more vibrations         space forces and vibrations, we recorded the interaction forces,
+when pressing down far from the base, especially when higher          end-effector position, orientation, velocity, and acceleration
+forces are commanded. The speed and acceleration of the end-          while the user moved slowly through the workspace. Our results
+effector also affect the measured forces. The experimenter tried      showed that the Touch exerts higher free-space forces and larger
+to keep the motion similar across trials, but there were naturally    vibrations on the user than the Touch X does, confirming the
+some differences, which likely caused some of the data scatter        superiority of the more expensive device. For the local dynamic
+seen in Fig. 11. Future work needs to investigate rendering of a      force and torque model, the user moved from low to high speeds
+range of stiffness values, the uniformity of stiffness across the     in the x, y, z, and diagonal directions. We validated our local
+workspace, and rendering of other haptic effects such as viscous      dynamic models by comparing the estimated forces with the
+damping and textures.                                                 recorded forces of other experiments and showed that the force
+                                                                      error is small for trajectories similar to the training set. This
+                                                                      H–W modeling approach can be used for all future haptic devices
+G. Design of Haptify
+                                                                      evaluated by Haptify, regardless of their structure type, DOF, and
+   We designed and built Haptify to address the need for a            complexities. Furthermore, the distance metric we developed
+standard benchmarking system for GFF haptic devices. Our              should enable researchers to determine whether a given model
+results have proven that attaching external motion, force, and        is likely to accurately predict the forces for a new trajectory of
+acceleration sensors to a device enables measurement of haptic        interest. We evaluated the active rendering performance of the
+attributes that are not provided by the manufacturer and that can-    devices via two experiments with a frictionless stiff surface.
+not easily be modeled or calculated. Our proposed benchmarks          As expected, the passive device properties strongly affected
+are shown in Table III. Now that we have validated Haptify with       active device performance, with the Touch showing higher
+experiments and analysis on two commercial haptic interfaces,         planar forces than the Touch X. Most surprisingly, we found
+we hope to benchmark a diverse set of GFF devices.                    that the stiffness felt by the user is significantly lower than the
+   To have the highest quality as a standard benchmark for a large    commanded stiffness for both devices.
+selection of devices, Haptify uses expensive, robust components          We have four main directions for future work. The first
+that are not portable. It requires a calibration process to assure    direction is to define and measure more benchmarking methods,
+accurate recordings. Future extensions of our work will include a     particularly for active haptic rendering. We plan to conduct a
+FAZLOLLAHI AND KUCHENBECKER: HAPTIFY: A MEASUREMENT-BASED BENCHMARKING SYSTEM FOR GROUNDED FORCE-FEEDBACK                                                      1635
+
+
+
+
+                                                                                     Fig. 13. (a) The experiment process, where a weight was placed in thirty
+                                                                                     different locations on the force plate. (b) The force data recorded at 1 kHz by
+                                                                                     the force plate. (c) The results; red circles represent the COP calculated from
+                                                                                     the force plate measurements, and black plus signs are the COP measured from
+                                                                                     the Vicon data.
+
+
+                                                                                        2) COP Experiment: We calculated the COP for the force
+                                                                                     plate based on Kistler documentation [40]. A weight was placed
+                                                                                     in 30 equally spaced locations. X and Y , the coordinates of the
+                                                                                     object with respect to the center force plate, are calculated as
+                                                                                            −M
+                                                                                     X = Fz y and Y = −M                       L
+                                                                                                            Fz , where Mx = 2 (F1z + F2z − F3z −
+                                                                                                               x
+
+                                                                                                    L
+                                                                                     F4z ), M y = 2 (−F1z + F2z + F3z − F4z ), and the center-to-
+                                                                                     center distance between sensors is L = 60 cm. The forces mea-
+                                                                                     sured in the COP experiment are shown in Fig. 13(b), and the
+                                                                                     30 COPs calculated from the force plate readings are plotted as
+                                                                                     red circles in Fig. 13(c). The error between the COP calculated
+Fig. 12. (a) The impact test in which a ball is dropped at the center of the force   and the COP measured from the Vicon motion-capture system is
+plate. (b) The corresponding frequency responses. Fx shows a prominent peak
+at 205 Hz, Fy shows a prominent peak at 206 Hz, and Fz shows a prominent             4.8 ± 3.8 mm. Three existing commercial Kistler force plates,
+peak at 182 Hz.                                                                      9281B11, 9281 C, and 9287B, with dimensions of 40 cm ×
+                                                                                     60 cm, 40 cm × 60 cm, and 60 cm × 90 cm are studied in [40]
+                                                                                     and have COP errors of 8.4 ± 4.4 mm, 11.6 ± 6.1 mm, and
+user study wherein haptic experts try different haptic devices
+                                                                                     14.1 ± 9.1 mm, respectively [40].
+as we record the interactions with Haptify. These experiments
+should allow us to further elucidate parameters that define a good
+active haptic device and a good haptic interaction. Once we have                                               ACKNOWLEDGMENT
+standardized a complete set of benchmarks, we intend to create a                        The authors would like to thank the International Max Planck
+graphical user interface to guide the experimenter through each                      Research School for Intelligent Systems (IMPRS-IS) for sup-
+test, which should increase the quality of the resulting metrics                     porting Farimah Fazlollahi, the Central Mechanical Workshop
+and reduce the experimenter’s mental workload [38]. Our third                        for fabricating the aluminum force plate, the MPI-IS Robotics
+direction is to benchmark more devices and make our findings                         ZWE for 3-D printing and 3-D scanning, Jonathan Fiene for
+and measurements accessible for all researchers by adding fea-                       developing the accelerometer board and M2 microcontroller,
+tures to the Haptipedia website. The fourth direction is to build                    Hasti Seifi, Karon MacLean, and Alborz Aghamaleki Sarvestani
+a less expensive and yet sufficiently precise version of Haptify.                    for many fruitful discussions, Bernard Javot and Joey Burns for
+                                                                                     helping set up the Haptify laboratory, Behnam Khojasteh for
+                                  APPENDIX                                           input on vibration analysis, and Natalia Sanchez-Tamayo and
+                                                                                     Neha Thomas for helpful feedback on this manuscript.
+   1) Natural Frequency Experiment: The natural frequency
+of the force plate was determined through an impact test by
+                                                                                                                       REFERENCES
+dropping a ball, as described in [39] and shown in Fig. 12(a). The
+transient response to the impact was measured at 1 kHz. A fast                        [1] K. J. Kuchenbecker, “Haptics and haptic interfaces,” in Encyclopedia of
+                                                                                          Robotics. Berlin, Germany: Springer, 2018.
+Fourier transform (FFT) was applied to visualize the frequency                        [2] V. Hayward, O. R. Astley, M. Cruz-Hernandez, D. Grant, and G. Robles-
+response of the force plate in each of the three Cartesian direc-                         De-La-Torre, “Haptic interfaces and devices,” Sensor Rev., vol. 24, no. 1,
+tions [see Fig. 12(b)]. Each natural frequency was determined                             pp. 16–29, 2004.
+                                                                                      [3] T. H. Massie and Salisbury, “The phantom haptic interface: A device for
+as the most prominent peak in the frequency response. All are                             probing virtual objects,” in Proc. ASME Winter Annu. Meeting, Symp.
+around 200 Hz, which is far beyond the bandwidth of human                                 Haptic Interfaces Virtual Environ. Teleoperator Syst., Chicago, IL, 1994,
+motion.                                                                                   pp. 295–300.
+1636                                                                                                  IEEE TRANSACTIONS ON ROBOTICS, VOL. 39, NO. 2, APRIL 2023
+
+
+
+ [4] H. Seifiet al., “Haptipedia: Accelerating haptic device discovery to support       [29] I. Díaz and J. J. Gil, “Influence of vibration modes and human operator
+     interaction and engineering design,” in Proc. ACM CHI Conf. Hum. Factors                on the stability of haptic rendering,” IEEE Trans. Robot., vol. 26, no. 1,
+     Comput. Syst., 2019, pp. 1–12.                                                          pp. 160–165, Feb. 2009.
+ [5] H. Seifi, M. Oppermann, J. Bullard, K. E. MacLean, and K. J. Kuchen-               [30] H. Kazerooni and M.-G. Her, “The dynamics and control of a haptic in-
+     becker, “Capturing experts’ mental models to organize a collection of                   terface device,” IEEE Trans. Robot. Automat., vol. 10, no. 4, pp. 453–464,
+     haptic devices: Affordances outweigh attributes,” in Proc. ACM CHI Conf.                Aug. 1994.
+     Hum. Factors Comput. Syst., 2020, pp. 1–12.                                        [31] A. M. Tahmasebi, B. Taati, F. Mobasser, and K. Hashtrudi-Zaad, “Dynamic
+ [6] A. J. Silva, O. A. D. Ramirez, V. P. Vega, and J. P. O. Oliver, “Phantom omni           parameter identification and analysis of a phantom haptic device,” in Proc.
+     haptic device: Kinematic and manipulability,” in Proc. IEEE Electron.,                  IEEE Conf. Control Appl., 2005, pp. 1251–1256.
+     Robot. Automot. Mechanics Conf., 2009, pp. 193–198.                                [32] B. E. Miller, J. E. Colgate, and R. A. Freeman, “On the role of dissipation
+ [7] M. H. Koul, P. Kumar, P. K. Singh, M. Manivannan, and S. K. Saha,                       in haptic systems,” IEEE Trans. Robot., vol. 20, no. 4, pp. 768–771,
+     “Gravity compensation for phantom omni haptic interface,” in Proc. Joint                Aug. 2004.
+     Int. Conf. Multibody Syst. Dyn., 2010, pp. 25–27.                                  [33] E. Shokrollahi, A. A. Goldenberg, J. M. Drake, K. W. Eastwood, and M.
+ [8] Y. Jiang, C. Yang, X. Wang, and C.-Y. Su, “Kinematics modeling of geo-                  Kang, “Application of a nonlinear Hammerstein-Wiener estimator in the
+     magic touch x haptic device based on adaptive parameter identification,”                development and control of a magnetorheological fluid haptic device for
+     in Proc. IEEE Int. Conf. Real-Time Comput. Robot., 2016, pp. 295–300.                   robotic bone biopsy,” Actuators, vol. 7, no. 4, 2018, Art. no. 83.
+ [9] M. C. Çavuşoğlu, D. Feygin, and F. Tendick, “A critical study of the             [34] S. I. Biagiola and J. L. Figueroa, “Wiener and Hammerstein uncertain mod-
+     mechanical and electrical properties of the phantom haptic interface and                els identification,” Math. Comput. Simul., vol. 79, no. 11, pp. 3296–3313,
+     improvements for high performance control,” Presence, Teleoperators                     2009.
+     Virtual Environ., vol. 11, no. 6, pp. 555–568, 2002.                               [35] J.-W. van Wingerden and M. Verhaegen, “Closed-loop subspace identifica-
+[10] E. Samur, Performance Metrics for Haptic Interfaces. Berlin, Germany:                   tion of Hammerstein-Wiener models,” in Proc. IEEE Conf. Decis. Control,
+     Springer Science & Business Media, 2012.                                                2009, pp. 3637–3642.
+[11] C. Hatzfeld and T. A. Kern, Engineering Haptic Devices. Berlin, Germany:           [36] 2022. [Online]. Available: https://chai3d.org
+     Springer, 2016.                                                                    [37] J. Watkinson, “Digital audio,” J. Audio Eng. Soc., vol. 36, no. 6,
+[12] R. Madhavan, R. Lakaemper, and T. Kalmár-Nagy, “Benchmarking and                        pp. 492–508, 1988.
+     standardization of intelligent robotic systems,” in Proc. IEEE Int. Conf.          [38] A. Abdulali, I. R. Atadjanov, and S. Jeon, “Visually guided acquisition of
+     Adv. Robot., 2009, pp. 1–7.                                                             contact dynamics and case study in data-driven haptic texture modeling,”
+[13] A. Aly, S. Griffiths, and F. Stramandinoli, “Metrics and benchmarks in                  IEEE Trans. Haptics, vol. 13, no. 3, pp. 611–627, Jul./Sep. 2020.
+     human-robot interaction: Recent advances in cognitive robotics,” Cogn.             [39] G. Paolini, U. Della Croce, P. O. Riley, F. K. Newton, and D. C. Kerrigan,
+     Syst. Res., vol. 43, pp. 313–323, 2017.                                                 “Testing of a tri-instrumented-treadmill unit for kinetic analysis of loco-
+[14] D. Feil-Seifer, K. Skinner, and M. J. Matarić, “Benchmarks for evaluating              motion tasks in static and dynamic loading conditions,” Med. Eng. Phys.,
+     socially assistive robotics,” Interact. Stud., vol. 8, no. 3, pp. 423–439, 2007.        vol. 29, no. 3, pp. 404–411, 2007.
+[15] J. Weisz, Y. Huang, F. Lier, S. Sethumadhavan, and P. Allen, “RoboBench:           [40] Improving COP Accuracy with Kistler Force Plates, Winterthur, Switzer-
+     Towards sustainable robotics system benchmarking,” in Proc. IEEE Int.                   land: Kistler, 2019.
+     Conf. Robot. Automat., 2016, pp. 3383–3389.
+[16] H. Culbertson and K. J. Kuchenbecker, “Importance of matching physical
+     friction, hardness, and texture in creating realistic haptic virtual surfaces,”
+     IEEE Trans. Haptics, vol. 10, no. 1, pp. 63–74, Jan./Mar. 2017.
+[17] K. J. Kuchenbecker and G. Niemeyer, “Modeling induced master motion in                                    Farimah Fazlollahi (Graduate Student Member,
+     force-reflecting teleoperation,” in Proc. IEEE Int. Conf. Robot. Automat.,                                IEEE) received the B.S. degree in mechanical en-
+     2005, pp. 348–353.                                                                                        gineering with a major in applied design and the
+[18] K. J. Kuchenbecker and G. Niemeyer, “Induced master motion in force-                                      M.S degree in mechanical engineering with a major
+     reflecting teleoperation,” ASME J. Dyn. Syst., Meas., Control, vol. 128,                                  in applied design, dynamics, vibrations, and control
+     no. 4, pp. 800–810, Dec. 2006.                                                                            from Shiraz University, Shiraz, Iran, in 2015 and
+[19] C. Frissonet al., “RepHap: Towards an opensource platform for bench-                                      2017, respectively. She is currently working toward
+     marking haptic devices leveraging the robot operating system ecosystem,”                                  the Ph.D. degree in mechanical engineering with the
+     in Proc. IEEE Haptics Symp., 2020, pp. 586–587.                                                           Haptic Intelligence Department, Max Planck Institute
+[20] B. Siciliano, L. Sciavicco, L. Villani, and G. Oriolo, Robotics: Modelling,                               for Intelligent Systems, Stuttgart, Germany.
+     Planning and Control. Berlin, Germany: Springer Science & Business                                           Her research interests include haptics, robotics,
+     Media, 2010.                                                                       dynamics, mechanism design, and sensor fusion.
+[21] R. Q. Van der Linde, P. Lammertse, E. Frederiksen, and B. Ruiter, “The
+     HapticMaster, a new high-performance haptic interface,” in Proc. Euro-
+     haptics, 2002, pp. 1–5.
+[22] P. Merriaux, Y. Dupuis, R. Boutteau, P. Vasseur, and X. Savatier, “A study
+     of vicon system positioning performance,” Sensors, vol. 17, no. 7, 2017,
+     Art. no. 1591.                                                                                                Katherine J. Kuchenbecker (Fellow, IEEE) re-
+[23] A. Burkaet al., “Proton: A visuo-haptic data acquisition system for robotic                                   ceived the Ph.D. degree in mechanical engineering
+     learning of surface properties,” in Proc. IEEE Int. Conf. Multisensor Fusion                                  from Stanford University, Stanford, CA, USA, in
+     Integration Intell. Syst., 2016, pp. 58–65.                                                                   2006.
+[24] D. Zhang, F. Cursi, and G.-Z. Yang, “WSrender: A workspace analysis                                              She did postdoctoral research with the Johns Hop-
+     and visualization toolbox for robotic manipulator design and verification,”                                   kins University, Baltimore, MD, USA. She directs the
+     IEEE Robot. Automat. Lett., vol. 4, no. 4, pp. 3836–3843, 2019.                                               Haptic Intelligence Department, Max Planck Institute
+[25] M. W. Spong, S. Hutchinson, and M. Vidyasagar, Robot Modeling and                                             for Intelligent Systems, Stuttgart, Germany. She was
+     Control, vol. 3, Hoboken, NJ, USA: Wiley, 2006.                                                               an Engineering Professor with the University of Penn-
+[26] N. Landin, J. M. Romano, W. McMahan, and K. J. Kuchenbecker, “Dimen-                                          sylvania, Philadelphia, PA, USA, before she moved to
+     sional reduction of high-frequency accelerations for haptic rendering,” in                                    the Max Planck Society in 2017. Her research centers
+     Proc. Int. Conf. Hum. Haptic Sens. Touch Enabled Comput. Appl., 2010,              on haptic interfaces, which enable a user to touch virtual and distant objects as
+     pp. 79–86.                                                                         though they were real and within reach, as well as haptic sensing systems, which
+[27] G. J. Sandell, “Roles for spectral centroid and other factors in determining       allow robots to physically interact with objects and people.
+     “blended” instrument pairings in orchestration,” Music Percep., vol. 13,              Dr. Kuchenbecker delivered a TEDYouth talk on haptics in 2012 and has been
+     no. 2, pp. 209–246, 1995.                                                          honored with a 2009 NSF CAREER Award, the 2012 IEEE Robotics and Au-
+[28] G. C. Ozmen, M. Safaei, L. Lan, and O. T. Inan, “A novel accelerome-               tomation Society Academic Early Career Award, a 2014 Penn Lindback Award
+     ter mounting method for sensing performance improvement in acoustic                for Distinguished Teaching, and various paper, demonstration, and reviewing
+     measurements from the knee,” J. Vib. Acoust., vol. 143, no. 3, 2020,               awards. She co-chaired the IEEE Technical Committee on Haptics from 2015
+     Art. no. 031006.                                                                   to 2017 and the IEEE Haptics Symposium in 2016 and 2018.
+
