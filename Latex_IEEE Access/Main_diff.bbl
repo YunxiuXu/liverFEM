@@ -55,8 +55,7 @@ H.~P. Bui, S.~Tomar, and S.~P. Bordas, ``Corotational cut finite element method
 
 \bibitem{wang2025group}
 S.~Wang, Y.~Xu, and S.~Hasegawa, ``Group-based corotational fem for real-time
-  large deformation simulation,'' \emph{IEEE Access}, vol.~13, pp.
-  179\,041--179\,056, 2025.
+  large deformation simulation,'' \emph{IEEE Access}, 2025.
 
 \bibitem{bouaziz2023projective}
 S.~Bouaziz, S.~Martin, T.~Liu, L.~Kavan, and M.~Pauly, ``Projective dynamics:
@@ -92,8 +91,7 @@ W.~C. Agboh, M.~Yalcin, and V.~Patoglu, ``A six degrees of freedom haptic
 \bibitem{bjelland2025haptic}
 {\O}.~Bjelland, B.~Rasheed, I.~Cherif, A.~F. Dalen, A.~Chellali, M.~Steinert,
   and R.~T. Bye, ``Haptic rendering using reality-based force profiles in
-  surgical simulation,'' \emph{IEEE Transactions on Haptics}, vol.~18, no.~3,
-  pp. 569--581, 2025.
+  surgical simulation,'' \emph{IEEE Transactions on Haptics}, 2025.
 
 \bibitem{chernikova2020simulation}
 O.~Chernikova, N.~Heitzmann, M.~Stadler, D.~Holzberger, T.~Seidel, and
@@ -109,92 +107,11 @@ B.~Wisniewski, K.~Zierer, and J.~Hattie, ``The power of feedback revisited: A
 \bibitem{xu2025lightweight}
 Y.~Xu, S.~Wang, and S.~Hasegawa, ``Lightweight fingernail haptic device:
   Unobstructed fingerpad force and vibration feedback for enhanced virtual
-  dexterous manipulation,'' \emph{IEEE Transactions on Haptics}, vol.~18,
-  no.~3, pp. 626--639, 2025.
+  dexterous manipulation,'' \emph{IEEE Transactions on Haptics}, 2025.
 
 \bibitem{hou2019new}
 W.~Hou, P.~X. Liu, and M.~Zheng, ``A new model of soft tissue with constraints
   for interactive surgical simulation,'' \emph{Computer Methods and Programs in
   Biomedicine}, vol. 175, pp. 35--43, 2019.
-
-\bibitem{fan2026stiffness}
-D.~Fan, C.~Liu, Y.~Nie, C.~Yang, K.~Qiao, L.~Shao, G.~Liu, X.~Feng, H.~Yao,
-  W.~Zhu, X.~Ma, and J.~S. Dai, ``A stiffness-adaptive visuo-tactile robotic
-  palpation system for surface texture profiling and deep lesion
-  localization,'' \emph{IEEE/ASME Transactions on Mechatronics}, 2026, early
-  Access.
-
-\bibitem{lee2025imagefree}
-Y.-J. Lee, S.-W. Bang, J.-B. Hong, and S.~Park, ``Image-free tumor segmentation
-  of soft tissue using a minimally invasive robotic palpation system,''
-  \emph{IEEE Transactions on Biomedical Engineering}, vol.~72, no.~12, pp.
-  3621--3631, 2025.
-
-\bibitem{he2021abdominal}
-L.~He, N.~Herzig, S.~de~Lusignan, L.~Scimeca, P.~Maiolino, F.~Iida, and
-  T.~Nanayakkara, ``An abdominal phantom with tunable stiffness nodules and
-  force sensing capability for palpation training,'' \emph{IEEE Transactions on
-  Robotics}, vol.~37, no.~4, pp. 1051--1064, 2021.
-
-\bibitem{leong2022surrogate}
-F.~Leong, C.~Y. Lai, S.~F. Khosroshahi, L.~He, S.~de~Lusignan, T.~Nanayakkara,
-  and M.~Ghajari, ``A surrogate model based on a finite element model of
-  abdomen for real-time visualisation of tissue stress during physical
-  examination training,'' \emph{Bioengineering}, vol.~9, no.~11, p. 687, 2022.
-
-\bibitem{fazlollahi2023haptify}
-F.~Fazlollahi and K.~J. Kuchenbecker, ``Haptify: A measurement-based
-  benchmarking system for grounded force-feedback devices,'' \emph{IEEE
-  Transactions on Robotics}, vol.~39, no.~2, pp. 1622--1636, 2023.
-
-\bibitem{hafiz2022effect}
-K.~N. Hafiz and E.~Karado{\u{g}}an, ``Effect of arm pivot joints on stiffness
-  discrimination in haptic environments,'' \emph{Multimodal Technologies and
-  Interaction}, vol.~6, no.~11, p.~98, 2022.
-
-\bibitem{hata2011value}
-S.~Hata, H.~Imamura, T.~Aoki, T.~Hashimoto, M.~Akahane, K.~Hasegawa, Y.~Bekku,
-  Y.~Sugawara, M.~Makuuchi, and N.~Kokudo, ``Value of visual inspection,
-  bimanual palpation, and intraoperative ultrasonography during hepatic
-  resection for liver metastases of colorectal carcinoma,'' \emph{World Journal
-  of Surgery}, vol.~35, no.~12, pp. 2779--2787, 2011.
-
-\bibitem{nikolaev2020estimation}
-S.~Nikolaev and S.~Cotin, ``Estimation of boundary conditions for
-  patient-specific liver simulation during augmented surgery,''
-  \emph{International Journal of Computer Assisted Radiology and Surgery},
-  vol.~15, no.~7, pp. 1107--1115, 2020.
-
-\bibitem{cheng2016reporting}
-A.~Cheng, D.~Kessler, R.~Mackinnon, T.~P. Chang, V.~M. Nadkarni, E.~A. Hunt,
-  J.~Duval-Arnould, Y.~Lin, D.~A. Cook, M.~Pusic, J.~Hui, D.~Moher, M.~Egger,
-  and M.~Auerbach, ``Reporting guidelines for health care simulation research:
-  Extensions to the {CONSORT} and {STROBE} statements,'' \emph{Advances in
-  Simulation}, vol.~1, no.~1, p.~25, 2016.
-
-\bibitem{dasilva2019piloting}
-C.~Da~Silva and A.~Dubrowski, ``Piloting simulations: A systematic refinement
-  strategy,'' \emph{Cureus}, vol.~11, no.~12, p. e6434, 2019.
-
-\bibitem{cook2016validation}
-D.~A. Cook and R.~Hatala, ``Validation of educational assessments: A primer for
-  simulation and beyond,'' \emph{Advances in Simulation}, vol.~1, no.~1, p.~31,
-  2016.
-
-\bibitem{borgersen2018gathering}
-N.~J. Borgersen, T.~M.~H. Naur, S.~M.~D. S{\o}rensen, F.~Bjerrum, L.~Konge,
-  Y.~Subhi, and A.~S.~S. Thomsen, ``Gathering validity evidence for surgical
-  simulation: A systematic review,'' \emph{Annals of Surgery}, vol. 267, no.~6,
-  pp. 1063--1068, 2018.
-
-\bibitem{xu2023difficulties}
-X.~Xu, H.~Wang, J.~Luo, C.~Zhang, L.~Konge, and L.~Tang, ``Difficulties in
-  using simulation to assess abdominal palpation skills,'' \emph{BMC Medical
-  Education}, vol.~23, no.~1, p. 897, 2023.
-
-\bibitem{sullivan2013analyzing}
-G.~M. Sullivan and A.~R. Artino, ``Analyzing and interpreting data from
-  likert-type scales,'' \emph{Journal of Graduate Medical Education}, vol.~5,
-  no.~4, pp. 541--542, 2013.
 
 \end{thebibliography}

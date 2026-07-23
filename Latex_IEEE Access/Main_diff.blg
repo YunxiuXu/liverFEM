@@ -1,56 +1,73 @@
-This is BibTeX, Version 0.99d (TeX Live 2025/Homebrew)
+This is BibTeX, Version 0.99e
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: Main_diff.aux
+Reallocating 'name_of_file' (item size: 1) to 9 items.
 The style file: IEEEtran.bst
-Reallocated singl_function (elt_size=4) to 100 items from 50.
-Reallocated singl_function (elt_size=4) to 100 items from 50.
-Reallocated singl_function (elt_size=4) to 100 items from 50.
-Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
-Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocating 'name_of_file' (item size: 1) to 47 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'wiz_functions' (item size: 4) to 6000 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
 Database file #1: ../Frontiers_LaTeX_Templates/bibtex/references.bib
+Warning--I didn't find a database entry for "fan2026stiffness"
+Warning--I didn't find a database entry for "lee2025imagefree"
+Warning--I didn't find a database entry for "he2021abdominal"
+Warning--I didn't find a database entry for "leong2022surrogate"
+Warning--I didn't find a database entry for "fazlollahi2023haptify"
+Warning--I didn't find a database entry for "hafiz2022effect"
+Warning--I didn't find a database entry for "hata2011value"
+Warning--I didn't find a database entry for "nikolaev2020estimation"
+Warning--I didn't find a database entry for "cheng2016reporting"
+Warning--I didn't find a database entry for "dasilva2019piloting"
+Warning--I didn't find a database entry for "cook2016validation"
+Warning--I didn't find a database entry for "borgersen2018gathering"
+Warning--I didn't find a database entry for "xu2023difficulties"
+Warning--I didn't find a database entry for "sullivan2013analyzing"
 -- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
 -- http://www.michaelshell.org/tex/ieeetran/bibtex/
 -- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
 
 Done.
-You've used 32 entries,
+You've used 18 entries,
             4087 wiz_defined-function locations,
-            1015 strings with 14837 characters,
-and the built_in function-call counts, 28838 in all, are:
-= -- 2384
-> -- 823
-< -- 262
-+ -- 450
-- -- 158
-* -- 1436
-:= -- 4187
-add.period$ -- 66
-call.type$ -- 32
-change.case$ -- 33
-chr.to.int$ -- 552
-cite$ -- 32
-duplicate$ -- 2042
-empty$ -- 2063
-format.name$ -- 184
-if$ -- 6734
+            943 strings with 11495 characters,
+and the built_in function-call counts, 14423 in all, are:
+= -- 1168
+> -- 395
+< -- 117
++ -- 210
+- -- 73
+* -- 707
+:= -- 2133
+add.period$ -- 38
+call.type$ -- 18
+change.case$ -- 18
+chr.to.int$ -- 258
+cite$ -- 18
+duplicate$ -- 1044
+empty$ -- 1103
+format.name$ -- 91
+if$ -- 3358
 int.to.chr$ -- 0
-int.to.str$ -- 32
-missing$ -- 366
-newline$ -- 119
-num.names$ -- 32
-pop$ -- 792
+int.to.str$ -- 18
+missing$ -- 183
+newline$ -- 77
+num.names$ -- 18
+pop$ -- 426
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 2
-skip$ -- 2232
+skip$ -- 1110
 stack$ -- 0
-substring$ -- 1396
-swap$ -- 1797
-text.length$ -- 78
+substring$ -- 644
+swap$ -- 859
+text.length$ -- 31
 text.prefix$ -- 0
 top$ -- 5
-type$ -- 32
+type$ -- 18
 warning$ -- 0
-while$ -- 125
-width$ -- 34
-write$ -- 357
+while$ -- 65
+width$ -- 20
+write$ -- 197
+(There were 14 warnings)
