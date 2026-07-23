@@ -102,33 +102,19 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
         x_v = [p[0] for p in vega_points]
         y_v = [p[1] for p in vega_points]
 
-    # Create figure with two subplots stacked vertically for double-column readability
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8.5, 11))
+    fig, ax1 = plt.subplots(1, 1, figsize=(8.5, 6.5))
     
-    # Left subplot: Log scale
-    ax1.plot(x_tet, y_tet, 'r-o', linewidth=2, label='Proposed Method (10 Threads)')
-    ax1.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
-    ax1.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
+    ax1.plot(x_tet, y_tet, 'r-o', linewidth=2, markersize=8, label='Proposed Method (10 threads)')
+    ax1.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, markersize=7, label='XPBD Fast (subSteps=5, maxIterations=1)')
+    ax1.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, markersize=8, label='XPBD Reference (subSteps=50, maxIterations=1)')
     if vega_points:
-        ax1.plot(x_v, y_v, 'g-d', linewidth=2, markersize=8, label='VegaFEM (Implicit BE, Ground Truth)')
+        ax1.plot(x_v, y_v, 'g-d', linewidth=2, markersize=8, label='VegaFEM (implicit backward Euler, high-accuracy reference)')
     ax1.set_xlabel('Number of Tetrahedra')
-    ax1.set_ylabel('FPS (Log Scale)')
+    ax1.set_ylabel('Frame Rate (FPS, log scale)')
     ax1.set_yscale('log')
-    ax1.set_title('Performance Comparison (Log Scale)')
+    ax1.set_title('Real-Time Performance vs. Mesh Scale')
     ax1.grid(True, which="both", ls="-", alpha=0.3)
-    ax1.legend(loc='upper right')
-    
-    # Right subplot: Linear scale
-    ax2.plot(x_tet, y_tet, 'r-o', linewidth=2, label='Proposed Method (10 Threads)')
-    ax2.plot(x_xpbd, y_xpbd, 'b--s', linewidth=1.5, label='XPBD Fast (Substeps=5, Low Accuracy)')
-    ax2.plot(x_xpbd_ref, y_xpbd_ref, 'b-^', linewidth=2, label='XPBD Reference (Substeps=50, High Accuracy)')
-    if vega_points:
-        ax2.plot(x_v, y_v, 'g-d', linewidth=2, markersize=8, label='VegaFEM (Implicit BE, Ground Truth)')
-    ax2.set_xlabel('Number of Tetrahedra')
-    ax2.set_ylabel('FPS (Linear Scale)')
-    ax2.set_title('Performance Comparison (Linear Scale)')
-    ax2.grid(True, which="both", ls="-", alpha=0.3)
-    ax2.legend(loc='upper right')
+    ax1.legend(loc='upper right', fontsize=12)
     
     plt.tight_layout()
     output_file = os.path.join(output_dir, 'comparison_fps.png')
@@ -172,29 +158,9 @@ def analyze_comparison(tetfem_path, xpbd_path, vega_base_dir, output_dir):
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Automatically find the latest TetGenFEM and XPBD results
-    def find_latest_csv(pattern):
-        folders = sorted(glob.glob(os.path.join(base_dir, pattern)))
-        # Filter out VegaFEM folders
-        folders = [f for f in folders if "VegaFEM" not in os.path.basename(f)]
-        if not folders: return None
-        csv_path = os.path.join(folders[-1], "experiment4_performance.csv")
-        return csv_path if os.path.exists(csv_path) else None
 
-    # xpbd is usually named like 20251221_152330_xpbd
-    xpbd_csv = find_latest_csv("*_xpbd")
-    # tetfem is usually just the timestamp
-    all_timestamp_folders = sorted(glob.glob(os.path.join(base_dir, "202*")))
-    tetfem_folders = [f for f in all_timestamp_folders if "_xpbd" not in os.path.basename(f) and "VegaFEM" not in os.path.basename(f)]
-    tetfem_csv = os.path.join(tetfem_folders[-1], "experiment4_performance.csv") if tetfem_folders else None
-
-    if not tetfem_csv:
-        # Fallback to the known good one if no new ones found
-        tetfem_csv = os.path.join(base_dir, "20251218_021141", "experiment4_performance.csv")
-    
-    if not xpbd_csv:
-        xpbd_csv = os.path.join(base_dir, "20251221_152330_xpbd", "experiment4_performance.csv")
+    tetfem_csv = os.path.join(base_dir, "20251223_013107", "experiment4_performance.csv")
+    xpbd_csv = os.path.join(base_dir, "20251223_015022_xpbd", "experiment4_performance.csv")
 
     vega_base_dir = base_dir # out/experiment4 root
     output_dir = base_dir

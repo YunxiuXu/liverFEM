@@ -2075,10 +2075,71 @@ static Eigen::Vector3f unprojectCursorToWorld(double fbMouseX,
 	return world.head<3>() * invW;
 }
 
+struct PipelineProfiler {
+	bool active = false;
+	int warmupFrames = 60;
+	int measureFrames = 240;
+	int frameCount = 0;
+	int sampleCount = 0;
+	double sumTotalMs = 0.0;
+	double sumPreSimMs = 0.0;
+	double sumPhysicsMs = 0.0;
+	double sumSimMs = 0.0;
+	double sumRenderMs = 0.0;
+	double sumHapticTxMs = 0.0;
+	double maxTotalMs = 0.0;
+
+	void record(double totalMs, double preSimMs, double physicsMs, double simMs, double renderMs, double hapticTxMs) {
+		++frameCount;
+		if (frameCount <= warmupFrames) return;
+		if (sampleCount >= measureFrames) return;
+		++sampleCount;
+		sumTotalMs += totalMs;
+		sumPreSimMs += preSimMs;
+		sumPhysicsMs += physicsMs;
+		sumSimMs += simMs;
+		sumRenderMs += renderMs;
+		sumHapticTxMs += hapticTxMs;
+		maxTotalMs = std::max(maxTotalMs, totalMs);
+	}
+
+	bool finished() const { return sampleCount >= measureFrames; }
+
+	void printSummary() const {
+		if (sampleCount <= 0) return;
+		const double inv = 1.0 / static_cast<double>(sampleCount);
+		const double meanTotal = sumTotalMs * inv;
+		const double meanPreSim = sumPreSimMs * inv;
+		const double meanPhysics = sumPhysicsMs * inv;
+		const double meanSim = sumSimMs * inv;
+		const double meanRender = sumRenderMs * inv;
+		const double meanHapticTx = sumHapticTxMs * inv;
+		const double meanFps = (meanTotal > 1e-9) ? (1000.0 / meanTotal) : 0.0;
+		std::cout << std::fixed << std::setprecision(3)
+		          << "[PipelineProfile] samples=" << sampleCount
+		          << " warmup=" << warmupFrames << "\n"
+		          << "  mean_frame_ms=" << meanTotal
+		          << " p99_frame_ms~=" << maxTotalMs
+		          << " mean_fps=" << meanFps << "\n"
+		          << "  mean_pre_sim_ms=" << meanPreSim
+		          << " (Leap poll + hand mapping)\n"
+		          << "  mean_physics_ms=" << meanPhysics
+		          << " (GB-cFEM prime + PBD)\n"
+		          << "  mean_full_sim_ms=" << meanSim
+		          << " (physics + contact + force mapping/filter)\n"
+		          << "  mean_render_ms=" << meanRender << "\n"
+		          << "  mean_haptic_tx_ms=" << meanHapticTx
+		          << " (force-to-serial; 0 if UART disabled)\n"
+		          << "  software_latency_ms~=" << meanTotal
+		          << " (same-frame hand input -> force command)\n";
+	}
+};
+
 int main(int argc, char** argv) {
 
 	bool exportTetgenAndExit = false;
 	std::string exportDirOverride;
+	PipelineProfiler pipelineProfiler;
 	loadParams("parameters.txt");
 	// Make sure both OpenMP and Eigen use all available cores
 	omp_set_dynamic(0);
@@ -2103,6 +2164,23 @@ int main(int argc, char** argv) {
 			experiment4.update();
 			return 0;
 		}
+		if (std::string(argv[i]) == "--profile-pipeline-frames" && i + 1 < argc) {
+			pipelineProfiler.active = true;
+			pipelineProfiler.measureFrames = std::max(1, std::atoi(argv[++i]));
+			continue;
+		}
+		if (std::string(argv[i]) == "--profile-pipeline-warmup" && i + 1 < argc) {
+			pipelineProfiler.warmupFrames = std::max(0, std::atoi(argv[++i]));
+			continue;
+		}
+	}
+
+	if (pipelineProfiler.active) {
+		// Reproducible software-side timing: synthetic finger motion, no UART dependency.
+		haptic_uart_enabled = false;
+		leapEnabled = false;
+		std::cout << "[PipelineProfile] enabled: warmup=" << pipelineProfiler.warmupFrames
+		          << " measure=" << pipelineProfiler.measureFrames << "\n";
 	}
 
 	tetgenio in, out;
@@ -2735,7 +2813,7 @@ int main(int argc, char** argv) {
 #if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 		LeapCTracker leapTracker;
 		// Start with Leap input enabled by default (can still be toggled with 'B').
-		bool leapUseInput = true;
+		bool leapUseInput = !pipelineProfiler.active;
 		bool leapMappingCalibrated = false;
 		Eigen::Vector3f leapCenterMm = Eigen::Vector3f::Zero();
 		// Keep the Leap->world mapping stable: anchor to the initial "home" pose.
@@ -3826,6 +3904,14 @@ int main(int argc, char** argv) {
 	}
 
 		while (!glfwWindowShouldClose(window)) {
+			const auto pipelineFrameStart = std::chrono::steady_clock::now();
+			double pipelinePreSimMs = 0.0;
+			double pipelinePhysicsMs = 0.0;
+			double pipelineSimMs = 0.0;
+			double pipelineRenderMs = 0.0;
+			double pipelineHapticTxMs = 0.0;
+			const auto pipelinePreSimMark = pipelineFrameStart;
+
 			ui.beginFrame(window);
 			experiment3.update();
 			experiment1.update();
@@ -5047,9 +5133,29 @@ int main(int argc, char** argv) {
 
 		static bool drawFaces = true;
 		static bool drawEdges = false;
+
+		if (pipelineProfiler.active && agentSphere.enabled) {
+			const float phase = static_cast<float>(frame) * 0.04f;
+			const float depth = 0.10f * bboxDiag * (0.50f + 0.50f * std::sin(phase));
+			const Eigen::Vector3f pressTarget = tumorPresetInits[0] + Eigen::Vector3f(0.0f, depth, 0.0f);
+			for (int fi = 0; fi < kFingerCount; ++fi) {
+				auto& p = agentDevicePositions[static_cast<size_t>(fi)];
+				auto& pPrev = agentDevicePrevPositions[static_cast<size_t>(fi)];
+				const Eigen::Vector3f target = pressTarget + agentHandFingerOffsets[static_cast<size_t>(fi)];
+				p = target;
+				agentDeviceVelocities[static_cast<size_t>(fi)] = (p - pPrev) / std::max(1e-8f, timeStep);
+				pPrev = p;
+				agentProxyPositions[static_cast<size_t>(fi)] = p;
+				agentProxyVelocities[static_cast<size_t>(fi)] = agentDeviceVelocities[static_cast<size_t>(fi)];
+			}
+		}
 		
 		// Physics update only when not paused
 		if (!isPaused) {
+			const auto pipelineSimBlockStart = std::chrono::steady_clock::now();
+			pipelinePreSimMs = std::chrono::duration<double, std::milli>(
+				pipelineSimBlockStart - pipelinePreSimMark).count();
+			const auto pipelinePhysicsStart = pipelineSimBlockStart;
 #pragma omp parallel for
 			for (int i = 0; i < groupNum; i++) {
 				//object.groups[i].calGroupKFEM(youngs, poisson);
@@ -5082,6 +5188,8 @@ int main(int argc, char** argv) {
 			}
 			object.PBDLOOP(pbdIterations);
 			experiment2.onAfterPhysics();
+			pipelinePhysicsMs = std::chrono::duration<double, std::milli>(
+				std::chrono::steady_clock::now() - pipelinePhysicsStart).count();
 			
 			// Apply plane constraint for volume preservation visualization
 				if (showVolumePreservation) {
@@ -6343,6 +6451,8 @@ int main(int argc, char** argv) {
 								physPrevPositions[id] = Eigen::Vector3f(v->x, v->y, v->z);
 							}
 						}
+			pipelineSimMs = std::chrono::duration<double, std::milli>(
+				std::chrono::steady_clock::now() - pipelineSimBlockStart).count();
 					}
 
 			// Update COM for all groups to ensure correct stress cloud visualization
@@ -6365,6 +6475,7 @@ int main(int argc, char** argv) {
 		}
 
 		// Render here
+		const auto pipelineRenderStart = std::chrono::steady_clock::now();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 
@@ -7317,6 +7428,7 @@ int main(int argc, char** argv) {
 			static ForceGraphHistory agentForceHistory;
 			static float agentForceGraphScaleN = 1.0f;
 			if (agentSphere.enabled && !isPaused) {
+				const auto pipelineHapticStart = std::chrono::steady_clock::now();
 				Eigen::Vector3f fN = Eigen::Vector3f::Zero();
 				if (agentForceGraphMode != 0) {
 					// DEVICE force (haptic output; already filtered/gain/clamped).
@@ -7445,7 +7557,15 @@ int main(int argc, char** argv) {
 					}
 				}
 
+				pipelineHapticTxMs = std::chrono::duration<double, std::milli>(
+					std::chrono::steady_clock::now() - pipelineHapticStart).count();
+				pipelineRenderMs = std::chrono::duration<double, std::milli>(
+					pipelineHapticStart - pipelineRenderStart).count();
+
 				agentForceHistory.push(Eigen::Vector4f(fN.x(), fN.y(), fN.z(), fN.norm()));
+			} else {
+				pipelineRenderMs = std::chrono::duration<double, std::milli>(
+					std::chrono::steady_clock::now() - pipelineRenderStart).count();
 			}
 
 			// Draw suspension overlays again as a foreground pass so they are not hidden by the liver surface.
@@ -7866,6 +7986,21 @@ int main(int argc, char** argv) {
 			lastTime += 1.0;
 		}
 		//printf("%d frame number\n", frame);
+		if (pipelineProfiler.active) {
+			const double pipelineTotalMs = std::chrono::duration<double, std::milli>(
+				std::chrono::steady_clock::now() - pipelineFrameStart).count();
+			pipelineProfiler.record(
+				pipelineTotalMs,
+				pipelinePreSimMs,
+				pipelinePhysicsMs,
+				pipelineSimMs,
+				pipelineRenderMs,
+				pipelineHapticTxMs);
+			if (pipelineProfiler.finished()) {
+				pipelineProfiler.printSummary();
+				glfwSetWindowShouldClose(window, GLFW_TRUE);
+			}
+		}
 		frame++;
 		//object.writeVerticesToFile("ourMethodResult.txt");
 		/*object.bodyVolume = 0.0f;
