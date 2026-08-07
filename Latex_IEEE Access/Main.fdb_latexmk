@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex Main"] 1784306122.08761 "Main.aux" "Main.bbl" "Main" 1784306123.18542 0
+["bibtex Main"] 1786114556.25625 "Main.aux" "Main.bbl" "Main" 1786117155.10169 0
   "../Frontiers_LaTeX_Templates/bibtex/references.bib" 1784305716.0665 12190 54dc0e3dab01000844a79304ef7da874 ""
   "./IEEEtran.bst" 1714408405 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "Main.aux" 1784306123.0172 12287 aa9b9f8d6f55c0407f3404c947bec9fd "pdflatex"
+  "Main.aux" 1786117154.92913 12283 f2f0e7493375a506e19d44c2694366c7 "pdflatex"
   (generated)
   "Main.bbl"
   "Main.blg"
   (rewritten before read)
-["pdflatex"] 1784306122.16219 "Main.tex" "Main.pdf" "Main" 1784306123.18558 0
+["pdflatex"] 1786117154.0489 "Main.tex" "Main.pdf" "Main" 1786117155.10183 0
   "../out/experiment1/displacement_comparison.png" 1774638481.14773 145316 630fd0badc4c4e59c1b06ddcb69ebc9d ""
   "../out/experiment2/volume_preservation_comparison.png" 1774638481.17827 214247 cac505174f4e5f1c60c70ba6f4908e3e ""
   "../out/experiment4/comparison_fps.png" 1784298649.35396 207065 a2c1ccad106b5c23699bb6709b7c0b68 ""
@@ -92,9 +92,9 @@
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/web2c/texmf.cnf" 1741388039 42151 79f67285bdd95beca4d137b380b4b9e5 ""
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-var/web2c/pdftex/pdflatex.fmt" 1741388039 3346141 1288109d02d1c772df65535881471649 ""
   "IEEEtran.cls" 1714408405 281957 5b2e4fa15b0f7eabb840ebf67df4c0f7 ""
-  "Main.aux" 1784306123.0172 12287 aa9b9f8d6f55c0407f3404c947bec9fd "pdflatex"
-  "Main.bbl" 1784306122.14453 9246 cc97059bde7ea4ddda1e6ba53cda58fa "bibtex Main"
-  "Main.tex" 1784305971.83039 71013 5e67228cdcab29f2707a66d1ee877df2 ""
+  "Main.aux" 1786117154.92913 12283 f2f0e7493375a506e19d44c2694366c7 "pdflatex"
+  "Main.bbl" 1786114556.32482 9246 cc97059bde7ea4ddda1e6ba53cda58fa "bibtex Main"
+  "Main.tex" 1786117141.92258 68729 753c77200316e102e0fbdfe20db710a8 ""
   "bullet.png" 1714408405 430 e52d8fe748259de33fa611fdd6a099c1 ""
   "ieeeaccess.cls" 1714408405 50800 6e473d2a8652127c24e6e8af3d7a34f5 ""
   "img/Wang.pdf" 1775721070.14827 3400506 74f4d1016952de8e2276de0593ce310a ""
@@ -109,6 +109,7 @@
   "spotcolor.sty" 1714408405 2231 765ae5e8d6893fdf438e03d9be453864 ""
   "t1-formata-bold.pfb" 1714408405 59944 1c92d9b3557b9138c9525b805bd9fce5 ""
   "t1-formata-bold.tfm" 1714408405 1420 e49288584c4b6aedcaf3809078fdde27 ""
+  "t1-formata-bolditalic.tfm" 1714408405 1672 a22b31dbf0da7ba6594975d3d39e3805 ""
   "t1-formata-condmedium.pfb" 1714408405 63989 3ffb6dac82a54d61206da592adc666d4 ""
   "t1-formata-condmedium.tfm" 1714408405 1412 69835d9272a4cf9349297208bcc60045 ""
   "t1-formata-medium.pfb" 1714408405 67701 47a57ee2678066d392f8aebdda0dba09 ""

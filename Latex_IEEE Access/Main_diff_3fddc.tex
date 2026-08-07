@@ -1,7 +1,7 @@
 \documentclass{ieeeaccess}
 %DIF LATEXDIFF DIFFERENCE FILE
-%DIF DEL /tmp/Main_old_3fddc.tex   Fri Jul 24 00:30:07 2026
-%DIF ADD Main.tex                  Fri Jul 24 00:24:45 2026
+%DIF DEL 3fddc1969742f7bf4529373392bdcc062b827382
+%DIF ADD current revised manuscript
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
@@ -197,7 +197,7 @@ In summary, existing studies have established foundations in real-time soft-tiss
 \cite{wang2025group}}\hskip0pt%DIFAUXCMD
 , and the fingertip haptic device used here has previously been validated as a standalone lightweight actuator \mbox{%DIFAUXCMD
 \cite{xu2025lightweight}}\hskip0pt%DIFAUXCMD
-; neither prior study integrated the two with hand tracking into a running, task-oriented closed loop, which is what the present work adds. }\DIFaddend Based on this gap, this paper develops a task-oriented haptic training prototype using liver lesion localization as the test scenario. The focus is to validate the system integration and usability of a physics-computation-driven interaction architecture that aims to provide accessible and physics-rich mechanical cues for medical training. The evaluation in this paper is a formative expert evaluation whose goal is to identify system feasibility and engineering boundaries rather than to demonstrate training efficacy.
+; neither prior study integrated the two with hand tracking into a running, task-oriented closed loop, which is what the present work adds. }\DIFaddend Based on this gap, this paper develops a task-oriented haptic training prototype using liver lesion localization as the test scenario. The focus is to \DIFdelbegin \DIFdel{validate }\DIFdelend \DIFaddbegin \DIFadd{assess }\DIFaddend the system integration and \DIFdelbegin \DIFdel{usability }\DIFdelend \DIFaddbegin \DIFadd{identify the engineering boundaries }\DIFaddend of a physics-computation-driven interaction architecture that aims to provide accessible and physics-rich mechanical cues for medical training. The evaluation in this paper is a formative expert evaluation whose goal is to identify system feasibility and engineering boundaries rather than to demonstrate training efficacy.
 
 \section{System Design and Implementation}
 \DIFaddbegin 
@@ -216,7 +216,7 @@ The contact-normal reaction force is used as the main input to the 1-DOF device.
 \begin{equation}
 F_n = \left| \mathbf{F}_{contact} \cdot \mathbf{n} \right|.
 \end{equation}
-\DIFdelbegin \DIFdel{In the deployed system, the actual update rate of the }\DIFdelend \DIFaddbegin \DIFadd{The actuator was bench-characterized with a force sensor, giving a calibrated, perceptible output-force range of 0.04 N to 1.36 N (values above this range saturate at 1.36 N) and a linear vibration-frequency response over a 100--180 Hz resonance band (correlation coefficient 0.9998). A per-user calibration before each session sets the perceptible-force threshold, and any $F_n$ below this threshold is rendered at the threshold value instead of zero.
+\DIFdelbegin \DIFdel{In the deployed system, the actual update rate of the }\DIFdelend \DIFaddbegin \DIFadd{Bench characterization with a force sensor measured a maximum static force of 1.36 N; commands above this limit saturate at 1.36 N. Before each session, per-user calibration establishes the perceptible-force threshold, and any nonzero $F_n$ below this threshold is rendered at the threshold value, giving a participant-specific operating range from that threshold to 1.36 N. In vibration tests, the measured peak-to-peak force reached 0.434 N at 140 Hz and remained within 6 dB of this peak from 100 to 200 Hz.
 }
 
 \DIFadd{The }\DIFaddend haptic control loop \DIFdelbegin \DIFdel{is }\DIFdelend \DIFaddbegin \DIFadd{runs at }\DIFaddend 1000 Hz, \DIFdelbegin \DIFdel{and the physics engine transmits force commands to the haptic hardware through a serial link at }\DIFdelend \DIFaddbegin \DIFadd{with force commands sent over a }\DIFaddend 2{,}000{,}000 bps \DIFdelbegin \DIFdel{. }\DIFdelend \DIFaddbegin \DIFadd{serial link (under 1 ms per packet). On the default liver mesh (13}{\DIFadd{,}}\DIFadd{800 nodes, 62}{\DIFadd{,}}\DIFadd{897 tetrahedra), profiling the software pipeline over 90 frames gives a mean same-frame latency of 25.2 ms (39.6 FPS, peak 30.1 ms) from hand-input update to force-command issuance, of which 22.2 ms is GB-cFEM/PBD, 1.4 ms is contact and force mapping, and 0.3 ms is rendering. Device forces are additionally low-pass filtered (10 ms time constant) and hand positions are smoothed (30 ms time constant) to suppress transients, and the actuator command path applies a PWM slew limiter to avoid cable-snap artifacts on contact onset. }\DIFaddend Under this mechanism, users perform lesion localization by perceiving differences in normal resistance while pressing different regions. The hardware connections and wearable device used in the experiment are shown in Fig.~\ref{fig:hardware}.
@@ -316,6 +316,7 @@ Both XPBD configurations are reported to ensure a fair evaluation. Reporting onl
 \centering
 \scriptsize
 \renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{2pt}
 \begin{tabular}{|p{0.20\linewidth}|p{0.24\linewidth}|p{0.24\linewidth}|p{0.20\linewidth}|}
 \hline
 \DIFaddFL{Setting }& \DIFaddFL{Proposed method }& \DIFaddFL{XPBD Fast / XPBD Ref }& \DIFaddFL{VegaFEM }\\
@@ -555,7 +556,7 @@ Force-feedback realism & 3/5 & The physical limitation of single-DOF hardware di
 \end{tabular}
 \end{table}
 
-According to the Likert-scale scores in Table~\ref{tab:likert}, the system received positive ratings in ``architectural feasibility'' and ``soft-tissue mechanical expression'' (4/5), while the score for ``force-feedback realism'' was only moderate (3/5). This result confirms the successful integration of the system's data flow while identifying future engineering challenges in hardware frequency response and feedback dimensionality. \DIFaddbegin \DIFadd{Because these scores come from a single surgical expert, they are reported only as qualitative, formative feedback that corroborates the verbal walkthrough findings; consistent with guidance on interpreting ordinal rating data \mbox{%DIFAUXCMD
+According to the Likert-scale scores in Table~\ref{tab:likert}, the system received positive ratings in ``\DIFdelbegin \DIFdel{architectural feasibility }\DIFdelend \DIFaddbegin \DIFadd{system feasibility and potential}\DIFaddend '' and ``soft-tissue mechanical expression'' (4/5), while the score for ``force-feedback realism'' was only moderate (3/5). This result confirms the successful integration of the system's data flow while identifying future engineering challenges in hardware frequency response and feedback dimensionality. \DIFaddbegin \DIFadd{Because these scores come from a single surgical expert, they are reported only as qualitative, formative feedback that corroborates the verbal walkthrough findings; consistent with guidance on interpreting ordinal rating data \mbox{%DIFAUXCMD
 \cite{sullivan2013analyzing}}\hskip0pt%DIFAUXCMD
 , they are not statistically generalizable usability evidence and should not be interpreted as validating training effectiveness.
 }\DIFaddend 
@@ -585,7 +586,7 @@ For the test scenario of liver lesion localization, the current system expresses
 
 %DIFDELCMD < %%%
 \DIFdelend \subsection{Future Research Directions}
-Future work should involve a structured, multi-sample user study with both medical novices and experienced surgeons to examine task validity and training effectiveness\DIFdelbegin \DIFdel{. This future evaluation will focus }\DIFdelend \DIFaddbegin \DIFadd{, focusing }\DIFaddend on quantitative learning curves and skill transfer\DIFdelbegin \DIFdel{to validate the system's actual utility in medical education}\DIFdelend , although the current scope remains focused on system-prototype design and technical feasibility. \DIFdelbegin \DIFdel{The next engineering }\DIFdelend \DIFaddbegin \DIFadd{On the engineering side, the next }\DIFaddend iteration will prioritize \DIFdelbegin \DIFdel{refining }\DIFdelend \DIFaddbegin \DIFadd{a nonlinear, capsule-aware material model, more complete }\DIFaddend ligament and abdominal \DIFdelbegin \DIFdel{boundaries for better macroscopic support, integrating }\DIFdelend \DIFaddbegin \DIFadd{boundary constraints for stronger organ anchoring, integration of }\DIFaddend surgical-instrument proxies to correct the interaction paradigm, and \DIFdelbegin \DIFdel{optimizing }\DIFdelend \DIFaddbegin \DIFadd{improved tangential-force compensation and }\DIFaddend synchronization between the physics engine and the haptic loop\DIFdelbegin \DIFdel{to ensure smoother force rendering}\DIFdelend .
+Future work should involve a structured, \DIFdelbegin \DIFdel{multi-sample }\DIFdelend \DIFaddbegin \DIFadd{multi-participant }\DIFaddend user study with both medical novices and experienced surgeons to examine task validity and training effectiveness\DIFdelbegin \DIFdel{. This future evaluation will focus }\DIFdelend \DIFaddbegin \DIFadd{, focusing }\DIFaddend on quantitative learning curves and skill transfer\DIFdelbegin \DIFdel{to validate the system's actual utility in medical education}\DIFdelend , although the current scope remains focused on system-prototype design and technical feasibility. \DIFdelbegin \DIFdel{The next engineering }\DIFdelend \DIFaddbegin \DIFadd{On the engineering side, the next }\DIFaddend iteration will prioritize \DIFdelbegin \DIFdel{refining }\DIFdelend \DIFaddbegin \DIFadd{a nonlinear, capsule-aware material model, more complete }\DIFaddend ligament and abdominal \DIFdelbegin \DIFdel{boundaries for better macroscopic support, integrating }\DIFdelend \DIFaddbegin \DIFadd{boundary constraints for stronger organ anchoring, integration of }\DIFaddend surgical-instrument proxies to correct the interaction paradigm, and \DIFdelbegin \DIFdel{optimizing }\DIFdelend \DIFaddbegin \DIFadd{improved tangential-force compensation and }\DIFaddend synchronization between the physics engine and the haptic loop\DIFdelbegin \DIFdel{to ensure smoother force rendering}\DIFdelend .
 
 \section{Conclusion}
 This paper proposes and implements a task-oriented haptic training prototype to verify the system connectivity and engineering feasibility of integrating a GB-cFEM physical engine with a haptic interface. By combining GB-cFEM-based real-time soft-tissue simulation with haptic mapping and using liver lesion localization as a concrete test scenario, the study realizes the transformation of a physical simulation kernel into an interactive feedback engine.

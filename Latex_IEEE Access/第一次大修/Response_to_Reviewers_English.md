@@ -28,7 +28,7 @@ We also removed overly strong statements from the Conclusion, including the prev
 > Establishing actual training effectiveness, learning-efficiency gains, or clinical-grade fidelity will require the structured, multi-participant, novice-and-expert study outlined in the Future Research Directions subsection.
 
 **Changes in the manuscript:**  
-The Abstract, the Discussion subsection “From Algorithm Validation to System-Prototype Evaluation,” and the Conclusion have been revised to consistently limit the contribution to technical feasibility, system integration, and preliminary formative feedback.
+Location: Abstract (p. 1); Section VI-A, “From Algorithm Validation to System-Prototype Evaluation” (p. 11); and Section VII, “Conclusion” (p. 12). These passages have been revised to consistently limit the contribution to technical feasibility, system integration, and preliminary formative feedback.
 
 ### Comment R1-2: Provide technical details and quantitative validation of the haptic-rendering pipeline
 
@@ -37,15 +37,15 @@ Please report the device force range, force-calibration method, saturation behav
 **Response:**  
 We agree. This comment overlaps with Comment R3-M3, and the corresponding revisions address both comments. We expanded the subsection “1-DOF Haptic Rendering Strategy” to report the following measurements and implementation details:
 
-- The actuator was characterized on a bench using a force sensor. Its calibrated perceptible output-force range was 0.04–1.36 N, with commands above this range saturating at 1.36 N.
-- The vibration-frequency response was linear over the 100–180 Hz resonance band, with a correlation coefficient of 0.9998.
-- Before each session, a per-user calibration establishes the perceptible-force threshold. Any normalized force below this threshold is rendered at the threshold value rather than as zero.
+- Bench characterization with a force sensor measured a maximum static force of 1.36 N, with commands above this limit saturating at 1.36 N.
+- Before each session, a per-user calibration establishes the perceptible-force threshold. Any nonzero force below this threshold is rendered at the threshold value, giving a participant-specific operating range from that threshold to 1.36 N.
+- In vibration tests, the measured peak-to-peak force reached 0.434 N at 140 Hz and remained within 6 dB of this peak from 100 to 200 Hz.
 - The haptic-control loop operates at 1000 Hz, and force commands are transmitted through a 2,000,000-bps serial connection in less than 1 ms per packet.
 - On the default liver mesh containing 13,800 nodes and 62,897 tetrahedra, profiling over 90 frames produced a mean same-frame latency of 25.2 ms (39.6 FPS; peak latency, 30.1 ms) from the hand-input update to force-command issuance. The mean latency comprised 22.2 ms for GB-cFEM/PBD, 1.4 ms for contact processing and force mapping, and 0.3 ms for rendering.
 - Device forces are low-pass filtered using a 10-ms time constant, while hand positions are smoothed using a 30-ms time constant to suppress transients. A PWM slew-rate limiter is also applied to prevent cable-snap artifacts at contact onset.
 
 **Changes in the manuscript:**  
-The subsection “1-DOF Haptic Rendering Strategy” now includes the measured force range, saturation behavior, calibration procedure, frequency-response linearity, software-pipeline latency, communication latency, filtering parameters, position smoothing, and PWM slew-rate limiting.
+Location: Section III-D, “1-DOF Haptic Rendering Strategy” (p. 4). This subsection now includes the measured maximum static force, saturation behavior, participant-specific calibration and operating range, vibration peak and 6-dB output range, software-pipeline latency, communication latency, filtering parameters, position smoothing, and PWM slew-rate limiting.
 
 ### Comment R1-3: Clarify the design of the formative evaluation
 
@@ -59,7 +59,7 @@ However, the three presets are located in different anatomical regions of the li
 The present single-session diagnostic walkthrough was not instrumented to record localization accuracy, time to localization, number of exploratory presses, hand trajectory, confidence, or error distance automatically. Behavioral information was recorded qualitatively through observation and interview. We now report this explicitly as a limitation. As explained further in our response to Comment R3-M4, the existing interaction pipeline already makes per-frame fingertip proxy positions and contact states available. In future work, these data will be logged using predefined operational measures in a randomized, multi-participant haptics-on/off study.
 
 **Changes in the manuscript:**  
-The subsection “Formative Expert Evaluation and Observation of Lesion-Search Behavior” now explains the matched lesion parameters, unmatched anatomical factors, fixed trial order, potential learning and familiarization effects, absence of automated behavioral logging, and appropriately limited interpretation of the observed strategy change.
+Location: Section IV-B, “Formative Expert Evaluation and Observation of Lesion-Search Behavior” (pp. 7–8), and Section V-B2, “Behavioral Observation in the Lesion-Localization Task” (p. 10). These passages now explain the matched lesion parameters, unmatched anatomical factors, fixed trial order, potential learning and familiarization effects, absence of automated behavioral logging, and appropriately limited interpretation of the observed strategy change.
 
 ### Comment R1-4: Provide reproducible information for the XPBD and VegaFEM comparisons
 
@@ -73,17 +73,17 @@ The revised text and table specify that all three methods used the same liver me
 We also expanded the Results subsection “Real-Time Performance and Scalability” to specify the mesh-resolution sweep, thread configurations (one thread and ten threads on a processor with up to 12 cores), and the numbers of warm-up and measured frames.
 
 **Changes in the manuscript:**  
-A new solver-settings table and accompanying text have been added to “Application-Level Technical Validation Based on a Specific Liver Model.” The performance and scalability methodology in the Results has also been expanded.
+Location: Section IV-A, “Application-Level Technical Validation Based on a Specific Liver Model” (pp. 6–7), including Table 2 (p. 6), and Section V-A3, “Real-Time Performance and Scalability” (pp. 9–10). A new solver-settings table and accompanying text have been added, and the performance and scalability methodology has been expanded.
 
 ### Comment R1-5: Complete a thorough formatting and language check
 
 Please correct spacing, hyphenation, conversion, and related formatting problems throughout the manuscript.
 
 **Response:**  
-We carefully proofread the complete manuscript and checked the LaTeX source for spacing, hyphenation, conversion, and formatting problems. The identified issues were corrected, and no unresolved problems of these types were found in the revised source.
+We carefully proofread the complete manuscript and checked the LaTeX source for spacing, hyphenation, conversion, formatting, and terminology consistency. During the final pass, we reduced the column padding in Table 2 so that it fits within the column width, replaced “multi-sample user study” with “multi-participant user study,” aligned the Likert-result wording with the exact Table 8 label “system feasibility and potential,” and removed wording in Related Work that could imply that a single-expert evaluation validated usability.
 
 **Changes in the manuscript:**  
-Formatting and language corrections have been made throughout the manuscript.
+Location: Section II-D, “Position of This Work” (p. 3); Table 2 in Section IV-A (p. 6); the paragraph following Table 8 in Section V-B3 (p. 10); and Section VI-C, “Future Research Directions” (p. 11). Formatting, terminology, and language consistency have been corrected, including the Table 2 column width.
 
 ### Additional Comment R1-6: Clarify the contribution relative to the authors’ previous work
 
@@ -97,7 +97,7 @@ We agree. This comment overlaps with Comment R3-0. In the “Position of This Wo
 This statement explicitly distinguishes the previously published standalone components from the incremental contribution of the present study: their integration with hand tracking, a lesion-localization task, and force mapping in a functioning real-time interaction loop.
 
 **Changes in the manuscript:**  
-The subsection “Position of This Work” now explicitly identifies the prior standalone contributions and the new system-level contribution of the present manuscript.
+Location: Section II-D, “Position of This Work” (p. 3). This subsection now explicitly identifies the prior standalone contributions and the new system-level contribution of the present manuscript.
 
 ### Additional Comment R1-7: Expand the related literature and comparisons
 
@@ -115,7 +115,7 @@ In the discussion of the Likert-scale results, we cite Sullivan et al. regarding
 The general educational references in the Introduction, including Wisniewski et al., remain limited to motivating the potential value of the work. They are not used as evidence that the present system has demonstrated an educational benefit.
 
 **Changes in the manuscript:**  
-The Related Work and formative-evaluation sections have been expanded with literature on haptic characterization, psychophysics, simulation validation, pilot evaluation, and abdominal palpation. The interpretation of the Likert-scale results and the role of general educational literature have also been clarified.
+Location: Sections II-B and II-C (p. 3); Section IV-B (pp. 7–8); and the paragraph following Table 8 in Section V-B3 (p. 10). These passages now cover haptic characterization, psychophysics, simulation validation, pilot evaluation, abdominal palpation, cautious Likert-scale interpretation, and the motivational role of general educational literature.
 
 ---
 
@@ -129,7 +129,7 @@ We agree and rewrote the final paragraph of the Conclusion. The revised text exp
 We now explicitly state that actual training effectiveness, gains in learning efficiency, and clinical-grade fidelity must be evaluated in a structured, multi-participant study involving both novices and experts. A similarly cautious statement has been added to the Abstract.
 
 **Changes in the manuscript:**  
-The Abstract and Conclusion have been revised to distinguish demonstrated technical feasibility from potential, but not yet demonstrated, clinical and educational value.
+Location: Abstract (p. 1) and Section VII, “Conclusion” (p. 12). These passages now distinguish demonstrated technical feasibility from potential, but not yet demonstrated, clinical and educational value.
 
 ### Comment R2-2: Explain the use of a single-expert formative evaluation more fully
 
@@ -141,7 +141,7 @@ We expanded the beginning of “Formative Expert Evaluation and Observation of L
 The evaluation is now explicitly defined as a formative expert evaluation intended to identify system feasibility and engineering boundaries, not to measure training effectiveness, skill acquisition, or learning outcomes. All conclusions derived from this evaluation are accordingly described as preliminary.
 
 **Changes in the manuscript:**  
-The rationale, intended purpose, and inferential limits of the single-expert evaluation have been added to the formative-evaluation subsection.
+Location: Section IV-B, “Formative Expert Evaluation and Observation of Lesion-Search Behavior” (pp. 7–8). The rationale, intended purpose, and inferential limits of the single-expert evaluation have been added.
 
 ### Comment R2-3: Clarify the limitations in haptic and anatomical realism
 
@@ -155,7 +155,7 @@ Haptic realism is limited by the 1-DOF actuator, which provides only normal cont
 The absence of material nonlinearity and explicit capsule behavior affects both dimensions: it limits the anatomical representation of the tissue and weakens the progressively increasing resistance expected during deeper indentation. These simplifications were adopted to preserve real-time performance and compatibility with consumer-grade hardware. They are now described as open engineering targets rather than as capabilities of the current system.
 
 **Changes in the manuscript:**  
-The Discussion now distinguishes anatomical realism from haptic realism and explains how the current material, anatomical, and device simplifications affect each dimension.
+Location: Section VI-A, “From Algorithm Validation to System-Prototype Evaluation” (p. 11). The Discussion now distinguishes anatomical realism from haptic realism and explains how the current material, anatomical, and device simplifications affect each dimension.
 
 ### Comment R2-4: Provide a more detailed comparison with existing liver-palpation simulators and training systems
 
@@ -169,7 +169,7 @@ These studies and our work all address lesion search through stiffness contrast 
 In contrast, our system is an interactive virtual-palpation platform based on GB-cFEM. The user directly explores a deformable virtual liver and perceives normal-force feedback generated by local differences in material stiffness through a wearable 1-DOF haptic device. Lesion location, stiffness parameters, and tissue models can be modified in the virtual environment without rebuilding a physical phantom. Thus, the systems address similar lesion-search problems but differ in the interacting agent, feedback modality, model configurability, and system medium.
 
 **Changes in the manuscript:**  
-The subsection “Liver-Related Simulation Systems and Training Tasks” now includes a task-level and technical comparison with recent robotic, physical-phantom, and surrogate finite-element palpation systems.
+Location: Section II-B, “Liver-Related Simulation Systems and Training Tasks” (p. 3). This subsection now includes a task-level and technical comparison with recent robotic, physical-phantom, and surrogate finite-element palpation systems.
 
 ---
 
@@ -181,7 +181,7 @@ The subsection “Liver-Related Simulation Systems and Training Tasks” now inc
 We agree. In the Related Work subsection “Position of This Work,” we added an explicit statement that the GB-cFEM solver and fingertip haptic device were previously validated as separate, standalone contributions. Neither prior study integrated these components with hand tracking in a functioning task-oriented closed loop. The contribution of the present manuscript is the integration of these components with force mapping and a liver-lesion localization task into a real-time interactive system.
 
 **Changes in the manuscript:**  
-An explicit statement distinguishing the prior component-level work from the present system-level contribution has been added to “Position of This Work.”
+Location: Section II-D, “Position of This Work” (p. 3). An explicit statement distinguishing the prior component-level work from the present system-level contribution has been added.
 
 ### Major Comment R3-M1: A single-expert evaluation cannot support broad claims about training or clinical use
 
@@ -195,7 +195,7 @@ The subsection “Formative Expert Evaluation and Observation of Lesion-Search B
 The Discussion similarly states that the single-expert walkthrough is formative and diagnostic and is intended to expose engineering boundaries rather than establish clinical-grade training efficacy, educational impact, or learning outcomes.
 
 **Changes in the manuscript:**  
-The Abstract, formative-evaluation subsection, Discussion, and Conclusion now consistently describe the evidence as preliminary formative feedback and avoid broader training or clinical claims.
+Location: Abstract (p. 1); Section IV-B (pp. 7–8); Section VI-A (p. 11); and Section VII (p. 12). These passages now consistently describe the evidence as preliminary formative feedback and avoid broader training or clinical claims.
 
 ### Major Comment R3-M2: The study does not measure novice performance, skill improvement, retention, or transfer to clinical tasks
 
@@ -207,21 +207,21 @@ We chose to reduce the claims rather than add a new learning-effect experiment b
 The observations are now described as preliminary qualitative evidence rather than a formal evaluation of training efficacy, educational impact, or learning outcomes. The discussion of medical education in the Introduction is used only to motivate the system’s potential value. A dedicated novice-and-expert study is now proposed in “Future Research Directions” to evaluate learning-related outcomes.
 
 **Changes in the manuscript:**  
-Claims concerning education and learning have been reduced throughout the manuscript, and the required novice-and-expert validation study is clearly identified as future work.
+Location: Section I, “Introduction” (pp. 1–2); Sections VI-A and VI-C (p. 11); and Section VII, “Conclusion” (p. 12). Claims concerning education and learning have been reduced, and the required novice-and-expert validation study is identified as future work.
 
 ### Major Comment R3-M3: Strengthen the quantitative validation of haptic feedback
 
 Please report actual force accuracy, latency, calibration, actuator limits, force resolution, saturation behavior, and interaction stability.
 
 **Response:**  
-We agree. This comment is closely related to Comment R1-2. We added measured and implementation-level information to “1-DOF Haptic Rendering Strategy,” including the calibrated perceptible force range of 0.04–1.36 N, saturation at 1.36 N, per-user perceptual-threshold calibration, the linear 100–180 Hz response band with a correlation coefficient of 0.9998, and the measured same-frame software latency.
+We agree. This comment is closely related to Comment R1-2. We added measured and implementation-level information to “1-DOF Haptic Rendering Strategy,” including a measured maximum static force of 1.36 N, saturation at 1.36 N, per-user perceptual-threshold calibration and participant-specific operating range, a peak-to-peak vibration force of 0.434 N at 140 Hz that remains within 6 dB of the peak from 100 to 200 Hz, and the measured same-frame software latency.
 
 On the default mesh, the mean latency from hand-input update to force-command issuance was 25.2 ms over 90 frames (39.6 FPS; peak, 30.1 ms). The mean comprised 22.2 ms for GB-cFEM/PBD, 1.4 ms for contact and force mapping, and 0.3 ms for rendering. Commands were sent through a 2,000,000-bps serial connection in less than 1 ms per packet, while the device control loop operated at 1000 Hz.
 
 For interaction stability, we now report a 10-ms low-pass time constant for device forces, a 30-ms smoothing time constant for hand positions, and a PWM slew-rate limiter that suppresses cable-snap artifacts at contact onset.
 
 **Changes in the manuscript:**  
-Quantitative device characterization, latency profiling, calibration, saturation, filtering, smoothing, and slew-rate limiting have been added to “1-DOF Haptic Rendering Strategy.”
+Location: Section III-D, “1-DOF Haptic Rendering Strategy” (p. 4). Quantitative device characterization, latency profiling, calibration, saturation, the vibration peak and 6-dB output range, filtering, smoothing, and slew-rate limiting have been added.
 
 ### Major Comment R3-M4: Provide objective results for the lesion-localization task
 
@@ -239,7 +239,7 @@ Third, the two trials used different lesion positions in a fixed order without a
 The current interaction pipeline already provides the per-frame fingertip proxy positions and contact states used for haptic-force computation. In future work, we will define the measures operationally, enable logging, and evaluate them in a structured, randomized, multi-participant study with a controlled haptics-on/off comparison.
 
 **Changes in the manuscript:**  
-The formative-evaluation subsection now explicitly reports the missing objective measures, explains the measurement and design constraints, and describes the logging and controlled-study plan.
+Location: Section IV-B, “Formative Expert Evaluation and Observation of Lesion-Search Behavior” (pp. 7–8), and Section V-B2, “Behavioral Observation in the Lesion-Localization Task” (p. 10). These passages now report the missing objective measures, explain the measurement and design constraints, and describe the logging and controlled-study plan.
 
 ### Major Comment R3-M5: Strengthen the biomechanical basis of the liver model
 
@@ -257,7 +257,7 @@ The fixed regions correspond to locations at which the liver is constrained by t
 We also clarify that this remains a simplified fixed-boundary approximation rather than a compliant ligament-level model. Because ligament compliance is not modeled quantitatively, the approximation introduces boundary-condition error relative to a complete patient-specific simulation. The description of the abdominal collision shell now also states that the current model does not separately represent the anterior falciform ligament, authentic abdominal contact relationships, or ligament compliance.
 
 **Changes in the manuscript:**  
-The biomechanical rationale and supporting references for tissue stiffness, stiffness contrast, lesion size, and anatomical constraints have been added to “Liver Model and Lesion Configuration,” together with a clearer account of the remaining boundary-condition limitations.
+Location: Section III-E, “Liver Model and Lesion Configuration” (pp. 4–6), including Table 1 (p. 5). The biomechanical rationale and supporting references for tissue stiffness, stiffness contrast, lesion size, and anatomical constraints have been added, together with a clearer account of the remaining boundary-condition limitations.
 
 ### Major Comment R3-M6: Provide complete implementation details for the XPBD and VegaFEM benchmarks
 
@@ -275,7 +275,7 @@ The revised manuscript now explains that the values in Experiments 1 and 2 were 
 The Results subsection “Real-Time Performance and Scalability” also now reports the mesh-generation procedure for the resolution sweep, thread counts, and the numbers of warm-up and measured frames.
 
 **Changes in the manuscript:**  
-The solver-settings table, benchmark protocol, convergence and termination explanation, mesh information, loading and boundary conditions, and performance-measurement procedure have all been added or expanded.
+Location: Section IV-A (pp. 6–7), including Table 2 (p. 6), and Section V-A3, “Real-Time Performance and Scalability” (pp. 9–10). The solver settings, benchmark protocol, convergence and termination explanation, mesh information, loading and boundary conditions, and performance-measurement procedure have all been added or expanded.
 
 ### Major Comment R3-M7: Explain the limitations of the 1-DOF device fully
 
@@ -287,7 +287,7 @@ We agree. This comment is closely related to Comment R2-3. The Discussion now st
 The expert’s observation in Task C, reported in “Diagnosis of Engineering Constraints and Evaluation of Force-Rendering Quality,” is consistent with this limitation. The expert noted that the 1-DOF output conveys only one-directional normal resistance and lacks tangential force and a more complex reaction-force distribution, preventing reproduction of the enveloping squeeze sensation of real tissue. This observation provides formative support for the Discussion’s analysis of haptic realism.
 
 **Changes in the manuscript:**  
-The limitations of 1-DOF feedback have been expanded in both the Results and Discussion to cover normal force, tangential force, enveloping squeeze, friction, texture, and distributed contact feedback.
+Location: Section V-B3, “Diagnosis of Engineering Constraints and Evaluation of Force-Rendering Quality” (p. 10), and Section VI-A (p. 11). The limitations of 1-DOF feedback have been expanded to cover normal force, tangential force, enveloping squeeze, friction, texture, and distributed contact feedback.
 
 ### Major Comment R3-M8: Reduce overly strong conclusions
 
@@ -301,7 +301,7 @@ We further state that the results suggest, without directly demonstrating, that 
 The Abstract and Discussion have been revised in parallel so that the scope of the conclusions is consistent throughout the manuscript.
 
 **Changes in the manuscript:**  
-Overly strong claims have been removed or qualified in the Abstract, Discussion, and Conclusion.
+Location: Abstract (p. 1); Section VI-A (p. 11); and Section VII, “Conclusion” (p. 12). Overly strong claims have been removed or qualified in these passages.
 
 ### Minor Comment R3-m1: Correct publication-date placeholders and other template or formatting inconsistencies
 
@@ -309,7 +309,7 @@ Overly strong claims have been removed or qualified in the Abstract, Discussion,
 The publication date and DOI fields currently retain the default IEEE Access submission-template placeholders because these fields are assigned by the publisher during production. We also checked the remaining template and formatting details together with the corrections made in response to Comment R1-5 and found no unresolved inconsistencies.
 
 **Changes in the manuscript:**  
-Formatting inconsistencies identified during proofreading were corrected. Publisher-assigned metadata fields remain as template placeholders pending production.
+Location: publisher-assigned metadata on p. 1 and formatting throughout pp. 1–13. Formatting inconsistencies identified during proofreading were corrected; the publication-date and DOI placeholders remain pending production.
 
 ### Minor Comment R3-m2: Define and use “lesion,” “tumor,” and “hard region” consistently
 
@@ -323,7 +323,7 @@ We also added the following explicit definition to “Liver Model and Lesion Con
 We did not adopt “tumor” as the uniform term because it denotes a specific neoplastic diagnosis. Applying it to a model defined only by local modulus enhancement would introduce an unsupported clinical interpretation.
 
 **Changes in the manuscript:**  
-Terminology has been standardized to “lesion,” and an explicit definition has been added.
+Location: Section III-E, “Liver Model and Lesion Configuration” (pp. 4–6), including Table 1 (p. 5) and Figure 2 (p. 6). Terminology has been standardized to “lesion,” and an explicit definition has been added.
 
 ### Minor Comment R3-m3: Improve the readability of figures and tables
 
@@ -335,21 +335,22 @@ We reviewed all performance plots and system screenshots and made the following 
 1. The performance comparison previously contained both logarithmic-scale and linear-scale panels. Because the linear-scale panel compressed three of the four curves into a narrow, indistinguishable band and added little information, we removed it and retained the logarithmic-scale plot. Abbreviated experimental conditions in the legend were expanded to full parameter descriptions, and the caption now identifies the configuration associated with each method.
 2. Development-interface text and the internal label “Tumor” in Figure 2 were replaced with “Lesion.”
 3. Residual debugging instructions visible in the Figure 4 screenshot were blurred.
+4. The column padding in Table 2 was reduced so that the solver-settings table fits within the column width.
 
 The axis labels and legend text in the remaining figures are legible in the two-column layout. Their sizing will be checked again at the proof stage if production scaling changes their appearance.
 
 **Changes in the manuscript:**  
-The performance figure, its legend and caption, and the system screenshots have been revised for clarity and consistency.
+Location: Table 2 (p. 6), Figure 2 and its caption (p. 6), Figure 4 and its caption (p. 8), and Figure 7 and its caption (p. 10). The solver-settings table width, system screenshots, performance plot, legend, and captions have been revised for clarity and consistency.
 
 ### Minor Comment R3-m4: Interpret the single-participant Likert ratings cautiously
 
 The ratings should be treated as qualitative formative feedback, not as generalizable usability evidence.
 
 **Response:**  
-We agree. The paragraph following the Likert-rating table now states that the ratings from a single surgical expert are qualitative, formative feedback used to complement the verbal walkthrough findings. They are not statistically generalizable usability evidence and should not be interpreted as validating training effectiveness.
+We agree. The paragraph following the Likert-rating table now states that the ratings from a single surgical expert are qualitative, formative feedback used to complement the verbal walkthrough findings. They are not statistically generalizable usability evidence and should not be interpreted as validating training effectiveness. The paragraph also uses the exact Table 8 evaluation-dimension label “system feasibility and potential” for consistency.
 
 **Changes in the manuscript:**  
-The interpretation immediately following the Likert-rating table has been revised accordingly.
+Location: the paragraph immediately following Table 8 in Section V-B3 (p. 10). The interpretation of the single-participant ratings and the evaluation-dimension terminology have been revised accordingly.
 
 ### Minor Comment R3-m5: Explain the supplementary video and clarify whether the lesion was visible during the formal evaluation
 
@@ -363,7 +364,7 @@ The approximately 54-second supplementary video has no audio and contains three 
 In the third segment, the lesion is rendered as a visible highlighted region solely to help viewers understand how retraction exposes the lesion. This visualization is for demonstration purposes only and does not represent the formal evaluation condition. During the formative evaluation, the lesion had no visual cue at any time. The expert inferred its location only from local deformation and haptic differences, consistent with the manuscript’s description of a hidden lesion. The highlighted video demonstration and the visually blinded evaluation therefore serve different purposes and are not contradictory.
 
 **Changes in the manuscript:**  
-No manuscript change was required because the supplementary video is not cited directly in the main text. The distinction between the demonstration visualization and the formal evaluation condition is clarified here for the reviewer.
+Location: not applicable; this clarification concerns the supplementary video, which is not cited in the main manuscript. No manuscript change was required.
 
 ### Minor Comment R3-m6: Verify all reference information, particularly for the 2025 publications
 
@@ -375,7 +376,7 @@ We checked and completed the bibliographic information for the three 2025 refere
 - Bjelland et al., *IEEE Transactions on Haptics*, vol. 18, no. 3, pp. 569–581, 2025.
 
 **Changes in the manuscript:**  
-The corresponding reference entries have been verified and completed.
+Location: References (pp. 12–13). The corresponding reference entries have been verified and completed.
 
 ### Minor Comment R3-m7: Shorten repetitive material and complete a careful English-language edit
 
@@ -384,8 +385,10 @@ We edited and condensed the Introduction and Discussion. In the Introduction, re
 
 In the Discussion, the opening paragraph previously repeated the contribution already explained in “Position of This Work”; it has been replaced with a short transition. The summary of the expert’s three observations previously repeated details already reported in the Results and has been reduced to the implications of those observations for palpation-related judgment. Finally, “Application Focus and Future Evolution of the System” and “Future Research Directions” contained nearly identical lists of engineering improvements. These lists have been consolidated in “Future Research Directions.”
 
+During the final consistency pass, “multi-sample user study” was corrected to “multi-participant user study,” and the Related Work wording was revised so that the study is described as assessing system integration and identifying engineering boundaries rather than validating usability.
+
 **Changes in the manuscript:**  
-The Introduction and Discussion have been shortened, redundant passages have been consolidated, and the manuscript has undergone a complete English-language edit.
+Location: Section I, “Introduction” (pp. 1–2); Section II-D, “Position of This Work” (p. 3); and Sections VI-A–VI-C, “Discussion” (p. 11). These sections have been shortened, redundant passages have been consolidated, terminology has been corrected, and the manuscript has undergone a complete English-language edit.
 
 ---
 
