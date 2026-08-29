@@ -37,15 +37,14 @@ Please report the device force range, force-calibration method, saturation behav
 **Response:**  
 We agree. This comment overlaps with Comment R3-M3, and the corresponding revisions address both comments. We expanded the subsection “1-DOF Haptic Rendering Strategy” to report the following measurements and implementation details:
 
-- Bench characterization with a force sensor measured a maximum static force of 1.36 N, with commands above this limit saturating at 1.36 N.
-- Before each session, a per-user calibration establishes the perceptible-force threshold. Any nonzero force below this threshold is rendered at the threshold value, giving a participant-specific operating range from that threshold to 1.36 N.
-- In vibration tests, the measured peak-to-peak force reached 0.434 N at 140 Hz and remained within 6 dB of this peak from 100 to 200 Hz.
+- Bench characterization with a force sensor measured a maximum static tensile force of 1.36 N.
+- To characterize the frequency response, a DC current bias equal to half the peak-to-peak current was added, and the frequency was swept from 10 to 500 Hz while keeping the peak-to-peak current constant. A resonance was observed near 150 Hz; the peak-to-peak force variation reached 0.434 N at 140 Hz, approximately 3.3 times the 0.132 N measured at 10 Hz. At 500 Hz, the peak-to-peak force variation was 0.123 N, corresponding to 0.93 times the 10-Hz reference value.
 - The haptic-control loop operates at 1000 Hz, and force commands are transmitted through a 2,000,000-bps serial connection in less than 1 ms per packet.
 - On the default liver mesh containing 13,800 nodes and 62,897 tetrahedra, profiling over 90 frames produced a mean same-frame latency of 25.2 ms (39.6 FPS; peak latency, 30.1 ms) from the hand-input update to force-command issuance. The mean latency comprised 22.2 ms for GB-cFEM/PBD, 1.4 ms for contact processing and force mapping, and 0.3 ms for rendering.
 - Device forces are low-pass filtered using a 10-ms time constant, while hand positions are smoothed using a 30-ms time constant to suppress transients. A PWM slew-rate limiter is also applied to prevent cable-snap artifacts at contact onset.
 
 **Changes in the manuscript:**  
-Location: Section III-D, “1-DOF Haptic Rendering Strategy” (p. 4). This subsection now includes the measured maximum static force, saturation behavior, participant-specific calibration and operating range, vibration peak and 6-dB output range, software-pipeline latency, communication latency, filtering parameters, position smoothing, and PWM slew-rate limiting.
+Location: Section III-D, “1-DOF Haptic Rendering Strategy” (p. 4). This subsection now includes the measured maximum static tensile force, the fixed peak-to-peak current and DC current bias used for the 10–500 Hz frequency-response measurement, resonance amplification relative to the 10-Hz reference, the 500-Hz relative output, software-pipeline latency, communication latency, filtering parameters, position smoothing, and PWM slew-rate limiting.
 
 ### Comment R1-3: Clarify the design of the formative evaluation
 
@@ -68,7 +67,7 @@ Please specify the substeps, iterations, time step, material parameters, mesh si
 **Response:**  
 We agree. This comment overlaps with Comment R3-M6, and the same revisions address both comments. We verified the settings used for all three methods in the large-deformation accuracy comparison (Experiment 1) and the volume-preservation comparison (Experiment 2). The subsection “Application-Level Technical Validation Based on a Specific Liver Model” now includes a table entitled “Solver Settings Used in the Displacement-Accuracy and Volume-Preservation Comparisons.”
 
-The revised text and table specify that all three methods used the same liver mesh and fixed-node definitions. They also report the common time step of 0.01 s, the material parameters (\(E=7000\) Pa and \(\nu=0.49\), except where Poisson’s ratio was varied in the volume-preservation experiment), 30/150 GB-cFEM coupling iterations, 5/50 XPBD substeps with `maxIterations = 1`, and 1/2 VegaFEM Newton iterations. The loading protocols, boundary conditions, and termination criteria are now described in detail.
+The revised text and table specify that all three methods used the same liver mesh and fixed-node definitions. They also report the common time step of 0.01 s, the material parameters ($E=7000$ Pa and $\nu=0.49$, except where Poisson’s ratio was varied in the volume-preservation experiment), 30/150 GB-cFEM coupling iterations, 5/50 XPBD substeps with `maxIterations = 1`, and 1/2 VegaFEM Newton iterations. The loading protocols, boundary conditions, and termination criteria are now described in detail.
 
 We also expanded the Results subsection “Real-Time Performance and Scalability” to specify the mesh-resolution sweep, thread configurations (one thread and ten threads on a processor with up to 12 cores), and the numbers of warm-up and measured frames.
 
@@ -214,14 +213,14 @@ Location: Section I, “Introduction” (pp. 1–2); Sections VI-A and VI-C (p. 
 Please report actual force accuracy, latency, calibration, actuator limits, force resolution, saturation behavior, and interaction stability.
 
 **Response:**  
-We agree. This comment is closely related to Comment R1-2. We added measured and implementation-level information to “1-DOF Haptic Rendering Strategy,” including a measured maximum static force of 1.36 N, saturation at 1.36 N, per-user perceptual-threshold calibration and participant-specific operating range, a peak-to-peak vibration force of 0.434 N at 140 Hz that remains within 6 dB of the peak from 100 to 200 Hz, and the measured same-frame software latency.
+We agree. This comment is closely related to Comment R1-2. We added measured and implementation-level information to “1-DOF Haptic Rendering Strategy,” including a measured maximum static tensile force of 1.36 N. For the frequency-response measurement, a DC current bias equal to half the peak-to-peak current was added, and the frequency was swept from 10 to 500 Hz while keeping the peak-to-peak current constant. A resonance was observed near 150 Hz; the peak-to-peak force variation reached 0.434 N at 140 Hz, approximately 3.3 times the 0.132 N measured at 10 Hz. At 500 Hz, the peak-to-peak force variation was 0.123 N, corresponding to 0.93 times the 10-Hz reference value. We also added the measured same-frame software latency.
 
 On the default mesh, the mean latency from hand-input update to force-command issuance was 25.2 ms over 90 frames (39.6 FPS; peak, 30.1 ms). The mean comprised 22.2 ms for GB-cFEM/PBD, 1.4 ms for contact and force mapping, and 0.3 ms for rendering. Commands were sent through a 2,000,000-bps serial connection in less than 1 ms per packet, while the device control loop operated at 1000 Hz.
 
 For interaction stability, we now report a 10-ms low-pass time constant for device forces, a 30-ms smoothing time constant for hand positions, and a PWM slew-rate limiter that suppresses cable-snap artifacts at contact onset.
 
 **Changes in the manuscript:**  
-Location: Section III-D, “1-DOF Haptic Rendering Strategy” (p. 4). Quantitative device characterization, latency profiling, calibration, saturation, the vibration peak and 6-dB output range, filtering, smoothing, and slew-rate limiting have been added.
+Location: Section III-D, “1-DOF Haptic Rendering Strategy” (p. 4). Quantitative device characterization, the fixed peak-to-peak current and DC current bias used for the 10–500 Hz frequency-response measurement, resonance amplification relative to the 10-Hz reference, the 500-Hz relative output, latency profiling, filtering, smoothing, and slew-rate limiting have been added.
 
 ### Major Comment R3-M4: Provide objective results for the lesion-localization task
 
@@ -266,7 +265,7 @@ Please report solver settings, mesh scale, loading conditions, boundary constrai
 **Response:**  
 We agree. This comment overlaps with Comment R1-4. A new table entitled “Solver Settings Used in the Displacement-Accuracy and Volume-Preservation Comparisons” has been added to “Application-Level Technical Validation Based on a Specific Liver Model.”
 
-The table and accompanying text report the common time step of 0.01 s; material parameters of \(E=7000\) Pa and \(\nu=0.49\), except where Poisson’s ratio was varied; 30/150 coupling iterations for GB-cFEM; 5/50 substeps for XPBD with `maxIterations = 1`; and 1/2 Newton iterations for VegaFEM.
+The table and accompanying text report the common time step of 0.01 s; material parameters of $E=7000$ Pa and $\nu=0.49$, except where Poisson’s ratio was varied; 30/150 coupling iterations for GB-cFEM; 5/50 substeps for XPBD with `maxIterations = 1`; and 1/2 Newton iterations for VegaFEM.
 
 All three methods used the same TetGen liver tetrahedral mesh, containing 13,800 nodes and 62,897 tetrahedra, and the same fixed-node definitions. We also added the three loading magnitudes and settle/ramp/hold step counts for Experiment 1, as well as the anchored and displaced slice proportions, displacement magnitude, and two Poisson’s-ratio settings for Experiment 2.
 

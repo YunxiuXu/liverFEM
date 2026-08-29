@@ -1,7 +1,7 @@
 \documentclass{ieeeaccess}
 %DIF LATEXDIFF DIFFERENCE FILE
-%DIF DEL 3fddc1969742f7bf4529373392bdcc062b827382
-%DIF ADD current revised manuscript
+%DIF DEL ./tmp/diffbase.oIjJ6W/Main.tex   Sat Aug 22 14:11:23 2026
+%DIF ADD Main.tex                         Sat Aug 22 14:11:14 2026
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
@@ -216,7 +216,7 @@ The contact-normal reaction force is used as the main input to the 1-DOF device.
 \begin{equation}
 F_n = \left| \mathbf{F}_{contact} \cdot \mathbf{n} \right|.
 \end{equation}
-\DIFdelbegin \DIFdel{In the deployed system, the actual update rate of the }\DIFdelend \DIFaddbegin \DIFadd{Bench characterization with a force sensor measured a maximum static force of 1.36 N; commands above this limit saturate at 1.36 N. Before each session, per-user calibration establishes the perceptible-force threshold, and any nonzero $F_n$ below this threshold is rendered at the threshold value, giving a participant-specific operating range from that threshold to 1.36 N. In vibration tests, the measured peak-to-peak force reached 0.434 N at 140 Hz and remained within 6 dB of this peak from 100 to 200 Hz.
+\DIFdelbegin \DIFdel{In the deployed system, the actual update rate of the }\DIFdelend \DIFaddbegin \DIFadd{Bench characterization with a force sensor measured a maximum static tensile force of 1.36 N. To characterize the frequency response, a DC current bias equal to half the peak-to-peak current was added, and the frequency was swept from 10 to 500 Hz while keeping the peak-to-peak current constant. A resonance was observed near 150 Hz; the peak-to-peak force variation reached 0.434 N at 140 Hz, approximately 3.3 times the 0.132 N measured at 10 Hz. At 500 Hz, the peak-to-peak force variation was 0.123 N, corresponding to 0.93 times the 10-Hz reference value.
 }
 
 \DIFadd{The }\DIFaddend haptic control loop \DIFdelbegin \DIFdel{is }\DIFdelend \DIFaddbegin \DIFadd{runs at }\DIFaddend 1000 Hz, \DIFdelbegin \DIFdel{and the physics engine transmits force commands to the haptic hardware through a serial link at }\DIFdelend \DIFaddbegin \DIFadd{with force commands sent over a }\DIFaddend 2{,}000{,}000 bps \DIFdelbegin \DIFdel{. }\DIFdelend \DIFaddbegin \DIFadd{serial link (under 1 ms per packet). On the default liver mesh (13}{\DIFadd{,}}\DIFadd{800 nodes, 62}{\DIFadd{,}}\DIFadd{897 tetrahedra), profiling the software pipeline over 90 frames gives a mean same-frame latency of 25.2 ms (39.6 FPS, peak 30.1 ms) from hand-input update to force-command issuance, of which 22.2 ms is GB-cFEM/PBD, 1.4 ms is contact and force mapping, and 0.3 ms is rendering. Device forces are additionally low-pass filtered (10 ms time constant) and hand positions are smoothed (30 ms time constant) to suppress transients, and the actuator command path applies a PWM slew limiter to avoid cable-snap artifacts on contact onset. }\DIFaddend Under this mechanism, users perform lesion localization by perceiving differences in normal resistance while pressing different regions. The hardware connections and wearable device used in the experiment are shown in Fig.~\ref{fig:hardware}.
