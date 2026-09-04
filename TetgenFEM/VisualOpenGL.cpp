@@ -2,6 +2,8 @@
 #include "SimpleUI.h"
 #include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <sstream>
 
 #ifdef _WIN32
 #include <Windows.h>

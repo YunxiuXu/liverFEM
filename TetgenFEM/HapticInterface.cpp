@@ -1,27 +1,109 @@
 #include "HapticInterface.h"
 #include <iostream>
-#include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
 #include <cstring>
 #include <algorithm>
 #include <cmath>
 #include <chrono>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#else
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
 #if defined(__APPLE__)
 #include <sys/ioctl.h>
 #include <IOKit/serial/ioss.h>
 #endif
+#endif
 
 
+#ifdef _WIN32
+HapticInterface::HapticInterface() : serialHandle(INVALID_HANDLE_VALUE), connected(false) {
+    std::memset(motorValues, 0, sizeof(motorValues));
+}
+#else
 HapticInterface::HapticInterface() : fd(-1), connected(false) {
     std::memset(motorValues, 0, sizeof(motorValues));
 }
+#endif
 
 HapticInterface::~HapticInterface() {
     close();
 }
 
+#ifdef _WIN32
+static std::string winSerialDevicePath(const std::string& port) {
+    if (port.rfind("\\\\.\\", 0) == 0) {
+        return port;
+    }
+    return "\\\\.\\" + port;
+}
+
+bool HapticInterface::init(const std::string& port, int baudRate) {
+    portName = port;
+    const std::string device = winSerialDevicePath(port);
+    HANDLE handle = CreateFileA(
+        device.c_str(),
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        nullptr,
+        OPEN_EXISTING,
+        0,
+        nullptr);
+    if (handle == INVALID_HANDLE_VALUE) {
+        std::cerr << "HapticInterface: Unable to open port " << port
+                  << " (WinError " << GetLastError() << ")" << std::endl;
+        return false;
+    }
+
+    DCB dcb{};
+    dcb.DCBlength = sizeof(DCB);
+    if (!GetCommState(handle, &dcb)) {
+        std::cerr << "HapticInterface: GetCommState failed" << std::endl;
+        CloseHandle(handle);
+        return false;
+    }
+    dcb.BaudRate = static_cast<DWORD>(baudRate);
+    dcb.ByteSize = 8;
+    dcb.Parity = NOPARITY;
+    dcb.StopBits = ONESTOPBIT;
+    dcb.fBinary = TRUE;
+    dcb.fDtrControl = DTR_CONTROL_ENABLE;
+    dcb.fRtsControl = RTS_CONTROL_ENABLE;
+    if (!SetCommState(handle, &dcb)) {
+        std::cerr << "HapticInterface: SetCommState failed for baud " << baudRate
+                  << " (WinError " << GetLastError() << ")" << std::endl;
+        CloseHandle(handle);
+        return false;
+    }
+
+    COMMTIMEOUTS timeouts{};
+    timeouts.ReadIntervalTimeout = 50;
+    timeouts.ReadTotalTimeoutConstant = 50;
+    timeouts.ReadTotalTimeoutMultiplier = 10;
+    timeouts.WriteTotalTimeoutConstant = 50;
+    timeouts.WriteTotalTimeoutMultiplier = 10;
+    SetCommTimeouts(handle, &timeouts);
+
+    serialHandle = handle;
+    connected = true;
+    std::cout << "HapticInterface: Connected to " << port << std::endl;
+    return true;
+}
+
+void HapticInterface::close() {
+    HANDLE handle = static_cast<HANDLE>(serialHandle);
+    if (connected && handle != nullptr && handle != INVALID_HANDLE_VALUE) {
+        CloseHandle(handle);
+        serialHandle = INVALID_HANDLE_VALUE;
+        connected = false;
+    }
+}
+#else
 bool HapticInterface::init(const std::string& port, int baudRate) {
     portName = port;
     fd = open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
@@ -48,7 +130,6 @@ bool HapticInterface::init(const std::string& port, int baudRate) {
         default: 
              speed = B38400; // Use a standard rate as base
              custom_baud = true;
-             // std::cerr << "HapticInterface: Warning, baudrate " << baudRate << " might not be supported directly, trying custom method." << std::endl;
              break;
     }
     
@@ -73,8 +154,6 @@ bool HapticInterface::init(const std::string& port, int baudRate) {
         speed_t rate = static_cast<speed_t>(baudRate);
         if (ioctl(fd, IOSSIOSPEED, &rate) == -1) {
             std::cerr << "HapticInterface: Error setting custom baud rate " << baudRate << " via IOSSIOSPEED" << std::endl;
-        } else {
-             // std::cout << "HapticInterface: Set custom baud rate " << baudRate << " via IOSSIOSPEED" << std::endl;
         }
     }
 #endif
@@ -94,6 +173,7 @@ void HapticInterface::close() {
         connected = false;
     }
 }
+#endif
 
 void HapticInterface::setParameters(float minF, float maxF, float minP, float maxP, float g) {
     minForceInput = minF;
@@ -261,9 +341,17 @@ void HapticInterface::sendPacket() {
         std::memcpy(&buffer[1], motorValues, 16);
     }
 
-    // Write to serial
+#ifdef _WIN32
+    HANDLE handle = static_cast<HANDLE>(serialHandle);
+    if (handle == nullptr || handle == INVALID_HANDLE_VALUE) return;
+    DWORD written = 0;
+    if (!WriteFile(handle, buffer, static_cast<DWORD>(BUFFER_SIZE), &written, nullptr)) {
+        std::cerr << "HapticInterface: Write error (WinError " << GetLastError() << ")" << std::endl;
+    }
+#else
     ssize_t written = write(fd, buffer, BUFFER_SIZE);
     if (written < 0) {
         std::cerr << "HapticInterface: Write error" << std::endl;
     }
+#endif
 }

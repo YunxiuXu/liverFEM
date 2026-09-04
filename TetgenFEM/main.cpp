@@ -329,7 +329,7 @@ static std::string formatSignedInt(float v)
 		// This is required because Object::updateIndices() assigns unique indices per group, so index-based
 		// surface extraction would incorrectly include internal group interfaces.
 		constexpr double kQuant = 1000000.0; // 1e-6 resolution
-		const auto q = [](float x) -> long long { return static_cast<long long>(std::llround(static_cast<double>(x) * kQuant)); };
+		const auto q = [kQuant](float x) -> long long { return static_cast<long long>(std::llround(static_cast<double>(x) * kQuant)); };
 		if (!v) return AgentPhysKey{};
 		return AgentPhysKey{q(v->initx), q(v->inity), q(v->initz)};
 	}

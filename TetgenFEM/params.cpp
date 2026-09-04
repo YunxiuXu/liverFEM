@@ -213,7 +213,11 @@ float model_rotateZ_deg = 0.0f;
 
 // Haptic UART Interface
 bool haptic_uart_enabled = false;
+#ifdef _WIN32
+std::string haptic_uart_port = "COM3";
+#else
 std::string haptic_uart_port = "/dev/cu.usbserial-AUOK5THN";
+#endif
 int haptic_uart_motor_id = 1;
 int haptic_uart_thumb_motor_id = 0;
 int haptic_uart_middle_motor_id = 2;

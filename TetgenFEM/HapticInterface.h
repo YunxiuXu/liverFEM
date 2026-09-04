@@ -33,7 +33,11 @@ public:
 
 private:
     std::string portName;
+#ifdef _WIN32
+    void* serialHandle = nullptr;
+#else
     int fd; // file descriptor
+#endif
     std::atomic<bool> connected;
 
     // Parameters for mapping

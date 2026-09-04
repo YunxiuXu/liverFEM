@@ -255,6 +255,7 @@ exp4_thread3=14
 
 # Haptic UART Configuration
 haptic_uart_enabled=true
+# macOS: /dev/cu.usbserial-...    Windows: COM3 (or COM4, etc.)
 haptic_uart_port=/dev/cu.usbserial-AUOK5THN
 haptic_uart_motor_id=1
 haptic_uart_thumb_motor_id=0

@@ -430,7 +430,7 @@ void Object::PBDLOOP(int looptime) {
 	};
 	constexpr double kQuant = 1000000.0; // 1e-6 resolution
 	const auto makeKey = [&](const Vertex* v) -> PhysKey {
-		const auto q = [](float x) -> long long { return static_cast<long long>(std::llround(static_cast<double>(x) * kQuant)); };
+		const auto q = [kQuant](float x) -> long long { return static_cast<long long>(std::llround(static_cast<double>(x) * kQuant)); };
 		if (!v) return PhysKey{};
 		return PhysKey{ q(v->initx), q(v->inity), q(v->initz) };
 	};
