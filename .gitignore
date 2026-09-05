@@ -18,6 +18,7 @@ compile_commands.json
 
 # Local binaries
 *.exe
+!TetgenFEM/TetgenFEM.exe
 
 # Generated runtime outputs
 TetgenFEM/force_data*.txt

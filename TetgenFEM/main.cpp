@@ -34,6 +34,13 @@
 #include "Experiment4.h"
 #include "HapticInterface.h"
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 #if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
 #include "LeapC.h"
 #endif
@@ -2136,6 +2143,16 @@ struct PipelineProfiler {
 };
 
 int main(int argc, char** argv) {
+#ifdef _WIN32
+	{
+		wchar_t modulePath[MAX_PATH];
+		const DWORD n = GetModuleFileNameW(nullptr, modulePath, MAX_PATH);
+		if (n > 0 && n < MAX_PATH) {
+			std::error_code ec;
+			std::filesystem::current_path(std::filesystem::path(modulePath).parent_path(), ec);
+		}
+	}
+#endif
 
 	bool exportTetgenAndExit = false;
 	std::string exportDirOverride;

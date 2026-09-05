@@ -206,6 +206,18 @@ if(NOT TETFEM_LEAPC_ENABLED)
     message(STATUS "LeapC: disabled")
 endif()
 
+if(WIN32)
+    set(_tetfem_dist "${PROJECT_SOURCE_DIR}/TetgenFEM")
+    add_custom_command(TARGET TetgenFEM POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<TARGET_FILE:TetgenFEM>"
+                "${_tetfem_dist}/TetgenFEM.exe"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${ULTRALEAP_DIR}/LeapC.dll"
+                "${_tetfem_dist}/LeapC.dll"
+        COMMENT "Copy portable Windows binaries into TetgenFEM/")
+endif()
+
 if(APPLE)
     link_directories(/opt/homebrew/opt/llvm/lib /opt/homebrew/opt/llvm/lib/c++ /opt/homebrew/opt/llvm/lib/unwind)
     target_link_options(TetgenFEM PRIVATE -stdlib=libc++ -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind -lunwind)
