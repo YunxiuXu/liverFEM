@@ -1,0 +1,171 @@
+
+IEEE Access <onbehalfof@manuscriptcentral.com>
+附件
+9月23日周三 22:46 (3天前)
+发送至 siw131， yunxiu， hasevr， su.yan， suyan
+
+23-Sep-2026
+
+Dear Ms. WANG:
+
+I am writing to you regarding manuscript # Access-2026-43742 entitled "A Real-Time Haptic Simulation Prototype for Liver Lesion Localization Training: System Design, Technical Feasibility Validation, and Formative Expert Evaluation" which you submitted to IEEE Access.
+
+Your article was peer reviewed with interest but has not been recommended for publication in its current form.  We strongly encourage you to address the reviewers’ concerns, which can be found at the bottom of this letter, and resubmit your article to IEEE Access once you have updated it accordingly.
+ 
+Please note that IEEE Access has a binary peer review process. Therefore, to uphold quality to IEEE standards, an article is rejected even if it requires minor edits.
+ 
+When updating your manuscript, you should elaborate on your points and clarify with references, examples, data, etc. If you disagree with any technical points the reviewers have made, please include your counterarguments in your response to the reviewers (more information detailed below) and work this into the updated manuscript. 
+
+Also, note that if a reviewer suggested references, you should only add those that are relevant to your work if you feel they strengthen your article. Recommending references to specific publications is not appropriate for reviewers and you should report excessive cases to ieeeaccessEIC@ieee.org.  Authors are not obligated to cite articles that are recommended by the reviewers, and the final decision on the article will not be influenced by whether or not authors cite these suggested references.
+ 
+IEEE Access allows one opportunity to resubmit. If the updated manuscript is determined not to have addressed all of the previous reviewers’ concerns, or if the Associate Editor still has substantial technical concerns, the article will be rejected and no further resubmissions will be allowed.
+ 
+When you are ready to resubmit your updated article, you can do so in the IEEE Author Portal.  When you log into the IEEE Author Portal you ill see the title of the rejected article and the option to “Start Resubmission”.  
+
+https://ieee.atyponrex.com/submission/submissionBoard/REX-PROD-2-7C2C1162-3154-4F33-ABD1-0929B9CECA70-B6A52D9D-C72C-47ED-B635-427E0B06F60F-40226/current?idtype=external 
+
+Upon resubmission you will be asked to upload the following 3 files:
+
+1) A document containing your response to reviewers from the previous peer review.  The “response to reviewers” document (template attached) should have the following regarding each comment: a) Reviewer’s concern, b) your response to the concern, c) your action to remedy the concern. The document should be uploaded with your manuscript files under "Author's Response Files.”
+
+NOTE: Though all attempts are made to use the same reviewers in each round of review, your article may have new reviewers in this round, for a number of reasons. Please address all reviewer comments.
+
+2) Your updated manuscript with all your individual changes highlighted, including grammatical changes (e.g. preferably with the yellow highlight tool within the pdf file). This file should be uploaded with your manuscript files as “Highlighted PDF.”
+
+3) A clean copy of the final manuscript (without highlighted changes) submitted as a Word or LaTeX file, and as a PDF, both submitted as the “Main Manuscript.”
+
+**IMPORTANT: Please see the attached Resubmission Checklist that details all the items listed above.  Please utilize this checklist to ensure you have made the necessary edits to your manuscript, and to ensure you have all the necessary files prepared prior to resubmission.
+
+*** AUTHOR LIST CHANGES: If your revised manuscript has an updated author list, you will need to submit a formal request to the Editor by completing the attachment labelled ‘Request for Byline Change,’ and uploading it as 'Request for byline change form.' This should include a DETAILED justification explaining each author’s contribution(s) to the work. You will also need to provide the justification for the author change during the submission process.  Change in the author list is considered rare and exceptional, and the decision to allow such changes rests with the Editor. Once the list and order of authors has been established, the list and order of authors should not be altered without permission of all living authors of that article.
+
+We sincerely hope you will update your manuscript and resubmit soon. Please contact me if you have any questions.
+
+Thank you for your interest in IEEE Access.
+
+Sincerely,
+
+Prof. Su Yan
+Associate Editor, IEEE Access
+su.yan@howard.edu, suyan@ieee.org
+
+Reviewers' Comments to Author:
+
+Reviewer: 1
+
+Comments:
+The revision is considerably stronger than the previous version. In particular, the manuscript now presents the work as a system-integration and technical-feasibility study, rather than evidence of educational or clinical effectiveness. The distinction from the authors’ previous GB-cFEM and haptic-device publications is explicit, the single-expert evaluation is interpreted cautiously, and the discussion of anatomical and haptic limitations is useful. Most previous concerns have therefore been addressed.
+
+The following points would complete the technical account.
+
+1. The remaining uncertainty concerns the effective haptic update path. Section III-D reports a 1000-Hz haptic-control loop, while the complete software pipeline produces a new force command at approximately 39.6 FPS, with a mean same-frame latency of 25.2 ms. Please explain what the actuator receives between physics updates: for example, whether the latest command is held, interpolated, filtered, or otherwise resampled. It would also help to distinguish software latency from the true end-to-end response of the physical actuator. The force-sensor characterization should state how commanded and measured force are related, how saturation is handled, and whether repeatability or hysteresis was examined. If these measurements are already available, a compact calibration plot or table would be preferable to reporting only the maximum static force and three frequency-response values.
+
+2. Table 2 and Figure 5 require a few precise definitions. “Coupling iterations: 30/150” should indicate which value was used in each experiment, and the relationship between Young’s modulus, Poisson’s ratio, and the XPBD compliance parameters should be given. Figure 5 labels the horizontal axis “Pulling Force (Accel),” whereas the text refers to loading strengths of 16, 30, and 40. Please define the quantity and its units. Because the methods use different numerical schemes and do not share a common convergence tolerance, the comparison should continue to be described as application-level evidence rather than a standardized demonstration of general superiority.
+
+3. Runtime and power results are useful, although some wording remains stronger than the measurements warrant. Profiling over 90 frames gives only a short observation of latency. If longer logs exist, reporting a median, a high percentile, and frame-time variability would make the real-time claim more informative. Otherwise, the present measurement can simply be identified as a short profiling run. Similarly, the change from approximately 12 W at idle to 52 W during five minutes of operation supports feasibility on the tested Mac mini, but it is not by itself general evidence of low computational burden or energy efficiency.
+
+No additional participant experiment is requested. The current single-expert walkthrough is acceptable for identifying engineering limitations, provided that observations remain clearly qualitative. Also, consider that statements such as the expert having “extracted physically meaningful stiffness cues” would be safer if expressed as reported or observed perception during the walkthrough, rather than as an objectively measured localization result.
+
+Some minors are the following:
+
+- The response letter describes the supplementary video as approximately 54 seconds long, whereas the supplied file lasts approximately 76.5 seconds.
+
+- The video still uses “tumor” and “target mass.” These labels should be changed to “lesion” to match the terminology adopted in the manuscript.
+
+- Phrases such as “system connectivity” and “soft-tissue mechanical expression” are understandable but not especially natural in English; “closed-loop system integration” and “representation of soft-tissue mechanics” would be clearer.
+
+
+
+Additional Questions:
+Please confirm that you have reviewed all relevant files, including supplementary files and any author response files, which can be found in the "View Author's Response" link above (author responses will only appear for resubmissions): Yes, all files have been reviewed
+
+1) Does the paper contribute to the body of knowledge?: Yes. The contribution is incremental and system-oriented rather than a new FEM formulation or a new haptic device. Its value lies in integrating two previously developed components with hand tracking, force mapping, and a liver-lesion localization scenario, followed by application-level testing and formative expert feedback. This is an appropriate contribution for IEEE Access provided that the claims remain limited to engineering feasibility. The revised manuscript now makes this distinction much more clearly.
+
+2) Is the paper technically sound?: The study is broadly sound as a proof-of-concept, and the revision has addressed most of the earlier concerns. The solver settings, anatomical assumptions, hardware characteristics, evaluation design, and limitations are now reported more openly. A few technical details concerning force calibration, timing between the physics and haptic loops, and benchmark configuration still need clarification before the central feasibility claim can be assessed without ambiguity.
+
+3) Is the subject matter presented in a comprehensive manner?: Largely yes. The authors have expanded the related work, added quantitative technical results, distinguished anatomical from haptic realism, and appropriately described the single-expert session as formative and diagnostic. A larger user study is not required for the present proof-of-concept, since training efficacy and clinical validity are no longer claimed. The remaining revisions concern the interpretation and reporting of the existing technical evidence rather than a redesign of the study.
+
+4) Are the references provided applicable and sufficient?: Yes. The revised bibliography covers the relevant work on real-time soft-tissue simulation, haptic rendering, liver and abdominal palpation, simulator validation, and formative evaluation. No additional references are suggested.
+
+5) Are there references that are not appropriate for the topic being discussed?: No
+
+5a) If yes, then please indicate which references should be removed.: N/A
+
+
+Reviewer: 2
+
+Comments:
+Thank you for the careful revision. The revision is clearly stronger than the previous version, and I appreciate the authors' effort in addressing the reviewers' concerns. The remaining issues mainly concern technical clarity and reproducibility.
+
+However, I still have several concerns that should be addressed before publication:
+
+1. Please clarify the 1000-Hz haptic loop.
+
+The manuscript reports a 1000-Hz haptic-control loop, while the complete hand-input-to-force-command pipeline runs at approximately 39.6 FPS. Please explain what force value is used between consecutive physics updates. Is the latest value held, interpolated, predicted, or updated through another mechanism? The effective haptic-feedback bandwidth should also be clarified.
+
+2. The force-output validation is still incomplete.
+
+The maximum force and frequency-response measurements are useful, but the manuscript should also clarify command-to-force calibration, linearity, resolution, saturation/clipping, and the actual force range used during the palpation task.
+
+3. The anisotropic-response validation is missing from the results.
+
+Section IV-A lists anisotropic-response validation as one of the technical experiments, but no corresponding result is presented. Please report this experiment or remove it from the stated validation protocol.
+
+4. Please clarify the solver configurations used for each result.
+
+Different coupling-iteration settings are reported for the proposed method, while Table 5 presents accuracy and runtime together. Please clearly state which configuration produced each displacement error and runtime value so that the reader does not interpret results from different operating conditions as a single accuracy-speed point.
+
+5. Keep the lesion-localization claims strictly qualitative.
+
+The revised manuscript appropriately acknowledges that only one expert was included and that no quantitative localization metrics were recorded. Please maintain this cautious interpretation throughout the manuscript. If the expert's actual localization success or failure was recorded, the result could also be stated explicitly.
+
+. The whole-machine power result of approximately 52 W versus 12 W idle is interesting, but the phrase “strong evidence” of low computational burden may be too strong without a detailed power-measurement protocol.
+
+. Please clarify what “GB-cFEM/PBD” means in the latency breakdown, since GB-cFEM is described as the main simulation solver.
+
+. Please verify the manuscript ID appearing in the response letter, since it differs from the current submission number.
+
+.A final proofreading and consistency check is recommended.
+
+Additional Questions:
+Please confirm that you have reviewed all relevant files, including supplementary files and any author response files, which can be found in the "View Author's Response" link above (author responses will only appear for resubmissions): Yes, all files have been reviewed
+
+1) Does the paper contribute to the body of knowledge?: YES
+
+2) Is the paper technically sound?: Partially
+
+3) Is the subject matter presented in a comprehensive manner?: Mostly yes.
+
+4) Are the references provided applicable and sufficient?: YES
+
+5) Are there references that are not appropriate for the topic being discussed?: No
+
+5a) If yes, then please indicate which references should be removed.:
+
+
+Reviewer: 3
+
+Comments:
+The paper presents a technically sound, fully functional system integration on accessible hardware, supported by clear performance and physics benchmarks. The primary limitations—such as a single-expert evaluation and simplified anatomical models—are explicitly acknowledged and properly contextualized as inherent to an initial systems and architecture proof-of-concept. Addressing these minor limitations with brief clarifications in the text is sufficient for publication, without requiring a major structural overhaul or resubmission loop.
+
+Additional Questions:
+Please confirm that you have reviewed all relevant files, including supplementary files and any author response files, which can be found in the "View Author's Response" link above (author responses will only appear for resubmissions): Yes, all files have been reviewed
+
+1) Does the paper contribute to the body of knowledge?: This paper contributes to the body of knowledge by demonstrating a complete, real-time closed-loop architecture that bridges continuous FEM physics and wearable, low-dimensional haptic feedback for simulated surgical palpation. Rather than introducing a novel physical algorithm or physical actuator, the study integrates a Group-Based Corotational FEM engine, bimanual optical hand tracking, and a 1-DOF fingernail-worn haptic device on consumer-grade hardware to convey hidden liver lesion hardness. Running on an Apple M4 Pro Mac mini, the system achieves real-time performance (~83 FPS, ~25.2 ms latency) while maintaining better volume preservation under near-incompressible constraints than position-based dynamics baselines. Expert walkthrough evaluation indicates that even 1-DOF normal force feedback can alter user interaction behavior toward local comparative pressing, though the paper's scope is strictly bounded by anatomical simplifications, a single-DOF haptic interface, and a preliminary single-expert evaluation without clinical efficacy testing.
+
+2) Is the paper technically sound?: Yes. The paper demonstrates solid technical soundess by validating its real-time closed-loop architecture on consumer hardware, maintaining high frame rates (~83 FPS) and low latency (~25.2 ms), while showing superior computational stability and volume preservation for near-incompressible tissue compared to position-based dynamics baselines.
+
+3) Is the subject matter presented in a comprehensive manner?: Yes, for a preliminary systems paper. The authors comprehensively cover the technical implementation, physics stability metrics, hardware latency, and expert interaction workflows, while transparently identifying the study's current limitations in anatomical modeling and user evaluation scope.
+
+The following suggestions to revision:
+
+Expand User Evaluation: Transition from the preliminary single-expert review ($n=1$) to a multi-participant study (e.g., comparing medical students vs. experienced surgeons) to quantitatively evaluate learning curves, lesion localization accuracy, and diagnostic confidence.      
+
+Benchmarking Against Other Physics Engines: Compare the current GB-cFEM implementation against other continuous physics frameworks (e.g., SOFA Framework or Projective Dynamics) to further validate performance, volume preservation, and stability tradeoffs.
+
+4) Are the references provided applicable and sufficient?: Yes
+
+5) Are there references that are not appropriate for the topic being discussed?: No
+
+5a) If yes, then please indicate which references should be removed.:
+
+If you have any questions, please contact article administrator: Mr. Abhishek Anand anand.abhishek@ieee.org

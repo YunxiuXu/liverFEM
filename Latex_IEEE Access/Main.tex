@@ -101,6 +101,15 @@ F_n = \left| \mathbf{F}_{contact} \cdot \mathbf{n} \right|.
 \end{equation}
 Bench characterization with a force sensor measured a maximum static tensile force of 1.36 N. To characterize the frequency response, a DC current bias equal to half the peak-to-peak current was added, and the frequency was swept from 10 to 500 Hz while keeping the peak-to-peak current constant. A resonance was observed near 150 Hz; the peak-to-peak force variation reached 0.434 N at 140 Hz, approximately 3.3 times the 0.132 N measured at 10 Hz. At 500 Hz, the peak-to-peak force variation was 0.123 N, corresponding to 0.93 times the 10-Hz reference value.
 
+The previously reported force-sensor measurement for this actuator is reproduced in Fig.~\ref{fig:current_force}: measured static string tension increases approximately linearly with the commanded motor current before reaching a plateau near 1.36 N \cite{xu2025lightweight}. This is an actuator-level current--force measurement, not a measurement of end-to-end force-tracking accuracy in the present simulation.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.76\linewidth,trim=0 216pt 0 0,clip]{motorCombine_source.pdf}
+\caption{Commanded motor current and measured static string tension for the same fingertip actuator. The force-sensor data were reported previously in \cite{xu2025lightweight}.}
+\label{fig:current_force}
+\end{figure}
+
 The haptic control loop runs at 1000 Hz, with force commands sent over a 2{,}000{,}000 bps serial link (under 1 ms per packet). On the default liver mesh (13{,}800 nodes, 62{,}897 tetrahedra), profiling the software pipeline over 90 frames gives a mean same-frame latency of 25.2 ms (39.6 FPS, peak 30.1 ms) from hand-input update to force-command issuance, of which 22.2 ms is GB-cFEM/PBD, 1.4 ms is contact and force mapping, and 0.3 ms is rendering. Device forces are additionally low-pass filtered (10 ms time constant) and hand positions are smoothed (30 ms time constant) to suppress transients, and the actuator command path applies a PWM slew limiter to avoid cable-snap artifacts on contact onset. Under this mechanism, users perform lesion localization by perceiving differences in normal resistance while pressing different regions. The hardware connections and wearable device used in the experiment are shown in Fig.~\ref{fig:hardware}.
 
 \begin{figure}[htbp]

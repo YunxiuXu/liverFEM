@@ -2440,6 +2440,11 @@ int main(int argc, char** argv) {
 		haptic.setSlewLimiter(haptic_slew_enabled, haptic_slew_up_pwm_per_sec, haptic_slew_down_pwm_per_sec);
 		if (haptic.init(selectedPort)) {
 			std::cout << "✓ Haptic interface initialized successfully!" << std::endl;
+			const int simThreads = std::max(1, omp_get_num_procs() - 1);
+			omp_set_num_threads(simThreads);
+			Eigen::setNbThreads(simThreads);
+			std::cout << "  Simulation threads: " << simThreads
+			          << " (one core left for 1000 Hz haptic output)" << std::endl;
 		} else {
 			std::cout << "✗ Failed to initialize haptic interface" << std::endl;
 		}
@@ -7439,19 +7444,10 @@ int main(int argc, char** argv) {
 				}
 
 				if (haptic_uart_enabled) {
-					// Tumor-specific "impact" vibration: a short burst when entering contact on a hard region.
-					// This makes stiffness differences perceptible even for 1DOF devices (no lateral force).
-					static double lastHapticTimeSec = 0.0;
-					const double nowHapticTimeSec = glfwGetTime();
-					float hapticDtSec = 0.0f;
-					if (lastHapticTimeSec > 0.0) hapticDtSec = static_cast<float>(nowHapticTimeSec - lastHapticTimeSec);
-					lastHapticTimeSec = nowHapticTimeSec;
-					hapticDtSec = std::clamp(hapticDtSec, 0.0f, 0.05f);
-					static std::array<float, 5> vibTimeLeftSec{}; // 0=thumb..4=pinky
-					static std::array<float, 5> vibPhaseRad{};
+					// Tumor impact: the simulation only raises a start/cancel command.
+					// The 1 kHz output thread synthesizes the burst.
 					static std::array<bool, 5> prevInContact{};
 					static std::array<bool, 5> prevHardRegion{};
-					constexpr float kTwoPi = 6.28318530718f;
 
 					// Send force for each configured finger->motor pair
 					// Finger 0 = Thumb  -> Motor 0
@@ -7509,42 +7505,21 @@ int main(int argc, char** argv) {
 							forceMag = maxF * (f / (f + knee));
 						}
 
-						// Tumor "impact" vibration burst on contact start/entry into hard region.
-						// Modulate after soft-clip so the vibration isn't crushed by the nonlinearity.
+						// Tumor impact is a command. The output thread samples the 70 Hz burst.
 						if (haptic_tumor_vib_enabled) {
 							const int fi = pair.fingerIdx;
 							if (!inContact) {
-								vibTimeLeftSec[static_cast<size_t>(fi)] = 0.0f;
-								vibPhaseRad[static_cast<size_t>(fi)] = 0.0f;
+								haptic.cancelVibration(pair.motorId);
 							} else {
 								const bool startBurst = hardRegion && (!prevInContact[static_cast<size_t>(fi)] || !prevHardRegion[static_cast<size_t>(fi)]);
 								if (startBurst) {
-									if (vibTimeLeftSec[static_cast<size_t>(fi)] <= 0.0f) {
-										vibTimeLeftSec[static_cast<size_t>(fi)] = std::max(0.0f, haptic_tumor_vib_duration_sec);
-										vibPhaseRad[static_cast<size_t>(fi)] = 0.0f;
-									}
-								}
-
-								float& tLeft = vibTimeLeftSec[static_cast<size_t>(fi)];
-								float& phase = vibPhaseRad[static_cast<size_t>(fi)];
-								if (tLeft > 0.0f && hapticDtSec > 0.0f) {
-									const float dur = std::max(1e-4f, haptic_tumor_vib_duration_sec);
-									const float elapsed = std::max(0.0f, dur - tLeft);
-									// Cosine fade from 1->0 over the burst.
-									const float u = std::clamp(elapsed / dur, 0.0f, 1.0f);
-									const float env = 0.5f * (1.0f + std::cos(PI * u));
-									const float freq = std::max(0.0f, haptic_tumor_vib_freq_hz);
-									const float amp = std::max(0.0f, haptic_tumor_vib_amp);
-									const float s = std::sin(phase);
-									// 1DOF cable devices usually only "pull". Use a unipolar modulation.
-									const float vib = amp * env * (0.5f * (1.0f + s));
-									forceMag = std::max(0.0f, forceMag + vib);
-									phase += kTwoPi * freq * hapticDtSec;
-									if (phase > kTwoPi) phase = std::fmod(phase, kTwoPi);
-									tLeft = std::max(0.0f, tLeft - hapticDtSec);
+									haptic.requestVibration(
+										pair.motorId,
+										haptic_tumor_vib_freq_hz,
+										haptic_tumor_vib_amp,
+										haptic_tumor_vib_duration_sec);
 								}
 							}
-
 							prevInContact[static_cast<size_t>(fi)] = inContact;
 							prevHardRegion[static_cast<size_t>(fi)] = hardRegion;
 						}
@@ -7564,6 +7539,9 @@ int main(int argc, char** argv) {
 
 				agentForceHistory.push(Eigen::Vector4f(fN.x(), fN.y(), fN.z(), fN.norm()));
 			} else {
+				if (haptic_uart_enabled && haptic.isOpen()) {
+					haptic.clearForces();
+				}
 				pipelineRenderMs = std::chrono::duration<double, std::milli>(
 					std::chrono::steady_clock::now() - pipelineRenderStart).count();
 			}

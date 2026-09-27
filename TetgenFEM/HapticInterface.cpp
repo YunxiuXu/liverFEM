@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <cerrno>
 #include <cstring>
 #include <algorithm>
 #include <cmath>
@@ -11,6 +12,7 @@
 #if defined(__APPLE__)
 #include <sys/ioctl.h>
 #include <IOKit/serial/ioss.h>
+#include <pthread/qos.h>
 #endif
 
 
@@ -77,22 +79,33 @@ bool HapticInterface::init(const std::string& port, int baudRate) {
              // std::cout << "HapticInterface: Set custom baud rate " << baudRate << " via IOSSIOSPEED" << std::endl;
         }
     }
+    // Ask the driver not to hold a partial USB packet. Default 0 waits on a
+    // character-count latency, which drops the output rate well below 1 kHz.
+    unsigned long latencyUs = 1000;
+    if (ioctl(fd, IOSSDATALAT, &latencyUs) == -1) {
+        std::cerr << "HapticInterface: IOSSDATALAT failed, serial latency left at driver default" << std::endl;
+    }
 #endif
 
-    // Blocking read with timeout (optional, we mainly write)
-    fcntl(fd, F_SETFL, 0);
+    // Non-blocking so a full USB buffer cannot stall the 1 kHz thread.
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags >= 0) {
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    }
 
     connected = true;
+    startOutputThread();
     std::cout << "HapticInterface: Connected to " << port << std::endl;
     return true;
 }
 
 void HapticInterface::close() {
-    if (connected && fd != -1) {
+    stopOutputThread();
+    if (fd != -1) {
         ::close(fd);
         fd = -1;
-        connected = false;
     }
+    connected = false;
 }
 
 void HapticInterface::setParameters(float minF, float maxF, float minP, float maxP, float g) {
@@ -110,7 +123,7 @@ void HapticInterface::setSlewLimiter(bool enabled, float upPwmPerSec, float down
     // Reset state so the next command takes effect deterministically.
     lastPwm_.fill(0);
     lastPwmValid_.fill(false);
-    lastTimeValid_.fill(false);
+    lastOutputTimeValid_ = false;
 }
 
 // Exactly from original code
@@ -147,91 +160,167 @@ void HapticInterface::sendForce(int motorId, float force) {
 }
 
 void HapticInterface::sendForce(int motorId, float force, bool bypassSlew) {
-    if (!connected || motorId < 0 || motorId > 7) return;
+    if (motorId < 0 || motorId > 7) return;
+    std::lock_guard<std::mutex> lock(mutex);
+    pending_[static_cast<size_t>(motorId)].force = force;
+    pending_[static_cast<size_t>(motorId)].bypassSlew = bypassSlew;
+}
 
-    const auto now = std::chrono::steady_clock::now();
+void HapticInterface::requestVibration(int motorId, float freqHz, float amplitude, float durationSec) {
+    if (motorId < 0 || motorId > 7) return;
+    std::lock_guard<std::mutex> lock(mutex);
+    ForceCommand& cmd = pending_[static_cast<size_t>(motorId)];
+    cmd.vibStart = true;
+    cmd.vibCancel = false;
+    cmd.vibFreqHz = std::max(0.0f, freqHz);
+    cmd.vibAmp = std::max(0.0f, amplitude);
+    cmd.vibDurationSec = std::max(0.0f, durationSec);
+}
 
-    // Important: if the requested force is zero (or below the input minimum),
-    // output a true "off" command (0 PWM), regardless of configured minPwmOutput.
-    // This prevents a lingering baseline force after the fingertip leaves contact.
+void HapticInterface::cancelVibration(int motorId) {
+    if (motorId < 0 || motorId > 7) return;
+    std::lock_guard<std::mutex> lock(mutex);
+    pending_[static_cast<size_t>(motorId)].vibStart = false;
+    pending_[static_cast<size_t>(motorId)].vibCancel = true;
+}
+
+void HapticInterface::clearForces() {
+    std::lock_guard<std::mutex> lock(mutex);
+    for (ForceCommand& cmd : pending_) {
+        cmd.force = 0.0f;
+        cmd.bypassSlew = true;
+        cmd.vibStart = false;
+        cmd.vibCancel = true;
+    }
+}
+
+void HapticInterface::startOutputThread() {
+    stopOutputThread();
+    outputRunning_.store(true, std::memory_order_relaxed);
+    outputThread_ = std::thread([this]() { outputLoop(); });
+}
+
+void HapticInterface::stopOutputThread() {
+    outputRunning_.store(false, std::memory_order_relaxed);
+    if (outputThread_.joinable()) {
+        outputThread_.join();
+    }
+}
+
+int HapticInterface::mapForceToPwm(int motorId, float force, bool bypassSlew, float dtSec) {
+    // Zero (or below the input minimum) is a true off command, not minPwmOutput.
     if (force <= minForceInput + 1e-6f || maxForceInput <= minForceInput + 1e-6f) {
-        if (slewEnabled) {
-            lastPwm_[motorId] = 0;
-            lastPwmValid_[motorId] = true;
-            lastTime_[motorId] = now;
-            lastTimeValid_[motorId] = true;
-        }
-        std::vector<uint8_t> bytes = intToHexProtocol(0);
-        {
-            std::lock_guard<std::mutex> lock(mutex);
-            motorValues[motorId * 2] = bytes[0];
-            motorValues[motorId * 2 + 1] = bytes[1];
-        }
-        sendPacket();
-        return;
+        lastPwm_[static_cast<size_t>(motorId)] = 0;
+        lastPwmValid_[static_cast<size_t>(motorId)] = true;
+        return 0;
     }
 
-    // Map force to output range
-    // Clamp input
     float f = std::max(minForceInput, std::min(force, maxForceInput));
-    
-    // Normalize 0-1
     float t = (f - minForceInput) / (maxForceInput - minForceInput);
     if (t < 0.0f) t = 0.0f;
     if (t > 1.0f) t = 1.0f;
 
-    // Apply Gamma Correction (Weber's Law / Psychophysics)
-    // t_out = t_in ^ gamma
-    // gamma < 1.0 boosts small forces (makes them more noticeable)
-    // gamma > 1.0 suppresses small forces
     if (std::abs(gamma - 1.0f) > 0.001f) {
         t = std::pow(t, gamma);
     }
-    
-    // Map to output
-    float outVal = minPwmOutput + t * (maxPwmOutput - minPwmOutput);
-    int intVal = static_cast<int>(outVal);
+
+    int intVal = static_cast<int>(minPwmOutput + t * (maxPwmOutput - minPwmOutput));
 
     if (slewEnabled && !bypassSlew) {
-        float dt = 0.0f;
-        if (lastTimeValid_[motorId]) {
-            dt = std::chrono::duration<float>(now - lastTime_[motorId]).count();
-        }
-        lastTime_[motorId] = now;
-        lastTimeValid_[motorId] = true;
-
-        const int prev = lastPwmValid_[motorId] ? lastPwm_[motorId] : intVal;
-        const float maxUp = slewUpPwmPerSec * dt;
-        const float maxDown = slewDownPwmPerSec * dt;
-        int limited = intVal;
-        if (limited > prev) {
+        const int prev = lastPwmValid_[static_cast<size_t>(motorId)] ? lastPwm_[static_cast<size_t>(motorId)] : intVal;
+        const float maxUp = slewUpPwmPerSec * dtSec;
+        const float maxDown = slewDownPwmPerSec * dtSec;
+        if (intVal > prev) {
             const int cap = prev + static_cast<int>(std::ceil(maxUp));
-            if (maxUp > 0.0f) limited = std::min(limited, cap);
-        } else if (limited < prev) {
+            if (maxUp > 0.0f) intVal = std::min(intVal, cap);
+        } else if (intVal < prev) {
             const int cap = prev - static_cast<int>(std::ceil(maxDown));
-            if (maxDown > 0.0f) limited = std::max(limited, cap);
+            if (maxDown > 0.0f) intVal = std::max(intVal, cap);
         }
-        intVal = limited;
-        lastPwm_[motorId] = intVal;
-        lastPwmValid_[motorId] = true;
-    } else if (slewEnabled) {
-        // Keep state consistent even when bypassing.
-        lastTime_[motorId] = now;
-        lastTimeValid_[motorId] = true;
-        lastPwm_[motorId] = intVal;
-        lastPwmValid_[motorId] = true;
     }
 
-    // Convert to protocol bytes
-    std::vector<uint8_t> bytes = intToHexProtocol(intVal);
+    lastPwm_[static_cast<size_t>(motorId)] = intVal;
+    lastPwmValid_[static_cast<size_t>(motorId)] = true;
+    return intVal;
+}
 
-    {
-        std::lock_guard<std::mutex> lock(mutex);
-        motorValues[motorId * 2] = bytes[0];     // Low
-        motorValues[motorId * 2 + 1] = bytes[1]; // High
+void HapticInterface::outputLoop() {
+#if defined(__APPLE__)
+    pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+#endif
+    constexpr auto kPeriod = std::chrono::milliseconds(1);
+    auto next = std::chrono::steady_clock::now();
+    std::cout << "HapticInterface: serial output thread running at 1000 Hz" << std::endl;
+
+    while (outputRunning_.load(std::memory_order_relaxed)) {
+        next += kPeriod;
+
+        std::array<ForceCommand, 8> cmds;
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            cmds = pending_;
+            for (ForceCommand& cmd : pending_) {
+                cmd.vibStart = false;
+                cmd.vibCancel = false;
+            }
+        }
+
+        const auto now = std::chrono::steady_clock::now();
+        float dtSec = 0.001f;
+        if (lastOutputTimeValid_) {
+            dtSec = std::chrono::duration<float>(now - lastOutputTime_).count();
+        }
+        lastOutputTime_ = now;
+        lastOutputTimeValid_ = true;
+        if (dtSec < 0.0f) dtSec = 0.0f;
+        if (dtSec > 0.02f) dtSec = 0.02f;
+
+        uint8_t values[16];
+        std::memset(values, 0, sizeof(values));
+        constexpr float kPi = 3.14159265f;
+        constexpr float kTwoPi = 6.28318530718f;
+        for (int motorId = 0; motorId < 8; ++motorId) {
+            const ForceCommand& cmd = cmds[static_cast<size_t>(motorId)];
+            float force = cmd.force;
+            bool bypassSlew = cmd.bypassSlew;
+            float& tLeft = vibTimeLeft_[static_cast<size_t>(motorId)];
+            float& phase = vibPhase_[static_cast<size_t>(motorId)];
+            if (cmd.vibCancel) {
+                tLeft = 0.0f;
+                phase = 0.0f;
+            } else if (cmd.vibStart && tLeft <= 0.0f) {
+                tLeft = cmd.vibDurationSec;
+                phase = 0.0f;
+            }
+            if (tLeft > 0.0f && dtSec > 0.0f && cmd.vibDurationSec > 0.0f) {
+                const float dur = std::max(1e-4f, cmd.vibDurationSec);
+                const float elapsed = std::max(0.0f, dur - tLeft);
+                const float u = std::clamp(elapsed / dur, 0.0f, 1.0f);
+                const float env = 0.5f * (1.0f + std::cos(kPi * u));
+                const float s = std::sin(phase);
+                const float vib = cmd.vibAmp * env * (0.5f * (1.0f + s));
+                force = std::max(0.0f, force + vib);
+                phase += kTwoPi * cmd.vibFreqHz * dtSec;
+                if (phase > kTwoPi) phase = std::fmod(phase, kTwoPi);
+                tLeft = std::max(0.0f, tLeft - dtSec);
+                bypassSlew = true;
+            }
+            const int pwm = mapForceToPwm(motorId, force, bypassSlew, dtSec);
+            const std::vector<uint8_t> bytes = intToHexProtocol(pwm);
+            values[motorId * 2] = bytes[0];
+            values[motorId * 2 + 1] = bytes[1];
+        }
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            std::memcpy(motorValues, values, sizeof(values));
+        }
+        sendPacket();
+
+        std::this_thread::sleep_until(next);
+        if (std::chrono::steady_clock::now() > next + kPeriod) {
+            next = std::chrono::steady_clock::now();
+        }
     }
-
-    sendPacket();
 }
 
 void HapticInterface::sendPacket() {
@@ -261,9 +350,11 @@ void HapticInterface::sendPacket() {
         std::memcpy(&buffer[1], motorValues, 16);
     }
 
-    // Write to serial
-    ssize_t written = write(fd, buffer, BUFFER_SIZE);
-    if (written < 0) {
-        std::cerr << "HapticInterface: Write error" << std::endl;
+    const ssize_t written = write(fd, buffer, BUFFER_SIZE);
+    if (written == static_cast<ssize_t>(BUFFER_SIZE)) return;
+    if (written < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) return;
+    if (!writeErrorLogged_) {
+        writeErrorLogged_ = true;
+        std::cerr << "HapticInterface: serial write incomplete (" << written << " bytes)" << std::endl;
     }
 }

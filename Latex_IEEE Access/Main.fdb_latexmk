@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex Main"] 1787211591.32156 "Main.aux" "Main.bbl" "Main" 1787375483.91339 0
+["bibtex Main"] 1790348347.54509 "Main.aux" "Main.bbl" "Main" 1790348348.63561 0
   "../Frontiers_LaTeX_Templates/bibtex/references.bib" 1784305716.0665 12190 54dc0e3dab01000844a79304ef7da874 ""
   "./IEEEtran.bst" 1714408405 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "Main.aux" 1787375483.76226 12283 f2f0e7493375a506e19d44c2694366c7 "pdflatex"
+  "Main.aux" 1790348348.47842 12697 c6beebb40e3fa65f7db29ac21be0376e "pdflatex"
   (generated)
   "Main.bbl"
   "Main.blg"
   (rewritten before read)
-["pdflatex"] 1787375482.94682 "Main.tex" "Main.pdf" "Main" 1787375483.91351 0
+["pdflatex"] 1790348347.60958 "Main.tex" "Main.pdf" "Main" 1790348348.63575 0
   "../out/experiment1/displacement_comparison.png" 1774638481.14773 145316 630fd0badc4c4e59c1b06ddcb69ebc9d ""
   "../out/experiment2/volume_preservation_comparison.png" 1774638481.17827 214247 cac505174f4e5f1c60c70ba6f4908e3e ""
   "../out/experiment4/comparison_fps.png" 1784298649.35396 207065 a2c1ccad106b5c23699bb6709b7c0b68 ""
@@ -92,9 +92,9 @@
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/web2c/texmf.cnf" 1741388039 42151 79f67285bdd95beca4d137b380b4b9e5 ""
   "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-var/web2c/pdftex/pdflatex.fmt" 1741388039 3346141 1288109d02d1c772df65535881471649 ""
   "IEEEtran.cls" 1714408405 281957 5b2e4fa15b0f7eabb840ebf67df4c0f7 ""
-  "Main.aux" 1787375483.76226 12283 f2f0e7493375a506e19d44c2694366c7 "pdflatex"
-  "Main.bbl" 1787211591.39274 9246 cc97059bde7ea4ddda1e6ba53cda58fa "bibtex Main"
-  "Main.tex" 1787375474.05104 68780 29b99ab0cb1232415298016892bfe472 ""
+  "Main.aux" 1790348348.47842 12697 c6beebb40e3fa65f7db29ac21be0376e "pdflatex"
+  "Main.bbl" 1790348347.60759 9246 cc97059bde7ea4ddda1e6ba53cda58fa "bibtex Main"
+  "Main.tex" 1790348341.69094 69529 ec8656ce26407af96db887b52351e2ef ""
   "bullet.png" 1714408405 430 e52d8fe748259de33fa611fdd6a099c1 ""
   "ieeeaccess.cls" 1714408405 50800 6e473d2a8652127c24e6e8af3d7a34f5 ""
   "img/Wang.pdf" 1775721070.14827 3400506 74f4d1016952de8e2276de0593ce310a ""
@@ -102,6 +102,7 @@
   "img/hardware_and_wearable_device.png" 1774590480.10097 672977 3a973eeb9909ed97ae477409d0903ed6 ""
   "img/hase.pdf" 1775721070.14999 167253 8b3321b1a3c52cea4f5191328446a1ba ""
   "img/liverfixedpoint.png" 1774593026.35196 327186 78af8a3daf10326d325633e231d4e598 ""
+  "img/motorCombine_source.pdf" 1790348325.40309 97443 b019a5ea8287c41a67dbfd60addb4bf4 ""
   "img/system_simulation_view.png" 1784298876.33986 405618 9daabc9b5b1e751628c892f93f9a099e ""
   "img/xu.pdf" 1775721070.14526 218236 787876ac8ad7d4a58276cc27e2b77d70 ""
   "logo.png" 1714408405 9705 6ba9f1039498f006286d6457f067dc20 ""
