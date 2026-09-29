@@ -2088,6 +2088,7 @@ struct PipelineProfiler {
 	double sumRenderMs = 0.0;
 	double sumHapticTxMs = 0.0;
 	double maxTotalMs = 0.0;
+	std::vector<double> totalMsSamples;
 
 	void record(double totalMs, double preSimMs, double physicsMs, double simMs, double renderMs, double hapticTxMs) {
 		++frameCount;
@@ -2101,6 +2102,7 @@ struct PipelineProfiler {
 		sumRenderMs += renderMs;
 		sumHapticTxMs += hapticTxMs;
 		maxTotalMs = std::max(maxTotalMs, totalMs);
+		totalMsSamples.push_back(totalMs);
 	}
 
 	bool finished() const { return sampleCount >= measureFrames; }
@@ -2115,11 +2117,35 @@ struct PipelineProfiler {
 		const double meanRender = sumRenderMs * inv;
 		const double meanHapticTx = sumHapticTxMs * inv;
 		const double meanFps = (meanTotal > 1e-9) ? (1000.0 / meanTotal) : 0.0;
+
+		std::vector<double> sorted = totalMsSamples;
+		std::sort(sorted.begin(), sorted.end());
+		auto percentile = [&](double p) -> double {
+			if (sorted.empty()) return 0.0;
+			double idx = p * static_cast<double>(sorted.size() - 1);
+			size_t lo = static_cast<size_t>(std::floor(idx));
+			size_t hi = static_cast<size_t>(std::ceil(idx));
+			if (lo == hi) return sorted[lo];
+			double frac = idx - static_cast<double>(lo);
+			return sorted[lo] * (1.0 - frac) + sorted[hi] * frac;
+		};
+		const double medianTotal = percentile(0.50);
+		const double p95Total = percentile(0.95);
+		const double p99Total = percentile(0.99);
+		double variance = 0.0;
+		for (double v : totalMsSamples) variance += (v - meanTotal) * (v - meanTotal);
+		variance *= inv;
+		const double stddevTotal = std::sqrt(variance);
+
 		std::cout << std::fixed << std::setprecision(3)
 		          << "[PipelineProfile] samples=" << sampleCount
 		          << " warmup=" << warmupFrames << "\n"
 		          << "  mean_frame_ms=" << meanTotal
-		          << " p99_frame_ms~=" << maxTotalMs
+		          << " median_frame_ms=" << medianTotal
+		          << " stddev_frame_ms=" << stddevTotal
+		          << " p95_frame_ms=" << p95Total
+		          << " p99_frame_ms=" << p99Total
+		          << " max_frame_ms=" << maxTotalMs
 		          << " mean_fps=" << meanFps << "\n"
 		          << "  mean_pre_sim_ms=" << meanPreSim
 		          << " (Leap poll + hand mapping)\n"

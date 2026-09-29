@@ -71,7 +71,7 @@ plt.bar(x - 0.5*width, summary_df['Proposed Method (Fast)'], width, label='Propo
 plt.bar(x + 0.5*width, summary_df['XPBD (Fast)'], width, label='XPBD (Fast, 5 sub)', color='orange')
 plt.bar(x + 1.5*width, summary_df['XPBD (Ref)'], width, label='XPBD (Ref, 50 sub)', color='red')
 
-plt.xlabel('Pulling Force (Accel)')
+plt.xlabel('Prescribed Loading Acceleration')
 plt.ylabel('Target Displacement')
 plt.title('Displacement Comparison: Proposed Method vs XPBD vs VegaFEM')
 plt.xticks(x, accels)
@@ -86,7 +86,7 @@ plt.plot(accels, summary_df['Proposed_Error_%'], marker='o', label='Proposed Met
 plt.plot(accels, summary_df['XPBD_Fast_Error_%'], marker='s', label='XPBD (Fast) Error %', color='orange', linestyle='--')
 plt.plot(accels, summary_df['XPBD_Ref_Error_%'], marker='^', label='XPBD (Ref) Error %', color='red', linestyle='--')
 
-plt.xlabel('Pulling Force (Accel)')
+plt.xlabel('Prescribed Loading Acceleration')
 plt.ylabel('Relative Error (%)')
 plt.title('Relative Error to VegaFEM Ground Truth')
 plt.xticks(accels)
