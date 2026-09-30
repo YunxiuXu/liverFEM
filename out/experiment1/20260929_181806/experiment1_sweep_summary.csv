@@ -1,0 +1,4 @@
+pull_accel,pbd_fast,pbd_reference,target_disp_fast,target_disp_reference,target_disp_ratio_fast_over_ref,target_disp_rel_error,rmse,max_error,rmse_over_diag,max_over_diag,rmse_over_target_disp_ref,max_over_target_disp_ref
+800,30,150,2.34643,2.14099,1.09596,0.095956,0.500304,0.617956,0.201953,0.249444,0.233679,0.288631
+1500,30,150,3.90493,3.74614,1.04239,0.0423885,0.110748,0.185896,0.0447045,0.0750387,0.0295632,0.0496232
+2000,30,150,5.0931,4.89402,1.04068,0.0406782,0.143574,0.249608,0.0579554,0.100757,0.0293367,0.0510025

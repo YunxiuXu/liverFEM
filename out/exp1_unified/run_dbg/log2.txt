@@ -1,0 +1,41 @@
+PositionBasedDynamics 2.2.2
+OpenGL version 2.1
+Vendor: Apple
+Renderer: Apple M4 Pro
+Version: 2.1 Metal - 91.7
+Load scene file: /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/xpbd_scene.json
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: enabled=1 nodes=4403 anchors=139
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.005 substeps=5
+TRACE step 0 scale 0 maxdisp 0 maxvel 0 meandisp 0 0 0
+TRACE step 100 scale 1 maxdisp 0.000869124 maxvel 0.00380077 meandisp -0.000406337 0.000132965 -0.000608068
+TRACE step 200 scale 1 maxdisp 0.00707422 maxvel 0.0105383 meandisp -0.00211964 0.00104058 -0.00373163
+TRACE step 300 scale 1 maxdisp 0.0217425 maxvel 0.0181155 meandisp -0.00461358 0.00305573 -0.00904907
+TRACE step 400 scale 1 maxdisp 0.0420352 maxvel 0.0221154 meandisp -0.00881598 0.00576327 -0.0167593
+TRACE step 500 scale 1 maxdisp 0.0662618 maxvel 0.0308521 meandisp -0.0139075 0.00900944 -0.0267273
+TRACE step 600 scale 1 maxdisp 0.0945963 maxvel 0.035017 meandisp -0.0187288 0.0132267 -0.0379048
+TRACE step 700 scale 1 maxdisp 0.124591 maxvel 0.0474689 meandisp -0.0241722 0.0178258 -0.0498675
+TRACE step 800 scale 1 maxdisp 0.15488 maxvel 0.0446346 meandisp -0.0296403 0.0219893 -0.0621446
+TRACE step 900 scale 1 maxdisp 0.183997 maxvel 0.0733278 meandisp -0.0340673 0.0263316 -0.0737479
+TRACE step 1000 scale 1 maxdisp 0.209299 maxvel 0.0832544 meandisp -0.0378579 0.0306716 -0.0842253
+TRACE step 1100 scale 1 maxdisp 0.230376 maxvel 0.0836068 meandisp -0.04099 0.033748 -0.0931208
+TRACE step 1200 scale 1 maxdisp 0.246532 maxvel 0.0901015 meandisp -0.0432386 0.0359664 -0.0995116
+TRACE step 1300 scale 1 maxdisp 0.255704 maxvel 0.106786 meandisp -0.0444469 0.0376843 -0.103135
+TRACE step 1400 scale 1 maxdisp 0.257379 maxvel 0.0884884 meandisp -0.0445079 0.0379615 -0.104186
+TRACE step 1500 scale 1 maxdisp 0.252231 maxvel 0.0759723 meandisp -0.0439497 0.0370314 -0.102219
+ExpU: done accel=0.005 sub=5 median=7.04129 ms drift=0.00642106

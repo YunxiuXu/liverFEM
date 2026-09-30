@@ -1,0 +1,80 @@
+PositionBasedDynamics 2.2.2
+OpenGL version 2.1
+Vendor: Apple
+Renderer: Apple M4 Pro
+Version: 2.1 Metal - 91.7
+Load scene file: /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/xpbd_scene.json
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: enabled=1 nodes=4403 anchors=139
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.005 substeps=5
+ExpU: done accel=0.005 sub=5 median=5.5515 ms drift=0.0192223
+Average time simulation step: 5.53267 ms
+Average time collision detection: 1.6026 ms
+Average time position constraints projection: 0.721303 ms
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.005 substeps=50
+ExpU: done accel=0.005 sub=50 median=44.303 ms drift=0.0139643
+Average time simulation step: 43.9895 ms
+Average time collision detection: 1.6082 ms
+Average time position constraints projection: 0.817661 ms
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.01 substeps=5
+ExpU: done accel=0.01 sub=5 median=5.66608 ms drift=0.0424001
+Average time simulation step: 5.60213 ms
+Average time collision detection: 1.60336 ms
+Average time position constraints projection: 0.735276 ms
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.01 substeps=50
+ExpU: done accel=0.01 sub=50 median=48.5582 ms drift=0.0287084
+Average time simulation step: 47.603 ms
+Average time collision detection: 1.6075 ms
+Average time position constraints projection: 0.889975 ms
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.02 substeps=5
+ExpU: done accel=0.02 sub=5 median=5.8165 ms drift=0.0826954
+Average time simulation step: 5.76077 ms
+Average time collision detection: 1.60328 ms
+Average time position constraints projection: 0.767619 ms
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.02 substeps=50
+ExpU: done accel=0.02 sub=50 median=54.3651 ms drift=0.0567438

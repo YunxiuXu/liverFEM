@@ -1,0 +1,1 @@
+accel=0.01 newton=20 median=205.582 ms unstable=0 drift=0.0155991

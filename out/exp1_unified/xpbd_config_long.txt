@@ -1,0 +1,9 @@
+out=/Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/run_xpbd_long
+dir=/Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/load_dir.txt
+mass=/Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/lumped_mass.txt
+anchors=/Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/anchors.txt
+accels=0.005,0.01,0.02
+substeps=5
+settle=0
+ramp=100
+hold=4000

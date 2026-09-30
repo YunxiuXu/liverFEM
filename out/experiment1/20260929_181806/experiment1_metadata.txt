@@ -1,0 +1,17 @@
+vertex_index=1328
+vertex_init=(0.441226,0.424951,1.28304)
+timeStep=0.01
+youngs=1e+06
+poisson=0.28
+poisson_original=0.28
+dragInfluenceRadius=0.6
+dragStiffness=2500
+dragMaxAccel=50000
+dragMaxDisplacement=1
+pullAccel=2000
+forceInfluenceRadius=0.6
+sweepAccels=800,1500,2000
+settleSteps=120
+loadRampSteps=240
+holdSteps=240
+runs=fast:pbd30;reference:pbd150

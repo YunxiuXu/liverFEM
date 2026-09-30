@@ -1,0 +1,8 @@
+out /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/test_tet
+dir -0.569247615 0.161154329 -0.806217362
+settle 20
+ramp 40
+hold 100
+accels 0.1
+iters 30
+anchors /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/anchors.txt

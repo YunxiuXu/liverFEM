@@ -1,0 +1,47 @@
+PositionBasedDynamics 2.2.2
+OpenGL version 2.1
+Vendor: Apple
+Renderer: Apple M4 Pro
+Version: 2.1 Metal - 91.7
+Load scene file: /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/xpbd_scene.json
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: enabled=1 nodes=4403 anchors=139
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.005 substeps=5
+ExpU: done accel=0.005 sub=5 median=5.71796 ms drift=0.0182163
+Average time simulation step: 5.81079 ms
+Average time collision detection: 1.60453 ms
+Average time position constraints projection: 0.776582 ms
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.01 substeps=5
+ExpU: done accel=0.01 sub=5 median=6.10112 ms drift=0.0139916
+Average time simulation step: 6.04335 ms
+Average time collision detection: 1.6062 ms
+Average time position constraints projection: 0.82312 ms
+---------------------------------------------------------------------------
+
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.node
+Loading /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/mesh.ele
+Number of tets: 20061
+Number of vertices: 4403
+ExpU: run accel=0.02 substeps=5
+ExpU: done accel=0.02 sub=5 median=6.43708 ms drift=0.0152002

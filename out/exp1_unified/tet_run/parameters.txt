@@ -1,0 +1,285 @@
+youngs=7000
+youngs1=7000
+youngs2=7000
+youngs3=7000
+# Half-model Young's modulus override
+half_youngs_enabled=false
+half_youngs_value=30000
+# 0 = X, 1 = Y, 2 = Z
+half_youngs_axis=0
+# 0 = lower (min side), 1 = upper (max side)
+half_youngs_side=0
+# Localized "tumor" stiffness patch (small area on the top surface near center).
+tumor_youngs_enabled=false
+tumor_youngs_value=30000
+# Smaller, more "lump-like" patch on the top surface.
+tumor_use3d=false
+tumor_topFrac=0.10
+tumor_radiusFrac=0.02
+tumor_centerXFrac=0.144398
+tumor_centerYFrac=0.795854
+tumor_centerZFrac=0.922562
+poisson=0.49
+density=20
+groupNumX=8
+groupNumY=6
+groupNumZ=6
+timeStep=0.008
+dampingConst=5.0
+Gravity=0.0
+bindForce= -1000000
+bindVelocity=-0.0
+constraintHardness=50000
+# Clamp interface binding constraint acceleration to reduce localized twitching (<=0 disables).
+bind_maxAccel=15000
+modelDir=models
+stlFile=liver_HD_Low.stl
+tetgenArgs=pq20a0.000083
+# Model re-orientation (world axes, right-hand rule):
+# 1) from current pose: looking towards +X, rotate 180
+# 2) then looking towards -Y, CCW 90 (equivalent to +Y -90)
+model_rotateX_deg=90
+model_rotateY_deg=180
+nodeFile=armadillo_4k.node
+eleFile=armadillo_4k.ele
+useDirectLoading=false
+autoSaveMesh=true
+dragInfluenceRadius=0.6
+dragStiffness=750.0
+dragMaxAccel=15000.0
+dragMaxDisplacement=1.0
+
+# Object anchoring (prevents whole-body drift; set to 0 for full-body motion)
+# 0=none, 1=fixed (hard pin), 2=spring (soft attachment)
+anchor_mode=0
+anchor_backSliceFrac=0.12
+anchor_radiusDepthFrac=0.20
+anchor_centerPushFrac=0.02
+anchor_springK=25
+anchor_springDamping=10
+anchor_springMaxAccel=5000
+
+# Optional: 3-point suspension ligaments (surface patches -> box walls)
+# Use this when you want "organ supports": 1 posterior-superior (hard) + 2 diaphragm hangers (soft).
+suspension_enabled=false
+susp1_enabled=false
+susp2_enabled=false
+susp3_enabled=false
+# Patch selection (fractions of initial bbox extents)
+susp1_backSliceFrac=0.12
+susp1_topSliceFrac=0.15
+susp_topSliceFrac=0.12
+susp_sideFrac=0.25
+susp_patchRadiusBboxFrac=0.12
+# Spring params (acceleration-space)
+susp1_k=160
+susp1_damping=25
+susp1_maxAccel=20000
+susp2_k=80
+susp2_damping=15
+susp2_maxAccel=12000
+susp3_k=80
+susp3_damping=15
+susp3_maxAccel=12000
+
+# Optional: volumetric stabilization (prevents extreme compression / inverted tets)
+tet_volumeConstraintEnabled=true
+tet_volumeConstraintCorrection=0.15
+tet_volumeConstraintIterations=2
+
+# Agent sphere ("finger") contact
+# Toggle at runtime with key 'H' (see console output). These are defaults on startup.
+agent_enabled=true
+agent_useSurfaceVertices=true
+agent_useSurfaceTriangles=true
+agent_virtualCoupling=true
+agent_radiusBboxScale=0.05
+agent_contactStiffness=1200
+agent_contactDamping=500
+agent_moveSpeedBboxPerSec=0.25
+agent_proxyMassFracOfObject=0.015
+agent_vcStiffnessNPerBbox=800
+agent_vcDampingNsPerBbox=100
+agent_vcDampingNsPerBboxInContact=700
+agent_vcAutoDamping=true
+agent_vcDampingRatioFree=1.0
+agent_vcDampingRatioContact=2.5
+agent_vcSubsteps=80
+agent_collisionIterations=50
+agent_contactManifoldTriangles=6
+agent_vcMaxDistanceRadiusFrac=2.5
+# Allow a small penetration shell for a more "pressable" feel (fraction of proxy radius).
+agent_maxPenetrationFrac=0.06
+agent_proxyPositionCorrection=0.9
+agent_influenceRadiusFrac=4.0
+agent_collisionTangentialDamp=0.7
+# For deformable tissue interaction, let contact move the tissue (not the proxy mass).
+agent_contactProxyInvMassScale=0.0
+agent_contactVelocityRelaxation=0.25
+agent_contactVelocityRelaxationMin=0.1
+agent_contactNormalDamp=0.8
+agent_frictionMu=0.3
+agent_contactForceMaterialExponent=1.6
+# Grip/adhesion (tangential spring to help dragging/rolling)
+agent_gripEnabled=false
+agent_gripTangentCorrection=0.6
+agent_gripMaxTangentStepFrac=0.25
+agent_gripSlipDistanceFrac=0.6
+agent_gripMinPenetrationFrac=0.03
+agent_deviceForceFilterTauSec=0.010
+agent_contactForceFilterTauSec=0.040
+agent_contactNormalFilterTauSec=0.040
+# Haptic output scaling/clamp (does NOT affect simulation/contact)
+agent_deviceForceGain=3.5
+agent_deviceForceHardGain=9.0
+agent_deviceForceMaxN=0
+agent_writeLiveFile=false
+agent_liveFileIntervalFrames=2
+
+# Axis-aligned walls (bbox-like): Y-/Y+ and X+ (3 planes)
+# `wall_marginBboxScale` is a per-axis bbox extent fraction (0.05 => ~5% gap).
+wall_enabled=false
+wall_marginBboxScale=0.05
+wall_restitution=0.0
+wall_tangentialDamp=0.2
+# Abdominal cavity: liver-shaped wall (rest-pose surface inflated outward by a gap).
+# Temporarily disabled: the inflated cavity is larger than the liver and is currently not desired.
+# Exposed side is +Y (no wall there).
+cavity_enabled=false
+cavity_collision_enabled=false
+cavity_gap_bboxScale=0.065
+cavity_open_frac=0.45
+cavity_open_axis=1
+cavity_open_side=+1
+
+# Ultraleap Stereo IR-170 (LeapC) right-hand fingertips (thumb..pinky) -> agent spheres mapping
+leap_enabled=true
+leap_workspaceXmm=260
+leap_workspaceYmm=260
+leap_workspaceZmm=260
+leap_worldMargin=0.25
+leap_gain=1.0
+leap_yOffsetBboxFrac=-0.2
+leap_fingerSpreadGain=2.0
+leap_smoothingTime=0.03
+leap_flipX=false
+leap_flipY=false
+leap_flipZ=false
+
+# Leap left-hand capsule collision (non-haptic, strong interaction).
+# Toggle at runtime with key 'N' (see console output).
+left_hand_enabled=true
+left_hand_capsuleRadiusBboxScale=0.030
+left_hand_capsuleLengthBboxScale=0.060
+left_hand_capsuleSamples=7
+left_hand_extraSmoothingTime=0.03
+left_hand_proxyMassFracOfObject=0.02
+left_hand_vcStiffnessNPerBbox=1200
+left_hand_vcDampingNsPerBbox=180
+left_hand_vcMaxDistanceRadiusFrac=1.2
+left_hand_vcSubsteps=20
+left_hand_collisionIterations=48
+left_hand_contactManifoldTriangles=4
+left_hand_maxPenetrationFrac=0.02
+left_hand_proxyPositionCorrection=0.65
+left_hand_collisionTangentialDamp=0.30
+left_hand_contactProxyInvMassScale=0.8
+left_hand_contactVelocityRelaxation=0.35
+left_hand_contactVelocityRelaxationMin=0.15
+left_hand_contactNormalDamp=0.85
+left_hand_frictionMu=0.18
+
+# Experiment 3 (one-click) parameters (only used after pressing START EXP3)
+exp3_exOverEy=20
+exp3_overridePoisson=true
+exp3_poissonOverride=0.08
+exp3_settleSteps=120
+exp3_dragSteps=240
+exp3_dragDistanceBboxScale=0.15
+exp3_dragDistanceMin=0.15
+exp3_dragDistanceMax=0.8
+exp3_resetAfterFinish=true
+
+# Experiment 1 (one-click) parameters (only used after pressing START EXP1)
+exp1_settleSteps=120
+exp1_dragSteps=240
+exp1_holdSteps=240
+exp1_pullAccel=16
+exp1_forceInfluenceRadius=0.6
+exp1_sweepAccel1=16
+exp1_sweepAccel2=30
+exp1_sweepAccel3=40
+exp1_pbdIterationsFast=30
+exp1_pbdIterationsReference=150
+exp1_resetAfterFinish=true
+
+# Experiment 2 (one-click) parameters (only used after pressing START EXP2)
+exp2_poissonIncompressible=0.49
+exp2_settleSteps=120
+exp2_dragSteps=240
+exp2_holdSteps=240
+exp2_dragDistanceBboxScale=0.35
+exp2_dragDistanceMin=0.30
+exp2_dragDistanceMax=0.90
+exp2_anchorSliceFrac=0.05
+exp2_pullSliceFrac=0.12
+exp2_minRegionVertexCount=24
+exp2_pullStiffness=400
+exp2_pullMaxAccel=4000
+exp2_pbdIterations=60
+exp2_resetAfterFinish=true
+
+# Experiment 4 (one-click) parameters (only used after pressing START EXP4)
+# Outputs: out/experiment4/<timestamp>/experiment4_performance.csv
+exp4_warmupFrames=60
+exp4_measureFrames=240
+exp4_pbdIterations=10
+exp4_targetTets1=1000
+exp4_targetTets2=10000
+exp4_targetTets3=20000
+exp4_targetTets4=40000
+exp4_targetTets5=65000
+# Optional: set these to skip auto-tuning and force fixed TetGen max volume for each target.
+exp4_maxVolumeStart=0
+exp4_maxVolume1=0
+exp4_maxVolume2=0
+exp4_maxVolume3=0
+exp4_maxVolume4=0
+exp4_maxVolume5=0
+exp4_tuneIters=3
+exp4_thread1=1
+exp4_thread2=10
+exp4_thread3=14
+		
+		
+
+# Haptic UART Configuration
+haptic_uart_enabled=true
+haptic_uart_port=/dev/cu.usbserial-AUOK5THN
+haptic_uart_motor_id=1
+haptic_uart_thumb_motor_id=0
+haptic_uart_middle_motor_id=2
+haptic_uart_ring_motor_id=3
+haptic_min_force_input=2.0
+haptic_max_force_input=100.0
+haptic_min_pwm_output=30.0
+haptic_max_pwm_output=180.0
+# Gamma correction for haptics (Power Law)
+# 1.0 = Linear
+# < 1.0 (e.g. 0.5-0.8) = Boosts small forces (Weber's Law / better sensitivity)
+# > 1.0 = Suppresses small forces
+haptic_gamma=0.7
+# Output shaping: prevents immediate saturation ("touch -> max") by soft-clipping the force.
+# If enabled, the output force sent to the device is:
+#   f_out = max_force * (f_raw / (f_raw + knee))
+haptic_softclip_enabled=true
+haptic_softclip_knee=35.0
+haptic_slew_enabled=true
+haptic_slew_up_pwm_per_sec=600.0
+haptic_slew_down_pwm_per_sec=2400.0
+# Tumor "impact" vibration burst (only when touching tumor region).
+haptic_tumor_vib_enabled=true
+haptic_tumor_vib_freq_hz=70.0
+haptic_tumor_vib_amp=12.0
+haptic_tumor_vib_duration_sec=0.15
+model_rotateZ_deg=180

@@ -1,0 +1,14 @@
+step 0 scale 0.00 maxq 0.00000 ms 1521.2
+step 10 scale 0.26 maxq 0.00009 ms 114.5
+step 20 scale 0.51 maxq 0.00051 ms 199.4
+step 30 scale 0.77 maxq 0.00144 ms 204.2
+step 40 scale 1.00 maxq 0.00301 ms 232.8
+step 50 scale 1.00 maxq 0.00518 ms 204.3
+step 60 scale 1.00 maxq 0.00770 ms 200.5
+step 70 scale 1.00 maxq 0.01039 ms 198.2
+step 80 scale 1.00 maxq 0.01312 ms 200.6
+step 90 scale 1.00 maxq 0.01582 ms 203.7
+step 100 scale 1.00 maxq 0.01847 ms 203.7
+step 110 scale 1.00 maxq 0.02108 ms 206.8
+step 120 scale 1.00 maxq 0.02365 ms 208.8
+step 130 scale 1.00 maxq 0.02619 ms 211.5

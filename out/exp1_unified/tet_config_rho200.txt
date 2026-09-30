@@ -1,0 +1,8 @@
+out /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/run_tet_rho200
+dir -0.569247615 0.161154329 -0.806217362
+settle 0
+ramp 100
+hold 5000
+accels 0.025
+iters 30
+anchors /Users/yunxiuxu/Documents/tetfemcpp/out/exp1_unified/anchors.txt
