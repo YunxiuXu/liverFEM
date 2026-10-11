@@ -65,6 +65,9 @@
 ## Reviewer 2
 
 - [x] **R2-1、R2-2：完成 R1-1 的共通问题。** 清楚说明物理更新之间的力值、有效反馈带宽，以及力指令到实测力的校准、线性、分辨率、限幅和触诊任务实际使用的力范围。对没有测过的项目如实说明。**随 R1-1a/b/c 一并写入 Main.tex，内容同上，分辨率(181级/0-180)已写入。**
+  - 补充回复（中文）：PWM指令用于设定电机电流，其对应关系在系统集成前已测量。结合图1已有的静态电流—拉力曲线，即可明确静态指令—拉力映射；PWM 180对应约0.78 A和1.36 N。正文同时补充了软件力信息的带宽特征：41.2 Hz更新率对应20.6 Hz奈奎斯特上限，10 ms一阶低通滤波对应约15.9 Hz截止频率。分项延迟估算约60 ms，不含跟踪、手部位置平滑及额外限速或力建立延迟。6000帧软件测试关闭跟踪与串口，使用合成输入。
+  - Supplementary response (R1-1 / R2-1 / R2-2): PWM commands specify motor current, and the PWM--current correspondence was measured before system integration. Together with the static current--force curve in Fig. 1, this defines the static command-to-tension mapping (PWM 180: approximately 0.78 A and 1.36 N). We also state the software force-information bandwidth limits: a 20.6 Hz Nyquist limit and a nominal 15.9 Hz low-pass cutoff. The component-based latency estimate is approximately 60 ms, excluding tracking, hand-position smoothing, and additional slew-limiter or force-buildup delays. The 6,000-frame software profile used synthetic input with tracking and serial communication disabled.
+  - Changes in the manuscript: Section III-D, PWM mapping paragraph and control-loop paragraph.
 - [x] **R2-3：处理缺失的各向异性结果。** 方法中写了 `Anisotropic response validation`，结果中未报告；核对现有 Experiment 3 数据，能支撑则补结果，不能则删去该验证项目。**已核实数据不可靠（10次跑里isotropic对照组X/Y比值从0.35到4.2都有，本该接近1），已删除 Main.tex 第180行该条验证项目，不留悬空引用。**
   - 回复信草稿（中文，待译英文）：感谢指出这个遗漏。我们核查了Experiment 3的数据，发现isotropic对照组本身在多次重复中未能稳定表现出各向同性（X/Y方向刚度比值波动很大），这说明实验设置存在未分离的方向性混杂因素，数据不足以支撑各向异性验证的结论。我们已从方法部分的验证协议中删除该项，不再声称做过此项验证。GB-cFEM框架对各向异性材料的一般支持能力在既有工作中已经确立，本次删除的只是针对本肝脏模型的这一项具体验证声明。
 - [x] **R2-4：把精度和速度对上配置。** 明确 Table 5 中每个位移误差、运行时间对应的耦合迭代设置；若 17.9% 与 12.0 ms 来自不同设置，不把它们写成同一个精度-速度结果。**已定稿并写入 Main.tex：Table 5 表头写明每列配置；所提方法耗时改为同一配置下的实测值 19.5 ms（51.3 FPS）；XPBD 误差改为三个载荷的平均值；Section V-A 同步改为约 51 FPS、约 19.5 ms。**
