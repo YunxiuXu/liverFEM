@@ -1,0 +1,142 @@
+diff --git a/TetgenFEM/Experiment2.cpp b/TetgenFEM/Experiment2.cpp
+index 3bc405a..2b2bdfb 100644
+--- a/TetgenFEM/Experiment2.cpp
++++ b/TetgenFEM/Experiment2.cpp
+@@ -43,6 +43,7 @@ void Experiment2::init(Object* obj, const std::vector<Vertex*>& physical) {
+     config.dragSteps = exp2DragSteps;
+     config.holdSteps = exp2HoldSteps;
+     config.poissonIncompressible = exp2PoissonIncompressible;
++    std::cout << "[Experiment2] init exp2PoissonIncompressible=" << exp2PoissonIncompressible << std::endl;
+     config.dragDistanceBboxScale = exp2DragDistanceBboxScale;
+     config.dragDistanceMin = exp2DragDistanceMin;
+     config.dragDistanceMax = exp2DragDistanceMax;
+diff --git a/TetgenFEM/main.cpp b/TetgenFEM/main.cpp
+index 56ec3f6..c1f060c 100644
+--- a/TetgenFEM/main.cpp
++++ b/TetgenFEM/main.cpp
+@@ -1,3 +1,4 @@
++#include <cstdlib>
+ 
+ //#define EIGEN_USE_MKL_ALL
+ #include <iostream>
+@@ -3947,6 +3948,14 @@ int main(int argc, char** argv) {
+ 			experiment3.update();
+ 			experiment1.update();
+ 			experiment2.update();
++			{
++				static int s_e2Frame = 0; static bool s_e2Started = false;
++				if (std::getenv("TETGENFEM_EXP2U")) {
++					++s_e2Frame;
++					if (!s_e2Started && s_e2Frame == 60) { experiment2.requestStart(); s_e2Started = true; }
++					else if (s_e2Started && s_e2Frame > 70 && !experiment2.isActive()) { std::cout << "[TetgenFEM] Auto Exp2 finished. Exiting." << std::endl; std::exit(0); }
++				}
++			}
+ 			experiment4.update();
+ 
+ 	#if defined(TETFEM_HAVE_LEAPC) && TETFEM_HAVE_LEAPC
+diff --git a/TetgenFEM/parameters.txt b/TetgenFEM/parameters.txt
+index a5d7b14..1edfe46 100644
+--- a/TetgenFEM/parameters.txt
++++ b/TetgenFEM/parameters.txt
+@@ -10,7 +10,7 @@ half_youngs_axis=0
+ # 0 = lower (min side), 1 = upper (max side)
+ half_youngs_side=0
+ # Localized "tumor" stiffness patch (small area on the top surface near center).
+-tumor_youngs_enabled=true
++tumor_youngs_enabled=false
+ tumor_youngs_value=30000
+ # Smaller, more "lump-like" patch on the top surface.
+ tumor_use3d=false
+@@ -19,12 +19,12 @@ tumor_radiusFrac=0.02
+ tumor_centerXFrac=0.144398
+ tumor_centerYFrac=0.795854
+ tumor_centerZFrac=0.922562
+-poisson=0.49
++poisson=0.28
+ density=200
+ groupNumX=8
+ groupNumY=6
+ groupNumZ=6
+-timeStep=0.008
++timeStep=0.01
+ dampingConst=5.0
+ Gravity=0.0
+ bindForce= -1000000
+@@ -38,8 +38,8 @@ tetgenArgs=pq20a0.000083
+ # Model re-orientation (world axes, right-hand rule):
+ # 1) from current pose: looking towards +X, rotate 180
+ # 2) then looking towards -Y, CCW 90 (equivalent to +Y -90)
+-model_rotateX_deg=90
+-model_rotateY_deg=180
++model_rotateX_deg=0
++model_rotateY_deg=0
+ nodeFile=armadillo_4k.node
+ eleFile=armadillo_4k.ele
+ useDirectLoading=false
+@@ -89,7 +89,7 @@ tet_volumeConstraintIterations=2
+ 
+ # Agent sphere ("finger") contact
+ # Toggle at runtime with key 'H' (see console output). These are defaults on startup.
+-agent_enabled=true
++agent_enabled=false
+ agent_useSurfaceVertices=true
+ agent_useSurfaceTriangles=true
+ agent_virtualCoupling=true
+@@ -153,7 +153,7 @@ cavity_open_axis=1
+ cavity_open_side=+1
+ 
+ # Ultraleap Stereo IR-170 (LeapC) right-hand fingertips (thumb..pinky) -> agent spheres mapping
+-leap_enabled=true
++leap_enabled=false
+ leap_workspaceXmm=260
+ leap_workspaceYmm=260
+ leap_workspaceZmm=260
+@@ -168,7 +168,7 @@ leap_flipZ=false
+ 
+ # Leap left-hand capsule collision (non-haptic, strong interaction).
+ # Toggle at runtime with key 'N' (see console output).
+-left_hand_enabled=true
++left_hand_enabled=false
+ left_hand_capsuleRadiusBboxScale=0.030
+ left_hand_capsuleLengthBboxScale=0.060
+ left_hand_capsuleSamples=7
+@@ -214,18 +214,18 @@ exp1_pbdIterationsReference=150
+ exp1_resetAfterFinish=true
+ 
+ # Experiment 2 (one-click) parameters (only used after pressing START EXP2)
+-exp2_poissonIncompressible=0.49
++exp2_poissonIncompressible=0.28
+ exp2_settleSteps=120
+ exp2_dragSteps=240
+-exp2_holdSteps=240
++exp2_holdSteps=480
+ exp2_dragDistanceBboxScale=0.35
+-exp2_dragDistanceMin=0.30
+-exp2_dragDistanceMax=0.90
++exp2_dragDistanceMin=0.5
++exp2_dragDistanceMax=0.5
+ exp2_anchorSliceFrac=0.05
+ exp2_pullSliceFrac=0.12
+ exp2_minRegionVertexCount=24
+-exp2_pullStiffness=400
+-exp2_pullMaxAccel=4000
++exp2_pullStiffness=4000
++exp2_pullMaxAccel=1000000
+ exp2_pbdIterations=60
+ exp2_resetAfterFinish=true
+ 
+@@ -254,7 +254,7 @@ exp4_thread3=14
+ 		
+ 
+ # Haptic UART Configuration
+-haptic_uart_enabled=true
++haptic_uart_enabled=false
+ haptic_uart_port=/dev/cu.usbserial-AUOK5THN
+ haptic_uart_motor_id=1
+ haptic_uart_thumb_motor_id=0
+@@ -282,4 +282,4 @@ haptic_tumor_vib_enabled=true
+ haptic_tumor_vib_freq_hz=70.0
+ haptic_tumor_vib_amp=12.0
+ haptic_tumor_vib_duration_sec=0.15
+-model_rotateZ_deg=180
++model_rotateZ_deg=0

@@ -76,12 +76,12 @@
 \newlabel{tab:expert}{{3}{9}{}{table.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Formative expert evaluation setup. The participant performed virtual palpation through hand motion while receiving 1-DOF force feedback, and the screen displayed real-time liver deformation and proxy-body positions.}}{9}{}\protected@file@percent }
 \newlabel{fig:eval}{{5}{9}{}{figure.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Task Design and Recorded Contents of the Formative Expert Evaluation}}{9}{}\protected@file@percent }
-\newlabel{tab:tasks}{{4}{9}{}{table.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Metric Construction for the Formative Evaluation}{9}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {V}Results}{9}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Technical Validation Results}{9}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}1}Large-Deformation Accuracy and Real-Time Performance}{9}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Task Design and Recorded Contents of the Formative Expert Evaluation}}{9}{}\protected@file@percent }
+\newlabel{tab:tasks}{{4}{9}{}{table.4}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Comparison of Large-Deformation Accuracy and Real-Time Performance}}{9}{}\protected@file@percent }
 \newlabel{tab:disp}{{5}{9}{}{table.5}{}}
 \citation{wang2025group}
@@ -90,11 +90,11 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Final shapes of the liver model under the largest load ($a=2000$) in Experiment 1. Grey: rest shape. Color: distance of each surface point from the VegaFEM result. The maximum distance is 0.19 for the proposed method (30 coupling iterations), 0.95 for XPBD Fast and 0.82 for XPBD Ref. Both XPBD configurations stretch the pulled corner into a thin tip.}}{10}{}\protected@file@percent }
 \newlabel{fig:shape}{{7}{10}{}{figure.7}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}2}Near-Incompressible Volume Preservation}{10}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}3}Real-Time Performance and Scalability}{10}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Volume-Deviation Comparison at Different Poisson Ratios}}{10}{}\protected@file@percent }
 \newlabel{tab:volume}{{6}{10}{}{table.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Comparison of volume preservation under near-incompressible conditions. The proposed method maintains small volume deviation and is overall close to the VegaFEM reference.}}{10}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Volume ratio $V/V_0$ at $\nu =0.49$ during the drag and hold phases. The proposed method and VegaFEM settle within about 2\% of the initial volume during the hold phase, whereas XPBD keeps oscillating with a larger deviation.}}{10}{}\protected@file@percent }
 \newlabel{fig:volume}{{8}{10}{}{figure.8}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-A}3}Real-Time Performance and Scalability}{10}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Comparison of Real-Time Performance Across Mesh Scales}}{11}{}\protected@file@percent }
 \newlabel{tab:fps}{{7}{11}{}{table.7}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Frame rate versus mesh scale (log-scale FPS axis) for the proposed method (10 threads), XPBD under the Fast and Reference substep configurations defined in Section IV-A, and VegaFEM. The proposed method maintains better real-time performance than VegaFEM over a broad tetrahedral range and still retains basic interactivity on larger-scale models.}}{11}{}\protected@file@percent }
@@ -102,13 +102,12 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Results of the Formative Expert Evaluation and System-Usability Feedback}{11}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}1}Interaction Fidelity During Free Exploration}{11}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}2}Behavioral Observation in the Lesion-Localization Task}{11}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}3}Diagnosis of Engineering Constraints and Evaluation of Force-Rendering Quality}{11}{}\protected@file@percent }
 \citation{sullivan2013analyzing}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}3}Diagnosis of Engineering Constraints and Evaluation of Force-Rendering Quality}{12}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Likert-Scale Ratings of System Usability and Force-Rendering Quality}}{12}{}\protected@file@percent }
 \newlabel{tab:likert}{{8}{12}{}{table.8}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {VI}Discussion}{12}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}From Algorithm Validation to System-Prototype Evaluation}{12}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Application Focus and Future Evolution of the System}{12}{}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{../Frontiers_LaTeX_Templates/bibtex/references}
 \bibcite{overtoom2019haptic}{1}
@@ -122,12 +121,13 @@
 \bibcite{liu2016towards}{9}
 \bibcite{bender2014survey}{10}
 \bibcite{muller2007position}{11}
-\bibcite{macklin2016xpbd}{12}
-\bibcite{agboh2016six}{13}
-\bibcite{bjelland2025haptic}{14}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Application Focus and Future Evolution of the System}{13}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Future Research Directions}{13}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{13}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{REFERENCES}{13}{}\protected@file@percent }
+\bibcite{macklin2016xpbd}{12}
+\bibcite{agboh2016six}{13}
+\bibcite{bjelland2025haptic}{14}
 \bibcite{chernikova2020simulation}{15}
 \bibcite{wisniewski2020power}{16}
 \bibcite{xu2025lightweight}{17}

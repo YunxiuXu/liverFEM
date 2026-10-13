@@ -1,0 +1,65 @@
+diff --git a/VegaFEM/utilities/interactiveDeformableSimulator/interactiveDeformableSimulator.cpp bVegaFEM/utilities/interactiveDeformableSimulator/interactiveDeformableSimulator.cpp
+index 69f9f6d..c31fb77 100644
+--- a/VegaFEM/utilities/interactiveDeformableSimulator/interactiveDeformableSimulator.cpp
++++ bVegaFEM/utilities/interactiveDeformableSimulator/interactiveDeformableSimulator.cpp
+@@ -1165,27 +1165,17 @@ void idleFunction(void)
+           targetPos0[2] + uq[3*experiment2.targetVertex+2]
+         );
+ 
+-        const double accel = experiment2.accelTarget * loadScale;
+-        const Vec3d forceDir(1.0, 0.0, 0.0); // X direction
+-
+-        for(int v=0; v<n; v++)
++        // Spring pull of the anterior 12% slice toward a +X target (matches TetgenFEM/XPBD Exp2)
++        const double kPull = 4000.0;
++        const double imposed = experiment2.dragDistance * loadScale;
++        for (size_t pi = 0; pi < experiment2.pullIndices.size(); ++pi)
+         {
+-          const Vec3d & p0 = volumetricMesh->getVertex(v);
++          const int v = experiment2.pullIndices[pi];
++          const Vec3d & p0 = experiment2.pullStartPos[pi];
+           Vec3d p(p0[0] + uq[3*v+0], p0[1] + uq[3*v+1], p0[2] + uq[3*v+2]);
+-          double distLen = len(p - targetPos);
+-          if (distLen <= experiment2.pullRadius)
+-          {
+-            double falloff = 1.0 - (distLen / experiment2.pullRadius);
+-            double forceScale = falloff;
+-            if (v == experiment2.targetVertex) forceScale *= 1.5;
+-
+-            const double my = (3*v+0 >= 0 && 3*v+0 < 3*n) ? experiment2.massDiag[3*v+0] : 0.0;
+-            const double force = my * accel * forceScale;
+-
+-            f_ext[3*v+0] += force * forceDir[0];
+-            f_ext[3*v+1] += force * forceDir[1];
+-            f_ext[3*v+2] += force * forceDir[2];
+-          }
++          Vec3d target(p0[0] + imposed, p0[1], p0[2]);
++          for (int c = 0; c < 3; ++c)
++            f_ext[3*v+c] += experiment2.massDiag[3*v+c] * kPull * (target[c] - p[c]);
+         }
+       }
+     }
+@@ -3265,6 +3255,7 @@ static void Experiment2_OnTimestepCompleted()
+     {
+       Experiment2_StopAndRestore();
+       Experiment2_SetStatus("Experiment 2: done (files written)");
++      if (getenv("VEGAFEM_AUTO_EXP2")) { printf("Experiment 2 (Auto) finished.\n"); exit(0); }
+     }
+   }
+ }
+@@ -3330,10 +3321,14 @@ void experiment2_buttonCallBack(int code)
+   experiment2.pullStartPos.clear();
+   const Vec3d & targetPos0 = volumetricMesh->getVertex(experiment2.targetVertex);
+   
++  double e2minX = 1e30, e2maxX = -1e30;
++  for(int v=0; v<n; v++) { const Vec3d & q = volumetricMesh->getVertex(v); e2minX = std::min(e2minX, q[0]); e2maxX = std::max(e2maxX, q[0]); }
++  const double e2pullX = e2maxX - 0.12 * (e2maxX - e2minX);
++  experiment2.dragDistance = 0.5;
+   for(int v=0; v<n; v++)
+   {
+     Vec3d p0 = volumetricMesh->getVertex(v);
+-    if (len(p0 - targetPos0) <= experiment2.pullRadius)
++    if (p0[0] >= e2pullX)
+     {
+       experiment2.pullIndices.push_back(v);
+       experiment2.pullStartPos.push_back(p0);

@@ -1,0 +1,52 @@
+diff --git a/PositionBasedDynamics/Demos/SceneLoaderDemo/Experiment2.cpp b/PositionBasedDynamics/Demos/SceneLoaderDemo/Experiment2.cpp
+index 710aa53..beedd46 100644
+--- a/PositionBasedDynamics/Demos/SceneLoaderDemo/Experiment2.cpp
++++ b/PositionBasedDynamics/Demos/SceneLoaderDemo/Experiment2.cpp
+@@ -1,3 +1,4 @@
++#include <cstdlib>
+ #include "Experiment2.h"
+ #include "Simulation/Simulation.h"
+ #include "Simulation/SimulationModel.h"
+@@ -67,7 +68,7 @@ namespace Exp2
+ 
+ 		static const int s_settleSteps = 120;
+ 		static const int s_dragSteps = 240;
+-		static const int s_holdSteps = 240;
++		static int s_holdSteps = std::getenv("XPBD_HOLD") ? std::atoi(std::getenv("XPBD_HOLD")) : 240;
+ 		static int s_stepInState = 0;
+ 		static float s_currentDragDistance = 0.0f;
+ 		static float s_dragDistance = 0.5f;  // Will be computed from bbox
+@@ -543,7 +544,7 @@ namespace Exp2
+ 			if (s_pullIndices.empty()) return;
+ 			
+ 			// 降低追踪刚度，防止 XPBD 爆炸
+-			const float stiffness = 50.0f; 
++			const float stiffness = std::getenv("XPBD_E2_K") ? std::atof(std::getenv("XPBD_E2_K")) : 50.0f;
+ 			const Vector3r targetDir(1.0, 0.0, 0.0);
+ 			
+ 			for (unsigned int idx : s_pullIndices) {
+diff --git a/PositionBasedDynamics/Demos/SceneLoaderDemo/SceneLoaderDemo.cpp b/PositionBasedDynamics/Demos/SceneLoaderDemo/SceneLoaderDemo.cpp
+index 604b2c2..666cdef 100644
+--- a/PositionBasedDynamics/Demos/SceneLoaderDemo/SceneLoaderDemo.cpp
++++ b/PositionBasedDynamics/Demos/SceneLoaderDemo/SceneLoaderDemo.cpp
+@@ -1,3 +1,5 @@
++#include <cstdlib>
++#include <iostream>
+ #include "Common/Common.h"
+ #include "Demos/Visualization/MiniGL.h"
+ #include "Demos/Visualization/Selection.h"
+@@ -186,6 +188,14 @@ void timeStep ()
+ 
+ 	// Update experiment state machines (even when paused, so they can progress)
+ 	Exp1::update();
++	{
++		static int s_e2Frame = 0; static bool s_e2Started = false;
++		if (std::getenv("XPBD_EXP2U")) {
++			++s_e2Frame;
++			if (!s_e2Started && s_e2Frame == 60) { Exp2::startExperiment2(); s_e2Started = true; }
++			else if (s_e2Started && s_e2Frame > 70 && !Exp2::isRunning()) { std::cout << "XPBD Exp2 (Auto) finished." << std::endl; std::exit(0); }
++		}
++	}
+ 	Exp2::update();
+ #ifdef ENABLE_EXP4
+ 	Exp4::update();
